@@ -15,16 +15,21 @@ DataQuality::~DataQuality(){
 }
 
 Bool_t DataQuality::Init(PadmeAnalysisEvent* event){
+
   if (fVerbose) printf("---> Initializing DataQuality\n");
   TString cfgFile = "config/UserAnalysis.conf";
   fHS = HistoSvc::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
-  
+
+  // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
+  // e determina la flag per quell'evento in base al tempo  
   fEvent = event;
   Int_t nRun = fEvent->RecoEvent->GetRunNumber(); //30000 vale solo per il 2022
   cout<<" Creating DataQuality Hystograms for Run Init "<< nRun<<endl;  
   
+  // se e' readmode fa quello che c'e' sotto
+
   fTimeBin = 5.; // sec
   fTimeBinCoarse = 60.; // sec
 
@@ -37,8 +42,10 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event){
     observable obsn;
     obsn.name = obsNames[i].Data();
 
-    obsn.valueAvg = new Double_t[fNTimeBins];
-    obsn.valueAvgCoarse = new Double_t[fNTimeBinsCoarse];
+    obsn.valueSum = new Double_t[fNTimeBins];
+    obsn.valueSquareSum = new Double_t[fNTimeBins];
+    obsn.valueSumCoarse = new Double_t[fNTimeBinsCoarse];
+    obsn.valueSquareSumCoarse = new Double_t[fNTimeBinsCoarse];
 
     obsn.nCounts = new Int_t[fNTimeBins];
     obsn.nCountsCoarse = new Int_t[fNTimeBinsCoarse];
@@ -61,6 +68,13 @@ Bool_t DataQuality::InitHistos(Int_t nRun){
 }
 
 Bool_t DataQuality::Process(){
+
+  // protection: should run on data only
+  // riempire i valori delle 5 osservabili
+  // prendere il tempo dell'evento e calcolare in che bin temporale cadi x 2 (normale e coarse)
+  // incrementare gli array sum, sumsquare, nCounts
+  // il codice sotto e' vecchio
+
   Bool_t IsGoodNPoT = false;
   fNPoT = 0;
   if(fEvent->TargetRecoBeam!=0){
@@ -160,6 +174,20 @@ Bool_t DataQuality::Process(){
 }
 
 Bool_t DataQuality::Finalize()
+// 
+// 
+// qui i Double_t* e gli Int_t* devono essere scritti in uscita in forma di TGraph* (histoService gestisce il salvare i TGraph*) 
+// il nome del TGraph* deve dipendere dal run
+// 
+// macro esterne:
+// quando tu fai hadd, lo devi fare per run
+// devi ripassare sul graph e fare le medie avg=sum/counts, rms=sqrt((sumsquare/counts - avg^2) / (counts-1))
+// queste medie e rms bisogna usarle per fare il data quality
+// determini i criteri
+// determini i periodi "meno buoni", "cattivi": start e stop time e runnumber
+// dobbiamo passare i periodi a DataQuality da usare quando dataquality e' in flagmode, forse in un file di testo formattato 
+
+// il codice sotto e' vecchio
 {
   if(vNRun.size()==0 && vNPoTRun.size()==0){
     vNRun.push_back(fNRun);

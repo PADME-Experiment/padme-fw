@@ -8,8 +8,10 @@
 
 struct observable{
   TString name;
-  Double_t* valueAvg; // avg value vs time 
-  Double_t* valueAvgCoarse; // avg value vs time [coarse bin]
+  Double_t* valueSum; // sum of the values vs time 
+  Double_t* valueSumCoarse; // sum value vs time [coarse bin]
+  Double_t* valueSquareSum; // sum of the squared value vs time 
+  Double_t* valueSquareSumCoarse; // sum of the squared value vs time [coarse bin]
   Int_t* nCounts; // number vs time
   Int_t* nCountsCoarse; // number vs time [coarse bin]
 };
@@ -28,7 +30,7 @@ public:
   Bool_t Process();
   Bool_t Finalize();
 
-  Int_t GetDataQualityLevel() { return fDataQualityLevel; }
+  Int_t GetDataQualityLevel() { return fDataQualityLevel; } //0,1,2 buon, meno buono, cattivo
 
 
 private:

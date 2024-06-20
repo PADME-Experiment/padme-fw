@@ -8,6 +8,7 @@
 #define ECalCalibration_H
 
 #include "PadmeVCalibration.hh"
+#include "TGraph.h"
 #include "ECalCalibHandler.hh"
 class TRawEvent;
 
@@ -24,6 +25,7 @@ public:
   ~ECalCalibration();
   void Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr );
   void ReadCalibConstant();
+  void PerformMCCalibration(std::vector<TRecoVHit *> &hitArray);
   void PerformCalibration(std::vector<TRecoVHit *> &hitArray,TRawEvent* rawEv);
   int SearchCalibFile();
   void SetEventTime(TTimeStamp ET){fEvTime = ET;}
@@ -40,6 +42,12 @@ private:
 
   Int_t     fUseCalibE;
   Int_t     fUseCalibT;
+
+  Int_t fOverrideEScale; // if set to 1, FOR DATA will override energy scale from input file and use the values below
+  Double_t  fGlobHitEnScaleOverrideData; //Used to override any scale from input file / the code itself
+  Double_t  fGlobHitEnScaleData; //Value used
+  Double_t  fGlobHitEnScaleMC;   //Value used for MC
+  TGraph* fRunDependentScale; 
 
   Double_t  fGlobEnScale;
   Double_t  fMuonDepositedEnergy;

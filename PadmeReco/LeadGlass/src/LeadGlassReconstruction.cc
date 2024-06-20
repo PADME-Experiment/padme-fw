@@ -132,8 +132,8 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
 Bool_t LeadGlassReconstruction::TriggerToBeSkipped()
 {
-  // Only analyze BTF triggers
-  if ( !(GetTriggerProcessor()->IsBTFTrigger()) ) return true;
+  // Enable this line if you only want to analyze BTF triggers
+  //if ( !(GetTriggerProcessor()->IsBTFTrigger()) ) return true;
   return false; 
 }
 

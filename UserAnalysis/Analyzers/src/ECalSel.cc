@@ -182,7 +182,7 @@ Bool_t ECalSel::Process(){
 
   if(isMC || (trigMask & (1 << 0)) ){
 
-    DataQuality();
+    // DataQuality();
     NPoTLGCorr();
     TwoClusSel();
     OneClusSel();
@@ -2044,7 +2044,7 @@ Bool_t ECalSel::FitTagProbeEff(){
 
 
 Bool_t ECalSel::Finalize(){
-  
+  fHistoMode = false;
   if(fHistoMode) TagProbeEff_macro();
   //if(fHistoMode) EvaluateResolutions_macro();
   return true;

@@ -17,6 +17,7 @@ class ETagAn;
 class ETagAnalysis;
 class MCTruth;
 class MCTruthECal;
+class DataQuality;
 
 class UserAnalysis {
 
@@ -54,6 +55,7 @@ private:
   MCTruth* fMCTruth;
   MCTruthECal* fMCTruthECal;
   ECalCalib* fECalCalib;
+  DataQuality *fDataQuality;
 
   bool fETagHitsAvail;
   bool fETagClusAvail;

@@ -28,6 +28,8 @@ private:
 public:
   virtual Bool_t Init(PadmeAnalysisEvent* event, Int_t DBRunNumber);
   virtual Bool_t Process();
+  int GetRunNumberFromDB(){return fRunNumberFormDB;}
+
   long long int GetRunStartTime(){return fRunStartTime;}
   long long int GetRunStopTime(){return fRunStopTime;}
 
@@ -84,6 +86,7 @@ private:
   // event-by-event quantities
 
   Int_t fRunOld;
+  Int_t fRunNumberFormDB;
   long long int fPeriodStartTime; // time of start of the period (2020, 2022, etc.)
   long long int fRunStartTime; // time of start of the run
   long long int fRunStopTime; // time of stop of the run

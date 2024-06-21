@@ -13,6 +13,7 @@
 #include "Is22GGAnalysis.hh" //MR
 //#include "Is3GAnalysis.hh" //MR
 #include "ETagAnalysis.hh" //AF
+#include "DataQuality.hh" //EDM TS
 #include "MCTruth.hh"     //MR
 #include "MCTruthECal.hh"     //EDM
 #include "HistoSvc.hh"
@@ -40,6 +41,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
   fETagAn  = ETagAn::GetInstance();
+  fDataQuality = DataQuality::GetInstance();
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
@@ -59,6 +61,7 @@ UserAnalysis::~UserAnalysis(){
   //  delete fIsGGAnalysis;
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
+  delete fDataQuality;
 //  delete fIs3GAnalysis;
 }
 
@@ -79,6 +82,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t fHistoMode, TString 
   fGeneralInfo->Init(fEvent, DBRunNumber);
   fNPoTAnalysis->Init(fEvent);
   fECalCalib22->Init(fHistoMode,InputHistofile);
+  fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
@@ -122,7 +126,10 @@ Bool_t UserAnalysis::Process(){
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fECalCalib->Process(fEvent);
+  fDataQuality->Process();
+
   fECalCalib22->Process(fEvent);
+
   fECalSel->Process();
   fECalSel->ProcessForCalib();
   if (fETagHitsAvail) fETagAn->Process();
@@ -197,6 +204,7 @@ Bool_t UserAnalysis::Finalize()
   if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();
   fECalCalib22->Finalize();
+  fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();
 
 //  // TGraph example

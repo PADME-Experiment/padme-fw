@@ -196,7 +196,7 @@ void GeneralInfo::PrintBeamProperties(int runID){
 }
 
 void GeneralInfo::RetrieveDBInfo(int runID){
-
+  fRunNumberFormDB = runID;
   fRunStartTime = fOfflineServerDB->getRunStartTime(runID);
   fRunStopTime =  fOfflineServerDB->getRunStopTime(runID);
 

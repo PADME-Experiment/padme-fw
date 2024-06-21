@@ -36,7 +36,7 @@ Bool_t ECalCalib22::Init(Bool_t fHistoModeVal, TString InputHistofileVal){
   if (fVerbose) printf("---> Initializing ECalCalib22\n");
   int iChNum=0;
   
-  ifstream InFile("../PadmeReco/config/Calibration/ECalEnergyCalibration_6.dat");
+  ifstream InFile("../PadmeReco/config/Calibration/ECalEnergyCalibration_7.dat");
   
   if(!InFile.is_open()) {
     cout<<"Cannot open ECal Channel list file!!!"<<endl;

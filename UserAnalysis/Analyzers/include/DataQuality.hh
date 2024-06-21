@@ -5,6 +5,7 @@
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
 #include "GeneralInfo.hh"
+#include "NPoTAnalysis.hh"
 
 struct observable{
   TString name;
@@ -26,7 +27,7 @@ public:
 
   ~DataQuality();
 
-  Bool_t Init(PadmeAnalysisEvent*);
+  Bool_t Init(PadmeAnalysisEvent*,  Bool_t HistoModeVal, TString InputHistofileVal);
   Bool_t Process();
   Bool_t Finalize();
 
@@ -34,16 +35,21 @@ public:
 
 
 private:
+  NPoTAnalysis *fNPoTAnalysis;
   Double_t fTimeBin; // maybe should allow external conf
   Double_t fTimeBinCoarse; // maybe should allow external conf
   Int_t fNTimeBins; //number of time bins
   Int_t fNTimeBinsCoarse; // number of coarse time bins
   std::vector<observable> fObservables;
-
+  Int_t fNRun;
+  TString fNRunString;
   Bool_t InitHistos(Int_t);
   static DataQuality* fInstance;
 
-
+  Bool_t fHistoMode;
+  TString InputHistofile;
+  TString InputHistofileName;
+  Int_t fSafety;
   Int_t fVerbose;
 
   PadmeAnalysisEvent* fEvent;

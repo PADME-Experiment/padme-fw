@@ -1,6 +1,7 @@
 #include "DataQuality.hh"
 #include "TGraph.h"
 #include "TString.h"
+#include "TMath.h"
 
 
 DataQuality* DataQuality::fInstance = 0;
@@ -14,31 +15,43 @@ DataQuality::~DataQuality(){
   delete fCfgParser;
 }
 
-Bool_t DataQuality::Init(PadmeAnalysisEvent* event){
+Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TString InputHistofileVal){
 
   if (fVerbose) printf("---> Initializing DataQuality\n");
   TString cfgFile = "config/UserAnalysis.conf";
   fHS = HistoSvc::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
+  fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
 
   // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
   // e determina la flag per quell'evento in base al tempo  
   fEvent = event;
-  Int_t nRun = fEvent->RecoEvent->GetRunNumber(); //30000 vale solo per il 2022
-  cout<<" Creating DataQuality Hystograms for Run Init "<< nRun<<endl;  
+  fNRun = fGeneralInfo->GetRunNumberFromDB(); //30000 vale solo per il 2022
+  cout<<" Creating DataQuality Hystograms for Run Init "<< fNRun<<endl;  
+  fHistoMode = fHistoModeVal;
+  InputHistofile = InputHistofileVal;
+
+//   if(fHistoMode){
+//   TObjArray *tx = InputHistofile.Tokenize("/");
+//   InputHistofileName = ((TObjString *)(tx->At(tx->GetLast())))->String(); 
+
+//   TObjArray *txRun = InputHistofileName.Tokenize(".");
+//   fNRunString = ((TObjString *)(txRun->At(0)))->String()+"."+((TObjString *)(txRun->At(1)))->String(); 
+//   //fNRun = ((TObjString *)(txRun->At(0)))->String(); //OCCHIO
   
+//  }
   // se e' readmode fa quello che c'e' sotto
-
+  fSafety = 1000;
   fTimeBin = 5.; // sec
-  fTimeBinCoarse = 60.; // sec
+  fTimeBinCoarse = 120.; // sec
 
-  fNTimeBins = ((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBin; //check carefully this ratio because there are two long long int subtracted
-  fNTimeBinsCoarse = ((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBinCoarse; 
+  fNTimeBins = fSafety +((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBin; //check carefully this ratio because there are two long long int subtracted
+  fNTimeBinsCoarse =1+fSafety*fTimeBin/fTimeBinCoarse + ((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBinCoarse; 
 
-  const int nObservables = 5;
-  TString obsNames[nObservables] = {"POT","ECalOverPOT","POTBunchLength","LGPed","POTTarg"};
-  for (int i=0; i<5; i++){
+  const int nObservables = 8;
+  TString obsNames[nObservables] = {"POT","ECalOverPOT","ECalHitOverPOT","POTBunchLength","LGPed","POTTarg", "TargXCharge", "TargYCharge"};
+  for (int i=0; i<nObservables; i++){
     observable obsn;
     obsn.name = obsNames[i].Data();
 
@@ -50,11 +63,23 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event){
     obsn.nCounts = new Int_t[fNTimeBins];
     obsn.nCountsCoarse = new Int_t[fNTimeBinsCoarse];
 
+    for(int j =0; j<fNTimeBins; j++){
+      obsn.valueSum[j] = 0;
+      obsn.valueSquareSum[j]=0;
+      obsn.nCounts[j]=0;
+    }
+     for(int j =0; j<fNTimeBinsCoarse; j++){
+      obsn.valueSumCoarse[j] = 0;
+      obsn.valueSquareSumCoarse[j]=0;
+      obsn.nCountsCoarse[j]=0;
+    }
+
     fObservables.push_back(obsn);
+    
   }
 
 
-  InitHistos(nRun);
+  InitHistos(fNRun);
   return true;
 }
 
@@ -62,8 +87,8 @@ Bool_t DataQuality::InitHistos(Int_t nRun){
   // DataQuality directory will contain all histograms related to this analysis
 
   fHS->CreateList("DataQuality");
-  fHS->CreateList("DataQualityLG");
-  cout<<" Creating Hystograms for Run "<<nRun<<" "<<endl;    
+  cout<<" Creating Hystograms for Run "<<nRun<<" "<<endl;  
+   
   return true;
 }
 
@@ -75,105 +100,73 @@ Bool_t DataQuality::Process(){
   // incrementare gli array sum, sumsquare, nCounts
   // il codice sotto e' vecchio
 
-  Bool_t IsGoodNPoT = false;
-  fNPoT = 0;
-  if(fEvent->TargetRecoBeam!=0){
-    fNRun = fEvent->RecoEvent->GetRunNumber(); //30000 vale solo per il 2022
-    fNPoT = fEvent->TargetRecoBeam->getnPOT();
-    fXPos = fEvent->TargetRecoBeam->getX();
-    fYPos = fEvent->TargetRecoBeam->getY();
-    fTimeStamp=fEvent->RecoEvent->GetEventTime(); 
-    //  cout<<" X tar "<<fXPos<<" "<<fYPos<<endl;
-    TotPoT    +=fNPoT;    
-    TotPoTRun +=fNPoT;
-    vTotPoT.push_back(TotPoT);
+  long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime();
+  int TimeBinVal =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBin;
+  int TimeBinValCoarse =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBinCoarse;
+  if(TimeBinVal>=fNTimeBins || TimeBinVal<0){
+    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<std::endl;
+    return false;
   }
-   fNPoTLG =0.;
-   fNPoTLGCorr =0;
-   fNPoTBL =0.;
-   Double_t fLGPed =0.;
-   Double_t fLGCharge=0.;
+  if(TimeBinValCoarse>=fNTimeBinsCoarse || TimeBinValCoarse<0){
+    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinValCoarse: "<<TimeBinValCoarse<<" NTimeBinsCoarse: "<<fNTimeBinsCoarse<<std::endl;
+    return false;
+  }
 
-  if(fEvent->LeadGlassRecoEvent!=0){
-    fNPoTLG   = fEvent->LeadGlassRecoEvent->GetNPoTs();
+  for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
+    Double_t Value;
     
-    fNPoTLGCorr = 402.5*fNPoTLG*fGeneralInfo->GetLGCorr()/fGeneralInfo->GetBeamEnergy(); //DA VALUTARE
-    fNPoTBL   = fEvent->LeadGlassRecoEvent->GetBunchLength();
-    fLGCharge = fEvent->LeadGlassRecoEvent->GetTotalCharge();
-    fLGPed    = fEvent->LeadGlassRecoEvent->GetPedestal();
-    TotPoTLG  +=fNPoTLG;
-    TotPoTRun +=fNPoTLG;
-    vTotPoTLG.push_back(TotPoTLG);
-  }
-  //  cout<<" NPOT "<<fNPoTLG<<" "<<fNPoT<<" BL "<<fNPoTBL<<endl;
+    if((iter->name).CompareTo("POT")==0){
+      Value = fNPoTAnalysis->GetNPoTLGCorr();
+    }else if((iter->name).CompareTo("ECalOverPOT")==0){
+      Double_t ETotECal=0;
+      for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++){
+        double eECal = fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+        ETotECal+=eECal;
+      }
+        if(fNPoTAnalysis->GetNPoTLGCorr()!=0) Value = ETotECal/fNPoTAnalysis->GetNPoTLGCorr();
+        else Value = 0;
+    }else if((iter->name).CompareTo("ECalHitOverPOT")==0){
+      Double_t TotHitE=0;
+      
+      for(int iHit = 0;iHit <fEvent->ECalRecoEvent->GetNHits() ; iHit++) {
+        double HitE = fEvent->ECalRecoEvent->Hit(iHit)->GetEnergy();
+        TotHitE+=HitE;
+      }
+      if(fNPoTAnalysis->GetNPoTLGCorr()!=0) Value = TotHitE/fNPoTAnalysis->GetNPoTLGCorr();
+      else Value = 0;
+      }else if((iter->name).CompareTo("POTBunchLength")==0){
+        Value = fEvent->LeadGlassRecoEvent->GetBunchLength();
 
+      }else if((iter->name).CompareTo("LGPed")==0){
+        Value = fEvent->LeadGlassRecoEvent->GetPedestal();
 
-  if(Neve%250 ==0){
-    vNPoT.push_back(fNPoTLG);
-    vNEvt.push_back(fTimeStamp);
-  }
-  if(fCurrentRun != -1 && fCurrentRun != fNRun){
-    vNRun.push_back(fNRun);
-    vNPoTRun.push_back(TotPoTRun);
-    TotPoTRun=0;
-    cout<<"Changing RUN "<<fNRun<<" "<<fCurrentRun<<endl;
-  }
+      }else if((iter->name).CompareTo("POTTarg")==0){
+        Value = fEvent->TargetRecoBeam->getnPOT();
 
-  fHS->FillHistoList("DataQuality","NPoT",fNPoT);
-  fHS->FillHistoList("DataQualityLG","NPoTLG",fNPoTLG);
-  fHS->FillHistoList("DataQualityLG","NPoTLGCorr",fNPoTLGCorr);
-  fHS->FillHisto2List("DataQualityLG","NPoTLGCorrvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTLGCorr);
-  fHS->FillHisto2List("DataQualityLG","BBQvsBunchID",fEvent->RecoEvent->GetEventNumber(),fEvent->LeadGlassRecoEvent->GetBunchBBQ());
+      }else if((iter->name).CompareTo("TargXCharge")==0){
+        Value = fEvent->TargetRecoBeam->getXCharge();
 
- if(fNPoTLG>250) {
-    fHS->FillHistoList("DataQualityLG","NPoTGood",fNPoTLG);
-    fHS->FillHistoList("DataQualityLG","PoTDens",(float)fNPoTLG/(float)fNPoTBL);
-    fHS->FillHistoList("DataQualityLG","LGCharge",fLGCharge);
-    fHS->FillHistoList("DataQualityLG","LGPed",fLGPed);
-    fHS->FillHistoList("DataQualityLG","BunchLenghtLG",fNPoTBL);
-    fHS->FillHistoList("DataQualityLG","BunchLenghtLGvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTBL);
-    fHS->FillHisto2List("DataQualityLG","LGPedvsBunchID",fEvent->RecoEvent->GetEventNumber(),fLGPed);
-    fHS->FillHisto2List("DataQualityLG","LGPedvsLGCharge",fLGPed, fLGCharge);
-  
-  }
+      }else if((iter->name).CompareTo("TargYCharge")==0){
+        Value = fEvent->TargetRecoBeam->getYCharge();
 
-  fHS->FillHistoList("DataQualityLG","NPoTTarvsNPoTLG",fNPoTLG,fNPoT);
-  fHS->FillHistoList("DataQualityLG","NPoTLGvsXTar",fXPos,fNPoTLG);
-  if(fNPoT>5E3) {
-    fHS->FillHistoList("DataQuality","XPos",fXPos);
-    fHS->FillHistoList("DataQuality","YPos",fYPos);
-  }
-
-  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
-  if( !(trigMask & (1 << 0)) ){
-    fHS->FillHistoList("DataQualityLG","NPoTNoPhys",fNPoTLG);
-    fHS->FillHistoList("DataQuality","NPoTNoPhys",fNPoT);
-    TotPoTNoPhys += fNPoT;
-  }
-  
-  if( (trigMask & (1 << 0)) ) {
-    fHS->FillHistoList("DataQualityLG","NPoTPhys",fNPoTLG);
-    fHS->FillHistoList("DataQuality","NPoTPhys",fNPoT);
-    TotPoTPhys += fNPoT;
-    if(fNPoT>5E3) {
-      fHS->FillHistoList("DataQuality","NPoTPhys5K",fNPoT);
-      TotPoTOver5K += fNPoT;
+      }else{
+      Value = 1;
+      std::cout<<" DataQuality ** WARNING ** The "<<(iter->name).Data() << " observable is not implemented"<<std::endl;
     }
-    // the actual value is 5 sigma need to check and move 
-    if(fNPoT>15E3 && fNPoT<45E3) {
-      fHS->FillHistoList("DataQuality","NPoTIsa",fNPoT);
-      IsGoodNPoT = true;
-    }
-    if(fNPoT>30E3) TotPoTOver30K += fNPoT;
+    
+    (iter->valueSum)[TimeBinVal] += Value;
+    (iter->valueSquareSum)[TimeBinVal] += (Value*Value);
+    (iter->valueSumCoarse)[TimeBinValCoarse] += (Value);
+    (iter->valueSquareSumCoarse)[TimeBinValCoarse] += (Value*Value);
+    (iter->nCounts)[TimeBinVal]++;
+    (iter->nCountsCoarse)[TimeBinValCoarse]++;
+
   }
-  
-  fCurrentRun = fNRun;
-  Neve++;
-  //  fEvtCount++;
-  return IsGoodNPoT;
+
+  return true;
 }
 
-Bool_t DataQuality::Finalize()
+Bool_t DataQuality::Finalize(){
 // 
 // 
 // qui i Double_t* e gli Int_t* devono essere scritti in uscita in forma di TGraph* (histoService gestisce il salvare i TGraph*) 
@@ -186,29 +179,155 @@ Bool_t DataQuality::Finalize()
 // determini i criteri
 // determini i periodi "meno buoni", "cattivi": start e stop time e runnumber
 // dobbiamo passare i periodi a DataQuality da usare quando dataquality e' in flagmode, forse in un file di testo formattato 
+fNRun = fGeneralInfo->GetRunNumberFromDB();
+if(!fHistoMode){
+  for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
+    TH1D *hvalueSum = fHS->BookHistoList("DataQuality", Form("hvalueSum_%s_%d", iter->name.Data(), fNRun), fNTimeBins, 0, fNTimeBins*fTimeBin); //in seconds
+    TH1D *hvalueSquareSum = fHS->BookHistoList("DataQuality", Form("hvalueSquareSum_%s_%d", iter->name.Data(), fNRun), fNTimeBins, 0, fNTimeBins*fTimeBin); //in seconds
+    TH1D *hvalueSumCoarse = fHS->BookHistoList("DataQuality", Form("hvalueSumCoarse_%s_%d", iter->name.Data(), fNRun), fNTimeBinsCoarse, 0, fNTimeBinsCoarse*fTimeBinCoarse); //in seconds
+    TH1D *hvalueSquareSumCoarse = fHS->BookHistoList("DataQuality", Form("hvalueSquareSumCoarse_%s_%d", iter->name.Data(), fNRun), fNTimeBinsCoarse, 0, fNTimeBinsCoarse*fTimeBinCoarse); //in seconds
+    TH1D *hnCounts = fHS->BookHistoList("DataQuality", Form("hnCounts_%s_%d", iter->name.Data(), fNRun), fNTimeBins, 0, fNTimeBins*fTimeBin); //in seconds
+    TH1D *hnCountsCoarse = fHS->BookHistoList("DataQuality", Form("hnCountsCoarse_%s_%d", iter->name.Data(), fNRun), fNTimeBinsCoarse, 0, fNTimeBinsCoarse*fTimeBinCoarse); //in seconds
+    
+    for(int i=0;i< fNTimeBins; i++ ){
 
-// il codice sotto e' vecchio
-{
-  if(vNRun.size()==0 && vNPoTRun.size()==0){
-    vNRun.push_back(fNRun);
-    vNPoTRun.push_back(TotPoTRun);
+      hvalueSum->SetBinContent(i+1,(iter->valueSum)[i]);
+      hvalueSquareSum->SetBinContent(i+1,(iter->valueSquareSum)[i]);
+      hnCounts->SetBinContent(i+1,(iter->nCounts)[i]);
+    }
+    for(int i=0;i< fNTimeBinsCoarse; i++ ){
+      hvalueSumCoarse->SetBinContent(i+1,(iter->valueSumCoarse)[i]);
+      hvalueSquareSumCoarse->SetBinContent(i+1,(iter->valueSquareSumCoarse)[i]);
+      hnCountsCoarse->SetBinContent(i+1,(iter->nCountsCoarse)[i]);
+    }
+    
+
+}
+std::cout<<"Data Quality TH1D plots filled "<<std::endl;
+}
+
+if(fHistoMode){
+  TGraphErrors *gPoTratio = new TGraphErrors();
+  gPoTratio->SetName("PoTRatio");
+  TGraphErrors *gPoTLG = new TGraphErrors();
+  gPoTLG->SetName("PoTLG");
+
+  TGraphErrors *gPoTLGAll = new TGraphErrors();
+  gPoTLGAll->SetName("PoTLGAll");
+
+  TGraphErrors *gPoTTarget = new TGraphErrors();
+  gPoTTarget->SetName("PoTTarget");
+  TGraphErrors *gXCharge = new TGraphErrors();
+  gPoTTarget->SetName("gTargXCharge");
+  TGraphErrors *gXChargeAll = new TGraphErrors();
+  gXChargeAll->SetName("gTargXChargeAll");
+
+  TGraphErrors *gPoTratioCharge = new TGraphErrors();
+  gPoTratioCharge->SetName("gPoTratioCharge");
+  TGraphErrors *gPoTratioChargeAll = new TGraphErrors();
+  gPoTratioChargeAll->SetName("gPoTratioChargeAll");
+ 
+
+  TFile *fileIn = new TFile(InputHistofile.Data());
+  if(!fileIn) std::cout<<"File not existing"<<std::endl;
+  std::cout<<"File to analyze for DataQuality: "<< InputHistofile.Data()<<std::endl;
+  //retrive info from th1d and assign it to the obs struct
+  for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
+    TH1D *hvalueSum = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSum_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
+    TH1D *hvalueSquareSum = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSquareSum_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
+    TH1D *hvalueSumCoarse = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSumCoarse_%s_%d", iter->name.Data(), fNRun))->Clone();
+    TH1D *hvalueSquareSumCoarse = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSquareSumCoarse_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
+    TH1D *hnCounts = (TH1D*) fileIn->Get(Form("DataQuality/hnCounts_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
+    TH1D *hnCountsCoarse = (TH1D*) fileIn->Get(Form("DataQuality/hnCountsCoarse_%s_%d", iter->name.Data(), fNRun))->Clone();
+
+    for(int i=0;i< fNTimeBins; i++ ){
+      (iter->valueSum)[i] = hvalueSum->GetBinContent(i+1);
+      (iter->valueSquareSum)[i] = hvalueSquareSum->GetBinContent(i+1);
+      (iter->nCounts)[i] = hnCounts->GetBinContent(i+1);
+    }
+    for(int i=0;i< fNTimeBinsCoarse; i++ ){
+      (iter->valueSumCoarse)[i] = hvalueSumCoarse->GetBinContent(i+1);
+      (iter->valueSquareSumCoarse)[i] = hvalueSquareSumCoarse->GetBinContent(i+1);
+      (iter->nCountsCoarse)[i] = hnCountsCoarse->GetBinContent(i+1);
+    }
+
+    TGraphErrors *obsplotMean = new TGraphErrors();
+    TGraph *obsplotSigma = new TGraph();
+    TGraphErrors *obsplotCoarseMean = new TGraphErrors();
+    TGraph *obsplotCoarseSigma = new TGraph();
+
+    //poi SaveTGraph con 
+
+
+    for(int i =0; i< fNTimeBins; i++ ){
+        if(iter->nCounts[i]<2) continue;
+        Double_t meanVal = (iter->valueSum)[i]/(iter->nCounts)[i];
+        int NpointMean = obsplotMean->GetN();
+        int NpointSigma = obsplotSigma->GetN(); 
+        obsplotMean->SetPoint(NpointMean, i*fTimeBin,meanVal); //remember when used to shift by timestamp     
+        Double_t sigmaVal = TMath::Sqrt((((iter->valueSquareSum)[i]/(iter->nCounts)[i])-(meanVal*meanVal))/((iter->nCounts)[i]-1.));
+        obsplotSigma->SetPoint(NpointSigma, i*fTimeBin,sigmaVal);
+        obsplotMean->SetPointError(NpointMean, 0.5*fTimeBin ,sigmaVal);
+
+    }
+
+
+    for(int i =0; i< fNTimeBinsCoarse; i++ ){
+          if(iter->nCountsCoarse[i]<2) continue;
+          int NpointMean = obsplotCoarseMean->GetN();
+          int NpointSigma = obsplotCoarseSigma->GetN(); 
+          Double_t meanVal = (iter->valueSumCoarse)[i]/(iter->nCountsCoarse)[i];
+          obsplotCoarseMean->SetPoint(NpointMean, i*fTimeBinCoarse,meanVal); //remember when used to shift by timestamp     
+          
+          Double_t sigmaVal = TMath::Sqrt((((iter->valueSquareSumCoarse)[i]/(iter->nCountsCoarse)[i])-(meanVal*meanVal))/((iter->nCountsCoarse)[i]-1.));
+          obsplotCoarseSigma->SetPoint(NpointSigma, i*fTimeBinCoarse,sigmaVal);
+          obsplotCoarseMean->SetPointError(NpointMean, 0.5* fTimeBin,sigmaVal);
+          
+
+      }
+    obsplotMean->SetName(Form("gMean_%s", (iter->name).Data()));
+    obsplotCoarseMean->SetName(Form("gMeanCoarse_%s", (iter->name).Data()));
+    obsplotSigma->SetName(Form("gSigma_%s", (iter->name).Data()));
+    obsplotCoarseSigma->SetName(Form("gSigmaCoarse_%s", (iter->name).Data()));
+
+    fHS->SaveTGraphList("DataQuality", obsplotMean->GetName(),  obsplotMean);
+    fHS->SaveTGraphList("DataQuality", obsplotCoarseMean->GetName(),obsplotCoarseMean );
+    fHS->SaveTGraphList("DataQuality", obsplotSigma->GetName(), obsplotSigma);
+    fHS->SaveTGraphList("DataQuality", obsplotCoarseSigma->GetName(),obsplotCoarseSigma);
+    if((iter->name).CompareTo("POT")==0){ 
+      gPoTLGAll = (TGraphErrors*) obsplotMean->Clone();
+      gPoTLG = (TGraphErrors*) obsplotCoarseMean->Clone();
+    }
+    else if((iter->name).CompareTo("POTTarg")==0){
+      gPoTTarget = (TGraphErrors*) obsplotCoarseMean->Clone();
+    }else if((iter->name).CompareTo("TargXCharge")==0) {
+      gXChargeAll = (TGraphErrors*) obsplotMean->Clone();
+
+      gXCharge = (TGraphErrors*) obsplotCoarseMean->Clone();
+      }
+    }
+    if(gPoTLG->GetN()== gPoTTarget->GetN()){
+        for(int i =0; i<gPoTLG->GetN(); i++){
+          Double_t XLG,YLG, XTa, YTa, XCha, YCha;
+          Double_t  XChaAll, YChaAll, XLGAll,YLGAll;
+          gPoTLG->GetPoint(i, XLG, YLG);
+          gPoTLGAll->GetPoint(i, XLGAll, YLGAll);
+          gPoTTarget->GetPoint(i, XTa, YTa);
+          gPoTratio->SetPoint(i,XLG, YTa/YLG);
+          gXCharge->GetPoint(i, XCha, YCha);
+          gXChargeAll->GetPoint(i, XChaAll, YChaAll);
+
+          gPoTratioCharge->SetPoint(i,XLG, YCha/YLG);
+          gPoTratioChargeAll->SetPoint(i,XLGAll, YChaAll/YLGAll);
+
+
+        }
+    }
+    fHS->SaveTGraphList("DataQuality", gPoTratio->GetName(),gPoTratio);
+    fHS->SaveTGraphList("DataQuality", gPoTratioCharge->GetName(),gPoTratioCharge);
+    fHS->SaveTGraphList("DataQuality", gPoTratioChargeAll->GetName(),gPoTratioChargeAll);
+    
   }
-  TGraph* nPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vNPoT[0]);
-  nPotVsTime->SetMarkerStyle(21);
-  fHS->SaveTGraphList("DataQuality","NPotVsTime",nPotVsTime);
-
-  //  TGraph* TotPotVsTime = new TGraph((Int_t)vNPoT.size(),&vNEvt[0],&vTotPoT[0]);
-  //  fHS->SaveTGraphList("DataQuality","TotPotVsTime",TotPotVsTime);
-
-  TGraph* TotPotVsRun = new TGraph((Int_t)vNPoTRun.size(),&vNRun[0],&vNPoTRun[0]);
-  fHS->SaveTGraphList("DataQuality","TotPotVsRun",TotPotVsRun);
-
-  std::cout<<"TotPot        = "<<TotPoT<<std::endl;
-  std::cout<<"TotPotPhys    = "<<TotPoTPhys<<std::endl;
-  std::cout<<"TotPotNoPhys  = "<<TotPoTNoPhys<<std::endl;
-  std::cout<<"TotPot Over30 = "<<TotPoTOver30K<<std::endl;
-  std::cout<<"TotPot Over5  = "<<TotPoTOver5K<<std::endl;
-
   if (fVerbose) printf("---> Finalizing DataQuality\n");
   return true;
 }

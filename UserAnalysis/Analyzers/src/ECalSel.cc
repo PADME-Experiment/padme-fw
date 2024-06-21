@@ -128,7 +128,11 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
 
 Double_t ECalSel::NPoTLGCorr(){
   Double_t NPotCorr = fNPoTAnalysis->GetNPoTLGCorr();
-  if(fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel", "NPoTLGCorr", NPotCorr,1.);
+  Double_t NPotNoCorr = fNPoTAnalysis->GetNPoTLG();
+  if(fFillLocalHistograms){
+     fhSvcVal->FillHistoList("ECalSel", "NPoTLGCorr", NPotCorr,1.);
+     fhSvcVal->FillHistoList("ECalSel", "NPoTLG_NO_Corr", NPotNoCorr,1.);
+     }
   return NPotCorr;
 }
 
@@ -919,12 +923,12 @@ Int_t ECalSel::TwoClusSel(){
 
   effweightClu1 = EffRatio->Eval(cluEnergy[0]);//*MCTrueDeno->Eval(cluEnergy[0]); //*GlobalTagDenoCorr;
   effweightClu2 = EffRatio->Eval(cluEnergy[1]);//*MCTrueDeno->Eval(cluEnergy[1]); //*GlobalTagDenoCorr;
+  
 
   if(fFillLocalHistograms){
-    if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
-    fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2", cluEnergy[0]+ cluEnergy[1], effweightClu1*effweightClu2);
-    }else{
     fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2", cluEnergy[0]+ cluEnergy[1]);
+    if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
+    fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2_corr", cluEnergy[0]+ cluEnergy[1], effweightClu1*effweightClu2);
     }
     fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_Theta1VsTheta2",labMomentaCM[0].Vect().Theta(), labMomentaCM[1].Vect().Theta() );
     fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_ThetaSumVsDeltaTheta",DeltaTheta, labMomentaCM[0].Vect().Theta()-labMomentaCM[1].Vect().Theta());
@@ -1235,6 +1239,7 @@ Bool_t ECalSel::InitHistos()
   Int_t NBinsPOT= (Max_POT-Min_POT)/10; 
 
   fhSvcVal->BookHistoList("ECalSel", "NPoTLGCorr", NBinsPOT, Min_POT, Max_POT);
+  fhSvcVal->BookHistoList("ECalSel", "NPoTLG_NO_Corr", NBinsPOT, Min_POT, Max_POT);
   fhSvcVal->BookHistoList("ECalSel", "EnSignalBhabha", 100, 0., 300.);
 
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_DrVsDtAll", 800, -400,400, 200, 0, 600.);
@@ -1275,6 +1280,7 @@ Bool_t ECalSel::InitHistos()
 
   fhSvcVal->BookHistoList("ECalSel","NumberOfECalCluPairs", 5,0.,5.);
   fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2", 300,0.,600.);
+  fhSvcVal->BookHistoList("ECalSel","ECal_SC_E1plusE2_corr", 300,0.,600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_E1E2VsMT", 800, -400,400, 300, 0.,600.);
   fhSvcVal->BookHisto2List("ECalSel","ECal_SC_E1E2VsDT", 300, -15,15, 300, 0.,600.);
   fhSvcVal->BookHistoList("ECalSel","ECal_SC_DT", 300, -15,15);

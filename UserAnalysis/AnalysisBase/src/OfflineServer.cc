@@ -15,8 +15,8 @@ OfflineServer::OfflineServer()
 {
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
-  std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT_periods.txt");
-  std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT_periods.txt" << std::endl;
+  std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT_periods_lgcorr.txt");
+  std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT_period_lgcorr.txt" << std::endl;
   //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
     std::cout << "Error: file could not be opened" << std::endl;

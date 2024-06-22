@@ -4,6 +4,7 @@
 #include <TRandom3.h>
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "GeneralInfo.hh"
 #include "HistoSvc.hh"
 #include "TH1D.h"
 
@@ -34,6 +35,7 @@ private:
   Int_t fVerbose;
 
   PadmeAnalysisEvent* fEvent;
+  GeneralInfo* fGeneralInfo;
 
   utl::ConfigParser* fCfgParser;
   Bool_t NewCalib = kFALSE; //---> Enables the creation of a new Calibration File 

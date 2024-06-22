@@ -179,6 +179,11 @@ Bool_t DataQuality::Finalize(){
 // determini i criteri
 // determini i periodi "meno buoni", "cattivi": start e stop time e runnumber
 // dobbiamo passare i periodi a DataQuality da usare quando dataquality e' in flagmode, forse in un file di testo formattato 
+if(fGeneralInfo->isMC()){
+  std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
+  return false;
+} 
+
 fNRun = fGeneralInfo->GetRunNumberFromDB();
 if(!fHistoMode){
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){

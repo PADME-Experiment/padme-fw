@@ -92,18 +92,34 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
   fYMax = 21.*(14+0.5);
   fYW = 21; // mm
   fNYBins = (fYMax-fYMin)/fYW;
-
-  if(fCfgParser->HasConfig("ECAL", "EfficiencyMC_File") && fCfgParser->HasConfig("ECAL", "EfficiencyMC_File")){
+  fApplyCorrection = true; 
+  if(fCfgParser->HasConfig("ECAL", "ApplyEfficiencyCorrection") && fCfgParser->HasConfig("ECAL", "EffCorrectionPath")){
+    TString cfgvalue = TString(fCfgParser->GetSingleArg("ECAL","ApplyEfficiencyCorrection"));
+    if(cfgvalue.CompareTo("1")==0) fApplyCorrection = true;
+    else fApplyCorrection = false;
+  }
+  
+  if(fApplyCorrection){
     //TGraphErrors *MCTPEff;
     //TGraphErrors *DATATPEff;
     //TGraphErrors *MCTrueDeno;
+    TString EffCorrectionPath = TString(fCfgParser->GetSingleArg("ECAL", "EffCorrectionPath"));
     Double_t GlobalTagDenoCorr = 0.1;
-
-    TFile *fileMCTP = new TFile(TString(fCfgParser->GetSingleArg("ECAL","EfficiencyMC_File")));
+    TString MCFileName = Form("%s/FitsliceOut_MC_full_%1f.root", EffCorrectionPath.Data(), (double)fGeneralInfo->GetPeriod());
+    TString DATAFileName = Form("%s/FitsliceOut_DATA_full_%1f.root",  EffCorrectionPath.Data(), (double) fGeneralInfo->GetPeriod());
+    TFile *fileMCTP = new TFile(MCFileName.Data());
+    if(!fileMCTP->IsOpen()){
+      std::cout<<"ECalSel *ERROR* File "<<MCFileName.Data()<<" does not exist "<<std::endl;
+      exit(1);
+    }
     MCTPEff = (TGraphErrors*) fileMCTP->Get("FitEffGraphE")->Clone();
     MCTrueDeno = (TGraphErrors*) fileMCTP->Get("ExpTagRatioE")->Clone();
     fileMCTP->Close();
-    TFile *fileDATATP = new TFile(TString(fCfgParser->GetSingleArg("ECAL","EfficiencyDATA_File")));
+    TFile *fileDATATP = new TFile(DATAFileName.Data());
+    if(!fileDATATP->IsOpen()){
+      std::cout<<"ECalSel *ERROR* File "<<DATAFileName.Data()<<" does not exist "<<std::endl;
+      exit(1);
+    }
     DATATPEff = (TGraphErrors*) fileDATATP->Get("FitEffGraphE")->Clone();
     EffRatio = new TGraphErrors(DATATPEff->GetN());
     fileDATATP->Close();
@@ -114,9 +130,8 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent* event, Bool_t fHistoModeVal, TString In
         MCTPEff->GetPoint(i, XMc, YMc);
         EffRatio->SetPoint(i,XDa, GlobalTagDenoCorr*YDa/YMc);
       }
-      // EffRatio->SaveAs("EffRatio.root");
     }else{
-      std::cout<< "Cannot divide two TGraphs with different number of points, weights will be set to 1"<<std::endl;
+      std::cout<< "ECalSel *WARNING* Cannot divide two TGraphs with different number of points, weights will be set to 1"<<std::endl;
     }
   }
 
@@ -382,9 +397,9 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
 
     int icellXTag = double(Xexp/cellSize+0.5) + ncells/2;
     int icellYTag = double(Yexp/cellSize+0.5)+ ncells/2;
-    if(icellXTag==5 && icellYTag==20){
-      std::cout<<"Xexp: "<<Xexp<<" Yexp: "<<Yexp<<" cluEnergy[0]: "<<cluEnergy[0]<<" pg: "<<pg<< "cluPos[0].X(),Y(): "<<cluPos[0].X()<<" , "<<cluPos[0].Y()<<std::endl;
-    }
+    // if(icellXTag==5 && icellYTag==20){
+    //   std::cout<<"Xexp: "<<Xexp<<" Yexp: "<<Yexp<<" cluEnergy[0]: "<<cluEnergy[0]<<" pg: "<<pg<< "cluPos[0].X(),Y(): "<<cluPos[0].X()<<" , "<<cluPos[0].Y()<<std::endl;
+    // }
     
     
     TString processTag;
@@ -425,7 +440,7 @@ Int_t ECalSel::OneClusTagAndProbeSel(){
     
     if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)){
       if(fMCTruthECal->GetVtxFromCluID(h1)<0) {
-        std::cout<<"Tag has no vertex associated"<<std::endl;
+        std::cout<<"**Tag has no vertex associated**"<<std::endl;
         }else{
       TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID(h1));
 
@@ -921,9 +936,10 @@ Int_t ECalSel::TwoClusSel(){
   
   
 
-  effweightClu1 = EffRatio->Eval(cluEnergy[0]);//*MCTrueDeno->Eval(cluEnergy[0]); //*GlobalTagDenoCorr;
-  effweightClu2 = EffRatio->Eval(cluEnergy[1]);//*MCTrueDeno->Eval(cluEnergy[1]); //*GlobalTagDenoCorr;
-  
+  if(fApplyCorrection){
+    effweightClu1 = EffRatio->Eval(cluEnergy[0]);//*MCTrueDeno->Eval(cluEnergy[0]); //*GlobalTagDenoCorr;
+    effweightClu2 = EffRatio->Eval(cluEnergy[1]);//*MCTrueDeno->Eval(cluEnergy[1]); //*GlobalTagDenoCorr;
+  }
 
   if(fFillLocalHistograms){
     fhSvcVal->FillHistoList("ECalSel","ECal_SC_E1plusE2", cluEnergy[0]+ cluEnergy[1]);
@@ -1323,36 +1339,56 @@ Bool_t ECalSel::InitHistos()
 
 Bool_t ECalSel::TagProbeEff_macro(){
   fileIn = new TFile(InputHistofile.Data());
-  if(!fileIn) std::cout<<"File not existing"<<std::endl;
-  std::cout<<"File to analyze: "<< InputHistofile.Data()<<std::endl;
+  if(fileIn->IsOpen()==false){
+  std::cout<<"ECalSel *ERROR *File "<<InputHistofile.Data()<<" does not exist"<<std::endl;
+  exit(1);
+  }
+  std::cout<<"File to analyze for Tag and Probe: "<< InputHistofile.Data()<<std::endl;
   //PhiFullProbe =(TH1D*) fileIn->Get("ECalSel/ECal_TP_DPHIAbs_probe")->Clone();
   PhiFullProbe =(TH1D*) fileIn->Get("ECalSel/ECal_TP_DPHIAbs_probe")->Clone();
   TFile *fileNoTarget = new TFile("run385.root");
+  if(fileNoTarget->IsOpen()==false){
+  std::cout<<"ECalSel *ERROR *File "<<InputHistofile.Data()<<" does not exist"<<std::endl;
+  exit(1);
+  }
   TH2D *notargetbkg = (TH2D*)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone();  
   notargetbkg->Scale(15e9/(2.366e6*3210)); 
   TH2D *notargetbkg_probe = (TH2D*)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();  
   notargetbkg_probe->Scale(15e9/(2.366e6*3210)); 
-  
+  TH1D *sliceNoTarg;
   for(int i=0; i<NSlicesE; i++ ){
-      TH1D *sliceNoTarg= (TH1D *) fileNoTarget->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
-      sliceNoTarg->Scale(15e9/(2.366e6*3210)); 
+      
+      fileIn->cd();
+      std::cout<<"In slice "<<i<<std::endl;
+
       TH1D *slice = (TH1D*) fileIn->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
-      slice->Add(sliceNoTarg);
+      if(fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") ==0 && fGeneralInfo->isMC() == true){
+        fileNoTarget->cd();
+        sliceNoTarg=  (TH1D *) fileNoTarget->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
+        sliceNoTarg->Scale(15e9/(2.366e6*3210)); 
+        slice->Add(sliceNoTarg);
+      }
+
       PhiFullProbeSlice.push_back(slice);
       if(!PhiFullProbeSlice[i]) std::cout<<"PhiFullProbeSlice["<<i<<"] non c'è "<<std::endl;
   }
-  
+  fileNoTarget->Close();
 
+  fileIn->cd();
 
   //EofTag = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone(); 
   EofTag = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone(); 
+  if(fGeneralInfo->isMC() == true){
   EofeIoni = (TH2D*) fileIn->Get("ECalSelMCTruth/ECal_TP_DEVsE_NOcut_tag_eIoni")->Clone(); 
   EofAnnihil = (TH2D*) fileIn->Get("ECalSelMCTruth/ECal_TP_DEVsE_NOcut_tag_annihil")->Clone(); 
+  }
   //EofProbe_cut = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone(); 
   EofProbe_cut = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone(); 
-  EofTag->Add(notargetbkg);
-  EofProbe_cut->Add(notargetbkg_probe);
-  MCTagProbeEff(); //wold be better if this one is called only if the fileIn is a MC prod -->but is tricky
+  if(fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") ==0 && fGeneralInfo->isMC() == true){
+    EofTag->Add(notargetbkg);
+    EofProbe_cut->Add(notargetbkg_probe);
+  }
+  //MCTagProbeEff(); //wold be better if this one is called only if the fileIn is a MC prod -->but is tricky
   FitTagProbeEff();
   return true;
 }
@@ -1523,8 +1559,10 @@ Bool_t ECalSel::FitTagProbeEff(){
       double Edown=fGeneralInfo->GetBeamEnergy()-fGeneralInfo->GetEnergyMax();
       double Eup=Edown+spacing;
       TString sliceOutname;
-      
-      sliceOutname = Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/FitsliceOut_%s", InputHistofileName.Data());
+      TString dataType;
+      if(fGeneralInfo->isMC()==true) dataType = "MC";
+      else dataType = "DATA";
+      sliceOutname = Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/FitsliceOut_%s_%s", dataType.Data(), InputHistofileName.Data());
       
       TFile *SliceOut = new TFile(sliceOutname, "recreate");
       std::cout<<"Slice output file: "<<sliceOutname<<std::endl;
@@ -1596,14 +1634,8 @@ Bool_t ECalSel::FitTagProbeEff(){
           Double_t DenTemp =(Double_t) (expGaus->Integral(tpLow,tpHigh))-BkgInt;
           DenE= DenTemp;
           Double_t errDen =  expGaus->GetParError(2);
-          EofeIoni->GetXaxis()->SetRangeUser(Edown,Eup);
-          EofAnnihil->GetXaxis()->SetRangeUser(Edown,Eup);
-          TH1D *eIoniTag =(TH1D*)EofeIoni->ProjectionY();
-          TH1D *AnnihilTag =(TH1D*)EofAnnihil->ProjectionY();
-          eIoniTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
-          AnnihilTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
-          Int_t expectedTags =AnnihilTag->Integral() +eIoniTag->Integral();
 
+         
           
           if(DenE==0 || std::isnan(DenTemp)){
             Eup+=spacing;
@@ -1611,8 +1643,17 @@ Bool_t ECalSel::FitTagProbeEff(){
             std::cout<<"Problem: No data"<<std::endl;
             continue;
           }
-          BkgRatioE->SetPoint(iSlice,EnergyVal,(expectedTags)/DenTemp);
+          if(fGeneralInfo->isMC()== true){
+            EofeIoni->GetXaxis()->SetRangeUser(Edown,Eup);
+            EofAnnihil->GetXaxis()->SetRangeUser(Edown,Eup);
+            TH1D *eIoniTag =(TH1D*)EofeIoni->ProjectionY();
+            TH1D *AnnihilTag =(TH1D*)EofAnnihil->ProjectionY();
+            eIoniTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
+            AnnihilTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
+            Int_t expectedTags =AnnihilTag->Integral() +eIoniTag->Integral();
 
+            BkgRatioE->SetPoint(iSlice,EnergyVal,(expectedTags)/DenTemp);
+          }
 
           //Probe 
 
@@ -1679,10 +1720,11 @@ Bool_t ECalSel::FitTagProbeEff(){
 
           
       }
-
-      BkgRatioE->SetTitle("Ratio Exp Tag ov N Tags  ; E_{beam}-E_{exp-tag} [MeV]; Ratio");
-      BkgRatioE->SetName("ExpTagRatioE");
-      BkgRatioE->Write();
+      if(fGeneralInfo->isMC()== true){
+        BkgRatioE->SetTitle("Ratio Exp Tag ov N Tags  ; E_{beam}-E_{exp-tag} [MeV]; Ratio");
+        BkgRatioE->SetName("ExpTagRatioE");
+        BkgRatioE->Write();
+      }
 
       EffGraphE->SetTitle("Fit EffGraphE; E_{beam}-E_{exp-tag} [MeV]; Efficiency");
       EffGraphE->SetName("FitEffGraphE");
@@ -2050,7 +2092,6 @@ Bool_t ECalSel::FitTagProbeEff(){
 
 
 Bool_t ECalSel::Finalize(){
-  fHistoMode = false;
   if(fHistoMode) TagProbeEff_macro();
   //if(fHistoMode) EvaluateResolutions_macro();
   return true;

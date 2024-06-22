@@ -31,7 +31,6 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fOfflineServerDB = OfflineServer::GetInstance();
   
   fRunOld = -1;
-
   // set global values for each run period
 
   if (trueRunNumber < 50151) {
@@ -96,7 +95,8 @@ Bool_t GeneralInfo::Process(){
   fDBRunNumber==0 ? runID= fRecoEvent->GetRunNumber(): runID=fDBRunNumber;
   //std::cout<<"DBRunNumber: "<<DBRunNumber<<" runID:"<<trueRunNumber<<std::endl;
  
-
+  fisMC = fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
+  
   if (runID != fRunOld) { // update run-level information
     // fBeamMomentum = fOfflineServerDB->getDHSTB01Energy(runID);
     // fIsEnergyAvailable = fOfflineServerDB->isEnergyAvailable(runID);

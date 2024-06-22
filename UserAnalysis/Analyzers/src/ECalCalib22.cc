@@ -21,6 +21,7 @@ ECalCalib22::ECalCalib22(TString cfgFile, Int_t verbose)
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
   fHS = HistoSvc::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fNRun = "";	     
   fCurrentRun=-1.;     
@@ -35,7 +36,6 @@ ECalCalib22::~ECalCalib22(){
 Bool_t ECalCalib22::Init(Bool_t fHistoModeVal, TString InputHistofileVal){
   if (fVerbose) printf("---> Initializing ECalCalib22\n");
   int iChNum=0;
-  
   ifstream InFile("../PadmeReco/config/Calibration/ECalEnergyCalibration_7.dat");
   
   if(!InFile.is_open()) {
@@ -191,17 +191,21 @@ Bool_t ECalCalib22::Process(PadmeAnalysisEvent* event){
 
 
 Bool_t ECalCalib22::Finalize()
-{ Bool_t isMC = true;
-  if (fVerbose) printf("---> Finalizing ECalCalib22\n");
-  if(fHistoMode && isMC==false) ChannelLandauFit();
+{ if (fVerbose) printf("---> Finalizing ECalCalib22\n");
+  if(fHistoMode && fGeneralInfo->isMC()==true){
+  std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
+  return false;
+  } 
+ ChannelLandauFit();
   
   return true;
 }
 
 Bool_t ECalCalib22::ChannelLandauFit(){
-
+  if(fHistoMode==false) return false;
+  
   TFile *InFile = new TFile(InputHistofile.Data());
-  if(!InFile){
+  if(!InFile->IsOpen()){
     std::cout<<InputHistofile.Data()<<" not found--> exiting"<<std::endl;
     exit(1);
   }

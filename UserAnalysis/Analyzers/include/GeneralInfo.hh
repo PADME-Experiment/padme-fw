@@ -73,6 +73,9 @@ public:
   inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;} //default time-energy slope
   inline double GetGlobalBunchTimeStart() const { return fGlobalBunchTimeStart;} // default bunch time start
   inline double GetGlobalBunchTimeLength() const { return fGlobalBunchTimeLength;} // default bunch time length
+  
+  inline Bool_t isMC() const { return fisMC;} // default bunch time length
+
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -142,6 +145,7 @@ private:
   double fRadiusMin;
   double fEnergyMin;
   double fEnergyMax;
+  Bool_t fisMC;
 
 };
 #endif

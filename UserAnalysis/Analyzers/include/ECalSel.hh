@@ -108,7 +108,7 @@ private:
   MCTruthECal* fMCTruthECal;
   NPoTAnalysis* fNPoTAnalysis;
   // general setup
-
+  Bool_t fApplyCorrection;
   bool fFillLocalHistograms;
   bool fFillCalibHistograms;
   Bool_t fHistoMode;

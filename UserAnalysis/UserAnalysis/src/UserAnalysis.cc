@@ -65,10 +65,10 @@ UserAnalysis::~UserAnalysis(){
 //  delete fIs3GAnalysis;
 }
 
-Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t fHistoMode, TString InputHistofile, Int_t DBRunNumber){
+Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString InputHistofile, Int_t DBRunNumber){
   if (event->ETagRecoEvent) fETagHitsAvail = kTRUE; // ETag hits are available
   if (event->ETagRecoCl) fETagClusAvail = kTRUE; // ETag hits are available
-
+  fHistoMode = HistoMode;
 
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
@@ -126,10 +126,10 @@ Bool_t UserAnalysis::Process(){
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fECalCalib->Process(fEvent);
-  fDataQuality->Process();
-
-  fECalCalib22->Process(fEvent);
-
+  if(!(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))){
+    fDataQuality->Process();
+    fECalCalib22->Process(fEvent);
+  }
   fECalSel->Process();
   fECalSel->ProcessForCalib();
   if (fETagHitsAvail) fETagAn->Process();
@@ -185,7 +185,7 @@ Bool_t UserAnalysis::Process(){
       }
     }
   }
-
+  
   return true;
 }
 

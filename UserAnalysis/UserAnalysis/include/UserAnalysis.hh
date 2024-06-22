@@ -34,7 +34,7 @@ public:
 private:
 
   Bool_t InitHistos();
-
+  Bool_t fHistoMode;
   Int_t fVerbose;
 
   PadmeAnalysisEvent* fEvent;
@@ -56,6 +56,7 @@ private:
   MCTruthECal* fMCTruthECal;
   ECalCalib* fECalCalib;
   DataQuality *fDataQuality;
+
 
   bool fETagHitsAvail;
   bool fETagClusAvail;

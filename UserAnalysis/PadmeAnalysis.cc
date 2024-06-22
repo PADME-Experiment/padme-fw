@@ -447,6 +447,9 @@ int main(Int_t argc, char **argv)
       //std::cout<<" I'm processing stupida "<<std::endl;
       UserAn->Process();    
   }
+}else{
+  jevent = fRecoChain->GetEntry(0);
+  UserAn->Process(); 
 }
   
   if (fVerbose) printf("---> Finalizing user analysis\n");

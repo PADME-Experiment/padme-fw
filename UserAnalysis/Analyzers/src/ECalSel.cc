@@ -1820,10 +1820,10 @@ Bool_t ECalSel::FitTagProbeEff(){
       
       std::cout<<"############ Overall Efficiency for FIT:  "<<EffE<<" +/- "<<errEffE<<"############" <<std::endl;    
   
-      ofstream IntegratedEfficiency(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_%s.txt",fNRun.Data()));
+      ofstream IntegratedEfficiency(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_%s_%s", dataType.Data(), fNRun.Data()));
       IntegratedEfficiency<<fGeneralInfo->GetPeriod()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<fGeneralInfo->GetCOG().X()<<"\t"<<fGeneralInfo->GetCOG().Y()<<"\t"<<NumTempAll<<"\t"<<errNumAll<<"\t"<<DenTempAll<<"\t"<<errDenAll<<"\t"<<EffE<<"\t"<<errEffE<<std::endl;
       
-      std::cout<<" Integrated eff in --> /data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_"<<fNRun.Data()<<".txt "<<std::endl;
+      std::cout<<" Integrated eff in --> /data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_"<<dataType.Data()<<"_"<<fNRun.Data()<<".txt "<<std::endl;
 
   
   return true;

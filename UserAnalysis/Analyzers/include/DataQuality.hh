@@ -33,7 +33,6 @@ public:
 
   Int_t GetDataQualityLevel() { return fDataQualityLevel; } //0,1,2 buon, meno buono, cattivo
 
-
 private:
   NPoTAnalysis *fNPoTAnalysis;
   Double_t fTimeBin; // maybe should allow external conf
@@ -45,7 +44,7 @@ private:
   TString fNRunString;
   Bool_t InitHistos(Int_t);
   static DataQuality* fInstance;
-
+  Bool_t fApplyQualityCheck;
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;

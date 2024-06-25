@@ -1,6 +1,7 @@
 #include "DataQuality.hh"
 #include "TGraph.h"
 #include "TString.h"
+#include "TF1.h"
 #include "TMath.h"
 
 
@@ -23,7 +24,10 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fGeneralInfo = GeneralInfo::GetInstance();
   fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
-
+  fApplyQualityCheck = true;
+  if(fCfgParser->HasConfig("GENERAL", "DataQualityLevel")){
+     fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "fDataQualityLevel")).Atoi();
+     } //handling del DataQualityLevel non implementato
   // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
   // e determina la flag per quell'evento in base al tempo  
   fEvent = event;
@@ -77,6 +81,8 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
     fObservables.push_back(obsn);
     
   }
+
+
 
 
   InitHistos(fNRun);
@@ -231,7 +237,7 @@ if(fHistoMode){
   gPoTratioCharge->SetName("gPoTratioCharge");
   TGraphErrors *gPoTratioChargeAll = new TGraphErrors();
   gPoTratioChargeAll->SetName("gPoTratioChargeAll");
- 
+  TF1 *p0fit = new TF1("p0fit", "pol0");
 
   TFile *fileIn = new TFile(InputHistofile.Data());
   if(!fileIn) std::cout<<"File not existing"<<std::endl;
@@ -288,7 +294,13 @@ if(fHistoMode){
           obsplotCoarseSigma->SetPoint(NpointSigma, i*fTimeBinCoarse,sigmaVal);
           obsplotCoarseMean->SetPointError(NpointMean, 0.5* fTimeBin,sigmaVal);
           
-
+        if((iter->name).CompareTo("ECalHitOverPOT")==0){
+          obsplotMean->Fit(p0fit, "EMQ");
+          Double_t p0Val = p0fit->GetParameter(0);
+          Double_t p0sigma = p0fit->GetParError(0)*p0fit->GetChisquare()/(p0fit->GetNDF()*1.1);
+          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%s.txt",fNRunString.Data())); //could be changed to only one file opening ad adding a new line with the new run number
+          fitresults<<fNRunString.Data()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
+        }
       }
     obsplotMean->SetName(Form("gMean_%s", (iter->name).Data()));
     obsplotCoarseMean->SetName(Form("gMeanCoarse_%s", (iter->name).Data()));
@@ -332,6 +344,10 @@ if(fHistoMode){
     fHS->SaveTGraphList("DataQuality", gPoTratioCharge->GetName(),gPoTratioCharge);
     fHS->SaveTGraphList("DataQuality", gPoTratioChargeAll->GetName(),gPoTratioChargeAll);
     
+    //fare fittino, salva P0 e errP0 scala con Chi2
+  //flag 0 singlolo periodo vicino al p0
+  //flag 1 singlolo periodo fuori da 5 sigma
+
   }
   if (fVerbose) printf("---> Finalizing DataQuality\n");
   return true;

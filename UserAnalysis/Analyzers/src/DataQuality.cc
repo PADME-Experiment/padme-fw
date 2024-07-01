@@ -26,7 +26,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fApplyQualityCheck = true;
   if(fCfgParser->HasConfig("GENERAL", "DataQualityLevel")){
-     fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "fDataQualityLevel")).Atoi();
+     fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "DataQualityLevel")).Atoi();
      } //handling del DataQualityLevel non implementato
   // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
   // e determina la flag per quell'evento in base al tempo  

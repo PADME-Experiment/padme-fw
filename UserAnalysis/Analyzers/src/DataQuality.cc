@@ -100,17 +100,19 @@ Bool_t DataQuality::InitHistos(Int_t nRun){
 
 Bool_t DataQuality::Process(){
 
+  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
+  if(trigMask & (1 << 0)) {
   // protection: should run on data only
   // riempire i valori delle 5 osservabili
   // prendere il tempo dell'evento e calcolare in che bin temporale cadi x 2 (normale e coarse)
   // incrementare gli array sum, sumsquare, nCounts
   // il codice sotto e' vecchio
-
-  long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime();
+  long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime().GetSec();
   int TimeBinVal =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBin;
+  // if(TMath::Abs(TimeBinVal-28900)<1000) std::cout<<"LOOK HERE"<<std::endl;
   int TimeBinValCoarse =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBinCoarse;
   if(TimeBinVal>=fNTimeBins || TimeBinVal<0){
-    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<std::endl;
+    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<" fTimeStamp: "<<fTimeStamp<<std::endl;
     return false;
   }
   if(TimeBinValCoarse>=fNTimeBinsCoarse || TimeBinValCoarse<0){
@@ -160,6 +162,17 @@ Bool_t DataQuality::Process(){
       std::cout<<" DataQuality ** WARNING ** The "<<(iter->name).Data() << " observable is not implemented"<<std::endl;
     }
     
+    // if((iter->name).CompareTo("ECalHitOverPOT")==0 && ((iter->valueSum)[TimeBinVal]+Value)<-4 && (iter->valueSum)[TimeBinVal]>=0){
+    //  std::cout<<"LOOK HERE"<<std::endl;
+    //  std::cout<<"TimeBinVal: "<<TimeBinVal<<" (iter->valueSum)[TimeBinVal]: "<<(iter->valueSum)[TimeBinVal]<<" Value sum: "<<(iter->valueSum)[TimeBinVal]+Value<<std::endl;
+    // std::cout<<"TrigMask:"<<fEvent->RecoEvent->GetTriggerMask()<< "LGCorr: "<<fNPoTAnalysis->GetNPoTLGCorr()<<std::endl;
+    // for(int iHit = 0;iHit <fEvent->ECalRecoEvent->GetNHits() ; iHit++) {
+    //     double HitE = fEvent->ECalRecoEvent->Hit(iHit)->GetEnergy();
+    //     std::cout<<iHit<<"HitE"<<HitE<<std::endl;
+    //   }
+    
+    // }
+    
     (iter->valueSum)[TimeBinVal] += Value;
     (iter->valueSquareSum)[TimeBinVal] += (Value*Value);
     (iter->valueSumCoarse)[TimeBinValCoarse] += (Value);
@@ -167,6 +180,7 @@ Bool_t DataQuality::Process(){
     (iter->nCounts)[TimeBinVal]++;
     (iter->nCountsCoarse)[TimeBinValCoarse]++;
 
+  }
   }
 
   return true;
@@ -293,14 +307,26 @@ if(fHistoMode){
           Double_t sigmaVal = TMath::Sqrt((((iter->valueSquareSumCoarse)[i]/(iter->nCountsCoarse)[i])-(meanVal*meanVal))/((iter->nCountsCoarse)[i]-1.));
           obsplotCoarseSigma->SetPoint(NpointSigma, i*fTimeBinCoarse,sigmaVal);
           obsplotCoarseMean->SetPointError(NpointMean, 0.5* fTimeBin,sigmaVal);
-          
+    }
         if((iter->name).CompareTo("ECalHitOverPOT")==0){
+          Int_t n3sigma = 0;
+          Int_t n5sigma = 0;
+          Int_t nbad = 0;
           obsplotMean->Fit(p0fit, "EMQ");
           Double_t p0Val = p0fit->GetParameter(0);
-          Double_t p0sigma = p0fit->GetParError(0)*p0fit->GetChisquare()/(p0fit->GetNDF()*1.1);
-          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%s.txt",fNRunString.Data())); //could be changed to only one file opening ad adding a new line with the new run number
+          Double_t p0sigma = p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
+          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%d.txt",fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
           fitresults<<fNRunString.Data()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
-        }
+          for(int ip =0; ip<obsplotMean->GetN(); ip++){
+            double yval,xval;
+            obsplotMean->GetPoint(ip,xval,yval);
+            if(TMath::Abs(yval-p0Val)<=3*p0sigma){
+              n3sigma++;
+            }else if(TMath::Abs(yval-p0Val)>3*p0sigma && TMath::Abs(yval-p0Val)<=5*p0sigma){
+              n5sigma++;
+            }else nbad++;
+          }
+          std::cout<<"N points: "<<obsplotMean->GetN()<<" N 3 sigma: "<<n3sigma<<" N 5 sigma: "<<n5sigma<<" N bad: "<<nbad<<std::endl;
       }
     obsplotMean->SetName(Form("gMean_%s", (iter->name).Data()));
     obsplotCoarseMean->SetName(Form("gMeanCoarse_%s", (iter->name).Data()));
@@ -333,7 +359,7 @@ if(fHistoMode){
           gPoTratio->SetPoint(i,XLG, YTa/YLG);
           gXCharge->GetPoint(i, XCha, YCha);
           gXChargeAll->GetPoint(i, XChaAll, YChaAll);
-
+          //sistemare deno =0
           gPoTratioCharge->SetPoint(i,XLG, YCha/YLG);
           gPoTratioChargeAll->SetPoint(i,XLGAll, YChaAll/YLGAll);
 

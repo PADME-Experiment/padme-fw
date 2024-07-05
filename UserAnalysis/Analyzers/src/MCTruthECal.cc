@@ -226,10 +226,9 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           }else{
             fHS->FillHistoList("MCTruthECal","ProcessID",3.,1.);	
           } 
-      
-
-      //pcleOut, x e y all'ecal 
-      
+          
+      //pcleOut, x e y all'ecal
+      //loop on vtx pcle out
       for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
 
           TMCParticle* mcOPart = mcVtx->ParticleOut(iO);

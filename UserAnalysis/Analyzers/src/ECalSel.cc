@@ -1340,32 +1340,31 @@ Bool_t ECalSel::InitHistos()
 Bool_t ECalSel::TagProbeEff_macro(){
   fileIn = new TFile(InputHistofile.Data());
   if(fileIn->IsOpen()==false){
-  std::cout<<"ECalSel *ERROR *File "<<InputHistofile.Data()<<" does not exist"<<std::endl;
+  std::cout<<"ECalSel-TagProbeEff_macro *ERROR *File "<<InputHistofile.Data()<<" does not exist"<<std::endl;
   exit(1);
   }
   std::cout<<"File to analyze for Tag and Probe: "<< InputHistofile.Data()<<std::endl;
   //PhiFullProbe =(TH1D*) fileIn->Get("ECalSel/ECal_TP_DPHIAbs_probe")->Clone();
   PhiFullProbe =(TH1D*) fileIn->Get("ECalSel/ECal_TP_DPHIAbs_probe")->Clone();
+  TH1D* NPoTforMC = (TH1D*) fileIn->Get("NPoTAnalysis/NPoT")->Clone();
   TFile *fileNoTarget = new TFile("run385.root");
   if(fileNoTarget->IsOpen()==false){
-  std::cout<<"ECalSel *ERROR *File "<<InputHistofile.Data()<<" does not exist"<<std::endl;
+  std::cout<<"ECalSel-TagProbeEff_macro *ERROR *File "<<"run385.root"<<" does not exist"<<std::endl;
   exit(1);
   }
   TH2D *notargetbkg = (TH2D*)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone();  
-  notargetbkg->Scale(15e9/(2.366e6*3210)); 
+  notargetbkg->Scale( NPoTforMC->GetEntries()*3000 /(2.368e6*5287)); //da rifare  
   TH2D *notargetbkg_probe = (TH2D*)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();  
-  notargetbkg_probe->Scale(15e9/(2.366e6*3210)); 
+  notargetbkg_probe->Scale(NPoTforMC->GetEntries()*3000/(2.368e6*5287)); //
   TH1D *sliceNoTarg;
   for(int i=0; i<NSlicesE; i++ ){
-      
       fileIn->cd();
       std::cout<<"In slice "<<i<<std::endl;
-
       TH1D *slice = (TH1D*) fileIn->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
       if(fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") ==0 && fGeneralInfo->isMC() == true){
         fileNoTarget->cd();
         sliceNoTarg=  (TH1D *) fileNoTarget->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
-        sliceNoTarg->Scale(15e9/(2.366e6*3210)); 
+        sliceNoTarg->Scale(NPoTforMC->GetEntries()*3000/(2.368e6*5287)); 
         slice->Add(sliceNoTarg);
       }
 
@@ -1379,6 +1378,7 @@ Bool_t ECalSel::TagProbeEff_macro(){
   //EofTag = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone(); 
   EofTag = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone(); 
   if(fGeneralInfo->isMC() == true){
+  std::cout<<"EofeIoni getter"<<std::endl;
   EofeIoni = (TH2D*) fileIn->Get("ECalSelMCTruth/ECal_TP_DEVsE_NOcut_tag_eIoni")->Clone(); 
   EofAnnihil = (TH2D*) fileIn->Get("ECalSelMCTruth/ECal_TP_DEVsE_NOcut_tag_annihil")->Clone(); 
   }
@@ -1394,8 +1394,6 @@ Bool_t ECalSel::TagProbeEff_macro(){
 }
 
 
-
-
 Bool_t ECalSel::MCTagProbeEff(){
       Double_t NumE=0.;
       Double_t DenE=0.;
@@ -1404,12 +1402,9 @@ Bool_t ECalSel::MCTagProbeEff(){
       // // Double_t DenPhi[NSlicesPhi]={0.};
       // // Double_t EffPhi[NSlicesPhi]={0.};
       Double_t EnergyVal=0.;
-
-
       double Edown=fGeneralInfo->GetBeamEnergy()-fGeneralInfo->GetEnergyMax();
       double Eup=Edown+spacing;
       TString sliceOutname;
-      
       sliceOutname = Form("/data9Vd1/padme/dimeco/TagAndProbeOut/MCout/MCsliceOut_%s", InputHistofileName.Data());
       
       TFile *SliceOut = new TFile(sliceOutname, "recreate");
@@ -1494,7 +1489,6 @@ Bool_t ECalSel::MCTagProbeEff(){
       EffGraphE->SetName("MCEffGraphE");
       EffGraphE->Write();
 
-
       //overall efficiency evaluation
 
       EofTag->GetXaxis()->UnZoom();
@@ -1572,6 +1566,7 @@ Bool_t ECalSel::FitTagProbeEff(){
       TGraphErrors *BkgRatioE = new TGraphErrors(NSlicesE);
 
       for(Int_t iSlice=0; iSlice<NSlicesE; iSlice++){
+
           //Tag
           std::cout<<"Edown: "<<Edown<<" Eup: "<<Eup<<std::endl;
           EnergyVal = (Edown+Eup)/2;
@@ -1586,13 +1581,15 @@ Bool_t ECalSel::FitTagProbeEff(){
             continue;
           }
           TF1 *exponential = new TF1("exponential", "expo", -60,60); 
+
           exponential->SetParameter(0, 5);
           exponential->SetParameter(1, -1e-2);
-
-          TFitResultPtr ExpFitResults= ProYTag->Fit(exponential,"RESQ");
+         
+          TFitResultPtr ExpFitResults= ProYTag->Fit(exponential,"RESQNO");
           //TF1 *expGaus = new TF1("expGaus", "expo+gausn(2)", -60,60);
           // (0.5*(1.+TMath::Erf((15.-[3])/([4]*TMath::Sqrt(2.))))-0.5*(1.+TMath::Erf(([3]+15.)/([4]*TMath::Sqrt(2.)))))
           TF1 *expGaus = new TF1("expGaus", Form("expo+gausn(2)/(0.5*(1.+TMath::Erf((%f-[3])/([4]*TMath::Sqrt(2.))))-0.5*(1.+TMath::Erf((-[3]+%f)/([4]*TMath::Sqrt(2.)))))",tpHigh, tpLow), -50,50); // +[2]*exp(((x-[3])/[4])*((x-[3])/[4]))
+         
           expGaus->SetParameter(0, exponential->GetParameter(0));
           expGaus->SetParameter(1, exponential->GetParameter(1));          
           // expGaus->SetParameter(2, 1000);
@@ -1629,30 +1626,31 @@ Bool_t ECalSel::FitTagProbeEff(){
           expBkg->SetParameter(1, expGaus->GetParameter(1));
           
           Double_t BkgInt = (Double_t) expBkg->Integral(tpLow,tpHigh);
-
-          
           Double_t DenTemp =(Double_t) (expGaus->Integral(tpLow,tpHigh))-BkgInt;
           DenE= DenTemp;
           Double_t errDen =  expGaus->GetParError(2);
 
-         
-          
           if(DenE==0 || std::isnan(DenTemp)){
             Eup+=spacing;
             Edown+=spacing;
             std::cout<<"Problem: No data"<<std::endl;
             continue;
           }
-          if(fGeneralInfo->isMC()== true){
+
+          std::cout<<"About to do ratios "<<std::endl;
+
+          if(fGeneralInfo->isMC() == true){ //not working allright (don't know why)
+            
+            std::cout<<"Doing ratios "<<std::endl;
             EofeIoni->GetXaxis()->SetRangeUser(Edown,Eup);
             EofAnnihil->GetXaxis()->SetRangeUser(Edown,Eup);
-            TH1D *eIoniTag =(TH1D*)EofeIoni->ProjectionY();
-            TH1D *AnnihilTag =(TH1D*)EofAnnihil->ProjectionY();
+            TH1D *eIoniTag =(TH1D*) EofeIoni->ProjectionY();
+            TH1D *AnnihilTag =(TH1D*) EofAnnihil->ProjectionY();
             eIoniTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
             AnnihilTag->GetXaxis()->SetRangeUser(tpLow,tpHigh);
             Int_t expectedTags =AnnihilTag->Integral() +eIoniTag->Integral();
-
             BkgRatioE->SetPoint(iSlice,EnergyVal,(expectedTags)/DenTemp);
+         
           }
 
           //Probe 
@@ -1743,7 +1741,7 @@ Bool_t ECalSel::FitTagProbeEff(){
       exponential->SetParameter(0, 5);
       exponential->SetParameter(1, -1e-2);
 
-      TFitResultPtr ExpFitResults= ProYTagAll->Fit(exponential,"RESQ");
+      TFitResultPtr ExpFitResults= ProYTagAll->Fit(exponential,"RESQNO");
       //TF1 *expGaus = new TF1("expGaus", "expo+gausn(2)", -60,60);
       // (0.5*(1.+TMath::Erf((15.-[3])/([4]*TMath::Sqrt(2.))))-0.5*(1.+TMath::Erf(([3]+15.)/([4]*TMath::Sqrt(2.)))))
       TF1 *expGaus = new TF1("expGaus", Form("expo+gausn(2)/(0.5*(1.+TMath::Erf((%f-[3])/([4]*TMath::Sqrt(2.))))-0.5*(1.+TMath::Erf((-[3]+%f)/([4]*TMath::Sqrt(2.)))))",tpHigh, tpLow), -50,50); // +[2]*exp(((x-[3])/[4])*((x-[3])/[4]))

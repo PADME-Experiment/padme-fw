@@ -42,7 +42,7 @@ Bool_t NPoTAnalysis::InitHistos(){
   cout<<" Creating Hystograms for Run "<<fNRun<<" "<<endl;  
 
   Int_t Min_POT=-500;
-  Int_t Max_POT=10500;
+  Int_t Max_POT=20500;
   Int_t NBinsPOT= (Max_POT-Min_POT)/10; //every 10 POT 
 
   // Target related quantities 

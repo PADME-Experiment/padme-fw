@@ -1251,7 +1251,7 @@ Bool_t ECalSel::InitHistos()
 
   // two-cluster sel
   Int_t Min_POT=-500;
-  Int_t Max_POT=10500;
+  Int_t Max_POT=20500;
   Int_t NBinsPOT= (Max_POT-Min_POT)/10; 
 
   fhSvcVal->BookHistoList("ECalSel", "NPoTLGCorr", NBinsPOT, Min_POT, Max_POT);

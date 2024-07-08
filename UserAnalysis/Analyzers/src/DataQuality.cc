@@ -46,7 +46,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   
 //  }
   // se e' readmode fa quello che c'e' sotto
-  fSafety = 1000;
+  fSafety = 2000;
   fTimeBin = 5.; // sec
   fTimeBinCoarse = 120.; // sec
 
@@ -112,7 +112,7 @@ Bool_t DataQuality::Process(){
   // if(TMath::Abs(TimeBinVal-28900)<1000) std::cout<<"LOOK HERE"<<std::endl;
   int TimeBinValCoarse =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBinCoarse;
   if(TimeBinVal>=fNTimeBins || TimeBinVal<0){
-    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<" fTimeStamp: "<<fTimeStamp<<std::endl;
+    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<" fTimeStamp: "<<fTimeStamp<<" Delta Start: "<<fTimeStamp-fGeneralInfo->GetRunStartTime()<< " Delta Stop: "<<fTimeStamp-fGeneralInfo->GetRunStopTime()<<std::endl;
     return false;
   }
   if(TimeBinValCoarse>=fNTimeBinsCoarse || TimeBinValCoarse<0){

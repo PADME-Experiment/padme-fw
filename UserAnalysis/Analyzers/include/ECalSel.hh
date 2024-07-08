@@ -75,6 +75,7 @@ public:
   Bool_t TagProbeEff();
   Bool_t MCTagProbeEff();
   Bool_t FitTagProbeEff();
+  Bool_t FitTagProbeEffvsPhi();
   //Bool_t FitTagProbeEff_notarg();
   Bool_t TagProbeEff_macro();
   Bool_t EvaluateResolutions();

@@ -228,41 +228,41 @@ bool ECalMLReconstruction::TriggerToBeSkipped()
 void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 {
   //// This method differ from  PadmeVReconstruction::BuildHits(TRawEvent* rawEv) only because it attach board and elementID to the DigitizerChannelEcal ====>>> if ChannelVReco woudl store bd and element id, this assignemnt might be don in the base reco class. 
-  // FILE* coeffFile = fopen("../../../PadmeAnalysis/run50384_CalibCoefficients.dat", "r");
-  // FILE* constFile = fopen("../../../PadmeAnalysis/run50384_CalibConstants.dat", "r");
-  FILE* calibFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuons.dat", "r");
-  FILE* calibFileECal = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuonsECal.dat", "r");
+  // FILE* coeffFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibCoefficients21.dat", "r");
+  // FILE* constFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibConstants21.dat", "r");
+  //FILE* calibFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuons.dat", "r");
+  // FILE* calibFileECal = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuonsECal.dat", "r");
  
   // float coefficients[32][32];
   // float constants[32][32];
-  float calib[32][32];
-  float calibECal[32][32];
+  // float calib[32][32];
+  //float calibECal[32][32];
   
-  for (int i = 0; i < 32; ++i) {
-    for (int j = 0; j < 32; ++j) {
-      // if (fscanf(coeffFile, "%f", &coefficients[i][j]) != 1) {
-      // 	fprintf(stderr, "Error reading coefficient matrix element.\n");
-      // 	break;
-      // }
-      // if (fscanf(constFile, "%f", &constants[i][j]) != 1) {
-      // 	fprintf(stderr, "Error reading constant matrix element.\n");
-      // 	break;
-      // }
-       if (fscanf(calibFile, "%f", &calib[i][j]) != 1) {
-	fprintf(stderr, "Error reading calibration matrix element.\n");
-	break;
-        }
-       if (fscanf(calibFileECal, "%f", &calibECal[i][j]) != 1) {
-	fprintf(stderr, "Error reading calibration ECal matrix element.\n");
-	break;
-        }
-    }
-  }
+  //for (int i = 0; i < 32; ++i) {
+  //  for (int j = 0; j < 32; ++j) {
+  //    if (fscanf(coeffFile, "%f", &coefficients[i][j]) != 1) {
+  //	fprintf(stderr, "Error reading coefficient matrix element.\n");
+  //	break;
+  //  }
+  //  if (fscanf(constFile, "%f", &constants[i][j]) != 1) {
+  //	fprintf(stderr, "Error reading constant matrix element.\n");
+  //	break;
+  //  }
+       // if (fscanf(calibFile, "%f", &calib[i][j]) != 1) {
+       // 	fprintf(stderr, "Error reading calibration matrix element.\n");
+       // 	break;
+       //  }
+       // if (fscanf(calibFileECal, "%f", &calibECal[i][j]) != 1) {
+       // 	fprintf(stderr, "Error reading calibration ECal matrix element.\n");
+       // 	break;
+       //  }
+  // }
+  // }
 
-  // fclose(coeffFile);
-  // fclose(constFile);
-  fclose(calibFile);
-  fclose(calibFileECal);
+  //  fclose(coeffFile);
+  //fclose(constFile);
+  // fclose(calibFile);
+  // fclose(calibFileECal);
   
   ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
@@ -311,17 +311,21 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 	if (fTriggerProcessor)
 	  Hits[iHit]->SetTime( Hits[iHit]->GetTime() - fTriggerProcessor->GetChannelTriggerTime(iBdID,ElChID) );
 	  
-		std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
-		 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
+	//std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
+	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
+		
+		//Set hit energy according to matching signals calibration
+	//	Hits[iHit]->SetEnergy((((coefficients[ChX][ChY])*(Hits[iHit]->GetEnergy()))+(constants[ChX][ChY])));
+		//Hits[iHit]->SetEnergy((1.053) *  (Hits[iHit]->GetEnergy()));
 
-		//	Hits[iHit]->SetEnergy(    (  (coefficients[ChX][ChY]) *  (Hits[iHit]->GetEnergy())  )   +   (constants[ChX][ChY])    );
-		//Hits[iHit]->SetEnergy((18/106.5) *  (Hits[iHit]->GetEnergy()));
-		if(calib[ChX][ChY]>0){
-		  Hits[iHit]->SetEnergy((((calibECal[ChX][ChY]))/(calib[ChX][ChY])) *  (Hits[iHit]->GetEnergy()));
-		}
-		else{
-		  Hits[iHit]->SetEnergy(((20)/106.5) *  (Hits[iHit]->GetEnergy()));
-		}
+		//Set hit energy according to muon calibration
+		// if(calib[ChX][ChY]>0){
+		//   Hits[iHit]->SetEnergy((((calibECal[ChX][ChY]))/(calib[ChX][ChY])) *  (Hits[iHit]->GetEnergy()));
+		// }
+		// else{
+		//   Hits[iHit]->SetEnergy(((20)/106.5) *  (Hits[iHit]->GetEnergy()));
+		// }
+		
 	// 		std::cout<< "CH: " << Hits[iHit]->GetChannelId() << "    Hit time is: "<<Hits[iHit]->GetTime()
 	// 			 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
 	((TH2F *) GetHisto("ECalMLHitsPos")) -> Fill((Hits[iHit]->GetChannelId())/100,(Hits[iHit]->GetChannelId())%100,Hits[iHit]->GetEnergy());

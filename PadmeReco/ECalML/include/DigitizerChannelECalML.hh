@@ -15,14 +15,19 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TTree.h"
+#include <tensorflow/core/protobuf/config.pb.h>
 #include <tensorflow/c/c_api.h>
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
+
+class TF_SessionOptions;
 
 class DigitizerChannelECalML : public ChannelVReco {
 public:
   DigitizerChannelECalML(){;};
   ~DigitizerChannelECalML();
+
+  virtual int SetConfig(TF_SessionOptions* opts, tensorflow::ConfigProto& config, TF_Status* status_);
 
   virtual void SetDigis(UShort_t n,Short_t* arr){fNSamples = n;fSamples = arr; };
   static void deallocator(void * data, size_t len, void * arg){};
@@ -52,6 +57,7 @@ private:
   //What do we operate
   UShort_t fNSamples;
   Short_t *fSamples;
+  static const int UPfactor=4;
   float floatSamples[1024];
   float* fSamplesML;
   Short_t fMax;
@@ -192,7 +198,7 @@ private:
   size_t ndata;
 
   Int_t MINDIST;
-  float filteredSamples[1024];
+  float filteredSamples[1024*UPfactor];
   Int_t THRESHOLD;
   
 };

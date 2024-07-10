@@ -5,7 +5,7 @@
 #include "TMath.h"
 #include "TSpectrum.h"
 #include "TRandom.h"
-//#include <tensorflow/c/c_api.h>
+#include <tensorflow/c/c_api.h>
 
 
 #include <stdio.h>
@@ -36,6 +36,29 @@ void DigitizerChannelECalML::PrintConfig(){
    std::cout<<"fIsCosmic       "<<fGlobalMode->IsCosmicsMode()<< std::endl;
    std::cout<<"fIsDebug  ECAL  "<<fGlobalMode->GetGlobalDebugMode()<< std::endl;
   }
+}
+
+int DigitizerChannelECalML::SetConfig(TF_SessionOptions* opts, tensorflow::ConfigProto& config, TF_Status* status_) {
+  std::string output;
+  if (!config.SerializeToString(&output)) {
+    std::cerr << "Failed to Serialize ConfigProto" << std::endl;
+    return -1;
+  }
+  // Dump bytes to console
+  const char* o = output.c_str();
+  for (size_t i = 0; i < output.size(); i++) {
+    if (i > 0) {printf(",");}
+    printf("0x%x", o[i] & 0xff);
+  }
+  printf("\n");
+
+  // TF_SetConfig
+  TF_SetConfig(opts, output.c_str(), output.size(), status_);
+  if (TF_GetCode(status_) != TF_OK) {
+    std::cerr << "ERROR: TF_SetConfig failed " << TF_Message(status_) << std::endl;
+    return -2;
+  }
+  return 0;
 }
 
 void DigitizerChannelECalML::Init(GlobalRecoConfigOptions *gOptions,
@@ -83,17 +106,30 @@ void DigitizerChannelECalML::Init(GlobalRecoConfigOptions *gOptions,
   fMHTemplateFile = cfg->GetParOrDefault("RECO","MHTemplateFile","config/BGOwaveformTemplate.txt");
 
   PrintConfig();
+  tensorflow::ConfigProto config = {};
+  tensorflow::GPUOptions* gpu = config.mutable_gpu_options();
 
-
+  config.set_intra_op_parallelism_threads(1);
+  //config.set_inter_op_parallelism_threads(1);
+  gpu->set_allow_growth(1);
+  // gpu->set_per_process_gpu_memory_fraction(0.1);
+  
   status = TF_NewStatus();
   graph  = TF_NewGraph();
   TF_Buffer* r_opts = TF_NewBufferFromString("",0);
   TF_Buffer* meta_g = TF_NewBuffer();
 
+
   opts = TF_NewSessionOptions();
   const char* tags[] = {"serve"};
 
-  session = TF_LoadSessionFromSavedModel(opts, r_opts, "config/model", tags, 1, graph, meta_g, status);
+  int errC = SetConfig(opts, config, status);
+
+  session = TF_LoadSessionFromSavedModel(opts, r_opts, "config/model_240510_tryUpsample", tags, 1, graph, meta_g, status);
+  
+
+  
+  std::cout<<"New session."<<std::endl;
 
   if ( TF_GetCode(status) != TF_OK ) exit(-1);
 
@@ -125,6 +161,7 @@ void DigitizerChannelECalML::Init(GlobalRecoConfigOptions *gOptions,
     
   ndims = 3;
   ndata = 1024*sizeof(float);
+
 
 }
 
@@ -170,6 +207,7 @@ void DigitizerChannelECalML::ApplyML(float* MLarr){
   if (int_tensor != NULL)
     //printf("TF_NewTensor is OK\n");
     ;
+    
   else
     printf("ERROR: Failed TF_NewTensor\n");
     
@@ -191,6 +229,7 @@ void DigitizerChannelECalML::ApplyML(float* MLarr){
   // free(OutputValues);
   // free(Input);
   // free(Output);
+
 
 }
 
@@ -215,20 +254,20 @@ void DigitizerChannelECalML::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   
   ApplyML(floatSamples);
   //std::cout<<"fSamplesML[57]: "<<fSamplesML[57]<<std::endl;
+  MINDIST=31;
+
   
-  MINDIST=11;
-  
-  for(int i = 0;i<1024;i++) {
+  for(int i = 0;i<(1024*UPfactor);i++) {
     filteredSamples[i] = 0;
   }
 
-  for(int i = MINDIST/2; i < 1024 - MINDIST/2;i++) {
+  for(int i = MINDIST/2; i < (1024*UPfactor) - MINDIST/2;i++) {
     int isMax = 1;
     for(int j = 1; j<= MINDIST/2; j++) {
       if(fSamplesML[i] < fSamplesML [i-j]) isMax = 0;
       if(fSamplesML[i] < fSamplesML[i+j]) isMax = 0;
     }
-    
+   
     if(isMax) {
       filteredSamples[i] = fSamplesML[i];
       for(int j = 1; j<=MINDIST/2; j++) {
@@ -239,10 +278,11 @@ void DigitizerChannelECalML::Reconstruct(std::vector<TRecoVHit *> &hitArray){
   
   THRESHOLD = 10;
   
-  for(int i=0;i<1024;i++) {
+  for(int i=0;i<1024*UPfactor;i++) {
     if(filteredSamples[i] > THRESHOLD){
       TRecoVHit *Hit = new TRecoVHit();
-      Hit->SetTime(i);
+      Hit->SetTime((double)i/(double)UPfactor);
+      //std::cout<<"Raw hit time: "<<Hit->GetTime()<<std::endl;
       Hit->SetEnergy(filteredSamples[i]);
       hitArray.push_back(Hit);
     }
@@ -254,6 +294,7 @@ void DigitizerChannelECalML::Reconstruct(std::vector<TRecoVHit *> &hitArray){
 DigitizerChannelECalML::~DigitizerChannelECalML(){
   TF_DeleteGraph(graph);
   TF_DeleteSession(session, status);
+  std::cout<<"Killed session."<<std::endl;
   TF_DeleteSessionOptions(opts);
   TF_DeleteStatus(status);
 }

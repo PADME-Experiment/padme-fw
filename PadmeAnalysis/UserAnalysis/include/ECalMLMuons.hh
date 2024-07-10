@@ -13,7 +13,6 @@ public:
 
   virtual Bool_t InitHistos();
   virtual Bool_t Process();  
-  virtual Bool_t Finalize();
 
 
 private:

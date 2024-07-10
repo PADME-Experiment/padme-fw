@@ -447,32 +447,4 @@ Bool_t ECalMLMuons::Process(){
   return fResult;
 }
 
-Bool_t ECalMLMuons::Finalize(){
-  
-  HistoSvc* hSvcBye =  HistoSvc::GetInstance();
-  std::cout<<"Tuka sam v analizera"<<std::endl; 
-  std::vector<std::string> histogramsToDelete; // Store histogram names to delete
 
-  for (int i = 0; i < 32; i++) {
-    for (int j = 0; j < 32; j++) {
-      const std::string mlHistogramName = this->GetName() + "_ECalML_muons_energy" + std::to_string(100 * i + j);
-      const std::string histogramName = this->GetName() + "_ECal_muons_energy" + std::to_string(100 * i + j);
-      // Check the number of entries for ML histograms and add to delete list if less than 50
-      if (hSvcBye->GetHisto(mlHistogramName)->GetEntries() < 50) {
-        histogramsToDelete.push_back(mlHistogramName);
-      }
-      
-      // Check the number of entries for regular histograms and add to delete list if less than 50
-      if (hSvcBye->GetHisto(histogramName)->GetEntries() < 50) {
-        histogramsToDelete.push_back(histogramName);
-      }
-    }
-  }
-  
-  for (const std::string& histName : histogramsToDelete) {
-    hSvcBye->removeHisto(histName.c_str());
-    std::cout << "Deleted histogram: " << histName << std::endl;
-  }
-  
-  return true;
-}

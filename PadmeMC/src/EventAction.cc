@@ -463,27 +463,31 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
 		       << " " << hit->GetPosX()/CLHEP::cm
 		       << " " << hit->GetPosY()/CLHEP::cm
 		       << " " << hit->GetPosZ()/CLHEP::cm
-		       << " " << hit->GetTime() 
+	  //<< " " << hit->GetTime() 
 		       << " ";
       }
     }
   }//end of loop on hits
 
   
-  for (int tt=0;tt<1024;tt++){
+  //for (int tt=0;tt<1024;tt++){
     for(int xx=0;xx<NCols;xx++){
       for(int yy=0;yy<NRows;yy++){
-      //MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
-      //(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+	MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
+	(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
       
-	(*(foutECalML)) << std::setw(7) << std::setprecision(2) <<fECalWaveForm[xx][yy][tt];
+	//	(*(foutECalML)) <<fECalWaveForm[xx][yy][tt] << " ";
+	// if (fabs(fECalWaveForm[xx][yy][tt])>0){
+	//   (*(foutECalML)) <<xx<<" "<<yy<<" "<<tt<<" "<<fECalWaveForm[xx][yy][tt]<<" ";
+
+	// }
       }
     }
-    (*(foutECalML)) << std::endl;
-  }
+    //(*(foutECalML)) << std::endl;
+    //}
 
-  (*(foutECalML)) << std::endl;
-  (*(foutTruth)) << std::endl;
+    (*(foutECalML)) << std::endl;
+    (*(foutTruth)) << std::endl;
 }
 void EventAction::FindClusters()
 {

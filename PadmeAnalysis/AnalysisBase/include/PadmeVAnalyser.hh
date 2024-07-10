@@ -22,7 +22,7 @@ public:
   virtual Bool_t Init(PadmeAnalysisEvent *event);
   virtual Bool_t Init(PadmeAnalysisEvent *event, int valid, int verb);
   virtual Bool_t Process();  
-  virtual Bool_t Finalize(){return true;}
+  virtual Bool_t Finalize(){std::cout<<"tuka sam"<<std::endl;return true;}
   void SetName(const char *s) {fName = s;};
   std::string GetName(){return fName;};
   Bool_t GetResult(){return fResult;};

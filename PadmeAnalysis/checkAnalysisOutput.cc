@@ -1,9 +1,9 @@
 
 void checkAnalysisOutput(){
 
-  TFile *f = TFile::Open("run50384_forCalib.root");
+  TFile *f = TFile::Open("240326_31mindistforCalib.root");
   TDirectory* dir = (TDirectory*) f->Get("ECalMLCalibration");
-  TFile *outRoot = new TFile("run50384_Calib.root","RECREATE");
+  TFile *outRoot = new TFile("run30369_Calib31MINDIST.root","RECREATE");
 
   TH2F *timesChannels = new TH2F("timesChannels","Time difference angular coefficient for each channel",1024,0,1024,100,0,30);
   TH1F *timesChannels1D = new TH1F("timesChannels1D","Time Differnece",1024,0.0,1024);
@@ -34,8 +34,8 @@ void checkAnalysisOutput(){
   FILE *coeffFile;
   FILE *constsFile;
 
-  coeffFile = fopen("run50384_CalibCoefficients.dat","w");
-  constsFile = fopen("run50384_CalibConstants.dat","w");
+  coeffFile = fopen("run30369_CalibCoefficients21.dat","w");
+  constsFile = fopen("run30369_CalibConstants21.dat","w");
 
   for(int i=0;i<32;i++){
     for(int j=0;j<32;j++) {

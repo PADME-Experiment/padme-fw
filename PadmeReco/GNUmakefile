@@ -27,6 +27,8 @@ LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 #LIBS += -L/usr/lib64/mysql -lmysqlclient
 LIBS += -Llib -lPadmeReco$(STATIC)
+#LIBS += -L/home/kalina/software/lib -ltensorflow
+#LIBS += -L/home/kalina/software/NewTF/lib -ltensorflow
 LIBS += -L/home/kalina/.local/lib/python3.9/site-packages/tensorflow -ltensorflow_cc
 LIBS += -L/home/kalina/.local/lib/python3.9/site-packages/tensorflow -ltensorflow_framework
 

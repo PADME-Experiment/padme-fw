@@ -263,7 +263,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
 
         LandauFun->ReleaseParameter(1);
         }else {
-          std::cout<<"Ch: "<<ECalChNum[iCh]<<" Vertical is empty "<<endl;
+          //std::cout<<"Ch: "<<ECalChNum[iCh]<<" Vertical is empty "<<endl;
           BadCalib->cd();
           ECalChHistoVert[iCh]->Write();
           float NonEmpty = ECalChHisto[iCh]->Integral();

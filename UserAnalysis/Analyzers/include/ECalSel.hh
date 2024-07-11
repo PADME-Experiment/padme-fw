@@ -168,6 +168,9 @@ private:
   TH2D *DeltaPhiofProbe_cut;
   TH1D *PhiFullProbe;
   std::vector<TH1D*> PhiFullProbeSlice;
+  std::vector<TH2D*> TagSlicevsPhi;
+  std::vector<TH2D*> ProbeSlicevsPhi;
+  std::vector<TH2D*> DPhiSlicevsPhi;
 
   TH2D *fhDTheta; 
   TH2D *fhDPhi;

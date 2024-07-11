@@ -250,9 +250,12 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           if(icellY>ncells || icellY<0) continue;
   
 
+          Double_t PhiPcle0 = TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X());
 
-          if (icellY > 26) continue; //magnet shadow for the 1st clu
-          if (icellY < 4) continue; //magnet shadow for the 1st clu
+          if(abs((abs(PhiPcle0)-TMath::Pi()/2))<TMath::Pi()/6) continue;
+
+          // if (icellY > 26) continue; //magnet shadow for the 1st clu
+          // if (icellY < 4) continue; //magnet shadow for the 1st clu
           
 
           if(fCellMap[100*icellX+icellY]!=1) continue; //controlla mappa calorimetro

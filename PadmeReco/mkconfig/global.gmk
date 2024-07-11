@@ -12,10 +12,8 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum -lGenVector
 
-TF2_LIBS := -L/home/kalina/.local/lib/python3.9/site-packages/tensorflow -ltensorflow_framework -ltensorflow_cc
-TF2_CPPFLAGS :=  -I/home/kalina/.local/lib/python3.9/site-packages/tensorflow/include
 
-CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include $(TF2_CPPFLAGS) -g
+CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -I/home/kalina/software/include -I/home/kalina/.local/lib/python3.9/site-packages/tensorflow/include -g
 #CPPFLAGS     += -I$(PADMERECO)/Service/include
 CPPFLAGS     += -I$(PADMERECO)/RecoBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)

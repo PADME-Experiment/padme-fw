@@ -164,14 +164,14 @@ void ECalMLCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawE
 	*/
 	fCalibHandler->SetTimeInterval(time);
 	fHitECalMLibrated = fHitE*(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale;
-	Hits[iHit]->SetEnergy(fHitECalMLibrated);
+	//Hits[iHit]->SetEnergy(fHitECalMLibrated);
 	//std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalMLibrated<<" "<<(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale<<std::endl;
 	
       } else { // fCalibVersion != "0"
 
 	if(fCalibMap[std::make_pair(BD,ChID)]!=0){ 
 	  fHitECalMLibrated = fHitE/fCalibMap[std::make_pair(BD,ChID)];
-	  Hits[iHit]->SetEnergy(fHitECalMLibrated);
+	  //Hits[iHit]->SetEnergy(fHitECalMLibrated);
 	  //std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalMLibrated<<" "<<1./fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
 	}else{
 	  if(!PRINTED) {

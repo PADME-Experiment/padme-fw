@@ -18,7 +18,7 @@
 #/Detector/EnableSubDetector ETag
 #/Detector/DisableSubDetector Target
 #/Detector/DisableSubDetector TPix
-/beam/n_e+_per_bunch 4000
+/beam/n_e+_per_bunch 3000
 /beam/bunch_time_length 250. ns
 /beam/momentum 282.5 MeV
 /beam/position_spread_on true
@@ -68,4 +68,4 @@
 #/vis/filtering/trajectories/create/attributeFilter
 #/vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
 #/vis/filtering/trajectories/attributeFilter-0/addInterval 5. MeV 1000. MeV
-/run/beamOn 100
+/run/beamOn 1000

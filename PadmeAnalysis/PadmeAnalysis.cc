@@ -610,6 +610,7 @@ int main(Int_t argc, char **argv)
    
    ecalAn   ->Finalize();
    targetAn ->Finalize();
+   UserAn ->Finalize();
    /*
    sacAn    ->Finalize();
    pvetoAn  ->Finalize();

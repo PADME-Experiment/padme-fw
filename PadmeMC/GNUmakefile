@@ -79,7 +79,7 @@ cleanallsub:
 include $(G4INSTALL)/config/binmake.gmk
 
 #Standard flags from G4
-CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wno-shadow -O2 -fPIC 
+CXXFLAGS := -W -Wall -ansi -pedantic -Wno-non-virtual-dtor -Wno-long-long -Wwrite-strings -Wpointer-arith -Woverloaded-virtual -pipe -Wno-shadow -O2 -fPIC -std=c++17
 CXXFLAGS += -g
 #CXXFLAGS += -pg -fprofile-generate
 

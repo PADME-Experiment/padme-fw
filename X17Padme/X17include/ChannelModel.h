@@ -31,7 +31,7 @@ public:
                RooRealVar &_sqrtS, RooRealVar &_xmass, RooRealVar &_theta,
                RooRealVar &_gve_test, RooRealVar &_kLumi_true, RooRealVar &_bes_true,
                RooRealVar &_pot_true, RooRealVar &_eff_true, RooRealVar &_bkg_yield_true,
-               RooRealVar &_signal_yield_bare, signal_types sig_type, background_types bkg_type,
+               signal_types sig_type, background_types bkg_type,
                double sqrts_mean, double err_sqrts,
                double bkg_mean, double sigma_bkg,
                double pot_mean, double sigma_pot,

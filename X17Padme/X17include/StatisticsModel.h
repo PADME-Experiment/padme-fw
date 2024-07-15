@@ -49,9 +49,9 @@ public:
 
   void SetDefaultAuxiliaryObservation() {
     pot_scale_default->setVal(1);
-    for (size_t i = 0; i < channels.size(); i++) {
-      channelModels[i]->bkg_yield_default->setVal(default_bkgYield_MC[i]);
-    }
+    // for (size_t i = 0; i < channels.size(); i++) {
+    //   channelModels[i]->bkg_yield_default->setVal(40000);
+    // }
   }
 
 public:
@@ -125,7 +125,7 @@ public:
 
   RooArgSet *Global_observables;
   RooArgSet *fitGlobal_parameters;
-  RooArgSet *constrainedGlobal_parameters; // needed because bkg does not depend on pot_true
+  RooArgSet *constrainedGlobal_parameters; // needed because signal and bkg dependo on different nuisance
   map<RooRealVar *, RooAbsPdf *> constraintsGlobal_map;
 
 };

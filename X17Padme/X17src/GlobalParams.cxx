@@ -59,6 +59,8 @@ void global_config::configure_run(const int &argc, char **argv) {
         nChannel = static_cast<TObjString *>(l->At(1))->GetString().Atoi();
         if(nChannel>gPoT->GetN()){
           cout << "The number of channels is too large: " << l << " > the whole scan (" << gPoT->GetN() << ")" << endl;
+          nChannel = gPoT->GetN();
+          cout << "The number of channels is set to the max value: " << gPoT->GetN() << endl;
           break;
         }
         delete l;
@@ -93,8 +95,8 @@ void global_config::configure_run(const int &argc, char **argv) {
     }
   }
 
-  double min_log_coupling = -10.;
-  double max_log_coupling = -4.;
+  double min_log_coupling = -3.;
+  double max_log_coupling = -2.;
   Int_t n_log_coupling = floor((max_log_coupling - min_log_coupling) / dlog_coupling) + 1;
   for (Int_t iE = 0; iE < n_log_coupling; iE++) {
     log_coupling_points.push_back(min_log_coupling + iE * dlog_coupling);

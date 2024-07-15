@@ -21,53 +21,53 @@ using namespace std;
 StatisticsModel::StatisticsModel(global_config &cfg)
     : SqrtS(new RooRealVar("SqrtS", "SqrtS", 16, 18.)),
       dsqrts(new Double_t(16.)),
-      Theta(new RooRealVar("Theta", "Theta", 0., 2*TMath::Pi())),
+      Theta(new RooRealVar("Theta", "Theta", 0., TMath::Pi())),
       XMass(new RooRealVar("XMass", "XMass", 16, 18.)),
       gve_test(new RooRealVar("gve_test", "gve_test", 1.e-4, 1.e-5, 1.e-2)),
       channelModels(), channels(),
       ScanPoint_categories(new RooCategory("ScanPoint_category", "ScanPoint_category")),
       kLumi_default(new RooRealVar("kLumi_default", "kLumi_default", 0.00176, 0.00167, 0.00185)), //kLumin = istantaneus luminosity global nuisance parameter 
       kLumi_true(new RooRealVar("kLumi_true", "kLumi_true", 0.00176, 0.00167, 0.00185)),
-      kLumi_sigma(new RooRealVar("kLumi_sigma", "kLumi_sigma", 1.e-5, 1.e-6, 1.e-4)),
+      kLumi_sigma(new RooRealVar("kLumi_sigma", "kLumi_sigma", 2.e-5, 1.e-6, 1.e-4)),
       kLumi_constraint(new RooLognormal("kLumi_constraint", "kLumi_constraint",
-                                       *kLumi_true, *kLumi_default, *kLumi_sigma)),
+                                        *kLumi_true, *kLumi_default, *kLumi_sigma)),
       Bes_default(new RooRealVar("Bes_default", "Bes_default", 0.0025, 0.001, 0.01)), //Bes = Beam Energy spread  global nuisance parameter - to be written as a percentage of the SqrtS of that scan point
       Bes_true(new RooRealVar("Bes_true", "Bes_true", 0.0025, 0.001, 0.01)),
       Bes_sigma(new RooRealVar("Bes_sigma", "Bes_sigma", 0.0005, 0.0001, 0.001)),
       Bes_constraint(new RooLognormal("Bes_constraint", "Bes_constraint",
                                       *Bes_true, *Bes_default, *Bes_sigma)),
-      NormCore_default(new RooRealVar("NormCore_default", "NormCore_default", 4.35e-3, 4.22e-3, 4.48e-3)), //NormCore = normalization of the line shape core gaussian nuisance parameter
-      NormCore_true(new RooRealVar("NormCore_true", "NormCore_true", 4.35e-3, 4.22e-3, 4.48e-3)),
-      NormCore_sigma(new RooRealVar("NormCore_sigma", "NormCore_sigma", 0.13e-3, 0.05e-3, 0.25e-3)), 
+      NormCore_default(new RooRealVar("NormCore_default", "NormCore_default", 4.35e3, 4.22e3, 4.48e3)), //NormCore = normalization of the line shape core gaussian nuisance parameter
+      NormCore_true(new RooRealVar("NormCore_true", "NormCore_true", 4.35e3, 4.22e3, 4.48e3)), // this is a cross section [b] 
+      NormCore_sigma(new RooRealVar("NormCore_sigma", "NormCore_sigma", 0.13e3, 0.05e3, 0.25e3)), // production evaluated with gve = 1 -> added after.
       NormCore_constraint(new RooLognormal("NormCore_constraint", "NormCore_constraint",
                                            *NormCore_true, *NormCore_default, *NormCore_sigma)),
-      sigmaCore_default(new RooRealVar("sigmaCore_default", "sigmaCore_default", 0.1, 0.097, 0.103)), //sigmaCore = sigma of the line shape core gaussian nuisance parameter
-      sigmaCore_true(new RooRealVar("sigmaCore_true", "sigmaCore_true",0.1, 0.097, 0.103)),
-      sigmaCore_sigma(new RooRealVar("sigmaCore_sigma", "sigmaCore_sigma", 0.003, 0.001, 0.01)),
+      sigmaCore_default(new RooRealVar("sigmaCore_default", "sigmaCore_default", 0.207, 0.201, 0.213)), //sigmaCore = sigma of the line shape core gaussian nuisance parameter
+      sigmaCore_true(new RooRealVar("sigmaCore_true", "sigmaCore_true", 0.207, 0.201, 0.213)),
+      sigmaCore_sigma(new RooRealVar("sigmaCore_sigma", "sigmaCore_sigma", 0.006, 0.001, 0.012)),
       sigmaCore_constraint(new RooLognormal("sigmaCore_constraint", "sigmaCore_constraint",
                                             *sigmaCore_true, *sigmaCore_default, *sigmaCore_sigma)),
-      NormTail_default(new RooRealVar("NormTail_default", "NormTail_default", 2.52e-3, 2.45e-3, 2.59e-3)), //NormTail = normalization of the line shape tail gaussian nuisance parameter
-      NormTail_true(new RooRealVar("NormTail_true", "NormTail_true", 2.52e-3, 2.45e-3, 2.59e-3)),
-      NormTail_sigma(new RooRealVar("NormTail_sigma", "NormTail_sigma", 0.03e-3, 0.01e-3, 0.1e-3)),
+      NormTail_default(new RooRealVar("NormTail_default", "NormTail_default", 2.52e3, 2.45e3, 2.59e3)), //NormTail = normalization of the line shape tail gaussian nuisance parameter
+      NormTail_true(new RooRealVar("NormTail_true", "NormTail_true", 2.52e3, 2.45e3, 2.59e3)),
+      NormTail_sigma(new RooRealVar("NormTail_sigma", "NormTail_sigma", 0.03e3, 0.01e3, 0.1e3)),
       NormTail_constraint(new RooLognormal("NormTail_constraint", "NormTail_constraint",
                                            *NormTail_true, *NormTail_default, *NormTail_sigma)),
-      sigmaTail_default(new RooRealVar("sigmaTail_default", "sigmaTail_default", 0.306, 0.297, 0.315)), //sigmaTail = sigma of the line shape tail gaussian nuisance parameter
-      sigmaTail_true(new RooRealVar("sigmaTail_true", "sigmaTail_true", 0.306, 0.297, 0.315)),
-      sigmaTail_sigma(new RooRealVar("sigmaTail_sigma", "sigmaTail_sigma", 0.009, 0.001, 0.02)),
+      sigmaTail_default(new RooRealVar("sigmaTail_default", "sigmaTail_default", 0.630, 0.611, 0.649)), //sigmaTail = sigma of the line shape tail gaussian nuisance parameter
+      sigmaTail_true(new RooRealVar("sigmaTail_true", "sigmaTail_true", 0.630, 0.611, 0.649)),
+      sigmaTail_sigma(new RooRealVar("sigmaTail_sigma", "sigmaTail_sigma", 0.019, 0.001, 0.04)),
       sigmaTail_constraint(new RooLognormal("sigmaTail_constraint", "sigmaTail_constraint",
                                             *sigmaTail_true, *sigmaTail_default, *sigmaTail_sigma)),
       SignalShape(new EEShapes("SignalShape", "SignalShape", *SqrtS, *dsqrts,
                                *NormCore_true, *XMass, *sigmaCore_true,
                                *NormTail_true, *sigmaTail_true, *Bes_true,
                                SqrtSMin, SqrtSMax)),
-      pot_scale_default(new RooRealVar("pot_scale_default", "pot_scale_default", 1., 0.8, 1.2)), //to scale the NEvents at the level of SMbkg 
-      pot_scale_true(new RooRealVar("pot_scale_true", "pot_scale_true", 1., 0.8, 1.2)), //to scale the NEvents at the level of SMbkg 
-      pot_scale_sigma(new RooRealVar("pot_scale_sigma", "pot_scale_sigma", 0.01, 0.001, 0.002)), //to scale the NEvents at the level of SMbkg 
+      pot_scale_default(new RooRealVar("pot_scale_default", "pot_scale_default", 1., 0.9, 1.1)), //to scale the NEvents at the level of SMbkg 
+      pot_scale_true(new RooRealVar("pot_scale_true", "pot_scale_true", 1., 0.9, 1.1)), //to scale the NEvents at the level of SMbkg 
+      pot_scale_sigma(new RooRealVar("pot_scale_sigma", "pot_scale_sigma", 0.05, 0.001, 0.1)), //to scale the NEvents at the level of SMbkg 
       pot_scale_constraint(new RooLognormal("pot_scale_constraint", "pot_scale_constraint",
                                             *pot_scale_true, *pot_scale_default, *pot_scale_sigma)), //to scale the NEvents at the level of SMbkg 
-      eff_scale_default(new RooRealVar("eff_scale_default", "eff_scale_default", 1., 0.8, 1.2)), //to scale the NEvents at the level of SMbkg 
-      eff_scale_true(new RooRealVar("eff_scale_true", "eff_scale_true", 1., 0.8, 1.2)), //to scale the NEvents at the level of SMbkg 
-      eff_scale_sigma(new RooRealVar("eff_scale_sigma", "eff_scale_sigma", 0.01, 0.001, 0.002)), //to scale the NEvents at the level of SMbkg 
+      eff_scale_default(new RooRealVar("eff_scale_default", "eff_scale_default", 1., 0.95, 1.05)), //to scale the NEvents at the level of SMbkg 
+      eff_scale_true(new RooRealVar("eff_scale_true", "eff_scale_true", 1., 0.95, 1.05)), //to scale the NEvents at the level of SMbkg 
+      eff_scale_sigma(new RooRealVar("eff_scale_sigma", "eff_scale_sigma", 0.01, 0.001, 0.02)), //to scale the NEvents at the level of SMbkg 
       eff_scale_constraint(new RooLognormal("eff_scale_constraint", "eff_scale_constraint",
                                             *eff_scale_true, *eff_scale_default, *eff_scale_sigma)), //to scale the NEvents at the level of SMbkg 
       sbModel_simultaneous(new RooSimultaneous("sbModel_simultaneous", "sbModel_simultaneous", *ScanPoint_categories)),
@@ -138,8 +138,6 @@ StatisticsModel::StatisticsModel(global_config &cfg)
 
         constraintsGlobal_map[pot_scale_true] = pot_scale_constraint;
         constraintsGlobal_map[eff_scale_true] = eff_scale_constraint;
-
-        // forse qui vanno aggiunti i constraint teorici sulla lineshape
       }
 
 StatisticsModel::~StatisticsModel() {
@@ -149,6 +147,55 @@ StatisticsModel::~StatisticsModel() {
   // }
   channelModels.clear();
   channels.clear();
+
+  //let's try to understand if the memory leakage breaks the code:
+  cout << "let's try to understand if the memory leakage breaks the code-> deleting a lot of 'new' pointers in StatisticsModel" << endl;
+
+  delete kLumi_default;
+  delete kLumi_true;
+  delete kLumi_sigma;
+  delete kLumi_constraint;
+
+  delete Bes_default;
+  delete Bes_true;
+  delete Bes_sigma;
+  delete Bes_constraint;
+
+  delete NormCore_default;
+  delete NormCore_true;
+  delete NormCore_sigma;
+  delete NormCore_constraint;
+
+  delete sigmaCore_default;
+  delete sigmaCore_true;
+  delete sigmaCore_sigma;
+  delete sigmaCore_constraint;
+
+  delete NormTail_default;
+  delete NormTail_true;
+  delete NormTail_sigma;
+  delete NormTail_constraint;
+  
+  delete sigmaTail_default;
+  delete sigmaTail_true;
+  delete sigmaTail_sigma;
+  delete sigmaTail_constraint;
+
+  delete pot_scale_default;
+  delete pot_scale_true;
+  delete pot_scale_sigma;
+  delete pot_scale_constraint;
+
+  delete eff_scale_default;
+  delete eff_scale_true;
+  delete eff_scale_sigma;
+  delete eff_scale_constraint;
+
+  delete sbModel_simultaneous;
+  delete bkgModel_simultaneous;
+  delete sbModel_simultaneous_noConstraints;
+  delete bkgModel_simultaneous_noConstraints;
+
 
   cout << "...done!" << endl;
 }
@@ -160,18 +207,14 @@ void StatisticsModel::AddChannel(TString fChannelModel, signal_types st, backgro
                                  double eff_mean, double sigma_eff) {
   channelModels.push_back(new ChannelModel(fChannelModel,
                                            *SqrtS, *XMass, *Theta, *gve_test, *kLumi_true, *Bes_true,
-                                           *pot_true, *bkg_yield_true, *eff_true,
-                                           *signal_yield_bare, st, bt,
+                                           *pot_true, *bkg_yield_true, *eff_true, st, bt,
                                            sqrts_mean, err_sqrts,
                                            bkg_mean, sigma_bkg,
                                            pot_mean, sigma_pot,
                                            eff_mean, sigma_eff));
   channels.push_back(fChannelModel);
   ScanPoint_categories->defineType(fChannelModel.Data());
-  cout << "ScanPoint_categories " << ScanPoint_categories << " ScanPoint_categories " << fChannelModel.Data() << endl;
-  cout << "Does the pointer to signalshape work? " << SignalShape << endl;
-  signal_yield_bare->setVal(SignalShape->analyticalIntegral(1, sqrts_mean - err_sqrts, sqrts_mean + err_sqrts));
-  cout << "è qui ti rompi? " << endl;
+  channelModels.back()->signal_yield_bare->setVal(SignalShape->analyticalIntegral(1, sqrts_mean - err_sqrts, sqrts_mean + err_sqrts));
   }
 
 void StatisticsModel::BuildModel() {
@@ -189,13 +232,14 @@ void StatisticsModel::BuildModel() {
 
 void StatisticsModel::Update(global_config &cfg, double mass, double log_coupling) {
   XMass->setVal(mass);
-  gve_test->setVal(exp(log_coupling));
-  for (size_t ich = 0; ich < channels.size(); ich++) {
+  gve_test->setVal(pow(10,log_coupling));
+  cout << "gve = " << gve_test->getVal() << "mass = " << XMass->getVal() << endl;
+  // for (size_t ich = 0; ich < channels.size(); ich++) {
     // TString channelName = channels[ich];
     // double new_val = LineShape->analyticalIntegral(1, sqrts_mean - err_sqrts, sqrts_mean + err_sqrts);
     // channelModels[ich]->signal_yield_bare->setVal(new_val);
     // channelModels[ich]->signal_yield_bare->setVal(new_val);
-  }
+  // }
 }
 
 double StatisticsModel::GetTotalYield() {
@@ -208,16 +252,17 @@ double StatisticsModel::GetTotalYield() {
 
 Bool_t StatisticsModel::IsLowYield() {
   double total_yield = GetTotalYield();
-  if (total_yield < 100.0)
-    return kTRUE;
+  // for (size_t ich = 0; ich < channels.size(); ich++) {
+  if (total_yield < 10.0) return kTRUE;
+  // }
   return kFALSE;
 }
 
 Bool_t StatisticsModel::IsHighYield() {
-  for (size_t ich = 0; ich < channels.size(); ich++) {
-    if (channelModels[ich]->expected_signal_ev->getVal() > 10000.0)
-      return kTRUE;
-  }
+  double total_yield = GetTotalYield();
+  //for (size_t ich = 0; ich < channels.size(); ich++) {
+    if (total_yield > 15000.0) return kTRUE;
+  // }
   return kFALSE;
 }
 

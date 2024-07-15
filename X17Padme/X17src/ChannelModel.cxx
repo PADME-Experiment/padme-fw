@@ -25,7 +25,7 @@ ChannelModel::ChannelModel(TString channelName,
                            RooRealVar &_sqrtS, RooRealVar &_xmass, RooRealVar &_theta,
                            RooRealVar &_gve_test, RooRealVar &_kLumi_true, RooRealVar &_bes_true,
                            RooRealVar &_pot_true, RooRealVar &_eff_true, RooRealVar &_bkg_yield_true,
-                           RooRealVar &_signal_yield_bare, signal_types sig_type, background_types bkg_type,
+                           signal_types sig_type, background_types bkg_type,
                            double sqrts_mean, double err_sqrts,
                            double bkg_mean, double sigma_bkg,
                            double pot_mean, double sigma_pot,
@@ -35,22 +35,22 @@ ChannelModel::ChannelModel(TString channelName,
       gve_test(&_gve_test), kLumi_true(&_kLumi_true), Bes_true(&_bes_true),
       bkg_yield_default(new RooRealVar(Form("bkg_yield_default_%s", fChannelName.Data()),
                                        Form("bkg_yield_default_%s", fChannelName.Data()),
-                                       bkg_mean, 1.e4, 1.e6)), //averages acquired by the input TGraphs
+                                       bkg_mean, 1.e-6, 1.e-4)), //averages acquired by the input TGraphs
       bkg_yield_true(new RooRealVar(Form("bkg_yield_true_%s", fChannelName.Data()),
                                     Form("bkg_yield_true_%s", fChannelName.Data()),
-                                    bkg_mean, 1.e4, 1.e6)),
+                                    bkg_mean, 1.e-6, 1.e-4)),
       bkg_yield_sigma(new RooRealVar(Form("bkg_yield_sigma_%s", fChannelName.Data()),
                                      Form("bkg_yield_sigma_%s", fChannelName.Data()),
-                                     sigma_bkg, 5.e3, 1.e5)),      
+                                     sigma_bkg, 5.e-9, 5.e-6)),      
       bkg_yield_constraint(new RooLognormal(Form("bkg_yield_constraint_%s", fChannelName.Data()),
                                             Form("bkg_yield_constraint_%s", fChannelName.Data()),
                                             *bkg_yield_true, *bkg_yield_default, *bkg_yield_sigma)),
       pot_default(new RooRealVar(Form("pot_default_%s", fChannelName.Data()),
                                  Form("pot_default_%s", fChannelName.Data()),
-                                 pot_mean, 1.e8, 1.e11)), //averages to be acquired by the input TGraphs
+                                 pot_mean, 5.e7, 1.e11)), //averages to be acquired by the input TGraphs
       pot_true(new RooRealVar(Form("pot_default_%s", fChannelName.Data()),
                               Form("pot_default_%s", fChannelName.Data()),
-                              pot_mean, 1.e8, 1.e11)),
+                              pot_mean, 5.e7, 1.e11)),
       pot_sigma(new RooRealVar(Form("pot_sigma_%s", fChannelName.Data()),
                                Form("pot_sigma_%s", fChannelName.Data()),
                                sigma_pot, 1.e7, 1.e9)),
@@ -72,6 +72,7 @@ ChannelModel::ChannelModel(TString channelName,
       signal_yield_bare(new RooRealVar(Form("signal_yield_bare_%s", fChannelName.Data()),
                                        Form("signal_yield_bare_%s", fChannelName.Data()),
                                        1. , 0., 1E6)), 
+      expected_signal_ev(nullptr), expected_bkg_ev(nullptr),
       extended_sbModel(nullptr), extended_bkgModel(nullptr),
       full_sbModel(nullptr), full_bkgModel(nullptr)
 {
@@ -159,6 +160,26 @@ ChannelModel::ChannelModel(TString channelName,
 
 ChannelModel::~ChannelModel() {
   cout << "Destroying Period " << fChannelName.Data() << "..." << endl;
+
+  //let's try to understand if the memory leakage breaks the code:
+  cout << "let's try to understand if the memory leakage breaks the code-> deleting a lot of 'new' pointers in ChannelModels" << endl;
+
+  delete bkg_yield_default;
+  delete bkg_yield_true;
+  delete bkg_yield_sigma;
+  delete bkg_yield_constraint;
+
+  delete pot_default;
+  delete pot_true;
+  delete pot_sigma;
+  delete pot_constraint;
+
+  delete eff_default;
+  delete eff_true;
+  delete eff_sigma;
+  delete eff_constraint;
+
+  delete signal_yield_bare;
 
   cout << "... deleting pdfs" << endl;
   delete signal_shape;

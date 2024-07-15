@@ -10,8 +10,6 @@
 using namespace std;
 
 namespace GlobalParams{
-  // extern RooRealVar mInv;
-  // extern RooRealVar dpMass;
   // extern RooRealVar pot_true;
   
   // extern vector<TString> signal_sources; 

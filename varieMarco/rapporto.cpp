@@ -16,6 +16,7 @@
 #include <TFile.h>
 #include <TMath.h>
 #include <TTree.h>
+#include <TEfficiency.h>
 #include <regex>
 
 using namespace std;
@@ -306,4 +307,177 @@ void diffHistogram() {
 
     TCanvas *canvas5 = new TCanvas("canvas5", "Canvas5", 800, 600);
     mg2->Draw("AP");
+}
+
+void ratioFromTxt(){
+
+    vector<double> col2A, col3A, col4A, col5A, col6A;
+    vector<double> col1B, col3B, col4B;
+
+    ifstream file1("/home/mancinima/padme-fw/varieMarco/BabaYaga/babayagaborn/xs_BabayagaBorn.txt");
+    ifstream file2("/home/mancinima/padme-fw/varieMarco/CrossSectionCalcHep.txt");
+
+    if (!file1.is_open() || !file2.is_open()) {
+        cerr << "Error opening file" << endl;
+        return;
+    }
+
+    string line1;
+    getline(file1, line1); // Skip the header
+    string line2;
+    getline(file2, line2); // Skip the header
+
+    while (getline(file1, line1)) {
+        stringstream ss(line1);
+        string token;
+        vector<double> row;
+
+        while (getline(ss, token, ',')) {
+            row.push_back(stod(token));
+        }
+
+        if (row.size() >= 5) {
+            col2A.push_back(row[2]); // 2nd column (0-indexed)
+            col3A.push_back(row[3]); // 3rd column (0-indexed)
+            col4A.push_back(row[4]); // 4th column (0-indexed)
+            col5A.push_back(row[5]); // 5th column (0-indexed)
+            col6A.push_back(row[6]); // 6th column (0-indexed)
+        }
+    }
+    file1.close();
+    while (getline(file2, line2)) {
+        stringstream ss(line2);
+        string token;
+        vector<double> row;
+
+        while (getline(ss, token, ',')) {
+            row.push_back(stod(token));
+        }
+
+        if (row.size() >= 5) {
+            col1B.push_back(row[1]); // 1st column (0-indexed)
+            col3B.push_back(row[3]/1000); // 3rd column (0-indexed) - /1000 to set th xs to be in nb
+            col4B.push_back(row[4]/1000); // 4th column (0-indexed) - /1000 to set th xs to be in nb
+        }
+    }
+    file2.close();
+    vector<double> Accepted1, Accepted2;
+    vector<double> ratio1, absolute_error1;
+    vector<double> ratio2, absolute_error2;
+    vector<double> ratio3, absolute_error3;
+    double Nev = 100000;
+
+    TH1D *htot = new TH1D("htot", "htot", col2A.size(), -0.5, col3A.size()+0.5);
+    TH1D *hNAcc_babayaga = new TH1D("hNAcc_babayaga", "hNAcc_babayaga", col2A.size(), -0.5, col3A.size()+0.5);
+    TH1D *hNAcc_calchep = new TH1D("hNAcc_calchep", "hNAcc_calchep", col2A.size(), -0.5, col3A.size()+0.5);
+
+    TFile *RootIn1 = TFile::Open("/home/mancinima/padme-fw/varieMarco/ScanBabayaga2806/merged_output.root");
+    TFile *RootIn2 = TFile::Open("/home/mancinima/padme-fw/varieMarco/SCANCALCHEP/merged_output.root");
+
+    for (size_t i = 1; i <= col2A.size(); ++i) {
+        htot->SetBinContent(i, Nev);
+
+        TDirectory *tdir1 = (TDirectory*)RootIn1->Get(Form("BhabhaFull_dir%i", int(col1B[i-1]*10)));
+        RootIn1->cd(Form("BhabhaFull_dir%i", int(col1B[i-1]*10)));
+        TH1F *hist1 = (TH1F*)(tdir1->Get(Form("hFEnDistAllCuts_P3%.2f", col1B[i-1]))->Clone());
+        Accepted1.push_back((double)(hist1->Integral()));
+        hNAcc_babayaga->SetBinContent(i, (double)(hist1->Integral()));
+
+        TDirectory *tdir2 = (TDirectory*)RootIn2->Get(Form("BhabhaFull_dir%i", int(col1B[i-1]*10)));      
+        RootIn2->cd(Form("BhabhaFull_dir%i", int(col1B[i-1]*10)));
+        TH1F *hist2 = (TH1F*)(tdir2->Get(Form("hFEnDistAllCuts_P3%.2f", col1B[i-1]))->Clone());
+        Accepted2.push_back((double)(hist2->Integral()));
+        hNAcc_calchep->SetBinContent(i, (double)(hist2->Integral()));
+
+        double rFullTree = col3A[i-1] / col3B[i-1];
+        double erFullTree = (col4A[i-1] / col3B[i-1]); //+ ((col4B[i-1] * col3A[i-1]) / (col3B[i-1] * col3B[i-1]));
+        ratio1.push_back(rFullTree);
+        absolute_error1.push_back(erFullTree);
+        double rTreeTree = col5A[i-1] / col3B[i-1];
+        double erTreeTree = (col6A[i-1] / col3B[i-1]); // + ((col4B[i-1] * col5A[i-1]) / (col3B[i-1] * col3B[i-1]));
+        ratio2.push_back(rTreeTree);
+        absolute_error2.push_back(erTreeTree);
+
+    }
+        
+    TEfficiency* pEff_baba = new TEfficiency(*hNAcc_babayaga, *htot);
+    TEfficiency* pEff_calc = new TEfficiency(*hNAcc_calchep, *htot);
+
+    // Create TGraphErrors
+    TGraphErrors* graph1 = new TGraphErrors(col2A.size());
+    TGraphErrors* graph2 = new TGraphErrors(col2A.size());
+    TGraphErrors* graph3 = new TGraphErrors(col2A.size());
+    
+    for (int i = 1; i <= htot->GetNbinsX(); i++) {
+        double effbaba = pEff_baba->GetEfficiency(i);
+        double effcalc = pEff_calc->GetEfficiency(i);
+        double ebabaAcc = (pEff_baba->GetEfficiencyErrorLow(i) * pEff_baba->GetEfficiencyErrorUp(i))/2;
+        double ecalcAcc = (pEff_calc->GetEfficiencyErrorLow(i) * pEff_calc->GetEfficiencyErrorUp(i))/2;
+
+        double rFullTreeCorr = (col3A[i-1]*effbaba) / (col3B[i-1]*effcalc) ;
+        double erFullTreeCorr = (col6A[i-1] / col3B[i-1])*(effbaba/effcalc) + 
+                                (ebabaAcc*col3A[i-1]) / (col3B[i-1]*effcalc) + (ecalcAcc*col3A[i-1]* effbaba) / (col3B[i-1]*effcalc*effcalc);
+        // double erFullTreeCorr = (col6A[i-1] / col3B[i-1])*(Accepted1[i-1]/Accepted2[i-1]) + ((col4B[i-1] * col5A[i-1]) / (col3B[i-1] * col3B[i-1]))*(Accepted1[i-1]/Accepted2[i-1]) + 
+        //                         (sqrt(Accepted1[i-1])*col3A[i-1]) / (col3B[i-1]*Accepted2[i-1]) + (sqrt(Accepted2[i-1])*col3A[i-1]*Accepted1[i-1]) / (col3B[i-1]*Accepted2[i-1]*Accepted2[i-1]);
+        
+        ratio3.push_back(rFullTreeCorr);
+        absolute_error3.push_back(erFullTreeCorr);
+
+        graph1->SetPoint(i-1, col2A[i-1], ratio1[i-1]);
+        graph1->SetPointError(i-1, 0, absolute_error1[i-1]); // X errors are zero
+        graph2->SetPoint(i-1, col2A[i-1], ratio2[i-1]);
+        graph2->SetPointError(i-1, 0, absolute_error2[i-1]); // X errors are zero
+        graph3->SetPoint(i-1, col2A[i-1], rFullTreeCorr);
+        graph3->SetPointError(i-1, 0, erFullTreeCorr); // X errors are zero
+    }
+
+    // Customize graph
+    graph1->SetTitle("Babayaga_Full / CalcHep");
+    graph1->GetXaxis()->SetTitle("#sqrt{s}");
+    graph1->GetYaxis()->SetTitle("#sigma_{Baba}/#sigma_{Calc}");
+    graph1->SetMarkerStyle(20);
+    graph1->SetMarkerColor(kBlue);
+    graph1->SetMarkerSize(0.8);
+
+    graph2->SetTitle("Babayaga_Tree / CalcHep");
+    graph2->GetXaxis()->SetTitle("#sqrt{s}");
+    graph2->GetYaxis()->SetTitle("#sigma_{Baba}/#sigma_{Calc}");
+    graph2->SetMarkerStyle(20);
+    graph2->SetMarkerColor(kBlue);
+    graph2->SetMarkerSize(0.8);
+
+    graph3->SetTitle("Babayaga_Full / CalcHep weighted by Accepted events");
+    graph3->GetXaxis()->SetTitle("#sqrt{s}");
+    graph3->GetYaxis()->SetTitle("#sigma_{Baba}/#sigma_{Calc}");
+    graph3->SetMarkerStyle(20);
+    graph3->SetMarkerColor(kBlue);
+    graph3->SetMarkerSize(0.8);
+
+    TCanvas* ceff1 = new TCanvas("ceff1", "ceff1", 800, 600);
+    pEff_baba->Draw();
+    TCanvas* ceff2 = new TCanvas("ceff2", "ceff2", 800, 600);
+    pEff_calc->Draw();
+
+    // Draw graph
+    TCanvas* canvas1 = new TCanvas("canvas1", "Babayaga_full / CalcHep", 800, 600);
+    graph1->Draw("AP");
+    TLegend* legend1 = new TLegend(0.1, 0.7, 0.3, 0.9);
+    legend1->AddEntry(graph1, "Babayaga_Full / CalcHep", "p");
+    legend1->Draw();
+
+    // Draw graph
+    TCanvas* canvas2 = new TCanvas("canvas2", "Babayaga_tree / CalcHep", 800, 600);
+    graph2->Draw("AP");
+    TLegend* legend2 = new TLegend(0.1, 0.7, 0.3, 0.9);
+    legend2->AddEntry(graph2, "Babayaga_Tree / CalcHep", "p");
+    legend2->Draw();
+
+    TCanvas* canvas3 = new TCanvas("canvas3", "Babayaga_Full / CalcHep weighted by Accepted events", 800, 600);
+    graph3->Draw("AP");
+    TLegend* legend3 = new TLegend(0.1, 0.7, 0.3, 0.9);
+    legend3->AddEntry(graph3, "Babayaga_Full / CalcHep weighted by Accepted events", "p");
+    legend3->Draw();
+
+    gStyle->SetOptStat(11111);
+
 }

@@ -43,7 +43,7 @@ double Na  = 6.022e23;
 double Z_C = 6;
 double D_C = 3.5;
 double A_C = 12;
-double TThickness = 0.0097; //in cm
+double TThickness = 0.01; //in cm
 double CmtoPb = 1e-36;
 double Luminosity_C = CmtoPb * Na * Z_C * D_C * TThickness / A_C;
 
@@ -56,7 +56,7 @@ vector<double> eSYield, eFYield, eGYield, eSMYield;
 vector<double> FullOvGG;
 vector<double> eFullOvGG;
 vector<double> EBeam, SqrtS;
-vector<double> BEM, eSqrtS;
+vector<double> BES, eSqrtS;
 
 ifstream EBeamInput("/home/mancinima/padme-fw/varieMarco/EnergyPoints.txt");
 double val;
@@ -64,7 +64,7 @@ while (EBeamInput >> val) {
     cout<<val<<endl;
     EBeam.push_back(val);
     SqrtS.push_back(TMath::Sqrt(val));
-    BEM.push_back(val*0.003);
+    BES.push_back(val*0.003);
     eSqrtS.push_back(TMath::Sqrt(val)*0.003);
     cout<<"beam energy "<<val<<endl;
 }
@@ -76,7 +76,7 @@ EBeamInput.close();
 //creating output file with TGraphErrors
 TFile *FileOut = new TFile(OutputName, "RECREATE");
 
-TFile* FileIn = new TFile("/home/mancinima/padme-fw/varieMarco/ToyR305mm/ToyNoAngle/merged_output.root", "READ");
+TFile* FileIn = new TFile("/home/mancinima/padme-fw/varieMarco/ToyR270mm/ToyNoAngle/merged_output.root", "READ");
 // ofstream TxtOut;
 // TxtOut.open("provaoutput.txt");
 // TxtOut<<"#"<<"E_Beam"<<" "<<"Sqrt(s)"<<" "<<"Signal Acc"<<" "<<"N(2CL)/NPoT"<<" "<<"N(ee)/NPoT"<<" "<<"N(AA)/NPoT"<<" "<<"N(ee)/N(AA)"<<"\n";
@@ -204,27 +204,27 @@ for(int iE = 0; iE<EBeam.size(); iE++){
 
 static const int nPoint = EBeam.size();
 
-// TGraphErrors *gSAcceptance = new TGraphErrors(nPoint, &EBeam[0], &SAcceptance[0], &BEM[0], &eSAcceptance[0]);
+// TGraphErrors *gSAcceptance = new TGraphErrors(nPoint, &EBeam[0], &SAcceptance[0], &BES[0], &eSAcceptance[0]);
 TGraphErrors *gSAcceptance = new TGraphErrors(nPoint, &SqrtS[0], &SAcceptance[0], &eSqrtS[0], &eSAcceptance[0]);
 // gSAcceptance->Fit(SFitFuncLow, "R");
 // gSAcceptance->Fit(SFitFuncRes, "R+");
 // gSAcceptance->Fit(SFitFuncFull, "R");
 
-// TGraphErrors *gGAcceptance = new TGraphErrors(nPoint, &EBeam[0], &GAcceptance[0], &BEM[0], &eGAcceptance[0]);
+// TGraphErrors *gGAcceptance = new TGraphErrors(nPoint, &EBeam[0], &GAcceptance[0], &BES[0], &eGAcceptance[0]);
 TGraphErrors *gGAcceptance = new TGraphErrors(nPoint, &SqrtS[0], &GAcceptance[0], &eSqrtS[0], &eGAcceptance[0]);
-// TGraphErrors *gSYield = new TGraphErrors(nPoint, &EBeam[0], &SYield[0], &BEM[0], &eSYield[0]);
+// TGraphErrors *gSYield = new TGraphErrors(nPoint, &EBeam[0], &SYield[0], &BES[0], &eSYield[0]);
 TGraphErrors *gSYield = new TGraphErrors(nPoint, &SqrtS[0], &SYield[0], &eSqrtS[0], &eSYield[0]);
-// TGraphErrors *gFYield = new TGraphErrors(nPoint, &EBeam[0], &FYield[0], &BEM[0], &eFYield[0]);
+// TGraphErrors *gFYield = new TGraphErrors(nPoint, &EBeam[0], &FYield[0], &BES[0], &eFYield[0]);
 TGraphErrors *gFYield = new TGraphErrors(nPoint, &SqrtS[0], &FYield[0], &eSqrtS[0], &eFYield[0]);
-// TGraphErrors *gGYield = new TGraphErrors(nPoint, &EBeam[0], &GYield[0], &BEM[0], &eGYield[0]);
+// TGraphErrors *gGYield = new TGraphErrors(nPoint, &EBeam[0], &GYield[0], &BES[0], &eGYield[0]);
 TGraphErrors *gGYield = new TGraphErrors(nPoint, &SqrtS[0], &GYield[0], &eSqrtS[0], &eGYield[0]);
-// TGraphErrors *gSMYield = new TGraphErrors(nPoint, &EBeam[0], &SMYield[0], &BEM[0], &eSMYield[0]);
+// TGraphErrors *gSMYield = new TGraphErrors(nPoint, &EBeam[0], &SMYield[0], &BES[0], &eSMYield[0]);
 TGraphErrors *gSMYield = new TGraphErrors(nPoint, &SqrtS[0], &SMYield[0], &eSqrtS[0], &eSMYield[0]);
 // gSMYield->Fit(SMFitFuncLow,"R");
 // gSMYield->Fit(SMFitFuncRes,"R+");
 // gSMYield->Fit(SMFitFuncFull, "R");
 
-// TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &EBeam[0], &FullOvGG[0], &BEM[0], &eFullOvGG[0]);
+// TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &EBeam[0], &FullOvGG[0], &BES[0], &eFullOvGG[0]);
 TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &SqrtS[0], &FullOvGG[0], &eSqrtS[0], &eFullOvGG[0]);
 // gFullOvGG->Fit(fitFunc,"E");
 
@@ -250,32 +250,32 @@ TGraphErrors *gFullOvGG = new TGraphErrors(nPoint, &SqrtS[0], &FullOvGG[0], &eSq
 //     // if(i>22 && i!=nPoint) hEDiff2->Fill(EBeam[i]- EBeam[i+1]);
 // }
 
-gSAcceptance->SetTitle("SAcceptance; EBeam [MeV]; Acceptance");
+gSAcceptance->SetTitle("SCh_efficiency; #sqrt{s} [MeV]; Acceptance");
 gSAcceptance->SetMarkerStyle(20);
 gSAcceptance->SetMarkerColor(kMagenta);
 gSAcceptance->SetMarkerSize(0.8);
-gGAcceptance->SetTitle("GAcceptance; EBeam [MeV]; Acceptance");
+gGAcceptance->SetTitle("GG_efficiency; #sqrt{s} [MeV]; Acceptance");
 gGAcceptance->SetMarkerStyle(20);
 gGAcceptance->SetMarkerColor(kBlue);
 gGAcceptance->SetMarkerSize(0.8);
 
-gSYield->SetTitle("SYield; EBeam [MeV]; N_{Sch}(e^{+}e^{-})/N^{PoT}");
+gSYield->SetTitle("SCh_Yield; #sqrt{s} [MeV]; N_{Sch}(e^{+}e^{-})/N^{PoT}");
 gSYield->SetMarkerStyle(20);
 gSYield->SetMarkerColor(kMagenta);
 gSYield->SetMarkerSize(0.8);
-gFYield->SetTitle("FYield; EBeam [MeV]; N_{Bhabha}(e^{+}e^{-})/N^{PoT}");
+gFYield->SetTitle("Bhabha_Yield; #sqrt{s} [MeV]; N_{Bhabha}(e^{+}e^{-})/N^{PoT}");
 gFYield->SetMarkerStyle(20);
 gFYield->SetMarkerColor(kGreen);
 gFYield->SetMarkerSize(0.8);
-gGYield->SetTitle("GYield; EBeam [MeV]; N(#gamma#gamma)/N^{PoT}");
+gGYield->SetTitle("GG_Yield; #sqrt{s} [MeV]; N(#gamma#gamma)/N^{PoT}");
 gGYield->SetMarkerStyle(20);
 gGYield->SetMarkerColor(kBlue);
 gGYield->SetMarkerSize(0.8);
-gSMYield->SetTitle("SMYield; EBeam [MeV]; N(2CL)/N^{PoT}");
+gSMYield->SetTitle("2CL_Yield; #sqrt{s} [MeV]; N(2CL)/N^{PoT}");
 gSMYield->SetMarkerStyle(20);
 gSMYield->SetMarkerColor(kBlack);
 gSMYield->SetMarkerSize(0.8);
-gFullOvGG->SetTitle("gFullOvGG; EBeam [MeV]; N_{Bhabha}(e^{+}e^{-})/N(#gamma#gamma))");
+gFullOvGG->SetTitle("Bhabha_Over_gg; #sqrt{s} [MeV]; N_{Bhabha}(e^{+}e^{-})/N(#gamma#gamma))");
 gFullOvGG->SetMarkerStyle(20);
 gFullOvGG->SetMarkerColor(kBlack);
 gFullOvGG->SetMarkerSize(0.8);

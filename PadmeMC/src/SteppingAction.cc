@@ -23,7 +23,7 @@ SteppingAction::SteppingAction()
 
   // Analyses are disabled by default
   fEnableSACAnalysis = 0;
-  fEnableECalAnalysis = 0;
+  fEnableECalAnalysis = 1;
   fHistoManager = HistoManager::GetInstance();
   fMCTruthManager = MCTruthManager::GetInstance();
 }
@@ -170,16 +170,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     }
   }
   
-
+  //G4cout<<"Ha tuka 1"<<std::endl;
   //Analyze ECal tracks
   if (fEnableECalAnalysis) {
     if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+      //G4cout<<"Ha tuka 2 "<<step->GetPreStepPoint()->GetPhysicalVolume()->GetName()<<" "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<std::endl;
       if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
-	 step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="World") {
-      
+	 step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="world_volume_PV"){ // was: World") {
+        //G4cout<<"Ha tuka 3"<<std::endl;
 	////PRENDI LE VARIABILI DALLA GEOMETRIA PLZ!!!!!!!!!!!!!!!!!!!!!
 	if(abs(step->GetPostStepPoint()->GetPosition().x())>5.*cm ||    
 	   abs(step->GetPostStepPoint()->GetPosition().y())>5.*cm){
+	  //G4cout<<"Ha tuka 4"<<std::endl;//see if ECal hits are added at all
 	  fEventAction->AddCalHitsStep(track->GetKineticEnergy(),
 				       track->GetGlobalTime(),
 				       ClassifyTrack(step->GetTrack()),
@@ -187,7 +189,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 				       step->GetPostStepPoint()->GetPosition().y()
 				       );
 	
-	  //	    G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<
+	  //  G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetCopyNo() <<" "<<track->GetKineticEnergy()<<
 	  //	      " X "<<step->GetPostStepPoint()->GetPosition().x()<<" Y "<<step->GetPostStepPoint()->GetPosition().y()<<" T "<<step->GetPostStepPoint()->GetGlobalTime()<<G4endl;
 	  //	track->SetTrackStatus(fStopAndKill);      
 	}

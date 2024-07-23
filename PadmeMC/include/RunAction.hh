@@ -58,6 +58,7 @@ public:
   void DisableAutomaticRandomSeed() { fAutomaticRandomSeed = false; }
 
   std::ofstream *GetOutputTextFileECalML(){return &fOutTextFileECalML;};
+  std::ofstream *GetOutputTextFileHits(){return &fOutTextFileHits;};
   std::ofstream *GetOutputTextFileTruth(){return &fOutTextFileTruth;};
 private:
 
@@ -71,6 +72,7 @@ private:
   G4double fSumLAbs, fSum2LAbs;
   G4double fSumLGap, fSum2LGap;   
   std::ofstream fOutTextFileECalML;
+  std::ofstream fOutTextFileHits;
   std::ofstream fOutTextFileTruth;
   
 };

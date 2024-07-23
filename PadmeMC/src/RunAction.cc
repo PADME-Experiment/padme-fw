@@ -52,8 +52,9 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   RootIOManager::GetInstance()->NewRun(aRun->GetRunID());
   fHistoManager->book();
-  fOutTextFileECalML.open("Tervel-ML-ECal-10k.dat");
-  fOutTextFileTruth.open("Tervel-ML-Truth-10k.dat");
+  fOutTextFileECalML.open("Tervel-ML-ECal-1000-new.dat");
+  fOutTextFileHits.open("Tervel-ML-Hits-1000-new.dat");
+  fOutTextFileTruth.open("Tervel-ML-Truth-1000-new.dat");
   
   long seeds[2];
   seeds[0] = 0;

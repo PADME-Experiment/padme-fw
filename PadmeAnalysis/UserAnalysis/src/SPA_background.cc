@@ -50,6 +50,7 @@ Bool_t SPA_background::InitHistos(){
   hSvcVal->BookHisto(this->GetName()+"_ECal_Energy_oneCluster",500,0.0,500.0);  
   hSvcVal->BookHisto(this->GetName()+"_ECal_Theta_oneCluster",100,0.0,0.1);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_Energy_Mmiss",500,0.0,500.0,1000,-500.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_ECal_Energy_MissingTheta_All",500,0.0,500,200,0.0,0.2);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_Energy_MissingTheta",500,0.0,500,200,0.0,0.2);
 
   
@@ -317,6 +318,9 @@ Bool_t SPA_background::Process(){
       Double_t Z_1 = 3480;
       MissingMass = ComputeMissingMass(BeamEnergy,(clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy()));
       hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_All",MissingMass);
+      
+      hSvc->FillHisto2(this->GetName()+"_ECal_Energy_MissingTheta_All",(clu->GetEnergy()),(ComputeTheta((clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy()))));
+      
      
       for (Int_t j=0; j<NclusECal; ++j){
 

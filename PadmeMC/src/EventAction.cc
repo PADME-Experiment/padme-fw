@@ -467,7 +467,9 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
 		      << " " << hit->GetPosZ()/CLHEP::cm
 		      << " " << hit->GetTime() 
 		      << " ";
+	std::cout << "Hit energy if boundary=1: " << hit->GetTrackEnergy() << std::endl;
 	 }
+      std::cout << "Hit boundary: " << hit->GetBoundary() << "Hit energy : " << hit->GetTrackEnergy() << std::endl;
     }
   }//end of loop on hits
 

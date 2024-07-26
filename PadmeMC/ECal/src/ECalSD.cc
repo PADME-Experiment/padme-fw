@@ -77,13 +77,14 @@ G4bool ECalSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
   newHit->SetTrackEnergy(aStep->GetTrack()->GetTotalEnergy());
-  G4cout << "Hit track energy from ECalSD: " << newHit->GetTrackEnergy()  << G4endl;
+  //G4cout << "Hit track energy from ECalSD: " << newHit->GetTrackEnergy()  << G4endl;
   if((PreStepStatus == fGeomBoundary) && fabs(localPosPre.z() + 11.5*CLHEP::cm)<1e-6) {
     newHit->SetBoundary(1);
+    G4cout <<__FILE__<<":"<<__LINE__<<" aStep->GetTrack()->GetTotalEnergy() " << aStep->GetTrack()->GetTotalEnergy()<< G4endl;
   } else {
     newHit->SetBoundary(0);
   }
-  G4cout << "Hit boundary from ECalSD: " << newHit->GetBoundary()  << G4endl;
+  //G4cout << "Hit boundary from ECalSD: " << newHit->GetBoundary()  << G4endl;
   fECalCollection->insert(newHit);
 
   

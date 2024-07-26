@@ -81,7 +81,12 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
    // Origin of calibration beam is on back face of Target
     //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
-    GenerateCalibrationGamma();
+    G4int npart = G4UniformRand()*bpar->GetCalibRunNgamma();
+    if(npart ==0) npart=1;
+    G4cout << "BeamGenerator - Number of particles in event: " << npart<< G4endl;
+    for(G4int ngamma=0; ngamma<npart;ngamma++){
+      GenerateCalibrationGamma();
+    }
     return;
   }
 
@@ -830,6 +835,11 @@ void BeamGenerator::GenerateCalibrationGamma()
 
   // Create primary vertex at center of back face of target with t=0.
   G4double vT = 0.*ns;
+  vT= 1000*G4UniformRand();
+  if(vT<16){
+    vT=vT+16;
+  }
+  //G4cout << "Gamma time " << vT << G4endl;
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
   G4double vZ = bpar->GetBeamCenterPosZ();
@@ -853,9 +863,14 @@ void BeamGenerator::GenerateCalibrationGamma()
   // Create gamma pointing from vertex to generated point
   // Will be improved to use different particles (e.g. e+)
   G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle("gamma");
-  G4double part_E = bpar->GetCalibRunEnergy();
+  //G4double part_E = bpar->GetCalibRunEnergy();
+  G4double part_E = 0.0;
+  do {part_E = G4RandGauss::shoot(bpar->GetCalibRunEnergy(),bpar->GetCalibRunEnergySigma());} while(part_E<=0.0);
+  //if(part_E<0) partE=0;
   G4PrimaryParticle* particle = new G4PrimaryParticle(part,part_E*vp.x(),part_E*vp.y(),part_E*vp.z(),part_E);
   vtx->SetPrimary(particle);
+  //G4cout << "Gamma energy " << part_E << G4endl;
+  //G4cout << "Gamma coordinates " << pX << " " << pY << G4endl;
 
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);

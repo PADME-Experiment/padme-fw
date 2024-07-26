@@ -125,8 +125,14 @@ public:
   void CalibrationRunDisable() { fCalibrationRun = false; }
   G4bool CalibrationRun() { return fCalibrationRun; }
 
+  G4double GetCalibRunNgamma() { return fCalibRunNgamma; }
+  void SetCalibRunNgamma(G4int n) { fCalibRunNgamma  = n; }
+  
   G4double GetCalibRunEnergy() { return fCalibRunEnergy; }
   void SetCalibRunEnergy(G4double e) { fCalibRunEnergy  = e; }
+  
+  G4double GetCalibRunEnergySigma() { return fCalibRunEnergySigma; }
+  void SetCalibRunEnergySigma(G4double sigmae) { fCalibRunEnergySigma  = sigmae; }
 
   G4double GetCalibRunCenterX() { return fCalibRunCenterX; }
   void SetCalibRunCenterX(G4double x) { fCalibRunCenterX = x; }
@@ -211,7 +217,9 @@ private:
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)
   G4bool   fCalibrationRun;
+  G4int fCalibRunNgamma;
   G4double fCalibRunEnergy;  // Energy of the photon
+  G4double fCalibRunEnergySigma;  // Sigma of the energy of the photon
   G4double fCalibRunCenterX; // X of center of cirlce 
   G4double fCalibRunCenterY; // Y of center of circle
   G4double fCalibRunRadius;  // Radius of circle

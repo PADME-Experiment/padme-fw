@@ -442,8 +442,8 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
       G4float hTime = hit->GetTime();
       //Energy of the hit, time of hit, position of the hit.
-      if( hit->GetPType()==1){
-	for( int ll = 0; ll<1024;ll++) {
+      if( hit->GetPType()==2 || hit->GetPType()==3 ){
+	for( int ll = 0; ll<1024;ll++ ) {
 	  //Propagation time = 0
 	  if(ll < (int) (hTime)) continue;
 
@@ -457,19 +457,20 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       ETotCal += hit->GetEnergy();
       //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
-      if(hit->GetBoundary()) {
-       	(*(foutHits)) << hit->GetChannelId()
-      // 	  //<< std::setw(11) << std::setprecision(5)
-		      << " " << hit->GetPType()
-		      << " " << hit->GetTrackEnergy()
-		      << " " << hit->GetPosX()/CLHEP::cm
-		      << " " << hit->GetPosY()/CLHEP::cm
-		      << " " << hit->GetPosZ()/CLHEP::cm
-		      << " " << hit->GetTime() 
-		      << " ";
-	std::cout << "Hit energy if boundary=1: " << hit->GetTrackEnergy() << std::endl;
-	 }
-      std::cout << "Hit boundary: " << hit->GetBoundary() << "Hit energy : " << hit->GetTrackEnergy() << std::endl;
+      // if(hit->GetBoundary()) 
+	// {
+      //  	(*(foutHits)) << hit->GetChannelId()
+      // // 	  //<< std::setw(11) << std::setprecision(5)
+      // 		      << " " << hit->GetPType()
+      // 		      << " " << hit->GetTrackEnergy()
+      // 		      << " " << hit->GetPosX()/CLHEP::cm
+      // 		      << " " << hit->GetPosY()/CLHEP::cm
+      // 		      << " " << hit->GetPosZ()/CLHEP::cm
+      // 		      << " " << hit->GetTime() 
+      // 		      << " ";
+      // 	std::cout << "Hit energy if boundary=1: " << hit->GetTrackEnergy() << std::endl;
+      // 	 }
+      // std::cout << "Hit boundary: " << hit->GetBoundary() << "Hit energy : " << hit->GetTrackEnergy() << std::endl;
     }
   }//end of loop on hits
 

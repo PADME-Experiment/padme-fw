@@ -14,7 +14,7 @@
 
 #include "globals.hh"
 
-class TETagMCEvent;  //change to MMEga
+class TMMegaMCEvent;  
 class MMegaGeometry;
 class TDetectorInfo;
 
@@ -36,7 +36,7 @@ private:
 
   TTree* fEventTree;
   TBranch* fMMegaBranch;
-  TETagMCEvent* fEvent;
+  TMMegaMCEvent* fEvent;
 
   MMegaGeometry* fGeoPars;
 

@@ -17,9 +17,9 @@
 #include "MMegaHit.hh"
 #include "MMegaDigi.hh"
 
-#include "TETagMCEvent.hh" //change to MMega
-#include "TETagMCHit.hh"  //same
-#include "TETagMCDigi.hh" //same
+#include "TMMegaMCEvent.hh" 
+#include "TMMegaMCHit.hh"  
+#include "TMMegaMCDigi.hh" 
 #include "TDetectorInfo.hh"
 #include "TSubDetectorInfo.hh"
 
@@ -34,12 +34,12 @@ MMegaRootIO::MMegaRootIO() : MCVRootIO(G4String("MMega"))
   fVerbose = fGeoPars->GetVerboseLevel();
 
   // Create event object
-  fEvent = new TETagMCEvent();
+  fEvent = new TMMegaMCEvent();
 
   TTree::SetBranchStyle(fBranchStyle);
 
   fEnabled = true;
-  fHitsEnabled = true;
+  fHitsEnabled = false;
   fDigisEnabled = true;
 
   if (fVerbose) G4cout << "MMegaRootIO: Initialized" << G4endl;
@@ -90,88 +90,88 @@ void MMegaRootIO::EndRun()
 void MMegaRootIO::SaveEvent(const G4Event* eventG4)
 {
 
-  if (fVerbose>=2) G4cout << "MMegaRootIO: Preparing event structure" << G4endl;
+    if (fVerbose>=2) G4cout << "MMegaRootIO: Preparing event structure" << G4endl;
 
-  //Save current Object count
-  Int_t savedObjNumber = TProcessID::GetObjectCount();
+    //Save current Object count
+    Int_t savedObjNumber = TProcessID::GetObjectCount();
 
-  // Reset event structure
-  fEvent->Clear();
-  //G4cout << "MMegaRootIO: setting run/event to " << fRunNumber << "/" << eventG4->GetEventID() << G4endl;
-  fEvent->SetRunNumber(fRunNumber);
-  fEvent->SetEventNumber(eventG4->GetEventID());
+    // Reset event structure
+    fEvent->Clear();
+    //G4cout << "MMegaRootIO: setting run/event to " << fRunNumber << "/" << eventG4->GetEventID() << G4endl;
+    fEvent->SetRunNumber(fRunNumber);
+    fEvent->SetEventNumber(eventG4->GetEventID());
 
-  if (fHitsEnabled) {
+    if (fHitsEnabled) { //maybe i do not need to save hits for MMega
 
-    // Get list of hit collections in this event
-    G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
-    G4int nHC = theHC->GetNumberOfCollections();
+        // Get list of hit collections in this event
+        G4HCofThisEvent* theHC = eventG4->GetHCofThisEvent();
+        G4int nHC = theHC->GetNumberOfCollections();
 
-    for(G4int iHC=0; iHC<nHC; iHC++) {
+        for(G4int iHC=0; iHC<nHC; iHC++) {
 
-      // Handle each collection type with the right method
-      G4String HCname = theHC->GetHC(iHC)->GetName();
-      if (HCname == "MMegaCollection"){
-	if (fVerbose>=2) G4cout << "MMegaRootIO: Found hits collection " << HCname << G4endl;
-	MMegaHitsCollection* MMegaHC = (MMegaHitsCollection*)(theHC->GetHC(iHC));
-	if(MMegaHC) {
-	  G4int n_hit = MMegaHC->entries();
-	  if(n_hit>0){
-	    G4double e_tot = 0.;
-	    for(G4int i=0;i<n_hit;i++) {
-	      TETagMCHit* hit = (TETagMCHit*)fEvent->AddHit();  //change to MMega
-	      hit->SetChannelId((*MMegaHC)[i]->GetChannelId()); 
-	      hit->SetTime((*MMegaHC)[i]->GetTime());
-	      hit->SetPosition(TVector3((*MMegaHC)[i]->GetPosX(),
-					(*MMegaHC)[i]->GetPosY(),
-					(*MMegaHC)[i]->GetPosZ()));
-	      hit->SetEnergy((*MMegaHC)[i]->GetEnergy());
-	      e_tot += hit->GetEnergy();
-	    }
-	    if (fVerbose>=2)
-	      G4cout << "MMegaRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
-	  }
-	}
-      }
+            // Handle each collection type with the right method
+            G4String HCname = theHC->GetHC(iHC)->GetName();
+            if (HCname == "MMegaCollection"){
+                if (fVerbose>=2) G4cout << "MMegaRootIO: Found hits collection " << HCname << G4endl;
+                MMegaHitsCollection* MMegaHC = (MMegaHitsCollection*)(theHC->GetHC(iHC));
+                if(MMegaHC) {
+                    G4int n_hit = MMegaHC->entries();
+                    if(n_hit>0){
+                        G4double e_tot = 0.;
+                        for(G4int i=0;i<n_hit;i++) {
+                            TMMegaMCHit* hit = (TMMegaMCHit*)fEvent->AddHit();  
+                            hit->SetChannelId(0); //in MMega hits do not contain ID info!
+                            hit->SetTime((*MMegaHC)[i]->GetTime());
+                            hit->SetPosition(TVector3((*MMegaHC)[i]->GetPosX(),
+                                                        (*MMegaHC)[i]->GetPosY(),
+                                                        (*MMegaHC)[i]->GetPosZ()));
+                            hit->SetEnergy((*MMegaHC)[i]->GetEnergy());
+                            // e_tot += hit->GetEnergy();
+                        }
+                        if (fVerbose>=2)
+                            G4cout << "MMegaRootIO: " << n_hit << " hits with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+                    }
+                }
+            }
 
+        }
     }
 
-  }
+    if (fDigisEnabled) {
 
-  if (fDigisEnabled) {
+        // Get list of digi collections in this event
+        G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
+        G4int nDC = theDC->GetNumberOfCollections();
 
-    // Get list of digi collections in this event
-    G4DCofThisEvent* theDC = eventG4->GetDCofThisEvent();
-    G4int nDC = theDC->GetNumberOfCollections();
+        for(G4int iDC=0; iDC<nDC; iDC++) {
 
-    for(G4int iDC=0; iDC<nDC; iDC++) {
+            // Handle each collection type with the right method
+            G4String DCname = theDC->GetDC(iDC)->GetName();
+            if (DCname == "MMegaDigiCollection"){ //change to MMega
+                if (fVerbose>=2) G4cout << "MMegaRootIO: Found digi collection " << DCname << G4endl;
+                MMegaDigiCollection* mMegaDC = (MMegaDigiCollection*)(theDC->GetDC(iDC));
+                if(mMegaDC) {
+                    G4int n_digi = mMegaDC->entries();
+                    if(n_digi>0){
+                        // G4double e_tot = 0.;
+                        for(G4int i=0;i<n_digi;i++) {
+                            TMMegaMCDigi* digi = (TMMegaMCDigi*)fEvent->AddDigi();
+                            digi->SetChannelId((*mMegaDC)[i]->GetID()); 
+                            // DQ: for now i save earliest time and total charge
+                            // NB: WE FILL THE ENERGY FIELD WITH CHARGE!
+                            digi->SetEnergy((*mMegaDC)[i]->GetCharge()); 
+                            digi->SetTime((*mMegaDC)[i]->GetTime());
+                            // e_tot += (*mMegaDC)[i]->GetCharge();
+                        }
+                        // if (fVerbose>=2)
+                        // G4cout << "MMegaRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
+                    }
+                }
+            }
 
-      // Handle each collection type with the right method
-      G4String DCname = theDC->GetDC(iDC)->GetName();
-      if (DCname == "MMegaDigiCollection"){ //change to MMega
-	if (fVerbose>=2) G4cout << "MMegaRootIO: Found digi collection " << DCname << G4endl;
-	MMegaDigiCollection* mMegaDC = (MMegaDigiCollection*)(theDC->GetDC(iDC));
-	if(mMegaDC) {
-	  G4int n_digi = mMegaDC->entries();
-	  if(n_digi>0){
-	    G4double e_tot = 0.;
-	    for(G4int i=0;i<n_digi;i++) {
-	      TETagMCDigi* digi = (TETagMCDigi*)fEvent->AddDigi();
-	      digi->SetChannelId((*mMegaDC)[i]->GetChannelId()); 
-	      digi->SetEnergy((*mMegaDC)[i]->GetEnergy());
-	      digi->SetTime((*mMegaDC)[i]->GetTime());
-	      e_tot += (*mMegaDC)[i]->GetEnergy();
-	    }
-	    if (fVerbose>=2)
-	      G4cout << "MMegaRootIO: " << n_digi << " digi with " << G4BestUnit(e_tot,"Energy") << " total energy" << G4endl;
-	  }
-	}
-      }
-
+        }
     }
 
-  }
-
-  TProcessID::SetObjectCount(savedObjNumber);
+    TProcessID::SetObjectCount(savedObjNumber);
 
 }

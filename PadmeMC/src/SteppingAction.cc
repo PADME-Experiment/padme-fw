@@ -26,7 +26,8 @@ SteppingAction::SteppingAction()
   // Analyses are disabled by default
   fEnableSACAnalysis = 0;
   fEnableECalAnalysis = 0;
-  fEnableMMegaAnalysis = 1; // D.Quaranta 9/1/24 default is 0!
+  fEnableMMegaAnalysis = 0; // D.Quaranta 9/1/24 default is 0!
+  fEnableETagAnalysis = 0; // D.Quaranta 5/8/24 default is 0!
   fHistoManager = HistoManager::GetInstance();
   fMCTruthManager = MCTruthManager::GetInstance();
 }
@@ -208,6 +209,44 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 // 				step->GetTrack()->GetVertexPosition().x(),
 // 				step->GetTrack()->GetVertexPosition().y(),
 // 				step->GetTrack()->GetVertexPosition().z());
+// 			}
+// 			track->SetTrackStatus(fStopAndKill); 
+//       }
+	  
+//     }
+//   }
+
+
+//Analyze ETag track  D.Quaranta 5/8/24
+//   if (fEnableETagAnalysis) {
+//     if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+//       if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ETagBar") {
+// 			if(step->GetTrack()->GetDefinition()->GetParticleName() != G4String("gamma")){
+
+// 				const G4Event* event = G4EventManager::GetEventManager()->GetConstCurrentEvent();
+// 				const G4VProcess* process = step->GetTrack()->GetCreatorProcess();
+// 				const G4ThreeVector &vertex = step->GetTrack()->GetVertexPosition();
+
+// 				G4int eventID; G4String processName;
+
+// 				if(event != nullptr) eventID = event->GetEventID();
+// 				else eventID = -1;
+
+// 				if(process != nullptr) processName = process->GetProcessName();
+// 				else processName = "null";
+
+// 				printf("%d %d %s %s %f %f %f %f\n",
+// 				step->GetTrack()->GetTrackID(),
+// 				eventID,
+// 				step->GetTrack()->GetDefinition()->GetParticleName().c_str(),
+// 				processName.c_str(),
+// 				track->GetKineticEnergy(),
+// 				// track->GetGlobalTime(),
+// 				// ClassifyTrack(step->GetTrack()),
+// 				step->GetPostStepPoint()->GetPosition().x(),
+// 				step->GetPostStepPoint()->GetPosition().y(),
+// 				step->GetPostStepPoint()->GetPosition().z());
+
 // 			}
 // 			track->SetTrackStatus(fStopAndKill); 
 //       }

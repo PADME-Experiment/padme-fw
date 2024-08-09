@@ -82,6 +82,8 @@ private:
   G4int fEnableSACAnalysis;
   G4int fEnableECalAnalysis;
   G4int fEnableMMegaAnalysis;
+  G4int fEnableETagAnalysis;  //DQ 5/8/24
+
 
 
   double ProcID;

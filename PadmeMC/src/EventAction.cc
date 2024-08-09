@@ -6,6 +6,7 @@
 #include "G4TrajectoryContainer.hh"
 #include "G4Trajectory.hh"
 #include "G4ios.hh"
+#include "G4UnitsTable.hh"
 
 #include "RunAction.hh"
 #include "EventAction.hh"
@@ -180,7 +181,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fECalDigitizer)    fECalDigitizer->Digitize();
   if (fSACDigitizer)     fSACDigitizer->Digitize();
   if (fETagDigitizer)    fETagDigitizer->Digitize();
-  if (fMMegaDigitizer)   fMMegaDigitizer->Digitize(); //D.Quaranta 16/03/2024
+  if (fMMegaDigitizer)   fMMegaDigitizer->Digitize(); //D Quaranta 16/03/2024
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
 
   
@@ -188,7 +189,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   AddMMegaHits(DC);
   
   // Save event to root file
-  //RootIOManager::GetInstance()->SaveEvent(evt); implement rootio for mmega otherwise segmentation fault here
+  RootIOManager::GetInstance()->SaveEvent(evt); 
 
   G4int nHC = 0;
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
@@ -401,7 +402,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   
-// M. Raggi metti a posto!!!!
+//  M. Raggi metti a posto!!!!
 //  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
 //    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
 //  }else{
@@ -739,7 +740,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       double PT=sqrt(PX*PX+PY*PY);
       double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
  // computing angle at the entrance of the target using the directions of the particles:
-      G4double htheta = asin(PT/PTOT);
+      G4double htheta = asin(PT/PTOT); //change PX with PT!!
       G4double hthetaX = asin(PX/PTOT);
 
       if(NFlag==7 || NFlag==4 || NFlag==1){
@@ -749,9 +750,10 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
       if (NFlag<8){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
-	fHistoManager->FillHisto(NHisto+1,htheta); // after the target
-	fHistoManager->FillHisto(NHisto+2,hX);     // 
-	fHistoManager->FillHisto(NHisto+3,hY);     // 
+	fHistoManager->FillHisto(NHisto+1,hthetaX); // after the target
+  // G4cout << hX << G4endl;
+	fHistoManager->FillHisto(NHisto+2,hX/mm);     // 
+	fHistoManager->FillHisto(NHisto+3,hY/mm);     // 
 	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
 	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
 	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
@@ -1114,41 +1116,63 @@ void EventAction::AddMMegaHits(G4DCofThisEvent* DC)
   G4int nDC = DC->GetNumberOfCollections();
 
   for(G4int iDC=0; iDC<nDC; iDC++) {
-
     // Handle each collection type with the right method
     G4String DCname = DC->GetDC(iDC)->GetName();
+    
     if (DCname == "MMegaDigiCollection"){ //change to MMega
       MMegaDigiCollection* mMegaDC = (MMegaDigiCollection*)(DC->GetDC(iDC));
+    
       if(mMegaDC) {
         G4int n_digi = mMegaDC->entries();
+    
         if(n_digi>0){
+    
           for(G4int i=0;i<n_digi;i++) {
-            MMegaDigi* digi = (*mMegaDC)[i];
-            G4int         hID = digi->GetID();
-            G4double      hCharge      = digi->GetCharge();
-            G4int         hNHits       = digi->GetNHits();
-            std::vector<G4double> hTimes = (digi->GetTimes());
-
-            fHistoManager->FillHisto(180,hNHits);
-            fHistoManager->FillHisto(181,hCharge);
+            MMegaDigi* digi     = (*mMegaDC)[i];
+            G4int      hID      = digi->GetID();
+            G4double   hCharge  = digi->GetCharge();
+            G4double   hTime    = digi->GetTime();
 
             MMegaGeometry* MMegaGeom = MMegaGeometry::GetInstance(); //D.Quaranta 17/04/2024
+
+            G4int modulo = 0;
             
             if(MMegaGeom->GetReadoutType() == "strips"){
-              fHistoManager->FillHisto(182, hID%10000);
+              modulo = 10000;
             }
 
             if(MMegaGeom->GetReadoutType() == "pads"){
-              fHistoManager->FillHisto(182, hID%1000);
+              modulo = 1000;
             }
-            
+
+            int firstDigit = hID/modulo;
+                
+            fHistoManager->FillHisto(180, hCharge);
+            fHistoManager->FillHisto(181, hTime/ns);
+
+            // G4cout << "EventAction.cc hID : " << hID << G4endl;
+            // G4cout << "EventAction.cc hID/modulo : " << hID%modulo << G4endl;
+
+            if (firstDigit == 1 || firstDigit == 4) // X coordinate planes
+            {
+              fHistoManager->FillHisto(182, hID%modulo);
+              fHistoManager->FillHisto2(184, hID%modulo, hCharge);
+              fHistoManager->FillHisto2(186, hID%modulo, hTime/ns);
+              fHistoManager->FillHisto(188, hID%modulo, hCharge);
+            }
+            else if (firstDigit == 2 || firstDigit == 3) // Y coordinate planes
+            {
+              fHistoManager->FillHisto(183, hID%modulo);
+              fHistoManager->FillHisto2(185, hID%modulo, hCharge);
+              fHistoManager->FillHisto2(187, hID%modulo, hTime/ns);
+              fHistoManager->FillHisto(189, hID%modulo, hCharge);
+
+            }           
           }    
         }
       }
     }
-
   }
-
 }
 
 G4double EventAction::GetCharge(G4double Energia)

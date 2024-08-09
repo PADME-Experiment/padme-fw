@@ -119,8 +119,8 @@ void HistoManager::book()
   double TPixYmax=TPixYmin+14.1*2;
   double TPiYBins = 14.1*2/0.055;
 
-  double MinE= 300.;
-  double MaxE= 500.;
+  double MinE= 100.;
+  double MaxE= 300.;
   int BinE= (int)(MaxE-MinE)*2;
 
   // h50 Series TimePix study
@@ -228,7 +228,7 @@ void HistoManager::book()
 
   histo[130] = new TH1D("h130","Flag3 energy",500,0.,0.1);
   if (!histo[130]) G4cout << "\n can't create histo 130" << G4endl; 
-  histo[131] = new TH1D("h131","Flag3 Angle ",500,0.,0.050);
+  histo[131] = new TH1D("h131","Flag3 Angle ",500,-0.050,0.050);
   if (!histo[131]) G4cout << "\n can't create histo 131" << G4endl;
   histo[132] = new TH1D("h132","Flag3 X coord ",BigFlagsXBins,BigFlagsXmin,BigFlagsXmax);
   if (!histo[132]) G4cout << "\n can't create histo 132" << G4endl; 
@@ -341,16 +341,26 @@ void HistoManager::book()
   // MMega histos
   //*****************************************
 
-  histo[180] = new TH1D("h180", "NHits", 500, 0., 300.);
+  histo[180] = new TH1D("h180", "Charge", 500, 0., 5000.);
   if (!histo[180]) G4cout << "\n can't create histo 180" << G4endl;
-  histo[181] = new TH1D("h181", "Charge", 300, 0., 1.e-15);
+  histo[181] = new TH1D("h181", "Times", 500, 0., 2000.);
   if (!histo[181]) G4cout << "\n can't create histo 181" << G4endl;
-  histo[182] = new TH1D("h182", "IDs", 1600, 0., 1600.);
+  histo[182] = new TH1D("h182", "XIDs", 1600, 0., 1600.);
   if (!histo[182]) G4cout << "\n can't create histo 182" << G4endl;
-  // histo[183] = new TH1D("h183", "Tot Charge per strip distribution");
-  // if (!histo[183]) G4cout << "\n can't create histo 183" << G4endl;
-  // histo2[185] = new TH2D("h185", "Time vs Strip");
-  // if (!histo2[185]) G4cout << "\n can't create histo 185" << G4endl;
+  histo[183] = new TH1D("h183", "YIDs", 1600, 0., 1600.);
+  if (!histo[183]) G4cout << "\n can't create histo 183" << G4endl;
+  histo2[184] = new TH2D("h184", "Charge vs XStrip", 1600, 0., 1600., 500, 0., 5000.);
+  if (!histo2[184]) G4cout << "\n can't create histo 184" << G4endl;
+  histo2[185] = new TH2D("h185", "Charge vs YStrip", 1600, 0., 1600., 300, 0., 100.e-15);
+  if (!histo2[185]) G4cout << "\n can't create histo 185" << G4endl;
+  histo2[186] = new TH2D("h186", "Time vs XIDs", 1600, 0., 1600., 1000,0., 2000);
+  if (!histo2[186]) G4cout << "\n can't create histo 186" << G4endl;
+  histo2[187] = new TH2D("h187", "Time vs YIDs", 1600, 0., 1600., 1000,0., 2000);
+  if (!histo2[187]) G4cout << "\n can't create histo 187" << G4endl;
+  histo[188] = new TH1D("h188", "XID times charge", 1600, 0., 1600.);
+  if (!histo[188]) G4cout << "\n can't create histo 188" << G4endl;
+  histo[189] = new TH1D("h189", "YID times charge", 1600, 0., 1600.);
+  if (!histo[189]) G4cout << "\n can't create histo 189" << G4endl;
 
   // BeW study
   histo[70] = new TH1D("h70","BeW energy",500,0.,0.1);

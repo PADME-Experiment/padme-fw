@@ -29,7 +29,7 @@ MMegaGeometry::MMegaGeometry()
   fMMegaNomexSizeZ = 10*mm;
   fMMegaKaptonSizeZ = 0.050*mm;
   fMMegaCarbonSizeZ = 0.004*mm; //thickness of carbon resistive layer
-  fMMegaLayerGap = 0.1*um; //otherwise Geant4 overlaps the layers in a weird way
+  fMMegaLayerGap = 0*um; //otherwise Geant4 overlaps the layers in a weird way
 
   // size of front and back panels
   fMMegaPanelSizeX = 600*mm;

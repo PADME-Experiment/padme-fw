@@ -36,6 +36,10 @@
 #pragma link C++ class TETagMCDigi+;
 #pragma link C++ class TETagMCEvent+;
 
+#pragma link C++ class TMMegaMCHit+;
+#pragma link C++ class TMMegaMCDigi+;
+#pragma link C++ class TMMegaMCEvent+;
+
 #pragma link C++ class THEPVetoMCHit+;
 #pragma link C++ class THEPVetoMCDigi+;
 #pragma link C++ class THEPVetoMCEvent+;

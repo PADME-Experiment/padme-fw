@@ -20,6 +20,7 @@
 #include "TPixRootIO.hh"
 #include "MCTruthRootIO.hh"
 #include "ETagRootIO.hh"
+#include "MMegaRootIO.hh"
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
 
@@ -78,6 +79,7 @@ RootIOManager::RootIOManager()
   fRootIOList.push_back(new TPixRootIO);
   fRootIOList.push_back(new MCTruthRootIO);
   fRootIOList.push_back(new ETagRootIO);
+  fRootIOList.push_back(new MMegaRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);
   // Tell all RootIO handlers about new run

@@ -51,7 +51,7 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
   
   G4double edep = aStep->GetTotalEnergyDeposit();
-  G4cout << "entering MMegaSD with:" << edep << G4endl;
+  // G4cout << "entering MMegaSD with:" << edep << G4endl;
   if (edep == 0.) return false;
 
   G4Track* track = aStep->GetTrack();
@@ -67,7 +67,7 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
   newHit->SetTrackID(track->GetTrackID());
-  newHit->SetTime(track->GetGlobalTime());
+  newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
   newHit->SetEnergy(aStep->GetTotalEnergyDeposit() - aStep->GetNonIonizingEnergyDeposit());
   newHit->SetETrack(track->GetTotalEnergy());
 
@@ -80,7 +80,7 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   newHit->SetLocalPositionStart(localPosPre);
   newHit->SetLocalPositionEnd(localPosPost);
 
-  newHit->Print(); //prints in G4 output the hit informations
+  // newHit->Print(); //prints in G4 output the hit informations
   // newHit->Draw();
 
   MMegaCollection ->insert(newHit);     

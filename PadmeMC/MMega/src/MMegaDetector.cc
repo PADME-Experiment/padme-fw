@@ -20,11 +20,12 @@
 #include "G4DigiManager.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4NistManager.hh"
+#include "G4UnitsTable.hh"
 
 #include "MMegaGeometry.hh"
 #include "MMegaSD.hh"
 #include "MMegaDigitizer.hh"
-#include "MMegaROGeometry.hh"
+// #include "MMegaROGeometry.hh"
 
 
 
@@ -61,7 +62,9 @@ void MMegaDetector::CreateGeometry()
   fMMegaVolume = new G4LogicalVolume(solidMMegaFull,G4Material::GetMaterial("Vacuum"),"MMegaLogic",0,0,0);
   fMMegaVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   fMMegaVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,MMegaPos,fMMegaVolume,"MMega",fMotherVolume,false,0,false);
+  G4RotationMatrix* rotationMatrix = new G4RotationMatrix(); 
+  rotationMatrix->rotateY(0.*deg); // added to mimic test beam conditions
+  new G4PVPlacement(rotationMatrix,MMegaPos,fMMegaVolume,"MMega",fMotherVolume,false,0,false);
 
   //GAS VOLUME
   G4double MMegaDriftSizeX = geo->GetMMegaDriftSizeX(); 
@@ -223,5 +226,23 @@ void MMegaDetector::CreateGeometry()
   sdMan->AddNewDetector(mMegaSD);
   fDriftVolume->SetSensitiveDetector(mMegaSD); //setting only gas volume as sensitive
   printf("Setting drift volume as SD \n");
+
+  // Computation of Radiation Length
+  G4double inverse_sum = MMegaDriftSizeZ/(fDriftVolume->GetMaterial()->GetRadlen()) +
+                        2*MMegaCopperSizeZ/(fMMegaCopperVolume->GetMaterial()->GetRadlen()) + 
+                        2*MMegaCarbonSizeZ/(fMMegaCarbonVolume->GetMaterial()->GetRadlen()) +
+                        4*MMegaFreonSizeZ/(fMMegaFreonVolume->GetMaterial()->GetRadlen()) + 
+                        2*MMegaNomexSizeZ/(fMMegaNomexVolume->GetMaterial()->GetRadlen())  + 
+                        4*MMegaKaptonSizeZ/(fMMegaKaptonVolume->GetMaterial()->GetRadlen()) + 
+                        2*MMegaCopperSizeZ/(fXReadoutVolume->GetMaterial()->GetRadlen()) + 
+                        2*MMegaCopperSizeZ/(fYReadoutVolume->GetMaterial()->GetRadlen()) +   
+                        2*AmpMeshSizeZ/(fAmpMeshVolume->GetMaterial()->GetRadlen())  + 
+                        CathodeMeshSizeZ/(fCathodeMeshVolume->GetMaterial()->GetRadlen());
+
+  G4double radlen_tot = ((MMegaSizeZ-5*mm)/inverse_sum);
+  G4cout << "Total Radiation Length is : " << G4BestUnit(radlen_tot, "Length")<<G4endl;
+  //Total Radiation Length is : 664.797 cm
+
+
 }
 

@@ -29,22 +29,22 @@ MMegaDigi::~MMegaDigi() {}
 MMegaDigi::MMegaDigi(const MMegaDigi& right)
   : G4VDigi()
 {
-  fTimes = right.fTimes;
-  fNHits = right.fNHits;
+  fTime = right.fTime;
   fCharge = right.fCharge;
-  // fCenter = right.fCenter;
   fID = right.fID;
+  //fNHits = right.fNHits;
+  // fCenter = right.fCenter;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 const MMegaDigi& MMegaDigi::operator=(const MMegaDigi& right)
 {
-  fTimes = right.fTimes;
-  fNHits = right.fNHits;
+  fTime = right.fTime;
   fCharge = right.fCharge;
-  // fCenter = right.fCenter;
   fID = right.fID;
+  // fNHits = right.fNHits;
+  // fCenter = right.fCenter;
   return *this;
 }
 
@@ -78,11 +78,11 @@ void MMegaDigi::Draw()
 void MMegaDigi::Print()
 {
   G4cout << "###### MMega Digi ######" << G4endl;
-  G4cout << "first hit time : " << G4BestUnit(*std::min_element(fTimes.begin(),fTimes.end()), "Time") << G4endl;
-  G4cout << "NHits: " << fNHits << G4endl;
-  G4cout << "Charge:" << fCharge << G4endl;
-  // G4cout << "Center:" << fCenter << G4endl;
   G4cout << "ID:" << fID << G4endl;
+  G4cout << "first hit time : " << G4BestUnit(fTime, "Time") << G4endl;
+  G4cout << "total charge   :" << G4BestUnit(fCharge, "Electric charge") << G4endl;
+  // G4cout << "Center:" << fCenter << G4endl;
+  // G4cout << "NHits: " << fNHits << G4endl;
   G4cout << "########################" << G4endl;
 }
 

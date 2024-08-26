@@ -52,6 +52,7 @@ private:
   void CreateDHSTB002Magnet();
   void CreateDHSTB001Magnet(); //Raggi 01/02/2022
   //  void CreateQuadMagnets( Grad, Lenght Radius, Position, Rotation);
+  void CreateDHSTB201Magnet();//Clara
   G4LogicalVolume* CreateQuadMagnets(G4double , G4double , G4double ,G4ThreeVector , G4RotationMatrix*);
 
   //Might try creating more flexible geometry with much less coding 08/2022

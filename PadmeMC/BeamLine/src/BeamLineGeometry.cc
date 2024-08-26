@@ -38,6 +38,7 @@ BeamLineGeometry::BeamLineGeometry()
   // Default magnetic field
   fDHSTB002MagneticFieldY = -1.055*tesla;
   fDHSTB001MagneticFieldY = -1.055*tesla;
+  fDHSTB201MagneticFieldY = -1.055*tesla;
 
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
   fQuadrupolesEnable = false;
@@ -48,19 +49,27 @@ BeamLineGeometry::BeamLineGeometry()
 
   // Radius of BeamPipe center
   fDHSTB002CenterRadius = 1723.*mm;
+  fDHSTB201CenterRadius = 1723.*mm;//Clara, questo lo terrei uguale, non sembra una coordinata
 
   // Z coordinate of magnet exit side (aligned with PADME Z axis)
   //  fDHSTB002ExitPosZ = -2001.*mm+400.*mm*cos(45.*deg); // Verify from drawings
   fDHSTB002ExitPosZ = -1635.00*mm; // From CAD drawings 12/04
+  fDHSTB201ExitPosZ = -2000.00*mm;//Clara, aggiungo info DHSTB201, coordinata a caso
 
   // Dimensions of DHSTB002 magnet
   // Angular span of the magnet
   fDHSTB002AngularSpan = 45.*deg;
+  fDHSTB201AngularSpan = 45.*deg; //Clara, boh!
 
   // Transversal size of the yoke
   fDHSTB002SizeX = 728.*mm;
   fDHSTB002SizeY = 670.*mm;
   fDHSTB002MinRadius = 1329.*mm;
+  
+  fDHSTB201SizeX = 728.*mm; //Clara, pure questo lo terrei uguale, sono solo le dimensioni del magnete
+  fDHSTB201SizeY = 670.*mm;
+  fDHSTB201MinRadius = 1329.*mm;
+
 
   // Yoke has a symmetric H-shaped hole centered on beam radius
   // Y
@@ -83,6 +92,11 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB002L2 = 170.*mm;
   fDHSTB002L3 = 128.*mm;
   fDHSTB002L4 =  42.*mm;
+  
+  fDHSTB201L1 = 424.*mm;
+  fDHSTB201L2 = 170.*mm;
+  fDHSTB201L3 = 128.*mm;
+  fDHSTB201L4 =  42.*mm;
 
   // Dimensions of the magnetic field volume inside the magnet
   // Field is now <>0 only in the central section of the H-shaped hole (can be refined)
@@ -90,17 +104,27 @@ BeamLineGeometry::BeamLineGeometry()
   fMagVolSizeY = fDHSTB002L4-10.*um; // Add a small tolerance to avoid overlaps
   fMagVolMinRadius = fDHSTB002CenterRadius-0.5*fMagVolSizeX;
   fMagVolMaxRadius = fDHSTB002CenterRadius+0.5*fMagVolSizeX;
+  
+  fMagVolSizeX = fDHSTB201L2;
+  fMagVolSizeY = fDHSTB201L4-10.*um; // Add a small tolerance to avoid overlaps
+  fMagVolMinRadius = fDHSTB201CenterRadius-0.5*fMagVolSizeX;
+  fMagVolMaxRadius = fDHSTB201CenterRadius+0.5*fMagVolSizeX;
 
-  // Dimensions of the beam pipe inside the magnets DHSTB001 and DHSTB002
+  // Dimensions of the beam pipe inside the magnets DHSTB001 and DHSTB002, Clara: anche questo lo terrei uguale
   // Transverse section
   fMagPipeSizeX = 59.*mm;
   fMagPipeSizeY = 40.*mm;
   fMagPipeMinRadius = fDHSTB002CenterRadius-0.5*fMagPipeSizeX;
   fMagPipeMaxRadius = fDHSTB002CenterRadius+0.5*fMagPipeSizeX;
+  fMagPipeMinRadius = fDHSTB201CenterRadius-0.5*fMagPipeSizeX;
+  fMagPipeMaxRadius = fDHSTB201CenterRadius+0.5*fMagPipeSizeX;
+
   fMagPipeHoleSizeX = 53.*mm;
   fMagPipeHoleSizeY = 32.*mm;
   fMagPipeHoleMinRadius = fDHSTB002CenterRadius-0.5*fMagPipeHoleSizeX;
   fMagPipeHoleMaxRadius = fDHSTB002CenterRadius+0.5*fMagPipeHoleSizeX;
+  fMagPipeHoleMinRadius = fDHSTB201CenterRadius-0.5*fMagPipeHoleSizeX;
+  fMagPipeHoleMaxRadius = fDHSTB201CenterRadius+0.5*fMagPipeHoleSizeX;
 
   // Length of the straight section inside the magnet
   fMagPipeLineLength = 1452.1*mm;
@@ -111,7 +135,7 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeFlangeRadius = 0.5*113.5*mm; // Diameter from DN63 datasheet
   fMagPipeFlangePosZ = 0.5*fMagPipeStraightLength-0.5*fMagPipeFlangeThick;
 
-  // Positions and rotations of straight sections
+  // Positions and rotations of straight sections, Clara, qui cominciano i guai con le posizioni della seconda linea
   fMagPipeStraightFrontPosX = 0.;
   fMagPipeStraightFrontPosZ = fDHSTB002ExitPosZ+0.5*fMagPipeStraightLength;
   fMagPipeStraightFrontRotY = 0.*deg;
@@ -123,10 +147,11 @@ BeamLineGeometry::BeamLineGeometry()
   fMagPipeStraightSidePosX = fDHSTB002CenterRadius*(1.-cos(fDHSTB002AngularSpan))-(fMagPipeLineLength+0.5*fMagPipeStraightLength)*sin(fDHSTB002AngularSpan);
   fMagPipeStraightSidePosZ = fDHSTB002ExitPosZ-fDHSTB002CenterRadius*sin(fDHSTB002AngularSpan)+(fMagPipeLineLength+0.5*fMagPipeStraightLength)*cos(fDHSTB002AngularSpan);
   fMagPipeStraightSideRotY = fDHSTB002AngularSpan;
-
+  
   // Entrance (upstream) and exit (downstream) coordinates of center of magnet pipe
 
   fMagPipeEnterPosX = fDHSTB002CenterRadius*(1.-cos(fDHSTB002AngularSpan))+fMagPipeStraightLength*sin(fDHSTB002AngularSpan);
+
   fMagPipeEnterPosY = 0.;
   fMagPipeEnterPosZ = fDHSTB002ExitPosZ-fDHSTB002CenterRadius*sin(fDHSTB002AngularSpan)-fMagPipeStraightLength*cos(fDHSTB002AngularSpan);
 
@@ -214,13 +239,16 @@ BeamLineGeometry::BeamLineGeometry()
   fWallMylarWinDistance =  297.0*cm;   //was wrong? 
   //  fWallMylarWinDistance =  267.0*cm;   //Check 
   fDHSTB002WallDistance =  380.5*cm;   //was wrong ?
+  fDHSTB201WallDistance =  500*cm;   //Clara, totalmente a caso, quale muro?
+
   //fDHSTB002WallDistance =  411.5*cm;   //check seem to be 4115 08/2022
 
   // BEAM line 2022 geometry parameters M. Raggi 08.2022 
   // Dimensions of the beam pipe inside the pulsed Magnet
   // 
 
-  fDHSTB002ToPulsedMagnet = 6642.*mm;   //flange to flange Raggi
+  fDHSTB002ToPulsedMagnet = 6642.*mm; 
+  fDHSTB201ToPulsedMagnet = 6642.*mm;   //flange to flange Raggi
   fPulsedPipeSizeX =   63.*mm; //full size
   fPulsedPipeSizeY =   24.*mm; //full size
   fPulsedPipeLength= 1044.*mm;
@@ -305,6 +333,27 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
     // Change it with datacards if using a different energy
     fDHSTB002MagneticFieldY = -0.5308*tesla;
     fDHSTB001MagneticFieldY = -0.5308*tesla;
+
+    fSLTB2Aperture= 1.74*mm;
+    fSLTB3Aperture= 4.2*mm;
+    fSLTB4Aperture= 1.9*mm;
+    fSLTB5Aperture= 5.0*mm;
+
+    fQ1MagneticFieldGrad =  1.771*tesla/m;
+    fQ2MagneticFieldGrad =  1.490*tesla/m;
+    fQ3MagneticFieldGrad =  1.881*tesla/m;
+    fQ4MagneticFieldGrad =  2.112*tesla/m;
+
+  } else if (fDetectorSetup == 50) {//Clara
+
+    // Second beam line
+    // Assume default energy of 282.8 MeV (CM = 17 MeV)
+    // Change it with datacards if using a different energy
+    fDHSTB002MagneticFieldY = -0.5308*tesla;
+    fDHSTB001MagneticFieldY = -0.5308*tesla;
+    fDHSTB201MagneticFieldY = -0.5308*tesla;
+    fDHSTB201MagneticFieldY = -0.5308*tesla;
+
 
     fSLTB2Aperture= 1.74*mm;
     fSLTB3Aperture= 4.2*mm;

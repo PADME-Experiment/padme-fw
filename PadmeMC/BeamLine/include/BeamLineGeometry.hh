@@ -63,6 +63,10 @@ public:
   // Magnetic field inside DHSTB002
   void SetDHSTB001MagneticFieldY(G4double f) { fDHSTB001MagneticFieldY = f; }
   G4double GetDHSTB001MagneticFieldY() { return fDHSTB001MagneticFieldY; }
+  
+  // Magnetic field inside DHSTB201
+  void SetDHSTB201MagneticFieldY(G4double f) { fDHSTB201MagneticFieldY = f; }
+  G4double GetDHSTB201MagneticFieldY() { return fDHSTB201MagneticFieldY; }
 
   // Mylar or BeWthickness
   void SetWindowThickness(G4double f) { fWindowThickness = f; }
@@ -120,12 +124,31 @@ public:
   G4double GetDHSTB002MinRadius() { return fDHSTB002MinRadius; }
   G4double GetDHSTB002MaxRadius() { return fDHSTB002MinRadius+fDHSTB002SizeX; }
 
-  // Dimensions of the H-shaped hole inside magnet yoke
+  // Dimensions of the H-shaped hole inside magnet yoke, DHSTB002
 
   G4double GetDHSTB002L1() { return fDHSTB002L1; }
   G4double GetDHSTB002L2() { return fDHSTB002L2; }
   G4double GetDHSTB002L3() { return fDHSTB002L3; }
   G4double GetDHSTB002L4() { return fDHSTB002L4; }
+  
+    // Dimensions of DHSTB201 magnet yoke, Clara
+
+  G4double GetDHSTB201CenterRadius() { return fDHSTB201CenterRadius; }
+  G4double GetDHSTB201AngularSpan() { return fDHSTB201AngularSpan; }
+  G4double GetDHSTB201ExitPosZ() { return fDHSTB201ExitPosZ; }
+
+  G4double GetDHSTB201SizeX() { return fDHSTB201SizeX; }
+  G4double GetDHSTB201SizeY() { return fDHSTB201SizeY; }
+  G4double GetDHSTB201MinRadius() { return fDHSTB201MinRadius; }
+  G4double GetDHSTB201MaxRadius() { return fDHSTB201MinRadius+fDHSTB201SizeX; }
+
+  // Dimensions of the H-shaped hole inside magnet yoke, DHSTB201
+
+  G4double GetDHSTB201L1() { return fDHSTB201L1; }
+  G4double GetDHSTB201L2() { return fDHSTB201L2; }
+  G4double GetDHSTB201L3() { return fDHSTB201L3; }
+  G4double GetDHSTB201L4() { return fDHSTB201L4; }
+
 
   // Dimensions of the magnetic field volume inside the magnet
   G4double GetMagVolSizeX() { return fMagVolSizeX; }
@@ -268,6 +291,7 @@ private:
   // Magnetic field
   G4double fDHSTB002MagneticFieldY;
   G4double fDHSTB001MagneticFieldY;
+  G4double fDHSTB201MagneticFieldY;
   G4double fWindowThickness;
 
   // Gradient of Quadrupoles Magnetic field 
@@ -299,6 +323,21 @@ private:
   G4double fDHSTB002SizeX;
   G4double fDHSTB002SizeY;
   G4double fDHSTB002MinRadius; // Magnet yoke is not centered on beam pipe
+  
+  // Radius of magnet at center of beam line, Clara, DHSTB201
+  G4double fDHSTB201CenterRadius;
+
+  // Z coordinate of magnet exit hole
+  G4double fDHSTB201ExitPosZ;
+
+  // Angular span of the magnet
+  G4double fDHSTB201AngularSpan;
+
+  // Transversal size of the yoke
+  G4double fDHSTB201SizeX;
+  G4double fDHSTB201SizeY;
+  G4double fDHSTB201MinRadius; // Magnet yoke is not centered on beam pipe
+
 
   // Yoke has a H-shaped hole inside centered on beam radius
   // Y
@@ -321,6 +360,11 @@ private:
   G4double fDHSTB002L2;
   G4double fDHSTB002L3;
   G4double fDHSTB002L4;
+ 
+  G4double fDHSTB201L1;//Clara, DHSTB201
+  G4double fDHSTB201L2;
+  G4double fDHSTB201L3;
+  G4double fDHSTB201L4;
 
   // Dimensions of the magnetic field volume inside the magnet
   G4double fMagVolSizeX;
@@ -434,6 +478,7 @@ private:
   G4double fWallMylarWinDistance;
 
   G4double fDHSTB002WallDistance;
+  G4double fDHSTB201WallDistance;
   G4double f2020PipeOuterRadius; 
   G4double f2020PipeInnerRadius; 
 
@@ -441,7 +486,8 @@ private:
   //
   // BEAM line 2022 geometry parameters M. Raggi 08.2022 
   //
-  G4double fDHSTB002ToPulsedMagnet; 
+  G4double fDHSTB002ToPulsedMagnet;
+  G4double fDHSTB201ToPulsedMagnet;
   // Dimensions of the beam pipe inside the pulsed magnet
   // Transverse section
   G4double fPulsedPipeSizeX; 

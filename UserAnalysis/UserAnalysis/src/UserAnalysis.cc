@@ -6,6 +6,7 @@
 #include "GeneralInfo.hh" //TS
 #include "ECalSel.hh" //TS
 #include "ETagAn.hh" //TS
+#include "ECalETagMatching.hh" //EDM
 #include "ECalCalib.hh"
 #include "ECalCalib22.hh" //EDM
 #include "NPoTAnalysis.hh" //MR
@@ -40,6 +41,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
+  fECalETagMatching  = ECalETagMatching::GetInstance();
   fETagAn  = ETagAn::GetInstance();
   fDataQuality = DataQuality::GetInstance();
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
@@ -62,6 +64,7 @@ UserAnalysis::~UserAnalysis(){
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
   delete fDataQuality;
+  delete fECalETagMatching;
 //  delete fIs3GAnalysis;
 }
 
@@ -85,6 +88,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
+  if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
   if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
   fIs22GGAnalysis->Init(fEvent);
@@ -130,9 +134,13 @@ Bool_t UserAnalysis::Process(){
     fDataQuality->Process();
     fECalCalib22->Process(fEvent);
   }
-  fECalSel->Process();
   fECalSel->ProcessForCalib();
-  if (fETagHitsAvail) fETagAn->Process();
+
+  fECalSel->Process();
+  if (fETagHitsAvail) {
+    fETagAn->Process();
+    fECalETagMatching->Process();
+  }
   //  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
 //  fIs3GAnalysis->Process();   
@@ -200,6 +208,7 @@ Bool_t UserAnalysis::Finalize()
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
   if (fETagHitsAvail) fETagAn->Finalize();
+  if (fETagHitsAvail) fECalETagMatching->Finalize();
   //  fIsGGAnalysis->Finalize();
   if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   fIs22GGAnalysis->Finalize();

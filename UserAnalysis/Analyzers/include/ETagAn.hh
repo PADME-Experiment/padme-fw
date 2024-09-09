@@ -12,6 +12,8 @@ using namespace std;
 class TRecoEvent;
 class TRecoVObject;
 class TRecoVClusCollection;
+class ECalSel;
+
 
 #define maxETagAssPerSide 10
 #define kSingleSideMatch 0
@@ -21,6 +23,7 @@ struct ETagECalAss{
   int indexECal; // indices of the ecal cluster associated
   int nETagBar; // index of ETagBar identified from the ECal cluster
   int nAss[2]; // number of Left,Right SiPM associations
+  int assType;
   int iAss[2][maxETagAssPerSide]; //indices of the Left,Right SiPM hits associated 
   int dCh[2][maxETagAssPerSide]; //delta-bar of the Left,Right SiPM hits associated 
   int closestSide; // closest side [the only one, if it's only one-side]
@@ -47,7 +50,9 @@ public:
   Bool_t Finalize();
   virtual Bool_t InitHistos();
   virtual Bool_t Process();  
-  ETagECalAss getETagECalAss(int i){return fETagECalAss.at(i);} //to be protected
+  ETagECalAss* getETagECalAss(int i){
+    return fETagECalAss.at(i);
+    } //to be protected
 
 protected:
   TRecoEvent*           fRecoEvent;
@@ -63,12 +68,12 @@ private:
   Double_t fdistanceTarget;
   Int_t ETagSingleMatch();
   Int_t ETagMatch();
-  Int_t ETagConditions(ETagECalAss);
-
+  //Int_t ETagConditions(ETagECalAss);
+ Int_t ETagConditions(Int_t *nAss, Double_t *rmsTime,Int_t nSides, Int_t closestSide);
   Int_t ETagMatchSave();
   ETagECalAss AssociateECalCluster(int indexCl, int toff);
 
-  std::vector<ETagECalAss> fETagECalAss; // associations of ECal clusters
+  std::vector<ETagECalAss*> fETagECalAss; // associations of ECal clusters
 
   int HitToClusterMapLeft[1500];
   int HitToClusterMapRight[1500];

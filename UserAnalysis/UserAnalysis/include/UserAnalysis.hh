@@ -13,6 +13,7 @@ class Is22GGAnalysis;
 class Is3GAnalysis;
 class GeneralInfo;
 class ECalSel;
+class ECalETagMatching;
 class ETagAn;
 class ETagAnalysis;
 class MCTruth;
@@ -51,6 +52,7 @@ private:
   ECalSel* fECalSel;
   ECalCalib22 *fECalCalib22;
   ETagAn* fETagAn;
+  ECalETagMatching* fECalETagMatching;
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;
   MCTruthECal* fMCTruthECal;

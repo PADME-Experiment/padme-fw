@@ -58,18 +58,18 @@ Bool_t NPoTAnalysis::InitHistos(){
 
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLG",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLGCorr",NBinsPOT,Min_POT,Max_POT);
-  fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",20000,0,5e7, NBinsPOT,Min_POT,Max_POT);
+  fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",20000,0,5e6, NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTNoPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTGood",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","PoTDens",200,0.,50.);
   fHS->BookHistoList("NPoTAnalysisLG","LGCharge",2000,0.,2000.);
   fHS->BookHistoList("NPoTAnalysisLG","LGPed",500,3500.,4000);
-  fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsBunchID",20000,0,5e7,500,3500.,4000);
+  fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsBunchID",20000,0,5e6,500,3500.,4000);
   fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsLGCharge",500,3500.,4000, 2000,0.,2000.);
   fHS->BookHistoList("NPoTAnalysisLG","BunchLenghtLG",500,0.,500.);
-  fHS->BookHisto2List("NPoTAnalysisLG","BunchLenghtLGvsBunchID",20000,0,5e7,500,0.,500.);
-  fHS->BookHisto2List("NPoTAnalysisLG","BBQvsBunchID",20000,0,5e7,500,0.,500.);
+  fHS->BookHisto2List("NPoTAnalysisLG","BunchLenghtLGvsBunchID",20000,0,5e6,500,0.,500.);
+  fHS->BookHisto2List("NPoTAnalysisLG","BBQvsBunchID",20000,0,5e6,500,0.,500.);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTTarvsNPoTLG",NBinsPOT,Min_POT,Max_POT,NBinsPOT,Min_POT,Max_POT);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGvsXTar",600,-15.,15.,NBinsPOT,Min_POT,Max_POT);
   return true;

@@ -12,6 +12,7 @@
 #include "GeneralInfo.hh"
 #include "MCTruthECal.hh"
 #include "NPoTAnalysis.hh"
+#include "ETagAn.hh"
 
 #include "HistoSvc.hh"
 
@@ -22,13 +23,16 @@ using namespace std;
 class TRecoEvent;
 class TRecoVObject;
 class TRecoVClusCollection;
+class ETagAn;
 
 enum eventFlag{
   ev_gg  = 0,
   ev_ee  = 1,
   ev_ggg = 2,
   ev_eeg = 3,
-  ev_single = 4
+  ev_single = 4,
+  ev_eg = 5 ,
+  ev_unknown = 6
 };
 
 enum algoFlag{
@@ -38,12 +42,18 @@ enum algoFlag{
 };
 
 
+struct Point {
+    double x, y;
+};
+
+
 struct ECalSelEvent{
   eventFlag flagEv;
   algoFlag flagAlgo;
   int indexECal[3]; // indices of the ecal clusters selected (could become a std vector)
   double totalE;
   double avgT;
+  double phi, theta;
   TVector2 cog; // cog of the selected clusters
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
@@ -86,7 +96,8 @@ public:
   virtual Bool_t Process();
 
   int getNECalEvents(){return (int) fECalEvents.size();}
-  ECalSelEvent getECalEvent(int i){return fECalEvents.at(i);} //to be protected
+  ECalSelEvent* getECalEvent(int i){return fECalEvents.at(i);} //to be protected
+  void setETagAssIndex(int i , int iClu, int iindex ){ (fECalEvents.at(i))->indexETagAss[iClu] = iindex;} //to be protected
 
 protected:
   PadmeAnalysisEvent* fEvent;
@@ -104,10 +115,12 @@ private:
   Double_t NPoTLGCorr();
   Bool_t NSignalBhabha();
   utl::ConfigParser* fCfgParser;
-  std::vector<ECalSelEvent> fECalEvents;
+  std::vector<ECalSelEvent*> fECalEvents;
   GeneralInfo* fGeneralInfo;
   MCTruthECal* fMCTruthECal;
   NPoTAnalysis* fNPoTAnalysis;
+  ETagAn* fETagAn;
+  bool isinTCUT(const std::vector<Point>& polygon, const Point& p);
   // general setup
   Bool_t fApplyCorrection;
   bool fFillLocalHistograms;
@@ -143,7 +156,7 @@ private:
   Double_t fMeanDPhi = 3.093; //rad
   Double_t fSigmaDTheta = 0.0932; //rad
   Double_t fSigmaDPhi = 0.1105; //rad
-  Double_t fSigmaE = 12.64;
+  Double_t fSigmaE; //defined with Ebeam
   Double_t fSigmaCut =3;
 
   TFile *fileIn;

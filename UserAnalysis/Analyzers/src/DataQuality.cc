@@ -35,7 +35,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   cout<<" Creating DataQuality Hystograms for Run Init "<< fNRun<<endl;  
   fHistoMode = fHistoModeVal;
   InputHistofile = InputHistofileVal;
-
+  
 //   if(fHistoMode){
 //   TObjArray *tx = InputHistofile.Tokenize("/");
 //   InputHistofileName = ((TObjString *)(tx->At(tx->GetLast())))->String(); 
@@ -276,7 +276,7 @@ if(fHistoMode){
       (iter->nCountsCoarse)[i] = hnCountsCoarse->GetBinContent(i+1);
     }
 
-    TGraphErrors *obsplotMean = new TGraphErrors();
+    TGraphErrors* obsplotMean = new TGraphErrors();
     TGraph *obsplotSigma = new TGraph();
     TGraphErrors *obsplotCoarseMean = new TGraphErrors();
     TGraph *obsplotCoarseSigma = new TGraph();
@@ -312,7 +312,30 @@ if(fHistoMode){
           Int_t n3sigma = 0;
           Int_t n5sigma = 0;
           Int_t nbad = 0;
-          obsplotMean->Fit(p0fit, "EMQ");
+          TGraphErrors* obsplotMeanNoBeamDown = new TGraphErrors();
+          std::cout<<obsplotMeanNoBeamDown->GetN()<<std::endl;
+          obsplotMeanNoBeamDown->SetName("obsplotMeanNoBeamDown");
+          std::cout<<obsplotMean->GetN()<<std::endl;
+          for(int iprm =0; iprm<obsplotMean->GetN(); iprm++){
+             //std::cout<<iprm<< std::endl;
+            
+            Double_t yvalrm=0,xvalrm=0,errxrm=0, erryrm=0;
+            obsplotMean->GetPoint(iprm,xvalrm,yvalrm);
+            errxrm= obsplotMean->GetErrorX(iprm);
+            erryrm= obsplotMean->GetErrorY(iprm);
+            if(yvalrm < freject_below || yvalrm > freject_above){
+               std::cout<<"Removing yvalrm:"<<yvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
+               continue;}
+            //if(yvalrm==0) {std::cout<< "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  obsplotMeanNoBeamDown->GetN():"<<obsplotMeanNoBeamDown->GetN()<<std::endl; continue;}
+            int Npointnobd= obsplotMeanNoBeamDown->GetN();
+            // std::cout<<iprm<<" "<<Npointnobd<<std::endl;
+            //std::cout<<"N:"<<obsplotMeanNoBeamDown->GetN()<<" yvalrm: "<<yvalrm<< " xvalrm: "<<xvalrm <<" errY: "<<erryrm<<" errX: "<<errxrm<<std::endl;
+            obsplotMeanNoBeamDown->SetPoint(Npointnobd,xvalrm, yvalrm);
+            obsplotMeanNoBeamDown->SetPointError(Npointnobd,errxrm, erryrm);
+            
+          }
+          obsplotMeanNoBeamDown->Fit(p0fit, "EMQ");
+          obsplotMeanNoBeamDown->SaveAs("prova.root");
           Double_t p0Val = p0fit->GetParameter(0);
           Double_t p0sigma = p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
           ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%d.txt",fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
@@ -320,9 +343,10 @@ if(fHistoMode){
           for(int ip =0; ip<obsplotMean->GetN(); ip++){
             double yval,xval;
             obsplotMean->GetPoint(ip,xval,yval);
-            if(TMath::Abs(yval-p0Val)<=3*p0sigma){
+            Double_t pointSigma = obsplotMean->GetErrorY(ip);
+            if(TMath::Abs(yval-p0Val)<=3*pointSigma){
               n3sigma++;
-            }else if(TMath::Abs(yval-p0Val)>3*p0sigma && TMath::Abs(yval-p0Val)<=5*p0sigma){
+            }else if(TMath::Abs(yval-p0Val)>3*pointSigma && TMath::Abs(yval-p0Val)<=5*pointSigma){
               n5sigma++;
             }else nbad++;
           }
@@ -345,7 +369,6 @@ if(fHistoMode){
       gPoTTarget = (TGraphErrors*) obsplotCoarseMean->Clone();
     }else if((iter->name).CompareTo("TargXCharge")==0) {
       gXChargeAll = (TGraphErrors*) obsplotMean->Clone();
-
       gXCharge = (TGraphErrors*) obsplotCoarseMean->Clone();
       }
     }
@@ -356,12 +379,12 @@ if(fHistoMode){
           gPoTLG->GetPoint(i, XLG, YLG);
           gPoTLGAll->GetPoint(i, XLGAll, YLGAll);
           gPoTTarget->GetPoint(i, XTa, YTa);
-          gPoTratio->SetPoint(i,XLG, YTa/YLG);
+          if(YLG!=0) gPoTratio->SetPoint(gPoTratio->GetN(),XLG, YTa/YLG);
           gXCharge->GetPoint(i, XCha, YCha);
           gXChargeAll->GetPoint(i, XChaAll, YChaAll);
           //sistemare deno =0
-          gPoTratioCharge->SetPoint(i,XLG, YCha/YLG);
-          gPoTratioChargeAll->SetPoint(i,XLGAll, YChaAll/YLGAll);
+          if(YLG!=0) gPoTratioCharge->SetPoint(gPoTratioCharge->GetN(),XLG, YCha/YLG);
+          if(YLGAll!=0)gPoTratioChargeAll->SetPoint(gPoTratioChargeAll->GetN(),XLGAll, YChaAll/YLGAll);
 
 
         }
@@ -378,3 +401,6 @@ if(fHistoMode){
   if (fVerbose) printf("---> Finalizing DataQuality\n");
   return true;
 }
+
+
+

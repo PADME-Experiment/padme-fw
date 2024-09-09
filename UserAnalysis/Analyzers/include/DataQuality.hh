@@ -30,7 +30,6 @@ public:
   Bool_t Init(PadmeAnalysisEvent*,  Bool_t HistoModeVal, TString InputHistofileVal);
   Bool_t Process();
   Bool_t Finalize();
-
   Int_t GetDataQualityLevel() { return fDataQualityLevel; } //0,1,2 buon, meno buono, cattivo
 
 private:
@@ -50,6 +49,8 @@ private:
   TString InputHistofileName;
   Int_t fSafety;
   Int_t fVerbose;
+  Double_t freject_above= 0.8;
+  Double_t freject_below= 0.4;
 
   PadmeAnalysisEvent* fEvent;
   utl::ConfigParser* fCfgParser;

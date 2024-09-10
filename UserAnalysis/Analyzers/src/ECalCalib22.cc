@@ -196,7 +196,7 @@ Bool_t ECalCalib22::Finalize()
   std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
   return false;
   } 
- ChannelLandauFit();
+ //ChannelLandauFit();
   
   return true;
 }

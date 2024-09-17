@@ -16,6 +16,7 @@
 //#include "PadmeReconstruction.hh"
 //#include "PadmeVReconstruction.hh"
 
+
 #include <signal.h>
 #include <fcntl.h>
 
@@ -30,6 +31,7 @@
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
+#include "TLeadGlassRecoEvent.hh"
 
 #include "HistoSvc.hh"
 #include "SACAnalysis.hh"
@@ -45,6 +47,16 @@
 #include "GlobalTimeAnalysis.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "temp_corr.hh"
+
+#include "UserTemplateAnalyser.hh"
+#include "PadmeVAnalyser.hh"
+
+//static UserTemplateAnalyser ThisAnalyser("UserTemplateAnalyser"); // = new UserTemplateAnalyser("UserTemplateAnalyser");
+//UserTemplateAnalyser *ThisAnalyser = new UserTemplateAnalyser("UserTemplateAnalyser");
+
+std::map<std::string, PadmeVAnalyser *>  PadmeVAnalyser::fAnalysers;
+
+
 
 void usage(char* name){
   std::cout << "Usage: "<< name << " [-h] [-b/-B #MaxFiles] [-i InputFile.root] [-l InputListFile.txt] [-n #MaxEvents] [-o OutputFile.root] [-s Seed] [-c ConfigFileName.conf] [-v verbose] [-m ProcessingMode] [-t ntuple]" 
@@ -88,6 +100,7 @@ TChain* BuildChain(TString treeName, TObjArray fInputFileNameList){
 
 int main(Int_t argc, char **argv)
 {
+  //  UserTemplateAnalyser ThisAnalyser("UserTemplateAnalyser");
 
   long utc_time;
 
@@ -95,6 +108,9 @@ int main(Int_t argc, char **argv)
   signal(SIGINT,sighandler);
   signal(SIGTERM,sighandler);
   signal(127,sighandler);
+  
+  //  std::cout << "Let's see if we have all the necessary ingredients" << std::endl;
+  //  std::cout << "There should be an analyser.... " << ThisAnalyser.GetName() << std::endl;
   
   extern char *optarg;
   int opt;
@@ -237,6 +253,7 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection*           fEVetoRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
   TMCTruthEvent*                  fMCTruthEvent         =0;
+  TLeadGlassRecoEvent*            fLeadGlassRecoEvent   =0;
 
    TTree::SetMaxTreeSize(190000000000);
 
@@ -300,6 +317,9 @@ int main(Int_t argc, char **argv)
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      } else if (branchName=="LeadGlass_Hits") {
+	fLeadGlassRecoEvent = new TLeadGlassRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlassRecoEvent);
       } else if (branchName=="TargetBeam") {
 	fTargetRecoBeam = new TTargetRecoBeam();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoBeam);
@@ -322,6 +342,7 @@ int main(Int_t argc, char **argv)
 	fMCTruthEvent = new TMCTruthEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
       }
+      
 
    }
 
@@ -359,66 +380,110 @@ int main(Int_t argc, char **argv)
    evetoAn    ->Init(fRecoEvent, fEVetoRecoEvent,   fEVetoRecoCl          );
    hepvetoAn  ->Init(fRecoEvent, fHEPVetoRecoEvent, fHEPVetoRecoCl        );
 
-
    // initialize temp corr
    int iret=InitTemps();
    if(iret==0) std::cout<<" --- initialized Temp correction --"<< std::endl;
 
+   PadmeAnalysisEvent *event = new PadmeAnalysisEvent();
 
-//evSel->Init(fRecoEvent, 
-//	       fECalRecoEvent,    fECalRecoCl, 
-//	       fPVetoRecoEvent,   fPVetoRecoCl, 
-//	       fEVetoRecoEvent,   fEVetoRecoCl, 
-//	       fHEPVetoRecoEvent, fHEPVetoRecoCl, 
-//	       fSACRecoEvent,     fSACRecoCl, 
-//	       fTargetRecoEvent,  fTargetRecoBeam );
-   AnnihilationSelection* AnnSel=0;
-   TagAndProbeSelection* TagandProbeSel=0 ;
-   PadmeAnalysisEvent *event=0;
-   UserAnalysis *UserAn=0;
-   GlobalTimeAnalysis *gTimeAn=0;
-   if(fProcessingMode==0){  
-     event = new PadmeAnalysisEvent();
-     UserAn = new UserAnalysis(fProcessingMode, fVerbose);
-     gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
+	  
+    event->RecoEvent            =fRecoEvent          ;
+    event->TargetRecoEvent      =fTargetRecoEvent    ;
+    event->EVetoRecoEvent       =fEVetoRecoEvent     ;
+    event->PVetoRecoEvent       =fPVetoRecoEvent     ;
+    event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
+    event->ECalRecoEvent        =fECalRecoEvent      ;
+    event->SACRecoEvent         =fSACRecoEvent       ;
+    event->TargetRecoBeam       =fTargetRecoBeam     ;
+    event->SACRecoCl            =fSACRecoCl          ;
+    event->ECalRecoCl           =fECalRecoCl         ;
+    event->PVetoRecoCl          =fPVetoRecoCl        ;
+    event->EVetoRecoCl          =fEVetoRecoCl        ;
+    event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
+    event->MCTruthEvent         =fMCTruthEvent       ;
+    event->LeadGlassRecoEvent   =fLeadGlassRecoEvent ;
+      
+    AnnihilationSelection* AnnSel=0;
+    TagAndProbeSelection* TagandProbeSel=0 ;
+    UserAnalysis *UserAn=0;
+    GlobalTimeAnalysis *gTimeAn=0;
+    if(fProcessingMode==0){  
+      UserAn = new UserAnalysis(fProcessingMode, fVerbose);
+      gTimeAn = new GlobalTimeAnalysis(fProcessingMode, fVerbose);
+      
+      AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+      TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
+      
+      AnnSel->InitHistos();
+      TagandProbeSel->InitHistos();
+      
+      AnnSel->Init(fRecoEvent, 
+		   fECalRecoEvent,    fECalRecoCl, 
+		   fSACRecoEvent,     fSACRecoCl, 
+		   fTargetRecoEvent,  fTargetRecoBeam);
+      TagandProbeSel->Init(fRecoEvent, 
+			   fECalRecoEvent,    fECalRecoCl, 
+			   fSACRecoEvent,     fSACRecoCl, 
+			   fTargetRecoEvent,  fTargetRecoBeam );
+      
+      UserAn->Init(event);
+      gTimeAn->Init(event);
+    }
+    
+    //Common structure for the presence of many analysers!
+    //    PadmeVAnalyser *AnalysersManager = new PadmeVAnalyser("AnalysersManager");
 
-     AnnSel = new AnnihilationSelection(fProcessingMode, fVerbose, fTargetOutPosition);
-     TagandProbeSel = new TagAndProbeSelection(fProcessingMode, fVerbose, fTargetOutPosition);
-     
-     AnnSel->InitHistos();
-     TagandProbeSel->InitHistos();
+    // std::cout << "======= Putting just one analyser .... " << std::endl;
+    //    UserTemplateAnalyser TestAnalyser("UserTemplateAnalyser");
+    
+    std::map<std::string, PadmeVAnalyser *>  & Analysers = PadmeVAnalyser::GetAnalysersMap();
+    std::vector<PadmeVAnalyser *> AnalysersChain;
+    
+    std::cout << "Analysers size: " << Analysers.size() << std::endl;
+    if( Analysers.size() > 0) {
+      std::cout << "Available analysers: " << std::endl;
+      for( std::map<std::string, PadmeVAnalyser *>::iterator it = Analysers.begin(); it!=Analysers.end();++it){
+	std::cout << "\t" << it->second->GetName()  << std::endl;
+      }
+    }
+    
+    //Build the analysers chain according to a config file:
+    std::ifstream cfgFile;
+    cfgFile.open("config/AnalysersChain.cfg");
+    std::string line;
+    if (cfgFile.is_open()) {
+      while ( getline (cfgFile,line) ) {
+	if(line.front() == '#') continue;
+	std::cout << "Requested analyser:  "<< line << std::endl;
+	std::string analyserName;
+	std::stringstream ss(line);
+	ss >> analyserName;
+	if(Analysers.find(analyserName) != Analysers.end()) {
+	  std::cout << "Analyser with name " << analyserName << "  registered. Adding to the processing chain" << std::endl;
+	  if(Analysers[analyserName]->IsUsed()) {
+	    std::cout << "=== WARNING: requesting " << analyserName << " more than once. Check your config file" << std::endl;
+	  } else {
+	    AnalysersChain.push_back( Analysers[analyserName] );
+	    Analysers[analyserName]->SetUsed();
+	  }
+	} else {
+	  std::cout << "Analyser with name " << analyserName << " does not exist...!" << std::endl;
+	}
+      }
+      cfgFile.close();
+    } else {
+      std::cout << "No valid config file... continue for the moment" << std::endl; 
+    }
 
-     AnnSel->Init(fRecoEvent, 
-		fECalRecoEvent,    fECalRecoCl, 
-		fSACRecoEvent,     fSACRecoCl, 
-		fTargetRecoEvent,  fTargetRecoBeam);
-     TagandProbeSel->Init(fRecoEvent, 
-		fECalRecoEvent,    fECalRecoCl, 
-		fSACRecoEvent,     fSACRecoCl, 
-		fTargetRecoEvent,  fTargetRecoBeam );
-   
-     event->RecoEvent            =fRecoEvent          ;
-     event->TargetRecoEvent      =fTargetRecoEvent    ;
-     event->EVetoRecoEvent       =fEVetoRecoEvent     ;
-     event->PVetoRecoEvent       =fPVetoRecoEvent     ;
-     event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
-     event->ECalRecoEvent        =fECalRecoEvent      ;
-     event->SACRecoEvent         =fSACRecoEvent       ;
-     event->TargetRecoBeam       =fTargetRecoBeam     ;
-     event->SACRecoCl            =fSACRecoCl          ;
-     event->ECalRecoCl           =fECalRecoCl         ;
-     event->PVetoRecoCl          =fPVetoRecoCl        ;
-     event->EVetoRecoCl          =fEVetoRecoCl        ;
-     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
-     event->MCTruthEvent         =fMCTruthEvent       ;
-     
-     //UserAn->InitHistos();
-     //gTimeAn->InitHistos();
 
-     UserAn->Init(event);
-     gTimeAn->Init(event);
-
-   }
+    //Initialize the requested analysers:
+    
+    for(std::vector<PadmeVAnalyser *>::iterator it = AnalysersChain.begin();it!=AnalysersChain.end();++it) {
+      (*it)->Init(event,fProcessingMode, fVerbose);
+    }
+    
+    
+    
     
    Int_t nTargetHits =0;
    Int_t nECalHits   =0;   
@@ -499,13 +564,25 @@ int main(Int_t argc, char **argv)
        }
 
        //
-       targetAn    ->Process();
-       ecalAn      ->Process();
-       ecalAn      ->EnergyCalibration(isMC);
-       sacAn       ->Process();
-       pvetoAn     ->Process();
-       evetoAn     ->Process();
-       hepvetoAn   ->Process();
+       if ( targetAn   ) targetAn    ->Process();
+       if ( ecalAn     ) ecalAn      ->Process();
+       if ( ecalAn     ) ecalAn      ->EnergyCalibration(isMC);
+       if ( sacAn      ) sacAn       ->Process();
+       if ( pvetoAn    ) pvetoAn     ->Process();
+       if ( evetoAn    ) evetoAn     ->Process();
+       if ( hepvetoAn  ) hepvetoAn   ->Process();
+       //       gTimeAn     ->Process();
+       //evSel       ->Process();
+       //       UserAn      ->Process();
+
+       for(std::vector<PadmeVAnalyser *>::iterator it = AnalysersChain.begin(); it!=AnalysersChain.end(); ++it) {
+	 (*it)->Process();
+	 // And stop with the analysis chain if something went wrong with the previous analysers
+	 // Can also be used for data validation
+	 // std::cout << "Analyser " << (*it)->GetName() << " finished with code: " << ((*it)->GetResult()?"Success":"Failure") << std::endl;
+	 if( ! (*it)->GetResult() ) break;  
+       }
+
        //evSel       ->Process();
        
        if(fProcessingMode==0){  
@@ -514,6 +591,7 @@ int main(Int_t argc, char **argv)
 	 //       UserAn      ->Process();
 	 //       gTimeAn     ->Process();
        }
+
        //
        //
        hSvc->FillNtuple();

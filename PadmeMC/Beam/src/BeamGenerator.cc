@@ -260,13 +260,13 @@ void BeamGenerator::GeneratePrimaryPositron()
     // Now rotate to the real beam direction
     part_dir.rotateUz(beam_dir);
 
-  else if (bpar->BeamApplySpot()){ // apply SPOT treatment
+  } else if (bpar->BeamApplySpot()){ // apply SPOT treatment
     // sample x,y
-    G4ThreeVector spot_pos(G4RandGauss::shoot(beam_dir.X()/beam_dir.Z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotX()),
-			  G4RandGauss::shoot(beam_dir.Y()/beam_dir.Z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotY()),
+    G4ThreeVector spot_pos(G4RandGauss::shoot(beam_dir.x()/beam_dir.z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotX()),
+			  G4RandGauss::shoot(beam_dir.y()/beam_dir.z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotY()),
 			  bpar->GetBeamSpotZ());
     part_dir = spot_pos-part_pos;
-    part_dir *= (1./part_dir);
+    part_dir *= (1./part_dir.mag());
 
   } else {
 

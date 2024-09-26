@@ -54,6 +54,12 @@ BeamParameters::BeamParameters()
   fBeamEmittanceX = 1.*mrad;
   fBeamEmittanceY = 1.*mrad;
 
+  // Beam spot (spread of X,Y beam at a given Z)
+  fBeamApplySpot = false;
+  fBeamSpotX = 0.1*mm;
+  fBeamSpotY = 0.1*mm;
+  fBeamSpotZ = 2683*mm;
+
   // Insert Uboson decays
   fNUbosonDecaysPerBunch = 0;
   fUbosonMass = 22.*MeV;

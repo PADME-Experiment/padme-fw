@@ -161,7 +161,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fEnableBeamSpotCmd = new G4UIcmdWithABool("/beam/beamspot_on",this);
   fEnableBeamSpotCmd->SetGuidance("Enable (true) or disable (false) spread of beam direction using input spot-spread values at given Z values. Overrides emittance treatment if both are set.");
   fEnableBeamSpotCmd->SetParameterName("EBS",true);
-  fEnableBeamSpotCmd->SetDefaultValue(true);
+  fEnableBeamSpotCmd->SetDefaultValue(false);
   fEnableBeamSpotCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamSpotXCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_x",this);

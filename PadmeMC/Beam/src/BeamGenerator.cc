@@ -239,7 +239,7 @@ void BeamGenerator::GeneratePrimaryPositron()
   
   // Add emittance around direction of beam axis
   G4ThreeVector part_dir;
-  if ( bpar->BeamApplyEmittance() ) {
+  if ( bpar->BeamApplyEmittance() && !bpar->BeamApplySpot()) { // if spot=TRUE -> only apply spot
 
     // Extract theta and phi according to emittance
     // Here we could introduce a correlation with the particle position wrt the beam axis
@@ -259,6 +259,14 @@ void BeamGenerator::GeneratePrimaryPositron()
 
     // Now rotate to the real beam direction
     part_dir.rotateUz(beam_dir);
+
+  else if (bpar->BeamApplySpot()){ // apply SPOT treatment
+    // sample x,y
+    G4ThreeVector spot_pos(G4RandGauss::shoot(beam_dir.X()/beam_dir.Z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotX()),
+			  G4RandGauss::shoot(beam_dir.Y()/beam_dir.Z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotY()),
+			  bpar->GetBeamSpotZ());
+    part_dir = spot_pos-part_pos;
+    part_dir *= (1./part_dir);
 
   } else {
 

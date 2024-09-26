@@ -156,6 +156,37 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamEmittanceYCmd->SetRange("EY >= 0. && EY <= 1000.");
   fSetBeamEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  // beam spot treatment
+
+  fEnableBeamSpotCmd = new G4UIcmdWithABool("/beam/beamspot_on",this);
+  fEnableBeamSpotCmd->SetGuidance("Enable (true) or disable (false) spread of beam direction using input spot-spread values at given Z values. Overrides emittance treatment if both are set.");
+  fEnableBeamSpotCmd->SetParameterName("EBS",true);
+  fEnableBeamSpotCmd->SetDefaultValue(true);
+  fEnableBeamSpotCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotXCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_x",this);
+  fSetBeamSpotXCmd->SetGuidance("Set sigma of gaussian spread of beam spot in X.");
+  fSetBeamSpotXCmd->SetParameterName("BSX",false);
+  fSetBeamSpotXCmd->SetDefaultUnit("mm");
+  fSetBeamSpotXCmd->SetRange("BSX >= 0. && BSX <= 200.");
+  fSetBeamSpotXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotYCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_y",this);
+  fSetBeamSpotYCmd->SetGuidance("Set sigma of gaussian spread of beam spot in Y.");
+  fSetBeamSpotYCmd->SetParameterName("BSY",false);
+  fSetBeamSpotYCmd->SetDefaultUnit("mm");
+  fSetBeamSpotYCmd->SetRange("BSY >= 0. && BSY <= 200.");
+  fSetBeamSpotYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotZCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_z",this);
+  fSetBeamSpotZCmd->SetGuidance("Set Z position used for the gaussian beam spots in X,Y.");
+  fSetBeamSpotZCmd->SetParameterName("BSZ",false);
+  fSetBeamSpotZCmd->SetDefaultUnit("mm");
+  fSetBeamSpotZCmd->SetRange("BSZ >= -1000. && BSZ <= 5000.");
+  fSetBeamSpotZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //
+
   fSetNUbosonDecaysPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_uboson_per_bunch",this);
   fSetNUbosonDecaysPerBunchCmd->SetGuidance("Set number of Uboson decays in each bunch.");
   fSetNUbosonDecaysPerBunchCmd->SetParameterName("NU",false);
@@ -321,6 +352,12 @@ BeamMessenger::~BeamMessenger()
   delete fSetBeamEmittanceXCmd;
   delete fSetBeamEmittanceYCmd;
 
+  delete fEnableBeamSpotCmd;
+  delete fSetBeamSpotXCmd;
+  delete fSetBeamSpotYCmd;
+  delete fSetBeamSpotZCmd;
+
+
   delete fSetNUbosonDecaysPerBunchCmd;
   delete fSetUbosonMassCmd;
 
@@ -436,6 +473,21 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetBeamEmittanceYCmd )
     fBeamParameters->SetBeamEmittanceY(fSetBeamEmittanceYCmd->GetNewDoubleValue(par));
+
+  else if ( cmd == fEnableBeamSpotCmd ) {
+    if (fEnableBeamSpotCmd->GetNewBoolValue(par)) {
+      fBeamParameters->BeamEnableSpot();
+    } else {
+      fBeamParameters->BeamDisableSpot();
+    }
+  }
+  else if ( cmd == fSetBeamSpotXCmd )
+    fBeamParameters->SetBeamSpotX(fSetBeamSpotXCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotYCmd )
+    fBeamParameters->SetBeamSpotY(fSetBeamSpotYCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotZCmd )
+    fBeamParameters->SetBeamSpotZ(fSetBeamSpotZCmd->GetNewDoubleValue(par));
+
 
   else if ( cmd == fSetNUbosonDecaysPerBunchCmd )
     fBeamParameters->SetNUbosonDecaysPerBunch(fSetNUbosonDecaysPerBunchCmd->GetNewIntValue(par));

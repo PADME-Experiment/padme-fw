@@ -100,6 +100,19 @@ public:
   G4double GetBeamEmittanceY() { return fBeamEmittanceY; }
   void SetBeamEmittanceY(G4double e) { fBeamEmittanceY = e; }
 
+  void BeamEnableSpot()  { fBeamApplySpot = true;  }
+  void BeamDisableSpot() { fBeamApplySpot = false;  }
+  G4bool BeamApplySpot() { return fBeamApplySpot; }
+  void SetBeamSpotX(G4double e) { fBeamSpotX = e; }
+  G4double GetBeamSpotX() { return fBeamSpotX; }
+  void SetBeamSpotY(G4double e) { fBeamSpotY = e; }
+  G4double GetBeamSpotY() { return fBeamSpotY; }
+  void SetBeamSpotZ(G4double e) { fBeamSpotZ = e; }
+  G4double GetBeamSpotZ() { return fBeamSpotZ; }
+
+
+
+
   G4int GetNUbosonDecaysPerBunch()        { return fNUbosonDecaysPerBunch; }
   void  SetNUbosonDecaysPerBunch(G4int n) { fNUbosonDecaysPerBunch = n;    }
 
@@ -207,6 +220,12 @@ private:
   G4bool   fBeamApplyEmittance;
   G4double fBeamEmittanceX;
   G4double fBeamEmittanceY;
+
+  // Beam spot (spread of X at a given ZForX and Y at a given ZForY)
+  G4bool   fBeamApplySpot;
+  G4double fBeamSpotX;
+  G4double fBeamSpotY;
+  G4double fBeamSpotZ;
 
   // Insert Uboson decays
   G4int fNUbosonDecaysPerBunch;

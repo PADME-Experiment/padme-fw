@@ -64,6 +64,12 @@ private:
   G4UIcmdWithABool* fEnableBeamEmittanceCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceXCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceYCmd;
+
+  G4UIcmdWithABool* fEnableBeamSpotCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotZCmd;
+
   
   G4UIcmdWithAnInteger* fSetNUbosonDecaysPerBunchCmd;
   G4UIcmdWithADoubleAndUnit* fSetUbosonMassCmd;

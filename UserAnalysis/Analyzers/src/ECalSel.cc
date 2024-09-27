@@ -242,7 +242,7 @@ Bool_t ECalSel::Process()
   // if(NEvent%10000==0) cout<<"ECalSel NEvent "<<NEvent<<endl;// -->si resetta ogni circa 500 evt per il MC
 
   fSafeEnergyFactor = 0.7; // 0.7; // Safety factor used for the energy min and max cuts
-fSafeSpaceMargin = 31.5;
+  fSafeSpaceMargin = 31.5;
   //fSafeSpaceMargin = 31.5 original value// 1.5 cells in mm, safety margin used for the radius min and max cut
   fFillLocalHistograms = true;
   fFillCalibHistograms = false;
@@ -260,6 +260,8 @@ fSafeSpaceMargin = 31.5;
     // DataQuality();
     NPoTLGCorr();
     TwoClusSel();
+    fSigmaCut = 4.;
+    TwoClusters_couples();
     OneClusSel();
     OneClusTagAndProbeSel();
   }
@@ -1463,11 +1465,11 @@ Int_t ECalSel::TwoClusSel()
 
 std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
   int NClu = fECal_clEvent->GetNElements(), r = 2;
-    
+
     std::pair<Int_t, Int_t> idxs_couple;
     
     std::vector<std::pair<Int_t, Int_t>> couples;
-
+    if(NClu<2) return couples;
     std::vector<bool> v(NClu);
     std::fill(v.end() - r, v.end(), true);
 
@@ -1482,7 +1484,6 @@ std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
 
             }
         }
-        // std::cout << idxs_couple.first<<" , "<<idxs_couple.second<<"\n";
         couples.push_back(idxs_couple);
     } while (std::next_permutation(v.begin(), v.end()));
 
@@ -1490,6 +1491,174 @@ std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
 }
 
 
+Int_t ECalSel::TwoClusters_couples(){
+  Int_t CutFlow=0;
+  std::vector<std::pair<Int_t, Int_t>> couples = GetCluCouples();
+  //fill plot with NCouples available
+  for (auto clupairs = begin (couples); clupairs != end (couples); ++clupairs) {
+    TRecoVCluster *tempClu[2];
+    TVector3 cluPos[2];
+    double cluTime[2];
+    
+    tempClu[0] = fECal_clEvent->Element(clupairs->first);
+    tempClu[1] = fECal_clEvent->Element(clupairs->second);
+
+    double dt = tempClu[0]->GetTime()-tempClu[1]->GetTime();
+    double cluEnergy[2];
+    cluEnergy[0] = tempClu[0]->GetEnergy();
+    cluEnergy[1] = tempClu[1]->GetEnergy();
+
+    cluPos[0].SetXYZ(
+        tempClu[0]->GetPosition().X() - fGeneralInfo->GetCOG().X(),
+        tempClu[0]->GetPosition().Y() - fGeneralInfo->GetCOG().Y(), fGeneralInfo->GetCOG().Z());
+    //double dr = tempClu[0]->GetTime()-tempClu[1]->GetTime();
+    cluPos[1].SetXYZ(
+        tempClu[1]->GetPosition().X() - fGeneralInfo->GetCOG().X(),
+        tempClu[1]->GetPosition().Y() - fGeneralInfo->GetCOG().Y(), fGeneralInfo->GetCOG().Z());
+    
+    double dr = (cluPos[0] - cluPos[1]).Mag();
+    fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt", dt, dr, 1.);
+    CutFlow |=  (1<<0);
+    
+    if(fabs(dt) > fMaxTimeDistance) continue;
+    CutFlow |=  (1<<1);
+    if(dr < fMaxTimeDistance) continue;
+    CutFlow |=  (1<<2);
+    fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt_cut", dt, dr, 1.);
+
+    // double pg[2];                                  // expected energies in the lab frame
+    // double cosq[2];
+    TLorentzVector labMomenta[2], labMomentaCM[2]; // momenta in the lab and CM frames
+    //TVector3 cluMomCrossBoost[2];                  // vector product between cluster direction and beam momentum (normalised to 1)
+
+    //evaluate kinematics and momenta
+    for(int i=0; i<2; i++){
+        TVector3 cluMom = cluPos[i] - fGeneralInfo->GetTargetPos();
+        cluMom *= (cluEnergy[i] / cluMom.Mag());
+
+        // laboratory and cm momenta
+        labMomenta[i].SetVectM(cluMom, 0.); // define a photon-like tlorentzVector --> siamo sicuri a 17 MeV??
+        labMomentaCM[i].SetVectM(labMomenta[i].Vect(), 0);
+        labMomentaCM[i].Boost(-fGeneralInfo->GetBoost());
+
+        // cosine and sine with respect to the boost
+        //cosq[i] = cluMom.Dot(fGeneralInfo->GetBoost()) / (cluMom.Mag() * fGeneralInfo->GetBoost().Mag());
+        //cluMomCrossBoost[i] = cluMom.Cross(fGeneralInfo->GetBoost());
+        //cluMomCrossBoost[i] *= 1. / (cluMom.Mag() * fGeneralInfo->GetBoost().Mag());
+
+        // energy expected in the lab
+        //pg[i] = 0.5 * fGeneralInfo->GetSqrts() / sqrt(1. - cosq[i] * cosq[i] + pow(fGeneralInfo->GetGam() * cosq[i], 2) - 2. * fGeneralInfo->GetBG() * fGeneralInfo->GetGam() * cosq[i] + pow(fGeneralInfo->GetBG(), 2));
+      }
+
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      Double_t DeltaPhiAbs = fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi());
+      Double_t DeltaTheta = labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta();
+
+       //Theta sum - Delta phi
+      if (!(DeltaPhiAbs > fMeanDPhi - fSigmaCut * fSigmaDPhi && DeltaPhiAbs < fMeanDPhi + fSigmaCut * fSigmaDPhi))
+        continue;
+      CutFlow |=  (1<<3);
+        
+      if (!(DeltaTheta > fMeanDTheta - fSigmaCut * fSigmaDTheta && DeltaTheta < fMeanDTheta + fSigmaCut * fSigmaDTheta))
+        continue;
+      CutFlow |=  (1<<4);
+
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_cut"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+    
+
+      //RMin cut
+      if (cluPos[0].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin || cluPos[1].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin)
+          fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_RMinOR"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      if (cluPos[0].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin || cluPos[1].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin){
+      continue; 
+      }
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_RMinAND"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      CutFlow |=  (1<<5);
+
+
+      //RMax cut
+      if (cluPos[0].Perp() < fGeneralInfo->GetRadiusMax() || cluPos[1].Perp() < fGeneralInfo->GetRadiusMax())
+          fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_RMaxOR"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      if (cluPos[0].Perp() > fGeneralInfo->GetRadiusMax() || cluPos[1].Perp() > fGeneralInfo->GetRadiusMax()){
+          
+      continue; 
+      }
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_RMaxAND"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      CutFlow |=  (1<<6);
+
+      //Min energy cut
+      if (cluEnergy[0] > fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor || cluEnergy[1] > fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor)
+      
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_EMinOR"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      if (cluEnergy[0] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor ||  cluEnergy[1] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor){
+      
+      continue;
+      }
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_EMinAND"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      CutFlow |=  (1<<7);
+      //Max energy cut
+      if (cluEnergy[0] < fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor || cluEnergy[1] < fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor)
+      
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_EMaxOR"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      if (cluEnergy[0] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor || cluEnergy[1] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor){
+      
+      continue;
+      }
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_EMaxAND"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      CutFlow |=  (1<<8);
+
+      Double_t PhiClu0 = TMath::ATan2(cluPos[0].Y(), cluPos[0].X());
+      Double_t PhiClu1 = TMath::ATan2(cluPos[1].Y(), cluPos[1].X());
+
+      if (abs((abs(PhiClu1) - TMath::Pi() / 2)) > TMath::Pi() / 6 || abs((abs(PhiClu0) - TMath::Pi() / 2)) > TMath::Pi() / 6)
+        fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_PhiOR"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+      if (abs((abs(PhiClu1) - TMath::Pi() / 2)) < TMath::Pi() / 6 || abs((abs(PhiClu0) - TMath::Pi() / 2)) < TMath::Pi() / 6){
+        continue;
+      }
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_PhiAND"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      CutFlow |=  (1<<9);
+ 
+
+
+  } //closes loop on clu couples
+  
+   for(int b=0; b<10; b++){
+      if ((CutFlow & (1<<b))  == 0) break;
+      fhSvcVal->FillHistoList("ECalSelTwoClu", "CutFlow_2Cl", b, 1.);
+
+  }
+}
 
 
 Bool_t ECalSel::InitHistos()
@@ -1525,6 +1694,7 @@ Bool_t ECalSel::InitHistos()
   fCutFlow = fhSvcVal->BookHistoList("ECalSel", "CutFlow", 17, 0, 17);
   fhSvcVal->BookHistoList("ECalSel", "CutFlow_right", 17, 0, 17);
   fhSvcVal->BookHistoList("ECalSel", "CutFlow_2Cl", 10, 0, 10);
+  fhSvcVal->BookHistoList("ECalSelTwoClu", "CutFlow_2Cl", 10, 0, 10);
 
   // single clusters from tag and probe
 
@@ -1652,6 +1822,8 @@ Bool_t ECalSel::InitHistos()
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DrVsDtAll", 800, -400, 400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DrVsDt", 800, -400, 400, 200, 0, 600.);
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt", 800, -400, 400, 200, 0, 600.);
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt_cut", 800, -400, 400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_EVsT", 800, -400, 400, 200, 0, 600.);
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_Chi2", 100, 0., 20.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_Chi2vsNPaired", 10, 0., 10., 100, 0., 20.);
@@ -1659,7 +1831,23 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_NPaired", 10, 0., 10.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DEVsE", 100, 100, 400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DE1VsDE2", 800, -400, 400, 800, -400, 400.);
-  fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs", 800, 0., 4 * TMath::Pi(), 800, 0., 4 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs", 800, 0., 4* TMath::Pi(), 800, 0., 4 * TMath::Pi());
+  
+  
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs", 800, 0., 2 * TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_cut", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_RMinOR", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_RMinAND", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_RMaxOR", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_RMaxAND", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_EMinOR", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_EMinAND", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_EMaxOR", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_EMaxAND", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_PhiOR", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_PhiAND", 800, 0., 2* TMath::Pi(), 800, 0., 2 * TMath::Pi());
+  
+  
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs_cut", 800, 0., 4 * TMath::Pi(), 800, 0., 4 * TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsEnergySum", 800, 0., 4 * TMath::Pi(), 400, 0, 400);
 

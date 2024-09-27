@@ -8,6 +8,7 @@
 
 #include "TObject.h"
 #include "TVector2.h"
+#include "TLorentzVector.h"
 #include "PadmeAnalysisEvent.hh"
 #include "GeneralInfo.hh"
 #include "MCTruthECal.hh"
@@ -55,6 +56,8 @@ struct ECalSelEvent{
   double avgT;
   double phi, theta;
   TVector2 cog; // cog of the selected clusters
+  TLorentzVector labP[2]; // lab momenta
+  TLorentzVector cmP[2]; // cm momenta
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 
@@ -109,6 +112,7 @@ protected:
   Int_t    fVerbose;
 
 private:
+  std::vector<std::pair<Int_t, Int_t>> GetCluCouples();
   Int_t TwoClusSel();
   Int_t OneClusSel();
   Int_t OneClusTagAndProbeSel();
@@ -166,7 +170,7 @@ private:
   const int nhole = 5; // 5x5 matrix is not instrumented                  
 
   
-
+  TH1D *fCutFlow;
   TH2D *EofTag;
   TH2D *EofeIoni;
   TH2D *EofAnnihil;

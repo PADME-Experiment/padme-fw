@@ -234,6 +234,29 @@ Int_t ETagAn::ETagMatch(){
 	}
       } // loop over algorithms for tag
     } // loop over component of the pair (should we use each pair twice?)
+
+
+  // t&p for gamma-gamma
+  
+  for (int j=0; j<2; j++){ // pair combination {0,1}, {1,0}
+      int iass = j; // tag clus
+      int jass = 1-j; // probe clus
+
+      // tag with asking for no SiPM on TAG
+      bool istag = ass[iass].nAss[0]==0 && ass[iass].nAss[1]==0 ;
+      // Denominator 
+      if(!istag) continue;
+      fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Deno"),ass[jass].nETagBar,ass[jass].closestSide,1.);
+      if((ass[jass].assType & (1<<kSingleSideMatch))>0) continue;
+      fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Deno_noBrem"),ass[jass].nETagBar,ass[jass].closestSide,1.);
+
+	    // Match condition
+
+      bool isProbed = ass[jass].nAss[0]==0 && ass[jass].nAss[1]==0 ;
+      if(isProbed) fhSvcVal->FillHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Num"),ass[jass].nETagBar,ass[jass].closestSide,1.);
+
+    } // loop over component of the pair (should we use each pair twice?)
+
   } // loop over cluster pairs
 
   return 0;
@@ -676,6 +699,9 @@ Bool_t ETagAn::InitHistos()
   fOffLabel = "Off";
 
   fhSvcVal->CreateList("ETagAn");
+  fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Deno"),15,0,15,2,-0.5,1.5); // should do variable binning to deal with central slabs
+  fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Deno_noBrem"),15,0,15,2,-0.5,1.5); // should do variable binning to deal with central slabs
+  fhSvcVal->BookHisto2List("ETagAn",Form("ECal_ETag_GammaGamma_Num"),15,0,15,2,-0.5,1.5); // should do variable binning to deal with central slabs
 
   for (int q=0; q<15; q++){
     for (int aa = 0; aa < 4; aa++) { // SiPM

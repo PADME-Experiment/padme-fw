@@ -14,6 +14,8 @@
 #include "TObjArray.h"
 #include "TH1D.h"
 #include "TFitResult.h"
+#include <algorithm>
+#include <vector>
 
 #include "TFitResultPtr.h"
 #include "TFile.h"
@@ -228,7 +230,7 @@ void ECalSel::ProcessForCalib()
   fSigmaCut = 10.;
   // fSigmaCut = 7.;
   fECalEvents.clear();
-  // TwoClusSel();  //removed for now
+  TwoClusSel();  //removed for now
   //  here the tag and probe selection might be added
 }
 
@@ -240,7 +242,8 @@ Bool_t ECalSel::Process()
   // if(NEvent%10000==0) cout<<"ECalSel NEvent "<<NEvent<<endl;// -->si resetta ogni circa 500 evt per il MC
 
   fSafeEnergyFactor = 0.7; // 0.7; // Safety factor used for the energy min and max cuts
-  fSafeSpaceMargin = 31.5; // 1.5 cells in mm, safety margin used for the radius min and max cut
+fSafeSpaceMargin = 31.5;
+  //fSafeSpaceMargin = 31.5 original value// 1.5 cells in mm, safety margin used for the radius min and max cut
   fFillLocalHistograms = true;
   fFillCalibHistograms = false;
   fECalEvents.clear();
@@ -686,7 +689,6 @@ Int_t ECalSel::OneClusTagAndProbeSel()
                 pcleOutProbe[1] = mcVtx->ParticleOut(1);
                 TLorentzVector pcle0probe(pcleOutProbe[0]->GetMomentum(), pcleOutProbe[0]->GetEnergy());
                 TLorentzVector pcle1probe(pcleOutProbe[1]->GetMomentum(), pcleOutProbe[1]->GetEnergy());
-
                 fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_TP_E1vsE2_probe_%s", processTag.Data()), pcleOutProbe[0]->GetEnergy(), pcleOutProbe[1]->GetEnergy(), 1.);
                 fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_TP_Theta1vsTheta2_probe_%s", processTag.Data()), pcleOutProbe[0]->GetMomentum().Theta(), pcleOutProbe[1]->GetMomentum().Theta(), 1.);
                 fhSvcVal->FillHistoList("ECalSelMCTruth", Form("ECal_TP_SqrtS_probe_%s", processTag.Data()), (pcle0probe + pcle1probe).M(), 1.);
@@ -888,37 +890,68 @@ Int_t ECalSel::TwoClusSel()
   // aggiungere NCell x clu vs E
   //  loop on cluster pairs
 
+  // Bool_t Nall=kFALSE, NTimeSafe = kFALSE, NRmin=kFALSE, NRmax=kFALSE, NEmin =kFALSE, NEmax=kFALSE, NPhi =kFALSE,
+  // Bool_t  N2Rmin=kFALSE, N2Rmax=kFALSE, N2Emin =kFALSE, N2Emax=kFALSE, N2Phi =kFALSE,  NDr =kFALSE, NDt=kFALSE;
+  Int_t CutFlow =0;
+  Int_t CutFlow_2Cl[2]={0,0};
+  
   for (int h1 = 0; h1 < fECal_clEvent->GetNElements(); ++h1)
   {
     Double_t tempChiEn = -1;
     tempClu[0] = fECal_clEvent->Element((int)h1);
-
+    CutFlow |=  (1<<0);
+    CutFlow_2Cl[0] |=  (1<<0);
     cluTime[0] = tempClu[0]->GetTime();
     if (cluTime[0] < fTimeSafeMin)
       continue; // require time in the safe region [TBchecked]
+    CutFlow |=  (1<<1);
+    CutFlow_2Cl[0] |=  (1<<1);
     cluEnergy[0] = tempClu[0]->GetEnergy();
 
     cluPos[0].SetXYZ(tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
+    fCutFlow->SetBinContent(1, fCutFlow->GetBinContent(1)+1);
     cluPosRel[0] = cluPos[0] - fGeneralInfo->GetCOG();
     if (cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin)
       continue; // require a minimum radius at the ECAL
+    CutFlow |=  (1<<2);
+    CutFlow_2Cl[0] |=  (1<<2);
+    fCutFlow->SetBinContent(2, fCutFlow->GetBinContent(2)+1);
+
     if (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMax())
       continue; // require a maximum radius at the ECAL, should we use a margin here as well?
+
+    CutFlow |=  (1<<3);
+    CutFlow_2Cl[0] |=  (1<<3);
+    fCutFlow->SetBinContent(3, fCutFlow->GetBinContent(3)+1);
+
     // da ridefinire con taglio magnete
     //    fhSvcVal->FillHisto2List("ECalSel",Form("ECal_SC_yvsx_rcut"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
 
     // int icellX = cluPos[0].X()/cellSize+0.5 + ncells/2;
     // int icellY = cluPos[0].Y()/cellSize+0.5 + ncells/2;
 
+    
+    if (cluEnergy[0] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor)
+      continue; // require a minimum energy
+    CutFlow |=  (1<<4);
+    CutFlow_2Cl[0] |=  (1<<4);
+    fCutFlow->SetBinContent(4, fCutFlow->GetBinContent(4)+1);
+
+    if (cluEnergy[0] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor)
+      continue; // require a maximum energy
+    CutFlow |=  (1<<5);
+    CutFlow_2Cl[0] |=  (1<<5);
+
+    fCutFlow->SetBinContent(5, fCutFlow->GetBinContent(5)+1);
+
     Double_t PhiClu0 = TMath::ATan2(cluPos[0].Y(), cluPos[0].X());
 
     if (abs((abs(PhiClu0) - TMath::Pi() / 2)) < TMath::Pi() / 6)
       continue;
+    CutFlow |=  (1<<6);
+    CutFlow_2Cl[0] |=  (1<<6);
+    fCutFlow->SetBinContent(6, fCutFlow->GetBinContent(6)+1);
 
-    if (cluEnergy[0] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor)
-      continue; // require a minimum energy
-    if (cluEnergy[0] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor)
-      continue; // require a maximum energy
     fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_yvsx_postcut"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y(), 1.);
 
     fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_NCellvsEnergy_phi_r_cut", tempClu[0]->GetEnergy(), tempClu[0]->GetNHitsInClus(), 1.);
@@ -934,10 +967,14 @@ Int_t ECalSel::TwoClusSel()
     for (int h2 = h1 + 1; h2 < fECal_clEvent->GetNElements(); ++h2)
     { // corretto partire da h1+1?
       tempClu[1] = fECal_clEvent->Element((int)h2);
-
+      CutFlow_2Cl[1] |=  (1<<0);
       cluTime[1] = tempClu[1]->GetTime();
       if (cluTime[1] < fTimeSafeMin)
         continue;
+      CutFlow |=  (1<<7);
+      CutFlow_2Cl[1] |=  (1<<1);
+
+
       cluEnergy[1] = tempClu[1]->GetEnergy();
       cluPos[1].SetXYZ(tempClu[1]->GetPosition().X(), tempClu[1]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
 
@@ -947,17 +984,34 @@ Int_t ECalSel::TwoClusSel()
       if (fFillLocalHistograms)
         fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DrVsDtAll"), dt, dr, 1.);
 
-      if (cluEnergy[1] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor)
-        continue; // require a minimum energy
-      if (cluEnergy[1] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor)
-        continue; // require a maximum energy
-
+      
       cluPosRel[1] = cluPos[1] - fGeneralInfo->GetCOG();
 
       if (cluPosRel[1].Perp() < fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin)
         continue; // require a minimum radius at the ECAL
+        CutFlow |=  (1<<8);
+        CutFlow_2Cl[1] |=  (1<<2);
+
+        fCutFlow->SetBinContent(7, fCutFlow->GetBinContent(7)+1);
+
       if (cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMax())
         continue; // require a maximum radius at the ECAL, should we use a margin here as well?
+        fCutFlow->SetBinContent(8, fCutFlow->GetBinContent(8)+1);
+        CutFlow |=  (1<<9);
+        CutFlow_2Cl[1] |=  (1<<3);
+
+
+      if (cluEnergy[1] < fGeneralInfo->GetEnergyMin() * fSafeEnergyFactor)
+        continue; // require a minimum energy
+        fCutFlow->SetBinContent(9, fCutFlow->GetBinContent(9)+1);
+        CutFlow |=  (1<<10);
+        CutFlow_2Cl[1] |=  (1<<4);
+
+      if (cluEnergy[1] > fGeneralInfo->GetEnergyMax() / fSafeEnergyFactor)
+        continue; // require a maximum energy
+        fCutFlow->SetBinContent(10, fCutFlow->GetBinContent(10)+1);
+        CutFlow |=  (1<<11);
+        CutFlow_2Cl[1] |=  (1<<5);
 
       // int icellX = cluPos[1].X()/cellSize+0.5 + ncells/2;
       // int icellY = cluPos[1].Y()/cellSize+0.5 + ncells/2;
@@ -966,6 +1020,9 @@ Int_t ECalSel::TwoClusSel()
 
       if (abs((abs(PhiClu1) - TMath::Pi() / 2)) < TMath::Pi() / 6)
         continue;
+      fCutFlow->SetBinContent(11, fCutFlow->GetBinContent(11)+1);
+      CutFlow |=  (1<<12);
+      CutFlow_2Cl[1] |=  (1<<6);
 
       // if (icellY > 26) continue;
       // if (icellY < 3) continue;
@@ -973,8 +1030,19 @@ Int_t ECalSel::TwoClusSel()
       if (fFillLocalHistograms)
         fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_DrVsDt", dt, dr, 1.);
 
-      if (fabs(dt) < fMaxTimeDistance && dr > fMinGGDistance)
+      if (fabs(dt) < fMaxTimeDistance) 
       {
+        fCutFlow->SetBinContent(12, fCutFlow->GetBinContent(12)+1);
+       CutFlow |=  (1<<13);
+       CutFlow_2Cl[0] |=  (1<<7);
+       CutFlow_2Cl[1] |=  (1<<7);
+
+        if  (dr > fMinGGDistance)
+      {
+        CutFlow |=  (1<<14);
+        CutFlow_2Cl[0] |=  (1<<8);
+        CutFlow_2Cl[1] |=  (1<<8);
+        fCutFlow->SetBinContent(13, fCutFlow->GetBinContent(13)+1);
 
         Double_t ChiEnergy = ((fGeneralInfo->GetBeamEnergy() - (cluEnergy[1] + cluEnergy[0])) / (fSigmaE * fSigmaE)) *
                              ((fGeneralInfo->GetBeamEnergy() - (cluEnergy[1] + cluEnergy[0])));
@@ -994,6 +1062,7 @@ Int_t ECalSel::TwoClusSel()
           }
         }
         nPaired++;
+      }
       }
 
     } // inner cluster loop
@@ -1030,43 +1099,7 @@ Int_t ECalSel::TwoClusSel()
       TVector3 cluMomCrossBoost[2];                  // vector product between cluster direction and beam momentum (normalised to 1)
       TLorentzVector labMomenta[2], labMomentaCM[2]; // momenta in the lab and CM frames
 
-      for (int i = 0; i < 2; i++)
-      {
-
-        if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
-        {
-
-          if (fMCTruthECal->GetVtxFromCluID((int)isPaired) > 0)
-          {
-
-            TMCVertex *mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID((int)isPaired));
-            if (mcVtx->GetProcess().CompareTo("eIoni")==0)
-            {
-
-              int bary = (cluPos[i].Y() + fETagBarSizeY * 0.5) / fETagBarSizeY + 7;
-
-              double downEdgeDist = cluPos[i].Y() + fETagBarSizeY * 0.5 - fETagBarSizeY * (bary - 7);
-              double upEdgeDist = fETagBarSizeY - downEdgeDist;
-              TRandom2 r;
-              TRandom2 r1;
-
-              // rand tra 0,1 uniform,
-
-              if (r.Uniform() > downEdgeDist / fETagBarSizeY)
-              {
-                // muovo up
-                // rand2 tra 0,1 uniform,
-                cluPos[i].SetY(cluPos[i].Y() + r1.Uniform() * upEdgeDist);
-              }
-              else
-              {
-                // and2 tra 0,1 uniform,
-                cluPos[i].SetY(cluPos[i].Y() - r1.Uniform() * downEdgeDist);
-              }
-              //
-            }
-          }
-        }
+      for(int i=0; i<2; i++){
 
         TVector3 cluMom = cluPos[i] - fGeneralInfo->GetTargetPos();
         cluMom *= (cluEnergy[i] / cluMom.Mag());
@@ -1154,8 +1187,8 @@ Int_t ECalSel::TwoClusSel()
       }
       if (fFillLocalHistograms)
       {
-        fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DTHEVsPhi_Lab_NOcut"), PhiCluster, labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1);
-        fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DPhiVsPhi_Lab_NOcut"), PhiCluster, fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()), 1);
+        fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DTHEVsPhi_Lab_NOcut"), PhiCluster, labMomenta[0].Vect().Theta() + labMomenta[1].Vect().Theta(), 1);
+        fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DPhiVsPhi_Lab_NOcut"), PhiCluster, fabs(labMomenta[0].Vect().Phi() - labMomenta[1].Vect().Phi()), 1);
         fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DTHEVsPhi_CM_NOcut"), PhiCluster, labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1);
         fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DPhiVsPhi_CM_NOcut"), PhiCluster, fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()), 1);
         if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
@@ -1181,9 +1214,21 @@ Int_t ECalSel::TwoClusSel()
 
       if (!(DeltaPhiAbs > fMeanDPhi - fSigmaCut * fSigmaDPhi && DeltaPhiAbs < fMeanDPhi + fSigmaCut * fSigmaDPhi))
         continue;
+        CutFlow |=  (1<<15);
+        CutFlow_2Cl[0] |=  (1<<9);
+        CutFlow_2Cl[1] |=  (1<<9);
+
       if (!(DeltaTheta > fMeanDTheta - fSigmaCut * fSigmaDTheta && DeltaTheta < fMeanDTheta + fSigmaCut * fSigmaDTheta))
         continue;
+        CutFlow |=  (1<<16);
+        CutFlow_2Cl[0] |=  (1<<10);
+        CutFlow_2Cl[1] |=  (1<<10);
 
+       if (fFillLocalHistograms) fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_DTHEVsDPHIAbs_cut"),
+                                 fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
+                                 labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+
+                              
       // auto ETagCl1 = fETagAn->getETagECalAss(h1);
       // auto ETagCl2 =fETagAn->getETagECalAss(isPaired);
       // std::cout<<"Associazione ETag: cl1: "<<ETagCl1.nAss[0]<<", "<<ETagCl1.nAss[1]<< "  cl2:"<<ETagCl2.nAss[0]<<", "<<ETagCl2.nAss[1]<<std::endl;
@@ -1226,6 +1271,32 @@ Int_t ECalSel::TwoClusSel()
           {
             TMCVertex *mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID((int)isPaired));
             processSelected = mcVtx->GetProcess().Data();
+            TVector3 VtxPos = mcVtx->GetPosition();
+            TMCParticle *pcleOut[2];
+            pcleOut[0] = mcVtx->ParticleOut(0);
+            pcleOut[1] = mcVtx->ParticleOut(1);
+            // TLorentzVector pcleOut4V(pcleOut[0]->GetMomentum(), pcleOut[0]->GetEnergy());
+            // TLorentzVector pcleOut4V(pcleOut[1]->GetMomentum(), pcleOut[1]->GetEnergy());
+            TVector3 pclePos = VtxPos;
+            TVector3 pcleMom[2];
+            pcleMom[0] = pcleOut[0]->GetMomentum();
+            pcleMom[1] = pcleOut[1]->GetMomentum();
+
+            TVector3 VtxPosAtCalo[2];
+            for(int ip =0; ip<2; ip++){
+            VtxPosAtCalo[ip].SetZ(fGeneralInfo->GetCOG().Z() - 72.8); // removed 6.5X0 faccia calorimetro
+            VtxPosAtCalo[ip].SetX(pclePos.X() + ((pcleMom[ip].X() / pcleMom[ip].Z()) * (VtxPosAtCalo[ip].Z() - pclePos.Z())));
+            VtxPosAtCalo[ip].SetY(pclePos.Y() + ((pcleMom[ip].Y() / pcleMom[ip].Z()) * (VtxPosAtCalo[ip].Z() - pclePos.Z())));
+            }
+            TVector2 cog_true(
+          (pcleOut[0]->GetEnergy() * VtxPosAtCalo[0] + pcleOut[1]->GetEnergy() * VtxPosAtCalo[1]).X() / (pcleOut[0]->GetEnergy() + pcleOut[1]->GetEnergy()),
+          (pcleOut[0]->GetEnergy() * VtxPosAtCalo[0] + pcleOut[1]->GetEnergy() * VtxPosAtCalo[1]).Y() / (pcleOut[0]->GetEnergy() + pcleOut[1]->GetEnergy()));
+
+            fhSvcVal->FillHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGX_true_%s", processSelected.Data()), cog_true.X() - fGeneralInfo->GetCOG().X(), 1.);
+            fhSvcVal->FillHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGY_true_%s", processSelected.Data()), cog_true.Y() - fGeneralInfo->GetCOG().Y(), 1.);
+            fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_SC_DCOGYvsDCOGY_true_%s", processSelected.Data()), cog_true.X() - fGeneralInfo->GetCOG().X(),cog_true.Y() - fGeneralInfo->GetCOG().Y(), 1.);
+
+            
           }
           fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_SC_DTHEVsDPHIAbs_probe_%s", processSelected.Data()),
                                    fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
@@ -1257,6 +1328,7 @@ Int_t ECalSel::TwoClusSel()
 
       if (fFillLocalHistograms)
       {
+        fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_COGYX_sel", cog.X(), cog.Y(), 1.);
 
         fhSvcVal->FillHisto2List("ECalSel", Form("ECal_SC_EVsT"), 0.5 * (cluTime[0] + cluTime[1]), cluEnergy[0] + cluEnergy[1], 1.);
         fhSvcVal->FillHistoList("ECalSel", Form("ECal_SC_DT"), (cluTime[0] - cluTime[1]), 1.);
@@ -1275,6 +1347,7 @@ Int_t ECalSel::TwoClusSel()
         fhSvcVal->FillHisto2List("ECalSel", "ECal_SC_DE_vs_EClu2_cut", cluEnergy[1], cluEnergy[1] - pg[1], 1);
       }
 
+    if (fFillLocalHistograms){
       ECalSelEvent *selev = new ECalSelEvent;
       selev->flagEv = ev_gg;
       selev->flagAlgo = angles;
@@ -1286,11 +1359,15 @@ Int_t ECalSel::TwoClusSel()
       selev->totalE = cluEnergy[0] + cluEnergy[1];
       selev->avgT = 0.5 * (cluTime[0] + cluTime[1]);
       selev->cog.Set(cog.X(), cog.Y());
+      selev->labP[0] = labMomenta[0];  
+      selev->labP[1] = labMomenta[1];  
+      selev->cmP[0] = labMomentaCM[0];  
+      selev->cmP[1] = labMomentaCM[1];  
       selev->indexETagAss[0] = -1;
       selev->indexETagAss[1] = -1;
       selev->indexETagAss[2] = -1;
       fECalEvents.push_back(selev);
-
+    }
       TLorentzVector photonMom[2];
       for (int j = 0; j < 2; j++)
       {
@@ -1363,7 +1440,16 @@ Int_t ECalSel::TwoClusSel()
 
       //}
     } // isPaired
-  } // cluster loop
+  } // cluster 
+  for(int b=0; b<17; b++){
+    if ((CutFlow & (1<<b))  == 0) break;
+    if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel", "CutFlow_right", b, 1.);
+  }
+  for(int b=0; b<11; b++){
+    if (((CutFlow_2Cl[0] & CutFlow_2Cl[1]) & (1<<b))  == 0) break;
+    if (fFillLocalHistograms) fhSvcVal->FillHistoList("ECalSel", "CutFlow_2Cl", b, 1.);
+  }
+
 
   if (fFillLocalHistograms)
   {
@@ -1375,6 +1461,37 @@ Int_t ECalSel::TwoClusSel()
   return fECalEvents.size() - nOld;
 }
 
+std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
+  int NClu = fECal_clEvent->GetNElements(), r = 2;
+    
+    std::pair<Int_t, Int_t> idxs_couple;
+    
+    std::vector<std::pair<Int_t, Int_t>> couples;
+
+    std::vector<bool> v(NClu);
+    std::fill(v.end() - r, v.end(), true);
+
+    do {
+      idxs_couple.first=-1;
+      idxs_couple.second=-1;
+        for (int i = 0; i < NClu; ++i) {
+            if (v[i]) {
+              
+              if(idxs_couple.first==-1) idxs_couple.first =i;
+              else idxs_couple.second =i;
+
+            }
+        }
+        // std::cout << idxs_couple.first<<" , "<<idxs_couple.second<<"\n";
+        couples.push_back(idxs_couple);
+    } while (std::next_permutation(v.begin(), v.end()));
+
+ return couples; 
+}
+
+
+
+
 Bool_t ECalSel::InitHistos()
 {
   static int NprocessAvailable = 5;
@@ -1382,6 +1499,7 @@ Bool_t ECalSel::InitHistos()
 
   fhSvcVal->CreateList("ECalSel");
   fhSvcVal->CreateList("ECalSelMCTruth");
+  fhSvcVal->CreateList("ECalSelTwoClu");
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx_Eweight", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
@@ -1404,6 +1522,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SingleClu_E1F_vs_E2FCut", 400, 0., 4., 100, 0., LMax);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SingleClu_DrVsDtAll", 800, -400, 400, 200, 0, 600.);
   fhSvcVal->BookHistoList("ECalSel", "NumberOfSingleClus", 10, 0., 10.);
+  fCutFlow = fhSvcVal->BookHistoList("ECalSel", "CutFlow", 17, 0, 17);
+  fhSvcVal->BookHistoList("ECalSel", "CutFlow_right", 17, 0, 17);
+  fhSvcVal->BookHistoList("ECalSel", "CutFlow_2Cl", 10, 0, 10);
 
   // single clusters from tag and probe
 
@@ -1428,9 +1549,12 @@ Bool_t ECalSel::InitHistos()
 
     // selection
     fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_DTHEVsDPHIAbs_probe_%s", processIDs[pid].Data()), 800, 0., 4 * TMath::Pi(), 800, 0., 4 * TMath::Pi());
+    fhSvcVal->BookHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGX_true_%s", processIDs[pid].Data()), 600, -300, 300);
     fhSvcVal->BookHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGX_probe_%s", processIDs[pid].Data()), 600, -300, 300);
+    fhSvcVal->BookHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGY_true_%s", processIDs[pid].Data()), 600, -300, 300);
     fhSvcVal->BookHistoList("ECalSelMCTruth", Form("ECal_SC_DCOGY_probe_%s", processIDs[pid].Data()), 600, -300, 300);
     fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_DCOGYvsDCOGY_probe_%s", processIDs[pid].Data()), 600, -300, 300, 600, -300, 300);
+    fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_DCOGYvsDCOGY_true_%s", processIDs[pid].Data()), 600, -300, 300, 600, -300, 300);
     fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_Theta1VsTheta2_%s", processIDs[pid].Data()), 900, 0, TMath::Pi(), 900, 0, TMath::Pi());
     fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_DTHEVsPhi_Lab_%s", processIDs[pid].Data()), 900, -TMath::Pi(), TMath::Pi(), 900, 0., 3 * TMath::Pi());
     fhSvcVal->BookHisto2List("ECalSelMCTruth", Form("ECal_SC_DTHEVsPhi_Lab_NOcut_%s", processIDs[pid].Data()), 900, -TMath::Pi(), TMath::Pi(), 900, 0., 3 * TMath::Pi());
@@ -1536,6 +1660,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DEVsE", 100, 100, 400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DE1VsDE2", 800, -400, 400, 800, -400, 400.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs", 800, 0., 4 * TMath::Pi(), 800, 0., 4 * TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs_cut", 800, 0., 4 * TMath::Pi(), 800, 0., 4 * TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsEnergySum", 800, 0., 4 * TMath::Pi(), 400, 0, 400);
 
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EofClu_nocut", 1000, 0, 1000);
@@ -1553,6 +1678,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_dphiElli", 200, 0, 40, 100, -TMath::Pi(), TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel", "ECal_ElliAngle_ElliEnergy", 200, 0., 40., 200, 0., 40.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_COGYX", 100, -200, 200, 100, -200, 200);
+  fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_COGYX_sel", 100, -200, 200, 100, -200, 200);
   fhSvcVal->BookHisto2List("ECalSel", "ECalX_vs_Time", 48, 0, 86400., 100, -200, 200); // 30-minute binning
   fhSvcVal->BookHisto2List("ECalSel", "ECalY_vs_Time", 48, 0, 86400., 100, -200, 200); // 30-minute binning
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_YX_clu0", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
@@ -1635,7 +1761,7 @@ Bool_t ECalSel::TagProbeEff_macro()
   TH2D *notargetbkg_probe = (TH2D *)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();
   notargetbkg_probe->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287)); //
   TH1D *sliceNoTarg;
-  for (int i = 0; i < NSlicesE; i++)
+  for (int i = 0; i < NSlicesE-2; i++)
   {
     fileIn->cd();
     std::cout << "In slice " << i << std::endl;
@@ -2018,7 +2144,7 @@ Bool_t ECalSel::FitTagProbeEff()
   TGraphErrors *BkgRatioE = new TGraphErrors(NSlicesE);
   Double_t sumDen, sumNum;
 
-  for (Int_t iSlice = 0; iSlice < NSlicesE; iSlice++)
+  for (Int_t iSlice = 0; iSlice < NSlicesE-2; iSlice++)
   {
 
     std::cout << "Edown: " << Edown + (spacing * (iSlice)) << " Eup: " << (Edown + (spacing * (iSlice + 1))) << std::endl;

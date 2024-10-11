@@ -54,7 +54,7 @@ struct ECalETagMatchedEvent{
   double totalE;
   double avgT;
   double phi, theta;
-  TVector2 cog; // cog of the selected clusters
+  TVector2 cog, xyclu[2]; // cog and xy of the selected clusters
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 

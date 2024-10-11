@@ -393,6 +393,7 @@ if(fHistoMode){
     fHS->SaveTGraphList("DataQuality", gPoTratioCharge->GetName(),gPoTratioCharge);
     fHS->SaveTGraphList("DataQuality", gPoTratioChargeAll->GetName(),gPoTratioChargeAll);
     
+    //fare delete dei tgraph
     //fare fittino, salva P0 e errP0 scala con Chi2
   //flag 0 singlolo periodo vicino al p0
   //flag 1 singlolo periodo fuori da 5 sigma

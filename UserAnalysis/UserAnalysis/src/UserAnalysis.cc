@@ -90,8 +90,8 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   if (fETagHitsAvail) fETagAn->Init(fEvent);
   if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
   //  fIsGGAnalysis->Init(fEvent);
-  if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
-  fIs22GGAnalysis->Init(fEvent);
+  //if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
+  //fIs22GGAnalysis->Init(fEvent);
 //  fIs3GAnalysis->Init(fEvent);
   return true;
 }
@@ -142,9 +142,9 @@ Bool_t UserAnalysis::Process(){
     fECalETagMatching->Process();
   }
   //  fIsGGAnalysis->Process();
-  fIs22GGAnalysis->Process();
+  //fIs22GGAnalysis->Process();
 //  fIs3GAnalysis->Process();   
-  if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
+  //if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
@@ -210,8 +210,8 @@ Bool_t UserAnalysis::Finalize()
   if (fETagHitsAvail) fETagAn->Finalize();
   if (fETagHitsAvail) fECalETagMatching->Finalize();
   //  fIsGGAnalysis->Finalize();
-  if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
-  fIs22GGAnalysis->Finalize();
+  //if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
+  //fIs22GGAnalysis->Finalize();
   fECalCalib22->Finalize();
   fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();

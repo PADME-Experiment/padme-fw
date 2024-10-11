@@ -95,15 +95,24 @@ Int_t ECalETagMatching::ECalETagMatch(){
     if((ECalClu[0]->nAss[0]==0 && ECalClu[0]->nAss[1]==0) && (ECalClu[1]->nAss[0]==0 && ECalClu[1]->nAss[1]==0)){
         	
           double eff1=1, eff2=1;
-          TFile *fEffETag = new TFile("/home/dimeco/calibTools/padme-fw/UserAnalysis/efftpgg.root");
-          if(!fEffETag->IsOpen()) std::cout<< "efftpgg.root was not opened"<<std::endl;
-          TH2D *hEff = (TH2D*) fEffETag->Get("ECal_ETag_GammaGamma_Num")->Clone();
-          if(hEff == nullptr) std::cout<<"ECal_ETag_GammaGamma_Num does not exist"<<std::endl;
+          // TFile *fEffETag = new TFile("/home/dimeco/calibTools/padme-fw/UserAnalysis/efftpgg.root");
+          // if(!fEffETag->IsOpen()) std::cout<< "efftpgg.root was not opened"<<std::endl;
+          // TH2D *hEff = (TH2D*) fEffETag->Get("ECal_ETag_GammaGamma_Num")->Clone();
+          // if(hEff == nullptr) std::cout<<"ECal_ETag_GammaGamma_Num does not exist"<<std::endl;
 
-          eff1 = hEff->GetBinContent((ECalClu[0]->nETagBar)+1, (ECalClu[0]->closestSide)+1);
-          eff2 = hEff->GetBinContent(hEff->FindBin( ECalClu[1]->nETagBar, ECalClu[1]->closestSide));
-          // std::cout<<"Sono sopravvissuto con al getbincontent 2: "<<eff2<<std::endl;
-          fEffETag->Close();
+          // eff1 = hEff->GetBinContent((ECalClu[0]->nETagBar)+1, (ECalClu[0]->closestSide)+1);
+          // eff2 = hEff->GetBinContent(hEff->FindBin( ECalClu[1]->nETagBar, ECalClu[1]->closestSide));
+          // // std::cout<<"Sono sopravvissuto con al getbincontent 2: "<<eff2<<std::endl;
+          // fEffETag->Close();
+
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_ESum_annihil"), ECalEv->totalE);
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_Theta1_annihil"),(ECalEv->cmP[0]).Vect().Theta());
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_Theta2_annihil"),(ECalEv->cmP[1]).Vect().Theta());
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_Phi1_annihil"),(ECalEv->cmP[0]).Vect().Phi());
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_Phi2_annihil"), (ECalEv->cmP[1]).Vect().Phi());
+          fhSvcVal->FillHisto2List("ECalETagMatching", Form("ECal_TC_COGYX_annihil"), (ECalEv->cog).X() ,(ECalEv->cog).Y());
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_R1_annihil"), (ECalEv->xyclu[0]).Mod());
+          fhSvcVal->FillHistoList("ECalETagMatching", Form("ECal_TC_R2_annihil"), (ECalEv->xyclu[1]).Mod());
 
           
           fhSvcVal->FillHistoList("ECalETagMatching",Form("ECalETag_annihil"),ECalEv->totalE); 
@@ -209,6 +218,17 @@ Bool_t ECalETagMatching::InitHistos()
   fhSvcVal->BookHisto2List("ECalETagMatching", "ECal_SC_COGYX_noAss", 100, -200, 200, 100, -200, 200);
   fhSvcVal->BookHisto2List("ECalETagMatching", Form("ECal_SC_DTHEVsPhi_Lab_noAss"), 900, -TMath::Pi(), TMath::Pi(), 900, 0., TMath::Pi());
   fhSvcVal->BookHisto2List("ECalETagMatching", Form("ECal_SC_DTHECMVsPhi_Lab_noAss"), 900, -TMath::Pi(), TMath::Pi(), 900, 0., 2* TMath::Pi());
+
+
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_ESum_annihil"), 400, 0, 400);
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_Theta1_annihil"),300, 0, TMath::Pi());
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_Theta2_annihil"),300, 0, TMath::Pi());
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_Phi1_annihil"),600, -TMath::Pi(), TMath::Pi());
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_Phi2_annihil"), 600, -TMath::Pi(), TMath::Pi());
+  fhSvcVal->BookHisto2List("ECalETagMatching", Form("ECal_TC_COGYX_annihil"), 100, -200, 200, 100, -200, 200);
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_R1_annihil"), 500, 0, 500);
+  fhSvcVal->BookHistoList("ECalETagMatching", Form("ECal_TC_R2_annihil"), 500, 0, 500);
+
 
   return true;
 }

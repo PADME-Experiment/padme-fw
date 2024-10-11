@@ -138,6 +138,18 @@ public:
   G4String GetBhaBhaFilename()        { return fBhaBhaFilename; }
   void SetBhaBhaFilename(G4String f) { fBhaBhaFilename = f; }
 
+  G4int GetBhaBhaLinesToSkip()       { return fBhaBhaLinesToSkip; }
+  void SetBhaBhaLinesToSkip(G4int n) { fBhaBhaLinesToSkip = n;    }
+
+  G4int GetNBabayagaPerBunch()        { return fNBabayagaPerBunch; }
+  void SetNBabayagaPerBunch(G4int n) { fNBabayagaPerBunch = n;    }
+
+  G4String GetBabayagaFilename()        { return fBabayagaFilename; }
+  void SetBabayagaFilename(G4String f) { fBabayagaFilename = f; }
+
+  G4int GetBabayagaLinesToSkip()       { return fBabayagaLinesToSkip; }
+  void SetBabayagaLinesToSkip(G4int n) { fBabayagaLinesToSkip = n;    }
+
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
 
@@ -242,6 +254,11 @@ private:
   // Insert BhaBha M. Raggi 20/05/2021
   G4int fNBhaBhaPerBunch;
   G4String fBhaBhaFilename;
+  G4int fBhaBhaLinesToSkip;
+
+  G4int fNBabayagaPerBunch;
+  G4String fBabayagaFilename;
+  G4int fBabayagaLinesToSkip;
 
   // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
   G4double fDecayLength;

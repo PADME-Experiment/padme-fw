@@ -82,6 +82,11 @@ private:
 
   G4UIcmdWithAnInteger* fSetNBhaBhaPerBunchCmd;
   G4UIcmdWithAString* fSetBhaBhaFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBhaBhaLinesToSkipCmd;
+
+  G4UIcmdWithAnInteger* fSetNBabayagaPerBunchCmd;
+  G4UIcmdWithAString* fSetBabayagaFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBabayagaLinesToSkipCmd;
 
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 

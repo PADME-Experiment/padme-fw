@@ -72,6 +72,14 @@ BeamParameters::BeamParameters()
   fNTwoPhotonDecaysPerBunch = 0;
   fTwoPhotonDecaysFilename = "TwoPhotonDecays.list";
 
+  fNBhaBhaPerBunch = 0;
+  fBhaBhaFilename = "BhaBha.list";
+  fBhaBhaLinesToSkip = 0;
+
+  fNBabayagaPerBunch = 0;
+  fBabayagaFilename = "Babayaga.list"; 
+  fBabayagaLinesToSkip = 0;
+
   // Decay length for displaced vertex (currently used only for TwoGamma events)
   fDecayLength = 0.*mm;
 

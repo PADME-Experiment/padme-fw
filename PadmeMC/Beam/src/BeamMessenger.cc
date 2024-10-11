@@ -223,13 +223,37 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   // Settings for BhaBha M. Raggi 20/05/2021
   fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
   fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
-  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false); // IS IT A PROBLEM THAT THE PARAMETER NAME IS EQUAL TO THAT USED FOR OTHER COMMANDS???
   fSetNBhaBhaPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
   fSetNBhaBhaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBhaBhaFilenameCmd = new G4UIcmdWithAString("/beam/BhaBha_file",this);
-  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
+  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false); // IS IT A PROBLEM THAT THE PARAMETER NAME IS EQUAL TO THAT USED FOR OTHER COMMANDS???
   fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBhaBhaLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/BhaBha_lines_to_skip",this);
+  fSetBhaBhaLinesToSkipCmd->SetGuidance("Set number of lines of BhaBha file to skip.");
+  fSetBhaBhaLinesToSkipCmd->SetParameterName("BBLTS",false);
+  fSetBhaBhaLinesToSkipCmd->SetRange("BBLTS >= 0");
+  fSetBhaBhaLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetNBabayagaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_Babayaga_per_bunch",this);
+  fSetNBabayagaPerBunchCmd->SetGuidance("Set number of Babayaga per bunch.");
+  fSetNBabayagaPerBunchCmd->SetParameterName("NTwPBBY",false);
+  fSetNBabayagaPerBunchCmd->SetRange("NTwPBBY == 0 || NTwPBBY == 1");
+  fSetNBabayagaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaFilenameCmd = new G4UIcmdWithAString("/beam/Babayaga_file",this);
+  fSetBabayagaFilenameCmd->SetParameterName("TwPFBBY",false);
+  fSetBabayagaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/Babayaga_lines_to_skip",this);
+  fSetBabayagaLinesToSkipCmd->SetGuidance("Set number of lines of Babayaga file to skip.");
+  fSetBabayagaLinesToSkipCmd->SetParameterName("BBYLTS",false);
+  fSetBabayagaLinesToSkipCmd->SetRange("BBYLTS >= 0");
+  fSetBabayagaLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
 
   fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
   fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
@@ -512,6 +536,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 
   else if ( cmd == fSetBhaBhaFilenameCmd )
     fBeamParameters->SetBhaBhaFilename(par);
+
+  else if ( cmd == fSetNBabayagaPerBunchCmd )
+    fBeamParameters->SetNBabayagaPerBunch(fSetNBabayagaPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBabayagaFilenameCmd )
+    fBeamParameters->SetBabayagaFilename(par);
 
   else if ( cmd == fSetDecayLengthCmd )
     fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));

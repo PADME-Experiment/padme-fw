@@ -537,11 +537,17 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBhaBhaFilenameCmd )
     fBeamParameters->SetBhaBhaFilename(par);
 
+  else if ( cmd == fSetBhaBhaLinesToSkipCmd )
+    fBeamParameters->SetBhaBhaLinesToSkip(fSetBhaBhaLinesToSkipCmd->GetNewIntValue(par));
+
   else if ( cmd == fSetNBabayagaPerBunchCmd )
     fBeamParameters->SetNBabayagaPerBunch(fSetNBabayagaPerBunchCmd->GetNewIntValue(par));
 
   else if ( cmd == fSetBabayagaFilenameCmd )
     fBeamParameters->SetBabayagaFilename(par);
+
+  else if ( cmd == fSetBabayagaLinesToSkipCmd )
+    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaLinesToSkipCmd->GetNewIntValue(par));
 
   else if ( cmd == fSetDecayLengthCmd )
     fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));

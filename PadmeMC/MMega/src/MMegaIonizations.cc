@@ -174,8 +174,6 @@ void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
 
 void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
 
-    MMegaGeometry* geo = MMegaGeometry::GetInstance();
-
     G4double x0 = geo->GetXPadStartPos();
     G4double y0 = geo->GetYPadStartPos();
     G4double shift = 0.5*geo->GetPadDistance(); //accounts for the fact that x and y pads are shifted
@@ -183,24 +181,22 @@ void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
     G4double wy = sqrt(0.5*geo->GetYPadArea());
     G4double pitch = geo->GetPadDistance();
 
-    // REM: add gaussian smearing for time and space resolution
-
     G4double x = ionipos.x();
     G4double y = ionipos.y();
     G4double z = ionipos.z();
 
     G4int ix_x = (x-(x0-wx))/pitch;
-    G4int iy_x = (y-(y0+shift-wx))/pitch;
+    G4int iy_x = (y-(y0-wx))/pitch;
 
     G4int ix_y = (x-(x0+shift-wy))/pitch;
-    G4int iy_y = (y-(y0-wy))/pitch;
+    G4int iy_y = (y-(y0+shift-wy))/pitch;
 
     // shift coordinates in the center of the pad
-    G4double x1_x = (x-(x0-wx)) - ix_x*pitch;
-    G4double y1_x = (y-(y0+shift-wy)) - iy_x*pitch;
+    G4double x1_x = (x-(x0-wx)) - (ix_x*pitch+wx);
+    G4double y1_x = (y-(y0-wy)) - (iy_x*pitch+wy);
 
-    G4double x1_y = (x-(x0+shift-wx)) - ix_y*pitch;
-    G4double y1_y = (y-(y0-wy)) - iy_y*pitch;
+    G4double x1_y = (x-(x0+shift-wx)) - (ix_y*pitch+wx);
+    G4double y1_y = (y-(y0+shift-wy)) - (iy_y*pitch+wy);
 
     //since pads are rotated we need to rotate the coordinate system by 45 degrees
 
@@ -211,7 +207,7 @@ void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
 
     //now check if hit point lies inside pad area
 
-    if(abs(xprime_x)<=sqrt(geo->GetXPadArea()) && abs(yprime_x)<=sqrt(geo->GetXPadArea())){ // pads for the x coordinate
+    if(abs(xprime_x)<=0.5*sqrt(geo->GetXPadArea()) && abs(yprime_x)<=0.5*sqrt(geo->GetXPadArea())){ // pads for the x coordinate
         if(z<=0){
             fid = ix_x + 1000;
             G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
@@ -222,9 +218,14 @@ void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
             G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
             ftime = s/fvdrift;
         }
+
+        fIDs.push_back(fid);
+        fTimes.push_back(ftime);
+        fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
+
     }
     
-    if(abs(xprime_y)<=sqrt(geo->GetYPadArea()) && abs(yprime_y)<=sqrt(geo->GetYPadArea())){ // pads for the y coordinate
+    if(abs(xprime_y)<=0.5*sqrt(geo->GetYPadArea()) && abs(yprime_y)<=0.5*sqrt(geo->GetYPadArea())){ // pads for the y coordinate
         if(z<=0){
             fid = iy_y + 2000;
             G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
@@ -235,5 +236,9 @@ void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
             G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
             ftime = s/fvdrift;
         }
+
+        fIDs.push_back(fid);
+        fTimes.push_back(ftime);
+        fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
     }
 }

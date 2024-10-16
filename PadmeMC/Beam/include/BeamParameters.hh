@@ -109,6 +109,8 @@ public:
   G4double GetBeamSpotY() { return fBeamSpotY; }
   void SetBeamSpotZ(G4double e) { fBeamSpotZ = e; }
   G4double GetBeamSpotZ() { return fBeamSpotZ; }
+  void SetBeamSpotSpreadX(G4double e) { fBeamSpotSpreadX = e; }
+  G4double GetBeamSpotSpreadX() { return fBeamSpotSpreadX; }
   void SetBeamSpotSpreadY(G4double e) { fBeamSpotSpreadY = e; }
   G4double GetBeamSpotSpreadY() { return fBeamSpotSpreadY; }
 

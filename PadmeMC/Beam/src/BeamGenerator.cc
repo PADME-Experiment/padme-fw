@@ -277,9 +277,9 @@ void BeamGenerator::GeneratePrimaryPositron()
 
   } else if (bpar->BeamApplySpot()){ // apply SPOT treatment
     // sample x,y
-    G4ThreeVector spot_pos(G4RandGauss::shoot(beam_dir.x()/beam_dir.z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotX()),
-			  G4RandGauss::shoot(beam_dir.y()/beam_dir.z()*bpar->GetBeamSpotZ(),bpar->GetBeamSpotY()),
-			  bpar->GetBeamSpotZ());
+    G4ThreeVector spot_pos(G4RandGauss::shoot(bpar->GetBeamSpotX(),bpar->GetBeamSpotSpreadX()),
+			   G4RandGauss::shoot(bpar->GetBeamSpotY(),bpar->GetBeamSpotSpreadY()),
+			   bpar->GetBeamSpotZ());
     part_dir = spot_pos-part_pos;
     part_dir *= (1./part_dir.mag());
 
@@ -861,7 +861,7 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   // Get electron/positron mass
   //  static const G4double me = G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGMass(); <-- MIGHT USE THIS *GeV???
   static const G4double me = 0.000511; //electron mass in GeV
-  // Get file with list of two-gamma events kinematics
+  // Get file with list of babayaga-generated events kinematics
   G4String fileBabayaga = bpar->GetBabayagaFilename();
 
   std::ifstream infile;

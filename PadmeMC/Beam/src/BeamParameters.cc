@@ -56,9 +56,11 @@ BeamParameters::BeamParameters()
 
   // Beam spot (spread of X,Y beam at a given Z)
   fBeamApplySpot = false;
-  fBeamSpotX = 0.1*mm;
-  fBeamSpotY = 0.1*mm;
+  fBeamSpotX = 0.*mm;
+  fBeamSpotY = 0.*mm;
   fBeamSpotZ = 2683*mm;
+  fBeamSpotSpreadX = 0.1*mm;
+  fBeamSpotSpreadY = 0.1*mm;
 
   // Insert Uboson decays
   fNUbosonDecaysPerBunch = 0;

@@ -109,6 +109,8 @@ public:
   G4double GetBeamSpotY() { return fBeamSpotY; }
   void SetBeamSpotZ(G4double e) { fBeamSpotZ = e; }
   G4double GetBeamSpotZ() { return fBeamSpotZ; }
+  void SetBeamSpotSpreadY(G4double e) { fBeamSpotSpreadY = e; }
+  G4double GetBeamSpotSpreadY() { return fBeamSpotSpreadY; }
 
 
 
@@ -238,6 +240,8 @@ private:
   G4double fBeamSpotX;
   G4double fBeamSpotY;
   G4double fBeamSpotZ;
+  G4double fBeamSpotSpreadX;
+  G4double fBeamSpotSpreadY;
 
   // Insert Uboson decays
   G4int fNUbosonDecaysPerBunch;

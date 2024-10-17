@@ -40,6 +40,9 @@
 #include "SACGeometry.hh"
 #include "TPixGeometry.hh"
 
+//PRINTOUT VERTICES#include "MCTruthManager.hh"
+//PRINTOUT VERTICES#include "MCTruthVertex.hh"
+
 #include "SystemInfo.hh"
 
 extern double NNeutrons;
@@ -215,6 +218,15 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       //      AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
+//PRINTOUT VERTICES  MCTruthManager* mct = MCTruthManager::GetInstance();
+//PRINTOUT VERTICES  if (mct->IsEnabled()) {
+//PRINTOUT VERTICES    G4cout << "Number of MC vertices " << mct->GetNVertices() << G4endl;
+//PRINTOUT VERTICES    for (int i=0; i<mct->GetNVertices(); i++){
+//PRINTOUT VERTICES      MCTruthVertex* vtx = mct->Vertex(i);
+//PRINTOUT VERTICES      G4cout << " vtx " << i << " properties are: " << vtx->GetPosX() << " " << vtx->GetPosY() << " " << vtx->GetPosZ() << " process = " << vtx->GetProcess() << G4endl;
+//PRINTOUT VERTICES    }
+//PRINTOUT VERTICES  }
+
   //int Ncells=0;
 
   //Retrieve beam Infos!

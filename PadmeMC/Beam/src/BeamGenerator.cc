@@ -874,6 +874,10 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
 void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
 {
   BeamParameters* bpar = BeamParameters::GetInstance();
+  TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
+  posInBetaBeam *= (fPositron.P/fPositron.E/posInBetaBeam.Mag());
+
+
   //  static G4int iline = 0;
   static G4int iline = bpar->GetBabayagaLinesToSkip();
   // Get electron/positron mass
@@ -881,6 +885,8 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   static const G4double me = 0.000511; //electron mass in GeV
   // Get file with list of babayaga-generated events kinematics
   G4String fileBabayaga = bpar->GetBabayagaFilename();
+
+  // read first part of input file
 
   std::ifstream infile;
   std::string Line = "";
@@ -894,117 +900,125 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
      getline(infile,Line);
      il++;
   }
+  if (il != iline +1) {
+    G4cout << "BeamGenerator::CreateFinalStateBabayaga - WARNING - Reached end of Babayaga decays input file" << G4endl;
+    return;
+  }
+
+  // align with the next event
+
+  bool catchevent = kFALSE;
+  while (!infile.eof() && !catchevent) {
+     getline(infile,Line);
+     il++;
+     // line should begin with " #"
+     TString linestart(Line);
+     if (linestart.Contains("#")) catchevent = kTRUE;
+  }
+
+  // parse number of particles
+
+  getline(infile,Line);
+  std::istringstream nparticleString(Line);
+  int iparticles;
+  nparticleString >> iparticles;
+  il++;
+
+  // read up to maxparticles
+
+  const int maxparticles = 10;
+  const double minPhotonEnergy = 0.001; // GeV
+  TLorentzVector particles[maxparticles];
+  int ngoodparticles = 0;
+  for (int ip = 0; ip<iparticles; ip++){
+    double en,px,py,pz;
+    getline(infile,Line);
+    il++;
+    std::istringstream particleString(Line);
+    particleString >> en >> px >> py >> pz;
+    if (ngoodparticles < 2) {
+      particles[ngoodparticles].SetXYZT(px,py,pz,en);
+      particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-
+      ngoodparticles++;
+    } else if (ngoodparticles < maxparticles){
+      TLorentzVector particlemom(px,py,pz,en);
+      particlemom.Boost(posInBetaBeam);
+      if (particlemom.E() > minPhotonEnergy) {
+	particles[ngoodparticles].SetXYZT(particlemom.X(),particlemom.Y(),particlemom.Z(),particlemom.T()); // boost in the lab frame the e+/e-
+	ngoodparticles++;
+      }
+    }
+  }
+  iline = il+1; // ready for next event
   infile.close();
 
-  // If we did not reach EOF, generate the final state 
-  if (il == iline + 1) {
- 
     // Get theta and phi from positron direction (assume beam axis directed along Z)
-    G4double theta = atan2(sqrt(fPositron.dir.x()*fPositron.dir.x()+fPositron.dir.y()*fPositron.dir.y()),fPositron.dir.z())*rad;
-    G4double phi = atan2(fPositron.dir.y(),fPositron.dir.x())*rad;
+  G4double theta = atan2(sqrt(fPositron.dir.x()*fPositron.dir.x()+fPositron.dir.y()*fPositron.dir.y()),fPositron.dir.z())*rad;
+  G4double phi = atan2(fPositron.dir.y(),fPositron.dir.x())*rad;
 
     // Choose random decay point along e+ path within Target
-    G4double z_decay = (fDetector->GetTargetFrontFaceZ()-fPositron.pos.z())+G4UniformRand()*fDetector->GetTargetThickness(); // why not exponential
-    G4double s_decay = z_decay/cos(theta);
-    G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
-    G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
-    G4double Dz = fPositron.pos.z()+z_decay;
-    G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
+  G4double z_decay = (fDetector->GetTargetFrontFaceZ()-fPositron.pos.z())+G4UniformRand()*fDetector->GetTargetThickness(); // why not exponential
+  G4double s_decay = z_decay/cos(theta);
+  G4double Dx = fPositron.pos.x()+s_decay*sin(theta)*cos(phi);
+  G4double Dy = fPositron.pos.y()+s_decay*sin(theta)*sin(phi);
+  G4double Dz = fPositron.pos.z()+z_decay;
+  G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
 
     // Create annihilation vertex in MCTruth
-    MCTruthVertex* tvtx;
-    if (fMCTruthMgr->IsEnabled()) {
-      if (decayLength == 0.) {
-	tvtx = fMCTruthMgr->AddVertex("Babayaga",G4ThreeVector(Dx,Dy,Dz),Dt);
-      } else {
-	tvtx = fMCTruthMgr->AddVertex("BabayagaAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
-      }
-      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+  MCTruthVertex* tvtx;
+  if (fMCTruthMgr->IsEnabled()) {
+    if (decayLength == 0.) {
+      tvtx = fMCTruthMgr->AddVertex("Babayaga",G4ThreeVector(Dx,Dy,Dz),Dt);
+    } else {
+      tvtx = fMCTruthMgr->AddVertex("BabayagaAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
     }
+    tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+  }
 
-    if (decayLength > 0.) {
-      // Displace vertex according to decay length defined by user
-      G4double dispS = G4RandExponential::shoot(decayLength);
-      Dx += dispS*sin(theta)*cos(phi);
-      Dy += dispS*sin(theta)*sin(phi);
-      Dz += dispS*cos(theta);
-      Dt += dispS/c_light; // Apporoximation: need to be corrected for particle mass and beam energy
-    }
+  if (decayLength > 0.) {
+    // Displace vertex according to decay length defined by user
+    G4double dispS = G4RandExponential::shoot(decayLength);
+    Dx += dispS*sin(theta)*cos(phi);
+    Dy += dispS*sin(theta)*sin(phi);
+    Dz += dispS*cos(theta);
+    Dt += dispS/c_light; // Apporoximation: need to be corrected for particle mass and beam energy
+  }
 
     // Create primary vertex at decay point
-    G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
+  G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
        
     // If decay vertex is displaced, store it in MCTruth
-    if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
-      tvtx = fMCTruthMgr->AddVertex("BabayagaDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
+  if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
+    tvtx = fMCTruthMgr->AddVertex("BabayagaDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
 
     // Decode input line
     //    G4cout << "Babayaga line to be decoded: ---" << Line << "---" << G4endl;
-    std::istringstream iss(Line);
-
-    // Skip first three fields in the line
-    double it;
-    double positronMomentum,dt2,px1,py1,pz1,px2,py2,pz2;
-    iss >> 
-      std::setprecision(8) >> std::scientific >> it >>
-      std::setprecision(8) >> std::scientific >> positronMomentum >>
-      std::setprecision(8) >> std::scientific >> dt2 >>
-      std::setprecision(8) >> std::scientific >> px1 >> 
-      std::setprecision(8) >> std::scientific >> py1 >> 
-      std::setprecision(8) >> std::scientific >> pz1 >> 
-      std::setprecision(8) >> std::scientific >> px2 >> 
-      std::setprecision(8) >> std::scientific >> py2 >> 
-      std::setprecision(8) >> std::scientific >> pz2;
-    //    G4cout << "Babayaga line decoded " << it << " " << positronMomentum << " " << dt2 << " " << px1 << " " << py1 << " " << pz1 << " " << px2 << " " << py2 << " " << pz2 << G4endl;
-
-    TVector3 posInBeta(0.,0.,-positronMomentum/TMath::Sqrt(me*me+positronMomentum*positronMomentum));
-    TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
-    posInBetaBeam *= (fPositron.P/fPositron.E/posInBetaBeam.Mag());
-    TLorentzVector lepOutMom[2];
-    lepOutMom[0].SetXYZM(px1*GeV,py1*GeV,pz1*GeV,me);
-    lepOutMom[1].SetXYZM(px2*GeV,py2*GeV,pz2*GeV,me);
-    for(G4int j=0; j<2; j++) {
-      fHistoManager->FillHisto(78+3*j,lepOutMom[j].X());
-      fHistoManager->FillHisto(79+3*j,lepOutMom[j].Y());
-      fHistoManager->FillHisto(80+3*j,lepOutMom[j].Z());
-      fHistoManager->FillHisto(84+j,(lepOutMom[j].Y()/lepOutMom[j].Z())*300);
+  for(G4int j=0; j<2; j++) {
+    fHistoManager->FillHisto(78+3*j,particles[j].X());
+    fHistoManager->FillHisto(79+3*j,particles[j].Y());
+    fHistoManager->FillHisto(80+3*j,particles[j].Z());
+    fHistoManager->FillHisto(84+j,(particles[j].Y()/particles[j].Z())*300);
+  }
       //      std::cout<<"Babayaga Particle " << j << " Px,Py,Pz " << lepOutMom[j].X() << " , " << lepOutMom[j].Y() << " , " << lepOutMom[j].Z() << " , " << lepOutMom[j].E() << " , " << G4endl;
 
-      lepOutMom[j].Boost(posInBeta);
-      lepOutMom[j].Boost(posInBetaBeam);
-    
-      G4ThreeVector lepton_p = G4ThreeVector(lepOutMom[j].X(),lepOutMom[j].Y(),lepOutMom[j].Z());
+  for(G4int j=0; j<ngoodparticles; j++) {
+    G4PrimaryParticle* lepton; 
+    if (j==0)      lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
+    else if (j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
+    else           lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
      
-      // Create e+/- primary particles with generated four-momentum (1: positron; 0: electron)
-      G4PrimaryParticle* lepton; 
-      if (j==1) {
-	lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),
-				       lepOutMom[j].X(),lepOutMom[j].Y(),lepOutMom[j].Z(),lepOutMom[j].E());
-	//        std::cout<<"Babayaga treated Positron Px,Py,Pz " << lepOutMom[j].X() << " , " << lepOutMom[j].Y() << " , " << lepOutMom[j].Z() << std::endl;
-      } else { 
-	lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),
-				       lepOutMom[j].X(),lepOutMom[j].Y(),lepOutMom[j].Z(),lepOutMom[j].E());
-	//        std::cout<<"Babayaga treated Electron Px,Py,Pz " << lepOutMom[j].X() << " , " << lepOutMom[j].Y() << " , " << lepOutMom[j].Z() << std::endl;
-      }
-      vtx->SetPrimary(lepton);
+    vtx->SetPrimary(lepton);
 
-       // Store lepton in MCTruth
-     if (fMCTruthMgr->IsEnabled()) {
-        if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),lepOutMom[j].E(),lepton_p);
-        else      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),lepOutMom[j].E(),lepton_p);
-      }
-
+    G4ThreeVector lepton_p = G4ThreeVector(particles[j].X(),particles[j].Y(),particles[j].Z());
+    // Store info in MCTruth
+    if (fMCTruthMgr->IsEnabled()) {
+      if (j==0)      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),particles[j].E(),lepton_p);
+      else if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),particles[j].E(),lepton_p);
+      else           tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),lepton_p);
     }
-
-    // Add primary vertex to event
-    fEvent->AddPrimaryVertex(vtx);
-
-    // Skip to next line
-    iline++;
-
-  } else {
-    G4cout << "BeamGenerator::CreateFinalStateBabayaga - WARNING - Reached end of Babayaga decays input file" << G4endl;
   }
+  // Add primary vertex to event
+  fEvent->AddPrimaryVertex(vtx);
 }
 
 

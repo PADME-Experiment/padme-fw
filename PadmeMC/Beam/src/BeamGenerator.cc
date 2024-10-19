@@ -18,7 +18,7 @@
 #include "G4Poisson.hh"
 #include "Randomize.hh"
 //#include "TRandom3.h"
-
+#include "TString.h"
 #include "BeamMessenger.hh"
 #include "HistoManager.hh"
 #include "DetectorConstruction.hh"
@@ -806,9 +806,13 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
     G4double it;
     G4double positronMomentum,dt2;
     iss >> it >> positronMomentum >> dt2;
+    //boost avanti è sbagliato
     TVector3 posInBeta(0.,0.,-positronMomentum/TMath::Sqrt(me*me+positronMomentum*positronMomentum));
     TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
-    posInBetaBeam *= (fPositron.P/fPositron.E/posInBetaBeam.Mag());
+    //posInBetaBeam.Print();
+    double posInGamma = (fPositron.E+fPositron.m)/TMath::Sqrt(2*fPositron.m*fPositron.E);
+    posInBetaBeam *= TMath::Sqrt(1 - pow(posInGamma, -2))/posInBetaBeam.Mag();
+  
     TLorentzVector lepOutMom[2];
     // Loop over electron and positron and store their momenta
     G4double p[4]; // Vector to store four-momentum of the lepton
@@ -875,9 +879,11 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
 {
   BeamParameters* bpar = BeamParameters::GetInstance();
   TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
-  posInBetaBeam *= (fPositron.P/fPositron.E/posInBetaBeam.Mag());
-
-
+  //posInBetaBeam.Print();
+  double posInGamma = (fPositron.E+fPositron.m)/TMath::Sqrt(2*fPositron.m*fPositron.E);
+  posInBetaBeam *= TMath::Sqrt(1 - pow(posInGamma, -2))/posInBetaBeam.Mag();
+  //std::cout<<fPositron.dir.x()<<" "<<fPositron.dir.y()<<" "<<fPositron.dir.z()<<" "<<posInBetaBeam.Mag()<<" "<<fPositron.P<<" "<<fPositron.E<<fPositron.P-fPositron.E<<std::endl;
+  //posInBetaBeam.Print();
   //  static G4int iline = 0;
   static G4int iline = bpar->GetBabayagaLinesToSkip();
   // Get electron/positron mass
@@ -906,15 +912,20 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   }
 
   // align with the next event
-
+  //std::cout<<il<<std::endl;
   bool catchevent = kFALSE;
   while (!infile.eof() && !catchevent) {
      getline(infile,Line);
      il++;
      // line should begin with " #"
      TString linestart(Line);
-     if (linestart.Contains("#")) catchevent = kTRUE;
-  }
+     //std::cout<<"Line: "<<linestart.Data()<<std::endl;
+     if (linestart.Contains("#")){ 
+	 catchevent = kTRUE;
+	 //std::cout<<"evt catched at il:"<<il<<std::endl;
+	 break;
+     }
+}
 
   // parse number of particles
 
@@ -922,12 +933,13 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   std::istringstream nparticleString(Line);
   int iparticles;
   nparticleString >> iparticles;
+  //std::cout<<"iparticles: "<<iparticles<<" il: "<<il<<std::endl;
   il++;
 
   // read up to maxparticles
 
   const int maxparticles = 10;
-  const double minPhotonEnergy = 0.001; // GeV
+  const double minPhotonEnergy = 0.001*GeV; // GeV
   TLorentzVector particles[maxparticles];
   int ngoodparticles = 0;
   for (int ip = 0; ip<iparticles; ip++){
@@ -936,12 +948,21 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
     il++;
     std::istringstream particleString(Line);
     particleString >> en >> px >> py >> pz;
+    //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
+    
+    //particles[ngoodparticles].SetXYZT(px,py,pz,en);
+    //particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-
+    //std::cout<<"il:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
     if (ngoodparticles < 2) {
-      particles[ngoodparticles].SetXYZT(px,py,pz,en);
-      particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-
+
+      particles[ngoodparticles].SetXYZT(px*GeV,py*GeV,pz*GeV,en*GeV);                                                                                                             
+      //std::cout<<"il before:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
+      particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-                                                                         
+      // std::cout<<particles[ngoodparticles].Theta()<<std::endl;
+      //std::cout<<"il after:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;    
       ngoodparticles++;
-    } else if (ngoodparticles < maxparticles){
-      TLorentzVector particlemom(px,py,pz,en);
+    } else if (ngoodparticles > 1 && ngoodparticles < maxparticles){
+      TLorentzVector particlemom(px*GeV,py*GeV,pz*GeV,en*GeV);
       particlemom.Boost(posInBetaBeam);
       if (particlemom.E() > minPhotonEnergy) {
 	particles[ngoodparticles].SetXYZT(particlemom.X(),particlemom.Y(),particlemom.Z(),particlemom.T()); // boost in the lab frame the e+/e-

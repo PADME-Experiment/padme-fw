@@ -738,7 +738,7 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
   static G4int iline = bpar->GetBhaBhaLinesToSkip();
   // Get electron/positron mass
   //  static const G4double me = G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGMass(); <-- MIGHT USE THIS *GeV???
-  static const G4double me = 0.000511; //electron mass in GeV
+  static const G4double me = 0.000511*GeV; //electron mass in GeV
   // Get file with list of two-gamma events kinematics
   G4String fileBhaBha = bpar->GetBhaBhaFilename();
   //  std::cout<<" entering BhaBha generator" <<std::endl;
@@ -806,11 +806,13 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
     G4double it;
     G4double positronMomentum,dt2;
     iss >> it >> positronMomentum >> dt2;
-    //boost avanti è sbagliato
+
     TVector3 posInBeta(0.,0.,-positronMomentum/TMath::Sqrt(me*me+positronMomentum*positronMomentum));
+    double posInGammaBack = (positronMomentum+fPositron.m)/TMath::Sqrt(2*fPositron.m*positronMomentum);
+    posInBeta *= TMath::Sqrt(1 - pow(posInGammaBack, -2))/posInBeta.Mag();
     TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
     //posInBetaBeam.Print();
-    double posInGamma = (fPositron.E+fPositron.m)/TMath::Sqrt(2*fPositron.m*fPositron.E);
+    double posInGamma = (positronMomentum+fPositron.m)/TMath::Sqrt(2*fPositron.m*positronMomentum);
     posInBetaBeam *= TMath::Sqrt(1 - pow(posInGamma, -2))/posInBetaBeam.Mag();
   
     TLorentzVector lepOutMom[2];
@@ -836,10 +838,12 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
       p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]+me*me); // Compute total energy of the lepton
       lepOutMom[j].SetXYZT(p[1],p[2],p[3],p[0]);
       //      std::cout<<"Bhabha Particle " << j << " Px,Py,Pz " << lepOutMom[j].X() << " , " << lepOutMom[j].Y() << " , " << lepOutMom[j].Z() << " , " << lepOutMom[j].E() << " , " << G4endl;
-
+      //std::cout<<"Before boosting back: "<<p[1]<<" "<<p[2]<<" "<<p[3]<<" "<<p[0]<<std::endl;
       lepOutMom[j].Boost(posInBeta);
+      //std::cout<<" com: "<<lepOutMom[j].X()<<" "<<lepOutMom[j].Y()<<" "<<lepOutMom[j].Z()<<" "<<lepOutMom[j].T()<<std::endl;
       lepOutMom[j].Boost(posInBetaBeam);
-    
+      //std::cout<<" lab: "<<lepOutMom[j].X()<<" "<<lepOutMom[j].Y()<<" "<<lepOutMom[j].Z()<<" "<<lepOutMom[j].T()<<std::endl;
+
       G4ThreeVector lepton_p = G4ThreeVector(lepOutMom[j].X(),lepOutMom[j].Y(),lepOutMom[j].Z());
      
       // Create e+/- primary particles with generated four-momentum (1: positron; 0: electron)

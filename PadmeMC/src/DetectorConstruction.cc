@@ -900,7 +900,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableHEPVeto  = 1;
     fEnableTPix     = 1;
     fEnableLeadGlass = 1;
-    fEnableMagneticField = 0; // PADME magnet is OFF
+    fEnableMagneticField = 1; // PADME magnet is OFF
   }
 
   // Pass setup information to each detector/structure

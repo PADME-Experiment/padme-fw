@@ -884,8 +884,10 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   BeamParameters* bpar = BeamParameters::GetInstance();
   TVector3 posInBetaBeam(fPositron.dir.x(),fPositron.dir.y(),fPositron.dir.z());
   //posInBetaBeam.Print();
-  double posInGamma = (fPositron.E+fPositron.m)/TMath::Sqrt(2*fPositron.m*fPositron.E);
-  posInBetaBeam *= TMath::Sqrt(1 - pow(posInGamma, -2))/posInBetaBeam.Mag();
+  double posInBG = fPositron.P / TMath::Sqrt(2*fPositron.m*fPositron.m + 2.*fPositron.m*fPositron.E);
+  double posInB = posInBG/TMath::Sqrt((posInBG*posInBG)+1);
+  posInBetaBeam *= posInB/posInBetaBeam.Mag();
+  //posInBetaBeam *= TMath::Sqrt(1 - pow(posInGamma, -2))/posInBetaBeam.Mag();
   //std::cout<<fPositron.dir.x()<<" "<<fPositron.dir.y()<<" "<<fPositron.dir.z()<<" "<<posInBetaBeam.Mag()<<" "<<fPositron.P<<" "<<fPositron.E<<fPositron.P-fPositron.E<<std::endl;
   //posInBetaBeam.Print();
   //  static G4int iline = 0;
@@ -946,6 +948,7 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   const double minPhotonEnergy = 0.001*GeV; // GeV
   TLorentzVector particles[maxparticles];
   int ngoodparticles = 0;
+  //fHistoManager->FillHisto(19,iparticles-2);
   for (int ip = 0; ip<iparticles; ip++){
     double en,px,py,pz;
     getline(infile,Line);
@@ -953,31 +956,33 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
     std::istringstream particleString(Line);
     particleString >> en >> px >> py >> pz;
     //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
-    
-    //particles[ngoodparticles].SetXYZT(px,py,pz,en);
-    //particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-
     //std::cout<<"il:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
     if (ngoodparticles < 2) {
-
       particles[ngoodparticles].SetXYZT(px*GeV,py*GeV,pz*GeV,en*GeV);                                                                                                             
       //std::cout<<"il before:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
       particles[ngoodparticles].Boost(posInBetaBeam); // boost in the lab frame the e+/e-                                                                         
-      // std::cout<<particles[ngoodparticles].Theta()<<std::endl;
       //std::cout<<"il after:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;    
       ngoodparticles++;
     } else if (ngoodparticles > 1 && ngoodparticles < maxparticles){
       TLorentzVector particlemom(px*GeV,py*GeV,pz*GeV,en*GeV);
       particlemom.Boost(posInBetaBeam);
       if (particlemom.E() > minPhotonEnergy) {
-	particles[ngoodparticles].SetXYZT(particlemom.X(),particlemom.Y(),particlemom.Z(),particlemom.T()); // boost in the lab frame the e+/e-
-	ngoodparticles++;
+          particles[ngoodparticles].SetXYZT(particlemom.X(),particlemom.Y(),particlemom.Z(),particlemom.T()); // boost in the lab frame the e+/e-
+          ngoodparticles++;
       }
     }
   }
   iline = il+1; // ready for next event
   infile.close();
-
-    // Get theta and phi from positron direction (assume beam axis directed along Z)
+  // TLorentzVector sum;
+  // sum.SetXYZT(0.,0.,0.,0.);
+  // for(int ig =0; ig<2; ig++){
+  //   std::cout<<particles[ig].M()<<std::endl;
+  //   sum+=particles[ig];
+  // }
+  // double s = sum.M();
+  // std::cout<<" s "<<s<<std::endl;
+  // Get theta and phi from positron direction (assume beam axis directed along Z)
   G4double theta = atan2(sqrt(fPositron.dir.x()*fPositron.dir.x()+fPositron.dir.y()*fPositron.dir.y()),fPositron.dir.z())*rad;
   G4double phi = atan2(fPositron.dir.y(),fPositron.dir.x())*rad;
 

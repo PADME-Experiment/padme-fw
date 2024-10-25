@@ -91,6 +91,8 @@ void HistoManager::book()
   histo[18] = new TH1D("h18","SAC energy",300,0.,600.);
   if (!histo[18]) G4cout << "\n can't create histo 18" << G4endl; 
 
+  // histo[19] = new TH1D("h19","NPcles babayaga",10,-0.5,10.5);
+  // if (!histo[19]) G4cout << "\n can't create histo 19" << G4endl; 
   histo2[1] = new TH2D("h21", "XY cell weigh energy ",ECalNRow,-ECalSizeX*0.5,ECalSizeX*0.5,ECalNCol,-ECalSizeY*0.5,ECalSizeY*0.5);
   if (!histo2[1]) G4cout << "\n can't create histo 11" << G4endl;  
   histo2[2] = new TH2D("h22", "XY weigh energy ",600,-30., 30.,600,-30.,30.);

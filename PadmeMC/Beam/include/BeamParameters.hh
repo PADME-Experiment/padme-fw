@@ -154,6 +154,15 @@ public:
   G4int GetBabayagaLinesToSkip()       { return fBabayagaLinesToSkip; }
   void SetBabayagaLinesToSkip(G4int n) { fBabayagaLinesToSkip = n;    }
 
+  G4int GetNBabayagaGGPerBunch()        { return fNBabayagaGGPerBunch; }
+  void SetNBabayagaGGPerBunch(G4int n) { fNBabayagaGGPerBunch = n;    }
+
+  G4String GetBabayagaGGFilename()        { return fBabayagaGGFilename; }
+  void SetBabayagaGGFilename(G4String f) { fBabayagaGGFilename = f; }
+
+  G4int GetBabayagaGGLinesToSkip()       { return fBabayagaGGLinesToSkip; }
+  void SetBabayagaGGLinesToSkip(G4int n) { fBabayagaGGLinesToSkip = n;    }
+
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
 
@@ -265,6 +274,10 @@ private:
   G4int fNBabayagaPerBunch;
   G4String fBabayagaFilename;
   G4int fBabayagaLinesToSkip;
+
+  G4int fNBabayagaGGPerBunch;
+  G4String fBabayagaGGFilename;
+  G4int fBabayagaGGLinesToSkip;
 
   // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
   G4double fDecayLength;

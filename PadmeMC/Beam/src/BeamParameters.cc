@@ -82,6 +82,11 @@ BeamParameters::BeamParameters()
   fBabayagaFilename = "Babayaga.list"; 
   fBabayagaLinesToSkip = 0;
 
+  fNBabayagaGGPerBunch = 0;
+  fBabayagaGGFilename = "BabayagaGG.list"; 
+  fBabayagaGGLinesToSkip = 0;
+
+
   // Decay length for displaced vertex (currently used only for TwoGamma events)
   fDecayLength = 0.*mm;
 

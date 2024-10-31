@@ -90,6 +90,12 @@ private:
   G4UIcmdWithAString* fSetBabayagaFilenameCmd;
   G4UIcmdWithAnInteger* fSetBabayagaLinesToSkipCmd;
 
+
+  G4UIcmdWithAnInteger* fSetNBabayagaGGPerBunchCmd;
+  G4UIcmdWithAString* fSetBabayagaGGFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBabayagaGGLinesToSkipCmd;
+
+
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 
   G4UIcmdWithABool* fEnableCalibRunCmd;

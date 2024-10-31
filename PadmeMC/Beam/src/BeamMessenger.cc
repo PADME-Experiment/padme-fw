@@ -268,6 +268,22 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBabayagaLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 
+  fSetNBabayagaGGPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BabayagaGG_per_bunch",this);
+  fSetNBabayagaGGPerBunchCmd->SetGuidance("Set number of BabayagaGG per bunch.");
+  fSetNBabayagaGGPerBunchCmd->SetParameterName("NTwPBBY",false);
+  fSetNBabayagaGGPerBunchCmd->SetRange("NTwPBBY == 0 || NTwPBBY == 1");
+  fSetNBabayagaGGPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaGGFilenameCmd = new G4UIcmdWithAString("/beam/BabayagaGG_file",this);
+  fSetBabayagaGGFilenameCmd->SetParameterName("TwPFBBY",false);
+  fSetBabayagaGGFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaGGLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/BabayagaGG_lines_to_skip",this);
+  fSetBabayagaGGLinesToSkipCmd->SetGuidance("Set number of lines of BabayagaGG file to skip.");
+  fSetBabayagaGGLinesToSkipCmd->SetParameterName("BBYLTS",false);
+  fSetBabayagaGGLinesToSkipCmd->SetRange("BBYLTS >= 0");
+  fSetBabayagaGGLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 
   fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
   fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
@@ -567,7 +583,17 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fBeamParameters->SetBabayagaFilename(par);
 
   else if ( cmd == fSetBabayagaLinesToSkipCmd )
-    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaLinesToSkipCmd->GetNewIntValue(par));
+    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
+  
+  else if ( cmd == fSetNBabayagaGGPerBunchCmd )
+    fBeamParameters->SetNBabayagaGGPerBunch(fSetNBabayagaGGPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBabayagaGGFilenameCmd )
+    fBeamParameters->SetBabayagaGGFilename(par);
+
+  else if ( cmd == fSetBabayagaLinesToSkipCmd )
+    fBeamParameters->SetBabayagaGGLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
+
 
   else if ( cmd == fSetDecayLengthCmd )
     fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));

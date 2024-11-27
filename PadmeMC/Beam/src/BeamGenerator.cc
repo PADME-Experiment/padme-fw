@@ -915,43 +915,31 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
     std::cout << "BeamGenerator::CreateFinalStateBabayaga - ERROR - Babayaga file " <<  fileBabayaga << " not found" << std::endl;
     exit(1);
   }
-  G4int il=0;
-  while (!infile.eof() && il <= iline) {
-     getline(infile,Line);
-     il++;
+
+  // Skipping first iline events
+  G4int ievt = 0;
+  while (!infile.eof() && ievt <= iline) {
+    getline(infile,Line);
+    TString tLine(Line);
+    if ( tLine.BeginsWith(" # EVENT N.") ){ 
+      ievt++; // We found a new event: count it
+      //std::cout<<" I'm at evt: "<<ievt<<"  "<<Line<<std::endl;
+    }
   }
-  if (il != iline +1) {
+  if (ievt != iline +1) {
     G4cout << "BeamGenerator::CreateFinalStateBabayaga - WARNING - Reached end of Babayaga decays input file" << G4endl;
     return;
   }
 
-  // align with the next event
-  //std::cout<<il<<std::endl;
-  bool catchevent = kFALSE;
-  while (!infile.eof() && !catchevent) {
-     getline(infile,Line);
-     il++;
-     // line should begin with " #"
-     TString linestart(Line);
-     //std::cout<<"Line: "<<linestart.Data()<<std::endl;
-     if (linestart.Contains("#")){ 
-	 catchevent = kTRUE;
-	 //std::cout<<"evt catched at il:"<<il<<std::endl;
-	 break;
-     }
-}
-
-  // parse number of particles
-
+  // Parse number of particles
   getline(infile,Line);
+  //std::cout<<"ievt: "<<ievt<< " Line: "<<Line<<std::endl;
   std::istringstream nparticleString(Line);
   int iparticles;
   nparticleString >> iparticles;
   //std::cout<<"iparticles: "<<iparticles<<" il: "<<il<<std::endl;
-  il++;
 
   // read up to maxparticles
-
   const int maxparticles = 10;
   const double minPhotonEnergy = 0.001*GeV; // GeV
   TLorentzVector particles[maxparticles];
@@ -960,7 +948,6 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   for (int ip = 0; ip<iparticles; ip++){
     double en,px,py,pz;
     getline(infile,Line);
-    il++;
     std::istringstream particleString(Line);
     particleString >> en >> px >> py >> pz;
     //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
@@ -980,7 +967,9 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
       }
     }
   }
-  iline = il+1; // ready for next event
+
+  // This event is over, skip to next event
+  iline++;
   infile.close();
   // TLorentzVector sum;
   // sum.SetXYZT(0.,0.,0.,0.);
@@ -1086,46 +1075,29 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
   std::string Line = "";
   infile.open(fileBabayaga.data());
   if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateBabayagaGG - ERROR - BabayagaGG file " <<  fileBabayaga << " not found" << std::endl;
+    std::cout << "BeamGenerator::CreateFinalStateBabayaga - ERROR - Babayaga file " <<  fileBabayaga << " not found" << std::endl;
     exit(1);
   }
-  G4int il=0;
-  while (!infile.eof() && il <= iline) {
-     getline(infile,Line);
-     il++;
+
+  // Skipping first iline events
+  G4int ievt = 0;
+  while (!infile.eof() && ievt <= iline) {
+    getline(infile,Line);
+    TString tLine(Line);
+    if ( tLine.BeginsWith(" # EVENT N.") ) ievt++; // We found a new event: count it
   }
-  if (il != iline +1) {
-    G4cout << "BeamGenerator::CreateFinalStateBabayagaGG - WARNING - Reached end of BabayagaGG decays input file" << G4endl;
+  if (ievt != iline +1) {
+    G4cout << "BeamGenerator::CreateFinalStateBabayaga - WARNING - Reached end of Babayaga decays input file" << G4endl;
     return;
   }
 
-  // align with the next event
-  //std::cout<<il<<std::endl;
-  bool catchevent = kFALSE;
-  while (!infile.eof() && !catchevent) {
-     getline(infile,Line);
-     il++;
-     // line should begin with " #"
-     TString linestart(Line);
-     //std::cout<<"Line: "<<linestart.Data()<<std::endl;
-     if (linestart.Contains("#")){ 
-	 catchevent = kTRUE;
-	 //std::cout<<"evt catched at il:"<<il<<std::endl;
-	 break;
-     }
-}
-
-  // parse number of particles
-
+  // Parse number of particles
   getline(infile,Line);
   std::istringstream nparticleString(Line);
   int iparticles;
   nparticleString >> iparticles;
   //std::cout<<"iparticles: "<<iparticles<<" il: "<<il<<std::endl;
-  il++;
-
   // read up to maxparticles
-
   const int maxparticles = 10;
   const double minPhotonEnergy = 0.001*GeV; // GeV
   TLorentzVector particles[maxparticles];
@@ -1134,7 +1106,6 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
   for (int ip = 0; ip<iparticles; ip++){
     double en,px,py,pz;
     getline(infile,Line);
-    il++;
     std::istringstream particleString(Line);
     particleString >> en >> px >> py >> pz;
     //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
@@ -1154,7 +1125,9 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
       }
     }
   }
-  iline = il+1; // ready for next event
+
+  // This event is over, skip to next event
+  iline++;
   infile.close();
   // TLorentzVector sum;
   // sum.SetXYZT(0.,0.,0.,0.);

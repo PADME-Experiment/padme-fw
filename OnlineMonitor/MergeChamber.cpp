@@ -143,18 +143,18 @@ int main(int argc, char* argv[])
   if (cfg->Verbose()) fprintf(stdout,"- Verbose level: %u\n",cfg->Verbose());
 
   // Create event copier
-  EventCopier* EC = new EventCopier();
-  if (EC->Initialize()) {
-    perror("- ERROR while initializing EventCopier");
-    exit(EXIT_FAILURE);
-  }
+  //EventCopier* EC = new EventCopier();
+  //if (EC->Initialize()) {
+  //  perror("- ERROR while initializing EventCopier");
+  //  exit(EXIT_FAILURE);
+  //}
 
   // Create output handler
-  OutputHandler* OH = new OutputHandler();
-  if (OH->Initialize()) {
-    perror("- ERROR while initializing OutputHandler");
-    exit(EXIT_FAILURE);
-  }
+  //OutputHandler* OH = new OutputHandler();
+  //if (OH->Initialize()) {
+  //  perror("- ERROR while initializing OutputHandler");
+  //  exit(EXIT_FAILURE);
+  //}
 
   // Create input handler
   InputHandler* IH = new InputHandler();
@@ -165,14 +165,9 @@ int main(int argc, char* argv[])
 
   // Create chamber reader
   Chamber* CH = new Chamber();
-  TTree* ChTree = CH->fChain;
-  Long64_t nEntries = ChTree->GetEntriesFast();
-  printf("Chamber entries = %lld\n",nEntries);
-  for ( Long64_t ent = 0; ent<nEntries; ent++ ) {
-    Long64_t iEntry = CH->LoadTree(ent);
-    Long64_t nBytes = CH->GetEntry(ent);
-    printf("Entry %8lld Bytes %6lld Event %8lld Time %10d.%6.6d TimeStamp %10d Trigger %10d\n",iEntry,nBytes,CH->evt,CH->daqTimeSec,CH->daqTimeMicroSec,CH->srsTimeStamp,CH->srsTrigger);
-  }
+  TTree* chTree = CH->fChain;
+  Long64_t chEntries = chTree->GetEntriesFast();
+  printf("Chamber entries = %lld\n",chEntries);
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -181,25 +176,56 @@ int main(int argc, char* argv[])
   TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
   printf("=== MergeRun starting on %s\n",cfg->FormatTime(now.tv_sec));
 
-  exit(0);
+  Long64_t chEntry = 0;
+  Long64_t iEntry, nBytes;
+  Int_t oldSec = 0;
+  Int_t oldMSec = 0;
+  Int_t oldSrsTS = 0;
+  Int_t dt,ds,dst;
+  Float_t ratio;
+  Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
+  Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
 
   while(true) {
 
+    // Get next PADME event
     TRawEvent* rawEv = IH->NextEvent();
     if (rawEv == 0) {
-      printf("- Reached end of streams: exiting\n");
+      printf("- Reached end of PADME streams: exiting\n");
       break;
     }
+
+    // Get next chamber event
+    iEntry = CH->LoadTree(chEntry);
+    nBytes = CH->GetEntry(chEntry);
+
+    // Check chamber time
+    if (oldSec) {
+      dt = CH->daqTimeMicroSec-oldMSec;
+      if (dt<0) dt = 1000000+dt;
+      ds = CH->srsTimeStamp-oldSrsTS;
+      if (ds<0) ds = chClockRollover+ds; // We can use absolute time to check if the clock counter rolled over more than once
+      ratio = (1.*ds)/(1.*dt);
+      dst = int(ds/chClockFreq+0.5);
+      printf("Chamber SRSts = %8u\tdt = %6d us\tds = %7d\tratio = %9.6f\tSRSdT = %6d us\tdelay = %d us\n",CH->srsTimeStamp,dt,ds,ratio,dst,dst-dt);
+    }
+    oldSec = CH->daqTimeSec;
+    oldMSec = CH->daqTimeMicroSec;
+    oldSrsTS = CH->srsTimeStamp;
 
     // Show event header once in a while (if required)
     if ( cfg->DebugScale() && (IH->EventNumber()%cfg->DebugScale() == 0) ) {
       TTimeStamp tts = rawEv->GetEventAbsTime();
-      printf("%7u Run %7d Event %7d Time %8d-%06d.%09d RunTime %13llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
+      printf("PADME   Entry %8u Run %8d Event %8d Time %8d-%06d.%09d RunTime %13llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
 	     IH->EventNumber(),rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
 	     rawEv->GetEventRunTime(),(rawEv->GetEventTrigMask() & 0xff),(rawEv->GetEventStatus() & 0xffff),
 	     rawEv->GetNADCBoards(),(rawEv->GetMissingADCBoards() & 0xffff));
+      TTimeStamp chts = TTimeStamp(CH->daqTimeSec,CH->daqTimeMicroSec*1000);
+      //printf("Chamber Entry %8lld Bytes %6lld Event %8lld Time %10d.%6.6d TimeStamp %10d Trigger %10d\n",iEntry,nBytes,CH->evt,CH->daqTimeSec,CH->daqTimeMicroSec,CH->srsTimeStamp,CH->srsTrigger);
+      printf("Chamber Entry %8lld Bytes %6lld Event %8lld Time %8d-%06d.%09d TimeStamp %11d Trigger %10d\n",iEntry,nBytes,CH->evt,chts.GetDate(),chts.GetTime(),chts.GetNanoSec(),CH->srsTimeStamp,CH->srsTrigger);
     }
 
+    /* switch off output during testing period
     // Copy current input event to output event structure
     if (EC->CopyEvent(OH->GetRawEvent(),rawEv)) {
       perror("- ERROR while copying input event to output event");
@@ -212,6 +238,7 @@ int main(int argc, char* argv[])
       perror("- ERROR while writing output file");
       exit(EXIT_FAILURE);
     }
+    */
 
     // Clear event
     rawEv->Clear("C");
@@ -222,13 +249,20 @@ int main(int argc, char* argv[])
       break;
     }
 
+    // Update chamber event counter
+    chEntry++;
+    if (chEntry >= chEntries) {
+      printf("- Reached end of chamber streams: exiting\n");
+      break;
+    }
+
   } // End loop over events
 
   // Finalize event copier
-  EC->Finalize();
+  //EC->Finalize();
 
   // Finalize output handler
-  OH->Finalize();
+  //OH->Finalize();
 
   // Finalize input handler
   IH->Finalize();
@@ -245,21 +279,22 @@ int main(int argc, char* argv[])
   Double_t t_run_f = t_end_f-t_start_f;
   printf("- Total run time: %.3fs\n",t_run_f);
   printf("- Total processed events: %d\n",IH->EventsRead());
-  printf("- Output files: %d\n",OH->GetTotalOutFiles());
-  printf("- Total output events: %d\n",OH->GetTotalEvents());
-  printf("- Total output data: %lld\n",OH->GetTotalSize());
+  //printf("- Output files: %d\n",OH->GetTotalOutFiles());
+  //printf("- Total output events: %d\n",OH->GetTotalEvents());
+  //printf("- Total output data: %lld\n",OH->GetTotalSize());
   if (IH->EventsRead()>0) printf("- Event processing time: %.3f ms/evt\n",1000.*t_run_f/IH->EventsRead());
   if (t_run_f>0.) printf("- Event processing rate: %.2f evt/s\n",IH->EventsRead()/t_run_f);
-  if (cfg->Verbose()) {
-    printf("- List of output files\n");
-    for(UInt_t i = 0; i < OH->GetTotalOutFiles(); i++) {
-      printf("  %4u %s\n",i,OH->GetOutFile(i).Data());
-    }
-  }
+  //if (cfg->Verbose()) {
+  //  printf("- List of output files\n");
+  //  for(UInt_t i = 0; i < OH->GetTotalOutFiles(); i++) {
+  //    printf("  %4u %s\n",i,OH->GetOutFile(i).Data());
+  //  }
+  //}
 
   delete IH;
-  delete OH;
-  delete EC;
+  //delete OH;
+  //delete EC;
+  delete CH;
 
   exit(EXIT_SUCCESS);
 

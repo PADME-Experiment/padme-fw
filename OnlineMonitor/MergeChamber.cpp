@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
   Int_t oldSec = 0;
   Int_t oldMSec = 0;
   Int_t oldSrsTS = 0;
-  Int_t dt,ds,dst;
+  Int_t dt,ds,dst,nroll;
   Float_t ratio;
   Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
   Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
@@ -201,13 +201,16 @@ int main(int argc, char* argv[])
 
     // Check chamber time
     if (oldSec) {
-      dt = CH->daqTimeMicroSec-oldMSec;
-      if (dt<0) dt = 1000000+dt;
+      dt = 1000000*(CH->daqTimeSec-oldSec)+(CH->daqTimeMicroSec-oldMSec);
+      nroll = int(chClockFreq*dt/chClockRollover);
+      //ds = CH->srsTimeStamp-oldSrsTS;
+      //if (ds<0) ds = chClockRollover+ds; // We can use absolute time to check if the clock counter rolled over more than once
       ds = CH->srsTimeStamp-oldSrsTS;
-      if (ds<0) ds = chClockRollover+ds; // We can use absolute time to check if the clock counter rolled over more than once
+      if (ds<0) ds = chClockRollover+ds; // Correct for clock counter rollover
+      if (nroll) ds += nroll*chClockRollover; // Take into account additional rollovers using info from absolute clock
       ratio = (1.*ds)/(1.*dt);
       dst = int(ds/chClockFreq+0.5);
-      printf("Chamber SRSts = %8u\tdt = %6d us\tds = %7d\tratio = %9.6f\tSRSdT = %6d us\tdelay = %d us\n",CH->srsTimeStamp,dt,ds,ratio,dst,dst-dt);
+      if (nroll) printf("Chamber NRoll = %2d\tSRSts = %8u\tdt = %6d us\tds = %7d\tratio = %9.6f\tSRSdT = %6d us\tdelay = %d us\n",nroll,CH->srsTimeStamp,dt,ds,ratio,dst,dst-dt);
     }
     oldSec = CH->daqTimeSec;
     oldMSec = CH->daqTimeMicroSec;

@@ -228,26 +228,26 @@ bool ECalMLReconstruction::TriggerToBeSkipped()
 void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 {
   //// This method differ from  PadmeVReconstruction::BuildHits(TRawEvent* rawEv) only because it attach board and elementID to the DigitizerChannelEcal ====>>> if ChannelVReco woudl store bd and element id, this assignemnt might be don in the base reco class. 
-  // FILE* coeffFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibCoefficients21.dat", "r");
-  // FILE* constFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibConstants21.dat", "r");
+   FILE* coeffFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibCoefficients21.dat", "r");
+   FILE* constFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run30369_CalibConstants21.dat", "r");
   //FILE* calibFile = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuons.dat", "r");
   // FILE* calibFileECal = fopen("/home/kalina/software/padme-fw/PadmeAnalysis/run50384_CalibMuonsECal.dat", "r");
  
-  // float coefficients[32][32];
-  // float constants[32][32];
+    float coefficients[32][32];
+    float constants[32][32];
   // float calib[32][32];
   //float calibECal[32][32];
   
-  //for (int i = 0; i < 32; ++i) {
-  //  for (int j = 0; j < 32; ++j) {
-  //    if (fscanf(coeffFile, "%f", &coefficients[i][j]) != 1) {
-  //	fprintf(stderr, "Error reading coefficient matrix element.\n");
-  //	break;
-  //  }
-  //  if (fscanf(constFile, "%f", &constants[i][j]) != 1) {
-  //	fprintf(stderr, "Error reading constant matrix element.\n");
-  //	break;
-  //  }
+   for (int i = 0; i < 32; ++i) {
+     for (int j = 0; j < 32; ++j) {
+       if (fscanf(coeffFile, "%f", &coefficients[i][j]) != 1) {
+  	fprintf(stderr, "Error reading coefficient matrix element.\n");
+   	break;
+       }
+       if (fscanf(constFile, "%f", &constants[i][j]) != 1) {
+   	fprintf(stderr, "Error reading constant matrix element.\n");
+   	break;
+       }
        // if (fscanf(calibFile, "%f", &calib[i][j]) != 1) {
        // 	fprintf(stderr, "Error reading calibration matrix element.\n");
        // 	break;
@@ -256,11 +256,11 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
        // 	fprintf(stderr, "Error reading calibration ECal matrix element.\n");
        // 	break;
        //  }
-  // }
-  // }
+     }
+   }
 
-  //  fclose(coeffFile);
-  //fclose(constFile);
+   fclose(coeffFile);
+   fclose(constFile);
   // fclose(calibFile);
   // fclose(calibFileECal);
   
@@ -315,7 +315,7 @@ void ECalMLReconstruction::BuildHits(TRawEvent* rawEv)
 	//	 <<"   Hit energy is: "<< Hits[iHit]->GetEnergy()   <<std::endl;
 		
 		//Set hit energy according to matching signals calibration
-	//	Hits[iHit]->SetEnergy((((coefficients[ChX][ChY])*(Hits[iHit]->GetEnergy()))+(constants[ChX][ChY])));
+		Hits[iHit]->SetEnergy((((coefficients[ChX][ChY])*(Hits[iHit]->GetEnergy()))+(constants[ChX][ChY])));
 		//Hits[iHit]->SetEnergy((1.053) *  (Hits[iHit]->GetEnergy()));
 
 		//Set hit energy according to muon calibration

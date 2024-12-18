@@ -79,7 +79,7 @@ EventAction::EventAction(RunAction* run)
   fEnableSaveVeto = 0;
 
   foutECalML = run->GetOutputTextFileECalML();
-  foutHits = run->GetOutputTextFileHits();
+  // foutHits = run->GetOutputTextFileHits();
   foutTruth = run->GetOutputTextFileTruth();
 }
 
@@ -439,10 +439,12 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
-      MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
-      G4float hTime = hit->GetTime();
-      //Energy of the hit, time of hit, position of the hit.
+
       if( hit->GetPType()==2 || hit->GetPType()==3 ){
+	MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+	G4float hTime = hit->GetTime();
+	//Energy of the hit, time of hit, position of the hit.
+      
 	for( int ll = 0; ll<1024;ll++ ) {
 	  //Propagation time = 0
 	  if(ll < (int) (hTime)) continue;
@@ -474,7 +476,7 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
     }
   }//end of loop on hits
 
-  G4cout<<"CalNPart "<<CalNPart<<std::endl;
+  //G4cout<<"CalNPart "<<CalNPart<<std::endl;
   // for( int iparticle=0; iparticle<CalNPart; iparticle++) {
   //   G4double E =     CalE[CalNPart];
   //   G4double T = CalTime[CalNPart] ;
@@ -486,23 +488,26 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
     // //G4cout<<"PType "<<Ptype << "E " << E << "X " << X << "Y " << Y << "T " << T << " "<<std::endl;
   // }
   
-  for (int tt=0;tt<1024;tt++){
+  // for (int tt=0;tt<1024;tt++){
     for(int xx=0;xx<NCols;xx++){
       for(int yy=0;yy<NRows;yy++){
 	MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
-	//(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+	//For 2D networks
+	(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+
+	//For 3D networks, uncomment tt loop
 	//	(*(foutECalML)) <<fECalWaveForm[xx][yy][tt] << " ";
-        if (fabs(fECalWaveForm[xx][yy][tt])>0){
-	  (*(foutECalML)) <<xx<<" "<<yy<<" "<<tt<<" "<<fECalWaveForm[xx][yy][tt]<<" ";
+	// if (fabs(fECalWaveForm[xx][yy][tt])>0){
+	  //(*(foutECalML)) <<xx<<" "<<yy<<" "<<tt<<" "<<fECalWaveForm[xx][yy][tt]<<" ";
 	  
-	}
+	//	}
       }
-    }
+     }
     //(*(foutECalML)) << std::endl;
-  }
+    // }
   
   (*(foutECalML)) << std::endl;
-  (*(foutHits)) << std::endl;
+  //(*(foutHits)) << std::endl;
   (*(foutTruth)) << std::endl;
 }
 
@@ -1094,7 +1099,8 @@ void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
     CalY[CalNPart]    = Y;
     CalNPart++;
     //G4cout<<CalNPart<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<G4endl;
-    (*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " " << T << " ";
+    // (*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " " << T << " ";
+    (*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " ";
     }
     //}
 }

@@ -18,7 +18,15 @@ Bool_t SPA_background::InitHistos(){
 
   HistoSvc* hSvcVal =  HistoSvc::GetInstance();
   hSvcVal->makeFileDir(GetName());
+  hSvcVal->BookHisto("Vertex Type",10,0.,10.); 
   
+  hSvcVal->BookHisto("NVerticesInEvent",100,0.,100.);
+  
+  hSvcVal->BookHisto("Vertex X",1000,-50.,50.);
+  hSvcVal->BookHisto("Vertex Y",1000,-50.,50.);
+  hSvcVal->BookHisto("Vertex Z",3000,-1500.,1500.);
+  
+  hSvcVal->BookHisto("MissingMass_Signal",1000,-500.0,500.0);
   //Number of hits in each detector
   hSvcVal->BookHisto(this->GetName()+"_ECal_NHits",100,0.0,100.0);
   hSvcVal->BookHisto(this->GetName()+"_ECalML_NHits",100,0.0,100.0);
@@ -43,6 +51,7 @@ Bool_t SPA_background::InitHistos(){
    //--------------------------------------------------MissingMass---------------------------------------------------------------------------
   //ECal
   hSvcVal->BookHisto(this->GetName()+"_ECal_MissingMass_All",1000,-500.0,500.0);
+  hSvcVal->BookHisto(this->GetName()+"_ECal_MissingMass_Ecut",1000,-500.0,500.0);
   hSvcVal->BookHisto(this->GetName()+"_ECal_MissingMass_After2gamma",1000,-500.0,500.0);
 
   hSvcVal->BookHisto(this->GetName()+"_ECal_MissingMass_oneCluster",1000,-500.0,500.0);
@@ -247,6 +256,8 @@ Bool_t SPA_background::IsBrems(TRecoVCluster* clu, TRecoVCluster* clu2){
 }
 
 Bool_t SPA_background::Process(){
+  //std::cout<<"Entering event "<<evt->RecoEvent->GetEventNumber()<<std::endl;
+
   HistoSvc* hSvc =  HistoSvc::GetInstance();
     
   GeneralInfo* fGeneralInfo = GeneralInfo::GetInstance();
@@ -257,7 +268,45 @@ Bool_t SPA_background::Process(){
   int nGG = 0;
   int nGGG = 0;
   int nBrems = 0;
-  
+
+  if(evt->MCTruthEvent){
+    TMCVertex* mcVtx;
+    if (evt->MCTruthEvent->GetNVertices()>0) {
+      hSvc->FillHisto("NVerticesInEvent",evt->MCTruthEvent->GetNVertices());
+      for(Int_t iV = 0; iV<evt->MCTruthEvent->GetNVertices(); iV++) {
+	mcVtx = evt->MCTruthEvent->Vertex(iV);
+	hSvc->FillHisto("Vertex X",mcVtx->GetPosition().x());
+	hSvc->FillHisto("Vertex Y",mcVtx->GetPosition().y());
+	hSvc->FillHisto("Vertex Z",mcVtx->GetPosition().z());
+	if(mcVtx->GetProcess() == "eBrem"){
+	  hSvc->FillHisto("Vertex Type",1.);
+	}	
+	if(mcVtx->GetProcess() == "eIoni"){
+	  hSvc->FillHisto("Vertex Type",2.);
+	}	
+	if(mcVtx->GetProcess() == "annihil"){
+	  hSvc->FillHisto("Vertex Type",9.);
+	}	
+      }
+    }
+  }
+
+  if(evt->MCTruthEvent&&evt->ECalRecoEvent){
+    TRecoVCluster* cluU=NULL;
+    Double_t MissingMassU=0;
+    Int_t NclusECal = evt->ECalRecoCl->GetNElements();
+    
+    Double_t Z_1_U = 3480;
+
+    TMCVertex* mcVtxU;
+      
+    if(NclusECal==1){
+      cluU    = evt->ECalRecoCl->Element(0);
+      
+      MissingMassU = ComputeMissingMass(BeamEnergy,(cluU->GetPosition().X()),(cluU->GetPosition().Y()),Z_1_U,(cluU->GetEnergy()));
+      if(cluU->GetEnergy()>60.) hSvc->FillHisto("MissingMass_Signal",MissingMassU);
+    }
+  }
   //Begin 2 and 3 gamma selection for ECal
   if(evt->ECalRecoEvent){
     hSvc->FillHisto(this->GetName()+"_ECal_NHits",evt->ECalRecoEvent->GetNHits());
@@ -285,9 +334,35 @@ Bool_t SPA_background::Process(){
     
     //Loop over the clusters for the first time
     if(NclusECal==1){
+
+      if(evt->MCTruthEvent){
+
+	TRecoVCluster* cluU=NULL;
+	Double_t MissingMassU=0;
+	Int_t NclusECal = evt->ECalRecoCl->GetNElements();
+	
+	Double_t Z_1_U = 3480;
+	
+	TMCVertex* mcVtxU;
+	
+
+	cluU    = evt->ECalRecoCl->Element(0);
+	
+	MissingMassU = ComputeMissingMass(BeamEnergy,(cluU->GetPosition().X()),(cluU->GetPosition().Y()),Z_1_U,(cluU->GetEnergy()));
+	if(cluU->GetEnergy()>60.) hSvc->FillHisto("MissingMass_Signal",MissingMassU);
+      }
+
+
+
+
+
+
+      
       clu    = evt->ECalRecoCl->Element(0);
       MissingMass = ComputeMissingMass(BeamEnergy,(clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy()));
+      hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_All",MissingMass);
       hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_oneCluster",MissingMass);
+      if(clu->GetEnergy()>60.) hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_Ecut",MissingMass);
       hSvc->FillHisto(this->GetName()+"_ECal_Energy_oneCluster",clu->GetEnergy());
       hSvc->FillHisto2(this->GetName()+"_ECal_Energy_Mmiss",clu->GetEnergy(),MissingMass);
       hSvc->FillHisto(this->GetName()+"_ECal_Theta_oneCluster",ComputeTheta((clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy())));
@@ -317,7 +392,7 @@ Bool_t SPA_background::Process(){
       
       Double_t Z_1 = 3480;
       MissingMass = ComputeMissingMass(BeamEnergy,(clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy()));
-      hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_All",MissingMass);
+      //hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_All",sqrt(MissingMass));
       
       hSvc->FillHisto2(this->GetName()+"_ECal_Energy_MissingTheta_All",(clu->GetEnergy()),(ComputeTheta((clu->GetPosition().X()),(clu->GetPosition().Y()),Z_1,(clu->GetEnergy()))));
       
@@ -370,7 +445,7 @@ Bool_t SPA_background::Process(){
       hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_After2gamma3gamma",MissingMass);
     }
 
- 
+    if(evt->PVetoRecoEvent){
       hSvc->FillHisto(this->GetName()+"_PVeto_NHits",evt->PVetoRecoEvent->GetNHits());
       Int_t NclusPVeto = evt->PVetoRecoCl->GetNElements();
       
@@ -411,9 +486,10 @@ Bool_t SPA_background::Process(){
 	}
 	
       }
-      if(nGG==0&&nGGG==0&&nBrems==0){
-	hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_After2gamma3gammaBrems",MissingMass);
-      }
+    }
+    if(nGG==0&&nGGG==0&&nBrems==0){
+      hSvc->FillHisto(this->GetName()+"_ECal_MissingMass_After2gamma3gammaBrems",MissingMass);
+    }
     
     
     }//End of first loop over clusters

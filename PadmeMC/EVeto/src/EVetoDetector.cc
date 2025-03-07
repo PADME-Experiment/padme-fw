@@ -51,7 +51,7 @@ void EVetoDetector::CreateGeometry()
   printf("EVeto size is %f %f %f\n",eVetoX,eVetoY,eVetoLength);
   G4Box* solidEVeto = new G4Box("EVetoSolid",eVetoX*0.5,eVetoY*0.5,eVetoLength*0.5);
   fEVetoVolume = new G4LogicalVolume(solidEVeto,G4Material::GetMaterial("Vacuum"),"EVetoLogic",0,0,0);
-  fEVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fEVetoVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,posEVeto,fEVetoVolume,"EVeto",fMotherVolume,false,0,true);
 
   // Create standard scintillator finger

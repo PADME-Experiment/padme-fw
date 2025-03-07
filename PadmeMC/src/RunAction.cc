@@ -18,11 +18,6 @@
 
 #include "BeamParameters.hh"
 
-#ifdef  G4MULTITHREADED
-#include "G4MTHepRandom.hh"
-#else
-#endif
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 //G4Run* RunAction::GenerateRun()
 //{ return new Run; }
@@ -101,13 +96,8 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
 
   G4cout << "PadmeMCInfo - RANDOM SEEDS: " << seeds[0] << "\t" << seeds[1] << G4endl;
 
-#ifdef  G4MULTITHREADED
-  G4MTHepRandom::setTheSeeds(seeds);
-  G4MTHepRandom::showEngineStatus();
-#else
   CLHEP::HepRandom::setTheSeeds(seeds);
   CLHEP::HepRandom::showEngineStatus();
-#endif
 
   if ( ((G4VisManager*)G4VisManager::GetConcreteInstance())->GetCurrentScene() ) {
     // Show some info about current run on display

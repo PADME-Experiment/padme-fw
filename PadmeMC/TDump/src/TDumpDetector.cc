@@ -45,7 +45,7 @@ void TDumpDetector::CreateGeometry()
   printf("TDump size is x=%f y=%f z=%f cm\n",tdumpSizeX/cm,tdumpSizeY/cm,tdumpSizeZ/cm);
   G4Box* solidTDump = new G4Box("TDump",0.5*tdumpSizeX,0.5*tdumpSizeY,0.5*tdumpSizeZ);
   fTDumpVolume = new G4LogicalVolume(solidTDump,G4Material::GetMaterial("Vacuum"),"TDump",0,0,0);
-  fTDumpVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fTDumpVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   //fTDumpVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   printf("TDump will be placed at x=%f y=%f z=%f cm\n",geo->GetTDumpPosX()/cm,geo->GetTDumpPosY()/cm,geo->GetTDumpPosZ()/cm);
   G4ThreeVector tdumpPos = G4ThreeVector(geo->GetTDumpPosX(),geo->GetTDumpPosY(),geo->GetTDumpPosZ()); 

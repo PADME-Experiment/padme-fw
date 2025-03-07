@@ -51,8 +51,9 @@ BeamLineStructure::BeamLineStructure(G4LogicalVolume* motherVolume)
   :fMotherVolume(motherVolume)
 {
   fBeamLineMessenger = new BeamLineMessenger(this);
+  geo = BeamLineGeometry::GetInstance();
   fBeamLineIsVisible = 1; // If =0 all chamber structures are invisible (debug only)
- }
+}
 
 BeamLineStructure::~BeamLineStructure()
 {
@@ -61,7 +62,7 @@ BeamLineStructure::~BeamLineStructure()
 
 void BeamLineStructure::CreateGeometry()
 {
-  geo = BeamLineGeometry::GetInstance();
+  //geo = BeamLineGeometry::GetInstance();
   //G4double fLineSetup = geo->GetBeamLineSetup();
   G4int setup = geo->GetDetectorSetup();
   
@@ -71,6 +72,7 @@ void BeamLineStructure::CreateGeometry()
     //    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
   }
   
+  /*
   //(fLineSetup==0.){
   if(setup == 10){
     //G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
@@ -101,6 +103,7 @@ void BeamLineStructure::CreateGeometry()
     CreatePulsedMagnet();
     CreateBeamLine2022();    // Beam line 2022
   }
+  */
 }
 
 ///////////////////////////////////////////////////////
@@ -140,8 +143,8 @@ void BeamLineStructure::CreateMylarThinWindow()
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
   G4VisAttributes MylarVisAttr = G4VisAttributes(G4Colour::Red());
   if(!fBeamLineIsVisible){
-    MylarVisAttr = G4VisAttributes::Invisible;
-    steelVisAttr = G4VisAttributes::Invisible;
+    MylarVisAttr = G4VisAttributes::GetInvisible();
+    steelVisAttr = G4VisAttributes::GetInvisible();
   }  
   // Create Mylar thin window and its support flange
 
@@ -154,7 +157,7 @@ void BeamLineStructure::CreateMylarThinWindow()
   // Top volume containing Mylar window and its flange
   G4Tubs* solidMylarWinVolume = new G4Tubs("solidMylarWinVolume",0.,mylarWinFlgR,0.5*mylarWinFlgT,0.*deg,360.*deg);
   fMylarWindowVolume = new G4LogicalVolume(solidMylarWinVolume,G4Material::GetMaterial("Vacuum"),"logicalMylarWinVolume",0,0,0);
-  fMylarWindowVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fMylarWindowVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   // Mylar thin window
   G4Tubs* solidMylarWin = new G4Tubs("solidMylarWin",0.,mylarWinR,0.5*mylarWinT,0.*deg,360.*deg);
@@ -189,7 +192,7 @@ void BeamLineStructure::CreateBeamLine2020()
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   G4VisAttributes DentroilMuroVisAttr   = G4VisAttributes(G4Color::Red()); // Beam Flags
 
-  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   //Gettining intial positions
   G4double mpEntPosX = geo->GetMagPipeEnterPosX();
@@ -562,7 +565,7 @@ void BeamLineStructure::CreateBeamLine2022()
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   G4VisAttributes DentroilMuroVisAttr   = G4VisAttributes(G4Color::Red()); // Beam Flags
   
-  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
   printf("****************************************** \n");
   printf("Creating a beamline in 2022 RunIII setup   \n");
   printf("****************************************** \n");
@@ -578,13 +581,13 @@ void BeamLineStructure::CreateBeThinWindow()
   // and pipes in the upstream region
   ///////////////////////////////////////////////////////
 
-  BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
+  //BeamLineGeometry* geo = BeamLineGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
   G4VisAttributes BeVisAttr = G4VisAttributes(G4Colour::Blue());
   if ( ! fBeamLineIsVisible ) {
-    BeVisAttr = G4VisAttributes::Invisible;
-    steelVisAttr = G4VisAttributes::Invisible;
+    BeVisAttr = G4VisAttributes::GetInvisible();
+    steelVisAttr = G4VisAttributes::GetInvisible();
   }
 
   // Create Be thin window and its support flange
@@ -597,7 +600,7 @@ void BeamLineStructure::CreateBeThinWindow()
   // Top volume containing Be window and its flange
   G4Tubs* solidBeWinVolume = new G4Tubs("solidBeWinVolume",0.,beWinFlgR,0.5*beWinFlgT,0.*deg,360.*deg);
   fBeWindowVolume = new G4LogicalVolume(solidBeWinVolume,G4Material::GetMaterial("Vacuum"),"logicalBeWinVolume",0,0,0);
-  fBeWindowVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fBeWindowVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   // Be thin window
   G4Tubs* solidBeWin = new G4Tubs("solidBeWin",0.,beWinR,0.5*beWinT,0.*deg,360.*deg);
@@ -634,8 +637,8 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   G4VisAttributes DHSTB002VisAtt = G4VisAttributes(G4Colour::Red());
   if ( ! fBeamLineIsVisible ) {
-    steelVisAttr   = G4VisAttributes::Invisible;
-    DHSTB002VisAtt = G4VisAttributes::Invisible;
+    steelVisAttr   = G4VisAttributes::GetInvisible();
+    DHSTB002VisAtt = G4VisAttributes::GetInvisible();
   }
 
   // Get position of entrance point to the magnet pipe section
@@ -712,7 +715,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   G4double magvolMaxR = geo->GetMagVolMaxRadius();
   G4Tubs* solidMagVol = new G4Tubs("solidMagVol",magvolMinR,magvolMaxR,0.5*magvolSizeY,0.*deg,magnetAngle);
   G4LogicalVolume* logicalMagVol = new G4LogicalVolume(solidMagVol,G4Material::GetMaterial("Vacuum"),"logicalMagVol",0,0,0);
-  //  logicalMagVol->SetVisAttributes(G4VisAttributes::Invisible);
+  //  logicalMagVol->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   // Create another volume externally adjacent to magnetic volume: used for cuts
   G4double extvolSizeY = geo->GetMagVolSizeY();
@@ -964,8 +967,8 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4VisAttributes MagFieldVisAtt = G4VisAttributes(G4Colour::Blue());
 
   if ( ! fBeamLineIsVisible ) {
-    steelVisAttr   = G4VisAttributes::Invisible;
-    DHSTB001VisAtt = G4VisAttributes::Invisible;
+    steelVisAttr   = G4VisAttributes::GetInvisible();
+    DHSTB001VisAtt = G4VisAttributes::GetInvisible();
   }
 // Create the straight section of the beam pipe (with its flange)
 // and position it at entrance and exits of magnet section of the beam line
@@ -1065,7 +1068,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4double magvolMaxR = geo->GetMagVolMaxRadius();
   G4Tubs* solidMagVol = new G4Tubs("solidMagVol",magvolMinR,magvolMaxR,0.5*magvolSizeY,0.*deg,magnetAngle);
   G4LogicalVolume* logicalMagVol = new G4LogicalVolume(solidMagVol,G4Material::GetMaterial("Vacuum"),"logicalMagVol",0,0,0);
-  logicalMagVol->SetVisAttributes(G4VisAttributes::Invisible);
+  logicalMagVol->SetVisAttributes(G4VisAttributes::GetInvisible());
   //  logicalMagVol->SetVisAttributes(MagFieldVisAtt);
 
   // Create another volume externally adjacent to magnetic volume: used for cuts
@@ -1198,7 +1201,7 @@ void BeamLineStructure::CreateBeamLine()
 
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
-  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   G4double Flag3R = 44.5*mm; // 99mm diameter
   G4double Flag3T = 50*um;  //Use the same of the BeW
@@ -1213,7 +1216,7 @@ void BeamLineStructure::CreateBeamLine()
 //  G4double magvolMaxR = geo->GetMagVolMaxRadius();
 //  G4Tubs* solidMagVol = new G4Tubs("solidMagVol",magvolMinR,magvolMaxR,0.5*magvolSizeY,0.*deg,magnetAngle);
 //  G4LogicalVolume* logicalMagVol = new G4LogicalVolume(solidMagVol,G4Material::GetMaterial("Vacuum"),"logicalMagVol",0,0,0);
-//  logicalMagVol->SetVisAttributes(G4VisAttributes::Invisible);
+//  logicalMagVol->SetVisAttributes(G4VisAttributes::GetInvisible());
 //
 //  // Create another volume externally adjacent to magnetic volume: used for cuts
 //  G4double extvolSizeY = geo->GetMagVolSizeY();
@@ -1549,7 +1552,7 @@ void BeamLineStructure::CreateWallAndPipe()
   G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
   G4VisAttributes DentroilMuroVisAttr   = G4VisAttributes(G4Color::Red()); // Beam Flags
 
-  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   //Gettining intial positions
   G4double mpEntPosX = geo->GetMagPipeEnterPosX();
@@ -1993,8 +1996,8 @@ void BeamLineStructure::CreatePulsedMagnet()
   G4VisAttributes PulsedVisAttr = G4VisAttributes(G4Colour::Brown());
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
   if ( ! fBeamLineIsVisible ) {
-    steelVisAttr   = G4VisAttributes::Invisible;
-    PulsedVisAttr = G4VisAttributes::Invisible;
+    steelVisAttr   = G4VisAttributes::GetInvisible();
+    PulsedVisAttr = G4VisAttributes::GetInvisible();
   }
 
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();  

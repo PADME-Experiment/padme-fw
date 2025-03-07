@@ -41,7 +41,7 @@ ETagDetector::~ETagDetector()
 void ETagDetector::CreateGeometry()
 {
 
-  G4VisAttributes colourETag = G4VisAttributes::Invisible;
+  G4VisAttributes colourETag = G4VisAttributes::GetInvisible();
   //G4VisAttributes colourETag = G4VisAttributes(G4Colour::Magenta());
   G4VisAttributes colourBar = G4VisAttributes(G4Colour::Green());
   G4VisAttributes colourPaint = G4VisAttributes(G4Colour::White());

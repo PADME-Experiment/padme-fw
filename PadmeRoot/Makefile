@@ -9,6 +9,9 @@
 # Set name of library
 LIBNAME := PadmeRoot
 
+# Set name of dictionayr file
+DICTFILE := PersistencyDict_rdict.pcm
+
 # Define directories for different file types
 SDIR	= src
 ODIR	= obj
@@ -39,8 +42,11 @@ SOURCES  := $(wildcard $(SDIR)/*.cc)
 DEPS     := $(addprefix $(DDIR)/,$(notdir $(SOURCES:.cc=.ccd)))
 OBJECTS  := $(addprefix $(ODIR)/,$(notdir $(SOURCES:.cc=.o))) $(ODIR)/PersistencyDict.o
 
-# Define comlete library name
+# Define complete library name
 LIBRARY := $(LDIR)/lib$(LIBNAME).so
+
+# Define complete dictionary name
+DICTIONARY := $(LDIR)/$(DICTFILE)
 
 #########################################################################
 
@@ -48,6 +54,7 @@ all: $(LIBNAME)
 
 $(LIBNAME) : $(DEPS) $(OBJECTS)
 	$(CXX) -shared -o $(LIBRARY) $(ROOTLDFLAGS) $(CXXFLAGS) $(OBJECTS)
+	mv $(DICTFILE) $(DICTIONARY)
 
 $(ODIR)/%.o : $(SDIR)/%.cc $(DDIR)/%.ccd
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -70,14 +77,17 @@ clean:
 
 cleanall:
 	@echo Cleaning all...
+	rm -f $(DDIR)/*.ccd
 	rm -f $(ODIR)/*.o
 	rm -f $(LIBRARY)
-	rm -f PersistencyDict.*
+	rm -f PersistencyDict.cc
+	rm -f $(DICTIONARY)
 
 try:
 	@echo Current make parameters:
 	@echo LIBNAME = $(LIBNAME)
 	@echo LIBRARY = $(LIBRARY)
+	@echo DICTIONARY = $(DICTIONARY)
 	@echo CXXFLAGS = $(CXXFLAGS)
 	@echo LIBS = $(LIBS)
 	@echo SOURCES = $(SOURCES)

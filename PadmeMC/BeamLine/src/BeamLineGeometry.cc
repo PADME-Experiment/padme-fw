@@ -237,7 +237,8 @@ BeamLineGeometry::BeamLineGeometry()
 
   fBTFTargetEnable = false;
   fBTFTargetThickness = 24.4*mm;
-  fBTFTargetDistance  = 2370.*mm; 
+  fBTFTargetDistance  = 2370.*mm;
+
 }
 
 BeamLineGeometry::~BeamLineGeometry()

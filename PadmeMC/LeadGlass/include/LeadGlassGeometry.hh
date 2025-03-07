@@ -8,6 +8,8 @@
 #ifndef LeadGlassGeometry_H
 #define LeadGlassGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 

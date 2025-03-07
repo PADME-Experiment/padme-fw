@@ -16,11 +16,6 @@
 
 #include "RootIOManager.hh"
 
-#ifdef  G4MULTITHREADED
-#include "G4MTHepRandom.hh"
-#else
-#endif
-
 #ifdef G4VIS_USE
 #include "G4VisExecutive.hh"
 #endif
@@ -65,13 +60,7 @@ int main(int argc,char** argv)
   //  if (argc == 3) SeedNum = atoi(argv[2]);
   
   //choose the Random engine
-  //  CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
-  //G4MTHepRandom::setTheEngine(new CLHEP::Ranlux64Engine);  
-#ifdef  G4MULTITHREADED
-  G4MTHepRandom::setTheEngine(new CLHEP::RanecuEngine);
-#else 
   CLHEP::HepRandom::setTheEngine(new CLHEP::RanecuEngine);
-#endif
 
   // User Verbose output class
   G4VSteppingVerbose* verbosity = new SteppingVerbose;

@@ -52,7 +52,7 @@ void TPixDetector::CreateGeometry()
   printf("TPix Box size is %.2f x %.2f x %.2f mm3\n",boxSizeX/mm,boxSizeY/mm,boxSizeZ/mm);
   G4Box* solidBox = new G4Box("TPixBoxSolid",0.5*boxSizeX,0.5*boxSizeY,0.5*boxSizeZ);
   fTPixBoxVolume = new G4LogicalVolume(solidBox,G4Material::GetMaterial("Air"),"TPixBoxLogic",0,0,0);
-  //fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  //fTPixVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   //fTPixBoxVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
   fTPixBoxVolume->SetVisAttributes(G4VisAttributes(colourBox));
 
@@ -74,7 +74,7 @@ void TPixDetector::CreateGeometry()
   printf("TPix size is %.2f x %.2f x %.2f mm3\n",tpixSizeX/mm,tpixSizeY/mm,tpixSizeZ/mm);
   G4Box* solidTPix = new G4Box("TPixSolid",0.5*tpixSizeX,0.5*tpixSizeY,0.5*tpixSizeZ);
   fTPixVolume = new G4LogicalVolume(solidTPix,G4Material::GetMaterial("Vacuum"),"TPixLogic",0,0,0);
-  fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fTPixVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   //fTPixVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
 
   /*

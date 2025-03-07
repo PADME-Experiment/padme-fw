@@ -15,8 +15,11 @@ export PADMERECO=${PADME}/PadmeReco
 # Define PADMEANALYSIS
 export PADMEANALYSIS=${PADME}/PadmeAnalysis
 
-# Define path to PadmeRoot and add it to LD_LIBRARY_PATH
+# Define path to PadmeRoot
 export PADMEROOT=${PADME}/PadmeRoot
+
+# Tell ROOT about location of PadmeRoot include files
+export ROOT_INCLUDE_PATH="${PADMEROOT}/include"
 
 # Add PadmeRoot to LD_LIBRARY_PATH (also remove previous definitions)
 #export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${PADMEROOT}/lib"

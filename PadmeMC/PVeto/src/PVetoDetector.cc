@@ -51,7 +51,7 @@ void PVetoDetector::CreateGeometry()
   printf("PVeto size is %f %f %f\n",pVetoX,pVetoY,pVetoZ);
   G4Box* solidPVeto = new G4Box("PVetoSolid",pVetoX*0.5,pVetoY*0.5,pVetoZ*0.5);
   fPVetoVolume = new G4LogicalVolume(solidPVeto,G4Material::GetMaterial("Vacuum"),"PVetoLogic",0,0,0);
-  fPVetoVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  fPVetoVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,posPVeto,fPVetoVolume,"PVeto",fMotherVolume,false,0,true);
 
   // Create standard scintillator finger

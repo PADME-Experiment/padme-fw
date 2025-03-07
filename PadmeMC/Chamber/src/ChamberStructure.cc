@@ -102,7 +102,7 @@ void ChamberStructure::CreateECalAlThinWindow()
   //G4double efFBackZ = geo->GetEWAlBackFacePosZ();
 
   G4VisAttributes alVisAttr = G4VisAttributes(G4Colour::Blue());
-  if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::GetInvisible();
 
   // Compute thin window sphere's radius and z position of center
   G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
@@ -150,10 +150,10 @@ void ChamberStructure::CreateECalCarbonThinWindow()
   G4double efFFrontZ = geo->GetEWAlFrontFacePosZ();
 
   G4VisAttributes alVisAttr = G4VisAttributes(G4Colour::Blue());
-  //if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::Invisible;
+  //if ( ! fChamberIsVisible ) alVisAttr = G4VisAttributes::GetInvisible();
 
   G4VisAttributes cVisAttr = G4VisAttributes(G4Colour::Yellow());
-  //if ( ! fChamberIsVisible ) cVisAttr = G4VisAttributes::Invisible;
+  //if ( ! fChamberIsVisible ) cVisAttr = G4VisAttributes::GetInvisible();
 
   // Compute thin window sphere's radius and z position of center
   G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
@@ -182,7 +182,7 @@ void ChamberStructure::CreateTargetPipes()
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
-  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   // Crossed pipes at target position
   G4double cpzRIn = geo->GetCPZRIn();
@@ -244,7 +244,7 @@ void ChamberStructure::CreateJunctionPipe()
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
-  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   // Junction pipe
 
@@ -280,7 +280,7 @@ void ChamberStructure::CreateBTFJunction() //M. Raggi 20/03/2019
 
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour::Grey());
-  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   G4double btfJunRIn = geo->GetBTFJunRIn();
   G4double btfJunROut = geo->GetBTFJunROut();
@@ -423,7 +423,7 @@ void ChamberStructure::CreatePortholeCaps()
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
-  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   G4int nPH = geo->GetPHCapNumber();
   for (G4int iPH=0; iPH<nPH; iPH++) {
@@ -451,7 +451,7 @@ void ChamberStructure::CreateTPixPortholeCap()
   ChamberGeometry* geo = ChamberGeometry::GetInstance();
 
   G4VisAttributes steelVisAttr = G4VisAttributes(G4Colour(0.4,0.4,0.4)); // Dark gray
-  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::Invisible;
+  if ( ! fChamberIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
 
   // Add 1.5mm to avoid overlap between extrnal vacuum chamber and large rectangular porthole cap
   G4double phExtraThick = 1.5*mm;

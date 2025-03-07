@@ -8,6 +8,8 @@
 #ifndef ETagGeometry_H
 #define ETagGeometry_H 1
 
+#include <vector>
+
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
 

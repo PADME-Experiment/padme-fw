@@ -32,9 +32,9 @@
 
 #include "G4OpticalPhysics.hh"
 
-#include "G4DataQuestionaire.hh"
+//#include "G4DataQuestionaire.hh"
 
-#if G4MAJORVERSION >= 10 
+//#if G4MAJORVERSION >= 10 
 
 #include "G4HadronPhysicsQGSP_BERT.hh"
 #include "G4HadronPhysicsQGSP_BERT_HP.hh"
@@ -42,22 +42,22 @@
 #include "G4HadronPhysicsQGSP_BIC.hh"
 #include "G4HadronPhysicsQGSP_BIC_HP.hh"
 
-#else
-#include "HadronPhysicsQGSP_BERT.hh"
-#include "HadronPhysicsQGSP_BERT_HP.hh"
-
-#include "HadronPhysicsQGSP_BIC.hh"
-#include "HadronPhysicsQGSP_BIC_HP.hh"
-#include "G4StepLimiterBuilder.hh"
-
-#endif
+//#else
+//#include "HadronPhysicsQGSP_BERT.hh"
+//#include "HadronPhysicsQGSP_BERT_HP.hh"
+//
+//#include "HadronPhysicsQGSP_BIC.hh"
+//#include "HadronPhysicsQGSP_BIC_HP.hh"
+//#include "G4StepLimiterBuilder.hh"
+//
+//#endif
 
 #include "PADME_PHYS.hh"
 #include "Constants.hh"
 
 PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
 {
-  G4DataQuestionaire it(photon);
+  //G4DataQuestionaire it(photon);
   G4cout << "<<< Geant4 Physics List simulation engine: PADME_PHYS"<<G4endl;
   G4cout <<G4endl;
   
@@ -109,42 +109,41 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
     if (NuclearBertini == 1) {
       if(NuclearHP == 1) {
 
-#if G4MAJORVERSION >= 10 
+//#if G4MAJORVERSION >= 10 
 	this->RegisterPhysics( new G4HadronPhysicsQGSP_BERT_HP(ver));
-#else
-	this->RegisterPhysics( new HadronPhysicsQGSP_BERT_HP(ver));
-#endif
+//#else
+//	this->RegisterPhysics( new HadronPhysicsQGSP_BERT_HP(ver));
+//#endif
       } else {
-#if G4MAJORVERSION >= 10 
-      this->RegisterPhysics( new G4HadronPhysicsQGSP_BERT(ver));
-#else
-      this->RegisterPhysics( new HadronPhysicsQGSP_BERT(ver));
-#endif
+//#if G4MAJORVERSION >= 10 
+	this->RegisterPhysics( new G4HadronPhysicsQGSP_BERT(ver));
+//#else
+//      this->RegisterPhysics( new HadronPhysicsQGSP_BERT(ver));
+//#endif
       }
     } else if (NuclearBinary == 1 ) {
       if(NuclearHP == 1) {
-#if G4MAJORVERSION >= 10 
+//#if G4MAJORVERSION >= 10 
 	this->RegisterPhysics(  new G4HadronPhysicsQGSP_BIC_HP(ver));
-#else
-	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC_HP(ver));
-#endif
+//#else
+//	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC_HP(ver));
+//#endif
       } else {
-#if G4MAJORVERSION >= 10 
+//#if G4MAJORVERSION >= 10 
 	this->RegisterPhysics(  new G4HadronPhysicsQGSP_BIC(ver));
-#else
-	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC(ver));
-#endif
+//#else
+//	this->RegisterPhysics(  new HadronPhysicsQGSP_BIC(ver));
+//#endif
       }
     }
 
-    // // Stopping Physics
-
-#if G4MAJORVERSION == 9
-#if  G4MINORVERSION == 6
-    this->RegisterPhysics( new G4StoppingPhysics(ver) );
-#endif
-#else
-#endif
+//// Stopping Physics
+//#if G4MAJORVERSION == 9
+//#if  G4MINORVERSION == 6
+//    this->RegisterPhysics( new G4StoppingPhysics(ver) );
+//#endif
+//#else
+//#endif
  
     // Ion Physics
     this->RegisterPhysics( new G4IonPhysics(ver));
@@ -153,13 +152,13 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
   // Neutron tracking cut
   this->RegisterPhysics( new G4NeutronTrackingCut(ver));
   
-  //Step limiter
-#if G4MAJORVERSION == 9
-#if  G4MINORVERSION == 6
-  this->RegisterPhysics(new G4StepLimiterBuilder());
-#endif
-#else
-#endif
+////Step limiter
+//#if G4MAJORVERSION == 9
+//#if  G4MINORVERSION == 6
+//  this->RegisterPhysics(new G4StepLimiterBuilder());
+//#endif
+//#else
+//#endif
 
 }
 

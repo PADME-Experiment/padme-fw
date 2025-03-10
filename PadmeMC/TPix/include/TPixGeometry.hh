@@ -12,6 +12,7 @@
 
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4TwoVector.hh"
 #include "G4ThreeVector.hh"
 
 class G4LogicalVolume;
@@ -86,6 +87,12 @@ public:
   G4double GetChipSizeZ() { return fChipSizeZ; }
 
   G4double GetCuSlabThick() { return fCuSlabThick; }
+  G4double GetCuSlabFingerWidth() { return fCuSlabFingerWidth; }
+
+  std::vector<G4TwoVector> GetCuShapePolygon() { return fCuShapePolygon; }
+  G4double GetCuShapeWidth() { return fCuShapeWidth; }
+  G4double GetCuShapeHeight() { return fCuShapeHeight; }
+  G4double GetCuShapeDepth() { return fCuShapeDepth; }
 
   G4double GetCuBarThick() { return fCuBarThick; }
   G4double GetCuBarHeight() { return fCuBarHeight; }
@@ -165,6 +172,13 @@ private:
 
   // Thin copper slab behind TimePix itself (X,Y dimensions = TimePix)
   G4double fCuSlabThick;
+  G4double fCuSlabFingerWidth;
+
+  // Chip Cu support structure (above and below chips)
+  std::vector<G4TwoVector> fCuShapePolygon;
+  G4double fCuShapeWidth;
+  G4double fCuShapeHeight;
+  G4double fCuShapeDepth;
 
   // Top and bottom Cu bars behind the readout boards (X dimension = TimePix
   G4double fCuBarThick;

@@ -48,8 +48,15 @@ TPixGeometry::TPixGeometry()
 
   // Thickness of Cu slab behind TimePix (to be measured)
   fCuSlabThick = 1.*mm;
+  fCuSlabFingerWidth = 2.*mm; // Rough measure from CAD (not too bad estimate)
 
-  // Dimension of Cu bars behinf TimePix readout electronics (to be measured)
+  // Chip Cu support structure (above and below chips)
+  fCuShapePolygon = { {0.0*mm,0.0*mm}, {0.0*mm,7.3*mm}, {17.0*mm,7.3*mm}, {17.0*mm,5.3*mm}, {21.0*mm,5.3*mm}, {21.0*mm,8.5*mm}, {23.0*mm,8.5*mm}, {23.0*mm,0.0*mm} };
+  fCuShapeWidth = 14.0*mm;
+  fCuShapeHeight = 23.0*mm;
+  fCuShapeDepth = 8.5*mm;
+
+  // Dimension of Cu bars behind TimePix readout electronics (to be measured)
   fCuBarThick = 12.*mm;
   fCuBarHeight = 24.6*mm;
 

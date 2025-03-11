@@ -11,6 +11,7 @@
 #include "G4ThreeVector.hh"
 #include "G4RotationMatrix.hh"
 #include "G4Box.hh"
+#include "G4Tubs.hh"
 #include "G4ExtrudedSolid.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4SDManager.hh"
@@ -42,8 +43,9 @@ void TPixDetector::CreateGeometry()
   TPixGeometry* geo = TPixGeometry::GetInstance();
 
   G4Colour colourCu = G4Colour::Red();
-  G4Colour colourBox = G4Colour::Grey();
+  //G4Colour colourBox = G4Colour::Grey();
   G4Colour colourTimePix = G4Colour::Blue();
+  G4Colour colourWater = G4Colour::Blue();
   G4Colour colourPCB = G4Colour::Green();
 
   // Create main TPix box
@@ -54,7 +56,6 @@ void TPixDetector::CreateGeometry()
   G4Box* solidBox = new G4Box("TPixBoxSolid",0.5*boxSizeX,0.5*boxSizeY,0.5*boxSizeZ);
   fTPixBoxVolume = new G4LogicalVolume(solidBox,G4Material::GetMaterial("Air"),"TPixBoxLogic",0,0,0);
   fTPixBoxVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fTPixBoxVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
   //fTPixBoxVolume->SetVisAttributes(G4VisAttributes(colourBox));
 
   G4double boxPosX = geo->GetBoxPosX();
@@ -76,7 +77,7 @@ void TPixDetector::CreateGeometry()
   G4Box* solidTPix = new G4Box("TPixSolid",0.5*tpixSizeX,0.5*tpixSizeY,0.5*tpixSizeZ);
   fTPixVolume = new G4LogicalVolume(solidTPix,G4Material::GetMaterial("Air"),"TPixLogic",0,0,0);
   fTPixVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  //fTPixVolume->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  //fTPixVolume->SetVisAttributes(G4VisAttributes(colourBox));
 
   /*
   // Position TPix in MotherVolume
@@ -131,7 +132,6 @@ void TPixDetector::CreateGeometry()
   G4double slabSizeZ = geo->GetCuSlabThick();
   printf("TPix Cu slab size is %.2f x %.2f x %.2f mm3\n",slabSizeX/mm,slabSizeY/mm,slabSizeZ/mm);
   G4Box* solidSlab = new G4Box("TPixCuSlabSolid",0.5*slabSizeX,0.5*slabSizeY,0.5*slabSizeZ);
-  //G4LogicalVolume* slabVolume = new G4LogicalVolume(solidSlab,G4Material::GetMaterial("G4_Cu"),"TPixCuSlabLogic",0,0,0);
   G4LogicalVolume* slabVolume = new G4LogicalVolume(solidSlab,G4Material::GetMaterial("Air"),"TPixCuSlabLogic",0,0,0);
   //slabVolume->SetVisAttributes(G4VisAttributes(colourBox));
   slabVolume->SetVisAttributes(G4VisAttributes::Invisible);
@@ -157,7 +157,7 @@ void TPixDetector::CreateGeometry()
     }
   }
 
-  // Position Cu slab behind TimePix
+  // Position Cu slab fingers behind TimePix
   G4double slabDispX = tpixDispX;
   G4double slabDispY = tpixDispY;
   G4double slabDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*slabSizeZ+1.*um;
@@ -174,6 +174,16 @@ void TPixDetector::CreateGeometry()
   G4ExtrudedSolid* solidShape = new G4ExtrudedSolid("TPixCuShapeSolid",shPoly,0.5*shWidth,G4TwoVector(0.,0.),1.,G4TwoVector(0.,0.),1.);
   G4LogicalVolume* shVolume = new G4LogicalVolume(solidShape,G4Material::GetMaterial("G4_Cu"),"TPixCuShapeLogic",0,0,0);
   shVolume->SetVisAttributes(G4VisAttributes(colourCu));
+
+  // Cu blocks behind readout electronics
+  G4double blockSizeX = geo->GetCuBlockWidth();
+  G4double blockSizeY = geo->GetCuBlockHeight();
+  G4double blockSizeZ = geo->GetCuBlockDepth();
+  printf("TPix Cu block size is %.2f x %.2f x %.2f mm3\n",blockSizeX/mm,blockSizeY/mm,blockSizeZ/mm);
+  G4Box* solidBlock = new G4Box("TPixCuBlockSolid",0.5*blockSizeX,0.5*blockSizeY,0.5*blockSizeZ);
+  G4LogicalVolume* blockVolume = new G4LogicalVolume(solidBlock,G4Material::GetMaterial("G4_Cu"),"TPixCuBlockLogic",0,0,0);
+  blockVolume->SetVisAttributes(G4VisAttributes(colourCu));
+
   G4RotationMatrix* rotUpTPixSh = new G4RotationMatrix;
   rotUpTPixSh->rotateX(90.*deg);
   rotUpTPixSh->rotateY(-90.*deg);
@@ -185,41 +195,19 @@ void TPixDetector::CreateGeometry()
       G4int idx = 10*row+col;
       if (row==0) {
 	G4RotationMatrix* rot = rotUpTPixSh;
-	G4ThreeVector disp = G4ThreeVector(tpixDispX+geo->GetChipPosX(row,col),tpixDispY+0.5*tpixSizeY+shHeight*mm,slabDispZ-0.5*slabSizeZ+shDepth);
+	G4ThreeVector disp = G4ThreeVector(tpixDispX+geo->GetChipPosX(row,col),tpixDispY+0.5*tpixSizeY+shHeight,slabDispZ-0.5*slabSizeZ+shDepth);
 	new G4PVPlacement(rot,disp,shVolume,"TPixCuShape",fTPixBoxVolume,false,idx,true);
+	G4ThreeVector dispB = G4ThreeVector(disp.x()+0.5*shWidth,disp.y()-shHeight+0.5*blockSizeY,disp.z()+0.5*blockSizeZ);
+	new G4PVPlacement(0,dispB,blockVolume,"TPixCuBlock",fTPixBoxVolume,false,idx,true);
       } else {
 	G4RotationMatrix* rot = rotDownTPixSh;
 	G4ThreeVector disp = G4ThreeVector(tpixDispX+geo->GetChipPosX(row,col),tpixDispY-0.5*tpixSizeY-shHeight,slabDispZ-0.5*slabSizeZ+shDepth);
 	new G4PVPlacement(rot,disp,shVolume,"TPixCuShape",fTPixBoxVolume,false,idx,true);
+	G4ThreeVector dispB = G4ThreeVector(disp.x()-0.5*shWidth,disp.y()+shHeight-0.5*blockSizeY,disp.z()+0.5*blockSizeZ);
+	new G4PVPlacement(0,dispB,blockVolume,"TPixCuBlock",fTPixBoxVolume,false,idx,true);
       }
     }
   }
-
-  // Cu bars behind readout electronics
-  G4double barSizeX = tpixSizeX;
-  G4double barSizeY = geo->GetCuBarHeight();
-  G4double barSizeZ = geo->GetCuBarThick();
-  printf("TPix Cu bar size is %.2f x %.2f x %.2f mm3\n",barSizeX/mm,barSizeY/mm,barSizeZ/mm);
-  G4Box* solidBar = new G4Box("TPixCuBarSolid",0.5*barSizeX,0.5*barSizeY,0.5*barSizeZ);
-  G4LogicalVolume* barVolume = new G4LogicalVolume(solidBar,G4Material::GetMaterial("G4_Cu"),"TPixCuBarLogic",0,0,0);
-  barVolume->SetVisAttributes(G4VisAttributes(colourCu));
-
-  // Position Cu bars above and below TimePix
-  G4double barTopDispX = tpixDispX;
-  G4double barTopDispY = tpixDispY+0.5*tpixSizeY+0.5*barSizeY;
-  G4double barTopDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*barSizeZ;
-  G4ThreeVector dispBarTop = G4ThreeVector(barTopDispX,barTopDispY,barTopDispZ);
-  //new G4PVPlacement(0,dispBarTop,barVolume,"TPixCuBarTop",fTPixBoxVolume,false,0,true);
-  printf("TPix Cu Bar Top placed inside main box at (%.1f,%.1f,%.1f) mm\n",
-	 barTopDispX/mm,barTopDispY/mm,barTopDispZ/mm);
-
-  G4double barBotDispX = tpixDispX;
-  G4double barBotDispY = tpixDispY-0.5*tpixSizeY-0.5*barSizeY;
-  G4double barBotDispZ = tpixDispZ+0.5*tpixSizeZ+0.5*barSizeZ;
-  G4ThreeVector dispBarBot = G4ThreeVector(barBotDispX,barBotDispY,barBotDispZ);
-  //new G4PVPlacement(0,dispBarBot,barVolume,"TPixCuBarBottom",fTPixBoxVolume,false,0,true);
-  printf("TPix Cu Bar Bottom placed inside main box at (%.1f,%.1f,%.1f) mm\n",
-	 barBotDispX/mm,barBotDispY/mm,barBotDispZ/mm);
 
   // Cu support frame
   G4double suppSizeX = geo->GetCuSuppWidth();
@@ -228,22 +216,51 @@ void TPixDetector::CreateGeometry()
   printf("TPix Cu support is %.2f x %.2f x %.2f mm3\n",suppSizeX/mm,suppSizeY/mm,suppSizeZ/mm);
   G4Box* solidSupp = new G4Box("TPixCuSuppSolid",0.5*suppSizeX,0.5*suppSizeY,0.5*suppSizeZ);
   G4double holeSizeX = geo->GetCuHoleWidth();
-  G4double holeSizeY = tpixSizeY;
+  G4double holeSizeY = geo->GetCuHoleHeight();
   G4double holeSizeZ = suppSizeZ+10.*um;
   printf("TPix Cu hole is %.2f x %.2f x %.2f mm3\n",holeSizeX/mm,holeSizeY/mm,holeSizeZ/mm);
   G4Box* solidHole = new G4Box("TPixCuHoleSolid",0.5*holeSizeX,0.5*holeSizeY,0.5*holeSizeZ);
-  G4SubtractionSolid* solidFrame = new G4SubtractionSolid("TPixCuFrameSolid",solidSupp,solidHole,0,G4ThreeVector(0.,0.,0.));
+  G4double holeDispX = 0.5*suppSizeX-geo->GetCuHoleDispX()-0.5*holeSizeX;
+  G4double holeDispY = -0.5*suppSizeY+geo->GetCuHoleDispY()+0.5*holeSizeY;
+  G4ThreeVector holeDisp = G4ThreeVector(holeDispX,holeDispY,0.);
+  G4SubtractionSolid* solidFrame = new G4SubtractionSolid("TPixCuFrameSolid",solidSupp,solidHole,0,holeDisp);
   G4LogicalVolume* frameVolume = new G4LogicalVolume(solidFrame,G4Material::GetMaterial("G4_Cu"),"TPixCuFrameLogic",0,0,0);
   frameVolume->SetVisAttributes(G4VisAttributes(colourCu));
 
-  // Position Cu frame around TimePix behind bars
-  G4double frameDispX = tpixDispX;
+  // Add internal pipes with cooling water
+  G4double pipeSizeR = geo->GetWaterPipeRadius();
+  G4double pipeSizeX = geo->GetWaterPipeLength();
+  G4Tubs* solidPipe = new G4Tubs("TPixWaterPipe",0.,pipeSizeR,0.5*pipeSizeX,0.*deg,360.*deg);
+  G4LogicalVolume* pipeVolume = new G4LogicalVolume(solidPipe,G4Material::GetMaterial("Water"),"TPixWaterPipeLogic",0,0,0);
+  pipeVolume->SetVisAttributes(G4VisAttributes(colourWater));
+  // Pipes are directed along X
+  G4RotationMatrix* rotPipe = new G4RotationMatrix;
+  rotPipe->rotateY(90.*deg);
+  G4ThreeVector dispPipeUp = G4ThreeVector(0.,0.5*suppSizeY-geo->GetWaterPipeUpDisp(),0.);
+  G4ThreeVector dispPipeDown = G4ThreeVector(0.,-0.5*suppSizeY+geo->GetWaterPipeDownDisp(),0.);
+  new G4PVPlacement(rotPipe,dispPipeUp,pipeVolume,"TPixWaterPipe",frameVolume,false,0,true);
+  new G4PVPlacement(rotPipe,dispPipeDown,pipeVolume,"TPixWaterPipe",frameVolume,false,0,true);
+
+  // Position Cu frame around TimePix behind bars (mind the X displacement)
+  G4double frameDispX = tpixDispX+0.5*tpixSizeX+geo->GetCuSuppToChipDispX()-0.5*suppSizeX;
   G4double frameDispY = tpixDispY;
-  G4double frameDispZ = tpixDispZ+0.5*tpixSizeZ+barSizeZ+0.5*suppSizeZ;
+  G4double frameDispZ = tpixDispZ+0.5*tpixSizeZ+shDepth+blockSizeZ+0.5*suppSizeZ+10.*um; // Add small displacement to avoid overlaps with blocks
   G4ThreeVector dispFrame = G4ThreeVector(frameDispX,frameDispY,frameDispZ);
-  //new G4PVPlacement(0,dispFrame,frameVolume,"TPixCuFrame",fTPixBoxVolume,false,0,true);
+  new G4PVPlacement(0,dispFrame,frameVolume,"TPixCuFrame",fTPixBoxVolume,false,0,true);
   printf("TPix Cu frame placed inside main box at (%.1f,%.1f,%.1f) mm\n",
-	 frameDispX/mm,frameDispY/mm,frameDispZ/mm);
+  	 frameDispX/mm,frameDispY/mm,frameDispZ/mm);
+
+  // Add small Cu bar on top side of support frame
+  G4double stickSizeX = suppSizeX;
+  G4double stickSizeY = 3.*mm;
+  G4double stickSizeZ = 2.*mm;
+  G4Box* solidStick = new G4Box("TPixCuStickSolid",0.5*stickSizeX,0.5*stickSizeY,0.5*stickSizeZ);
+  G4LogicalVolume* stickVolume = new G4LogicalVolume(solidStick,G4Material::GetMaterial("G4_Cu"),"TPixCuStickLogic",0,0,0);
+  stickVolume->SetVisAttributes(G4VisAttributes(colourCu));
+  G4double stickPosX = frameDispX;
+  G4double stickPosY = frameDispY+0.5*suppSizeY-7.2*mm-0.5*stickSizeY;
+  G4double stickPosZ = frameDispZ-0.5*suppSizeZ-0.5*stickSizeZ;
+  new G4PVPlacement(0,G4ThreeVector(stickPosX,stickPosY,stickPosZ),stickVolume,"TPixCuStick",fTPixBoxVolume,false,0,true);
 
   // PCB bars on top and bottom of TimePix
   G4double pcbSizeX = tpixSizeX;
@@ -259,7 +276,7 @@ void TPixDetector::CreateGeometry()
   G4double pcbTopDispY = tpixDispY+0.5*tpixSizeY+0.5*pcbSizeY;
   G4double pcbTopDispZ = tpixDispZ-0.5*tpixSizeZ-geo->GetPCBBarDispZ()-0.5*pcbSizeZ;
   G4ThreeVector dispPCBTop = G4ThreeVector(pcbTopDispX,pcbTopDispY,pcbTopDispZ);
-  //new G4PVPlacement(0,dispPCBTop,pcbVolume,"TPixPCBBarTop",fTPixBoxVolume,false,0,true);
+  new G4PVPlacement(0,dispPCBTop,pcbVolume,"TPixPCBBarTop",fTPixBoxVolume,false,0,true);
   printf("TPix PCB Bar Top placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 pcbTopDispX/mm,pcbTopDispY/mm,pcbTopDispZ/mm);
 
@@ -267,7 +284,7 @@ void TPixDetector::CreateGeometry()
   G4double pcbBotDispY = tpixDispY-0.5*tpixSizeY-0.5*pcbSizeY;
   G4double pcbBotDispZ = tpixDispZ-0.5*tpixSizeZ-geo->GetPCBBarDispZ()-0.5*pcbSizeZ;
   G4ThreeVector dispPCBBot = G4ThreeVector(pcbBotDispX,pcbBotDispY,pcbBotDispZ);
-  //new G4PVPlacement(0,dispPCBBot,pcbVolume,"TPixPCBBarBottom",fTPixBoxVolume,false,0,true);
+  new G4PVPlacement(0,dispPCBBot,pcbVolume,"TPixPCBBarBottom",fTPixBoxVolume,false,0,true);
   printf("TPix PCB Bar Bottom placed inside main box at (%.1f,%.1f,%.1f) mm\n",
 	 pcbBotDispX/mm,pcbBotDispY/mm,pcbBotDispZ/mm);
 

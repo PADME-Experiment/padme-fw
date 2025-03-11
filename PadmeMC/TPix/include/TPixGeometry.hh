@@ -94,13 +94,23 @@ public:
   G4double GetCuShapeHeight() { return fCuShapeHeight; }
   G4double GetCuShapeDepth() { return fCuShapeDepth; }
 
-  G4double GetCuBarThick() { return fCuBarThick; }
-  G4double GetCuBarHeight() { return fCuBarHeight; }
+  G4double GetCuBlockWidth() { return fCuBlockWidth; }
+  G4double GetCuBlockHeight() { return fCuBlockHeight; }
+  G4double GetCuBlockDepth() { return fCuBlockDepth; }
 
   G4double GetCuSuppThick() { return fCuSuppThick; }
   G4double GetCuSuppHeight() { return fCuSuppHeight; }
   G4double GetCuSuppWidth() { return fCuSuppWidth; }
+  G4double GetCuSuppToChipDispX() { return fCuSuppToChipDispX; }
   G4double GetCuHoleWidth() { return fCuHoleWidth; }
+  G4double GetCuHoleHeight() { return fCuHoleHeight; }
+  G4double GetCuHoleDispX() { return fCuHoleDispX; }
+  G4double GetCuHoleDispY() { return fCuHoleDispY; }
+
+  G4double GetWaterPipeRadius() { return fWaterPipeRadius;}
+  G4double GetWaterPipeLength() { return fWaterPipeLength; }
+  G4double GetWaterPipeUpDisp() { return fWaterPipeUpDisp; }
+  G4double GetWaterPipeDownDisp() { return fWaterPipeDownDisp; }
 
   G4double GetPCBBarThick() { return fPCBBarThick; }
   G4double GetPCBBarHeight() { return fPCBBarHeight; }
@@ -180,15 +190,26 @@ private:
   G4double fCuShapeHeight;
   G4double fCuShapeDepth;
 
-  // Top and bottom Cu bars behind the readout boards (X dimension = TimePix
-  G4double fCuBarThick;
-  G4double fCuBarHeight;
+  // Top and bottom Cu bars behind the readout boards
+  G4double fCuBlockWidth;
+  G4double fCuBlockHeight;
+  G4double fCuBlockDepth;
 
   // Cu support frame
   G4double fCuSuppThick;
   G4double fCuSuppWidth;
   G4double fCuSuppHeight;
+  G4double fCuSuppToChipDispX;
   G4double fCuHoleWidth;
+  G4double fCuHoleHeight;
+  G4double fCuHoleDispX;
+  G4double fCuHoleDispY;
+
+  // Water pipes
+  G4double fWaterPipeRadius;
+  G4double fWaterPipeLength;
+  G4double fWaterPipeUpDisp;
+  G4double fWaterPipeDownDisp;
 
   // PCB bars
   G4double fPCBBarThick;

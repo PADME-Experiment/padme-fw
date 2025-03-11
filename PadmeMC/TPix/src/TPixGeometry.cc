@@ -46,9 +46,9 @@ TPixGeometry::TPixGeometry()
   fTPixDispY = 0.*mm;     // i.e. centered on the vertical
   fTPixDispZ = (-135./2.+10.+fChipSizeZ/2.)*mm;  // - Half depth of box + longitudinal displacement + half TPix thickness (see technical design)
 
-  // Thickness of Cu slab behind TimePix (to be measured)
+  // Thickness of Cu slab behind TimePix
   fCuSlabThick = 1.*mm;
-  fCuSlabFingerWidth = 2.*mm; // Rough measure from CAD (not too bad estimate)
+  fCuSlabFingerWidth = 2.*mm;
 
   // Chip Cu support structure (above and below chips)
   fCuShapePolygon = { {0.0*mm,0.0*mm}, {0.0*mm,7.3*mm}, {17.0*mm,7.3*mm}, {17.0*mm,5.3*mm}, {21.0*mm,5.3*mm}, {21.0*mm,8.5*mm}, {23.0*mm,8.5*mm}, {23.0*mm,0.0*mm} };
@@ -56,15 +56,26 @@ TPixGeometry::TPixGeometry()
   fCuShapeHeight = 23.0*mm;
   fCuShapeDepth = 8.5*mm;
 
-  // Dimension of Cu bars behind TimePix readout electronics (to be measured)
-  fCuBarThick = 12.*mm;
-  fCuBarHeight = 24.6*mm;
+  // Dimension of Cu bars behind TimePix readout electronics
+  fCuBlockWidth = 14.*mm;
+  fCuBlockHeight = 15.5*mm;
+  fCuBlockDepth = 5.*mm;
 
-  // Dimensions of Cu support frame (to be measured)
-  fCuSuppThick = 12.*mm;
-  fCuSuppWidth = 130.*mm;
-  fCuSuppHeight = 78.*mm;
-  fCuHoleWidth = 114.*mm;
+  // Dimensions of Cu support frame
+  fCuSuppThick = 10.*mm;
+  fCuSuppWidth = 129.*mm;
+  fCuSuppHeight = 80.*mm;
+  fCuSuppToChipDispX = 26.32*mm; // Cu support is displaced in X wrt TimePix chips
+  fCuHoleWidth = 94.*mm;
+  fCuHoleHeight = 29.*mm;
+  fCuHoleDispX = 25.*mm;
+  fCuHoleDispY = 25.5*mm;
+
+  // Dimensions and position of water pipes inside Cu support frame
+  fWaterPipeRadius = 2.1*mm;
+  fWaterPipeLength = fCuSuppWidth;
+  fWaterPipeUpDisp = 20.5*mm;
+  fWaterPipeDownDisp = 20.5*mm;
 
   // Dimensions and displacement of PCB bars
   fPCBBarThick = 2.*mm;

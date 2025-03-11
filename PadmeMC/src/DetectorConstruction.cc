@@ -598,6 +598,11 @@ void DetectorConstruction::DefineMaterials()
   Air->AddElement(G4Element::GetElement("N"),70.*perCent);
   Air->AddElement(G4Element::GetElement("O"),30.*perCent);
 
+  // Water (TPix, cooling pipes)
+  G4Material* Water = new G4Material("Water",1.0*g/cm3,2);
+  Water->AddElement(G4Element::GetElement("H"),2);
+  Water->AddElement(G4Element::GetElement("O"),1);
+
   // Diamond (Target)
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
   Diamond->AddElement(G4Element::GetElement("C"),1);

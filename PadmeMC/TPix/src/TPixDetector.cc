@@ -65,6 +65,7 @@ void TPixDetector::CreateGeometry()
   G4double boxRotY = geo->GetTPixRotY();
   G4RotationMatrix* rotBox = new G4RotationMatrix;
   rotBox->rotateY(boxRotY);
+
   new G4PVPlacement(rotBox,posBox,fTPixBoxVolume,"TPixBox",fMotherVolume,false,0,true);
   printf("TPix Box placed at (%.1f,%.1f,%.1f) mm with a rotation of %.3f rad\n",
 	 boxPosX/mm,boxPosY/mm,boxPosZ/mm,boxRotY/rad);

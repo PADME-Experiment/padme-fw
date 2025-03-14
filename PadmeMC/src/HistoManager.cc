@@ -113,17 +113,30 @@ void HistoManager::book()
   if (!histo2[9]) G4cout << "\n can't create histo 19" << G4endl;
  
   // Additional histos for TimePix
-  double TPixXmin= -14.1/2;
-  double TPixXmax= TPixXmin+14.1*6;
+  //  double TPixXmin= -14.1/2 - 35.25;
+  double TPixXmin= -14.1*6/2;
+  double TPixXmax= TPixXmin+14.1*6; //MR and EDM 02/25 align time pix to 0,0
   double TPiXBins = 14.1*6/0.055;
 
-  double TPixYmin=-14.1/2;
+  double TPixYmin=-14.1;
   double TPixYmax=TPixYmin+14.1*2;
   double TPiYBins = 14.1*2/0.055;
 
   double MinE= 150.;
   double MaxE= 450.;
   int BinE= (int)(MaxE-MinE)*2;
+
+  // h40 Lead Glass study
+  histo[40] = new TH1D("h40","LG energy",1000,0.,1.E6);
+  if (!histo[40]) G4cout << "\n can't create histo 40" << G4endl; 
+
+  histo[42] = new TH1D("h42","LeadGlass X coord",240,-60.,60.);
+  if (!histo[42]) G4cout << "\n can't create histo 42" << G4endl; 
+  histo[43] = new TH1D("h43","LeadGlass Y coord",240,-60.,60.);
+  if (!histo[43]) G4cout << "\n can't create histo 43" << G4endl; 
+  histo[44] = new TH1D("h44","LeadGlass Z coord",360,-160.,200.);
+  if (!histo[44]) G4cout << "\n can't create histo 44" << G4endl; 
+ 
 
   // h50 Series TimePix study
   histo[50] = new TH1D("h50","Tpix energy",500,0.,1.);
@@ -416,25 +429,12 @@ void HistoManager::book()
   histo[94] = new TH1D("h94","MylarW Beam energy ",BinE,MinE,MaxE);
   if (!histo[94]) G4cout << "\n can't create histo 94" << G4endl; 
 
-  
   histo2[95] = new TH2D("h95","MylarW beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
   if (!histo2[95]) G4cout << "\n can't create histo 95" << G4endl;
   histo2[96] = new TH2D("h96","MylarW XvsE",TarXBins,TarXmin,TarXmax,200,300.,500.);
   if (!histo2[96]) G4cout << "\n can't create histo 96" << G4endl;
-
   histo2[97] = new TH2D("h97","MylarW ThetavsE",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[97]) G4cout << "\n can't create histo 97" << G4endl;
-
-
-
-
-
-
-
-
-
-
-
 
   //Hystogram of generated variables 30-39
   histo2[30] = new TH2D("h30", "Energy vs Theta Gen ",275,0.,550.,60,0.,12.);

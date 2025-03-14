@@ -39,6 +39,7 @@
 #include "ECalGeometry.hh"
 #include "SACGeometry.hh"
 #include "TPixGeometry.hh"
+#include "LeadGlassGeometry.hh"
 
 //PRINTOUT VERTICES#include "MCTruthManager.hh"
 //PRINTOUT VERTICES#include "MCTruthVertex.hh"
@@ -93,6 +94,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
 
   // Get current run and event numbers
   ETotCal  = 0;
+  ETotLG   = 0;
   ECalHitT = 0;
   CalEvtT  = 0;
   ClPosX   = 0;
@@ -215,7 +217,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
       AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "LeadGlassCollection") {        //M. Raggi 30/08/2019
-      //      AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
+      AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
 //PRINTOUT VERTICES  MCTruthManager* mct = MCTruthManager::GetInstance();
@@ -768,6 +770,35 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
   //  XBeW/=NBeW;
   //  YBeW/=NBeW;
 }
+// Reading info from Beam Flags M. Raggi 29/08/2019
+void EventAction::AddLeadGlassHits(LeadGlassHitsCollection* hcont)  //BeW readout module
+{
+  G4int nHits = hcont->entries();
+  G4double X,Y,Z,TrEne;
+  for (G4int h=0; h<nHits; h++) {    
+    LeadGlassHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      //G4int index = hit->GetCryNb();
+      //      G4int index = hit->GetChannelId();
+      ETotLG += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+      X = hit->GetLocalPosX();
+      Y = hit->GetLocalPosY();
+      Z = hit->GetLocalPosZ();
+      //      TrEne = hit->GetTrackEnergy();   // track energy
+ 
+      if(Z>182.){
+	std::cout<<"ELG "<<ETotLG<<" Z "<<Z<<std::endl;
+	fHistoManager->FillHisto(42,X);  
+	fHistoManager->FillHisto(43,Y);  
+	fHistoManager->FillHisto(44,Z); 
+      }
+    } 
+  }
+  fHistoManager->FillHisto(40,ETotLG);     // All hit energies
+  //  std::cout<<"ELG "<<ETotLG<<std::endl;
+}
+    
+
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
@@ -1065,8 +1096,8 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
       G4int iRow = hChID/10;
       G4int iCol = hChID%10;
       
-      hX+=iCol*14.10;
-      hY+=iRow*14.10;
+      hX+=iCol*14.10-35.25;
+      hY+=iRow*14.10-7.;
 
       fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
       fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos
@@ -1078,9 +1109,7 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
       fHistoManager->FillHisto2(56,hX,hTrE,1.); //X vs Track energy
       //      G4cout<<"CC Nhits "<<nHits<<" time  "<<hTime<<" edep "<<hE<<" X "<<hX<<" Y "<<hY<<G4endl;
     }
-  }
- 
- 
+  } 
 }
 
 void EventAction::AddETagHits(ETagHitsCollection* hcont)

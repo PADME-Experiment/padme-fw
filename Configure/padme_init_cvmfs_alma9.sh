@@ -8,12 +8,11 @@ PROBLEMS=0
 #ROOT_SETUP_SCRIPT=/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/5.34.36/x86_64-centos7-gcc49-opt/root/bin/thisroot.sh
 #GEANT4_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/10.3.ref01/x86_64-slc6-gcc49-opt/bin/geant4.sh
 #GEANT4MAKE_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/10.3.ref01/x86_64-slc6-gcc49-opt/share/Geant4-10.3.0/geant4make/geant4make.sh
+
 GCC_SETUP_SCRIPT=/cvmfs/sft.cern.ch/lcg/contrib/gcc/11/x86_64-el9-gcc11-opt/setup.sh
 ROOT_SETUP_SCRIPT=/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.34.04/x86_64-almalinux9.5-gcc115-opt/bin/thisroot.sh
-#GEANT4_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/11.3.ref01/x86_64-el9-gcc11-optdeb/bin/geant4.sh
-#GEANT4MAKE_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/11.3.ref01/x86_64-el9-gcc11-optdeb/share/Geant4/geant4make/geant4make.sh
-GEANT4_SETUP_SCRIPT=/cvmfs/sft.cern.ch/lcg/releases/LCG_107a/Geant4/11.3.0/x86_64-el9-gcc14-opt/bin/geant4.sh
-GEANT4MAKE_SETUP_SCRIPT=/cvmfs/sft.cern.ch/lcg/releases/LCG_107a/Geant4/11.3.0/x86_64-el9-gcc14-opt/share/Geant4/geant4make/geant4make.sh
+GEANT4_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/11.3.ref01/x86_64-el9-gcc11-optdeb/bin/geant4.sh
+GEANT4MAKE_SETUP_SCRIPT=/cvmfs/geant4.cern.ch/geant4/11.3.ref01/x86_64-el9-gcc11-optdeb/share/Geant4/geant4make/geant4make.sh
 
 # Check if CVMFS is available with all needed software packages
 if [ ! -d /cvmfs ]; then

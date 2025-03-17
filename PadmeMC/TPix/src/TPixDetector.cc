@@ -55,7 +55,7 @@ void TPixDetector::CreateGeometry()
   printf("TPix Box size is %.2f x %.2f x %.2f mm3\n",boxSizeX/mm,boxSizeY/mm,boxSizeZ/mm);
   G4Box* solidBox = new G4Box("TPixBoxSolid",0.5*boxSizeX,0.5*boxSizeY,0.5*boxSizeZ);
   fTPixBoxVolume = new G4LogicalVolume(solidBox,G4Material::GetMaterial("Air"),"TPixBoxLogic",0,0,0);
-  fTPixVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
+  fTPixBoxVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
   //fTPixBoxVolume->SetVisAttributes(G4VisAttributes(colourBox));
 
   G4double boxPosX = geo->GetBoxPosX();
@@ -135,7 +135,7 @@ void TPixDetector::CreateGeometry()
   G4Box* solidSlab = new G4Box("TPixCuSlabSolid",0.5*slabSizeX,0.5*slabSizeY,0.5*slabSizeZ);
   G4LogicalVolume* slabVolume = new G4LogicalVolume(solidSlab,G4Material::GetMaterial("Air"),"TPixCuSlabLogic",0,0,0);
   //slabVolume->SetVisAttributes(G4VisAttributes(colourBox));
-  slabVolume->SetVisAttributes(G4VisAttributes::Invisible);
+  slabVolume->SetVisAttributes(G4VisAttributes::GetInvisible());
 
   // Position Cu fingers inside slab
   G4double fingerWidth = geo->GetCuSlabFingerWidth();

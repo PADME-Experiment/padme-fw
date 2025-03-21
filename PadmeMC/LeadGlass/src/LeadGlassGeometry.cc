@@ -24,7 +24,7 @@ LeadGlassGeometry::LeadGlassGeometry()
 
   fBlockId = 1; // OPAL block type 8
 
-  fLeadGlassFrontFacePosZ = 3100.*mm; // Position of block front face
+  fLeadGlassFrontFacePosZ = 3200.*mm; // Position of block front face // EDM moved 10 cm away from Timepix
 
   fLeadGlassDigitizerName = "LeadGlassDigitizer";
   fLeadGlassSensitiveDetectorName = "LeadGlassSD";

@@ -127,6 +127,11 @@ public:
   G4double GetTPixDistanceToCorner() { return fTPixDistanceToCorner; }
   void SetTPixDistanceToCorner(G4double);
 
+  G4double GetTPixYDisplacement() { return fTPixDistanceToCorner; }
+  void SetTPixYDisplacement(G4double);
+
+
+
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetTPixChamberWallCorner(G4ThreeVector);
 
@@ -221,6 +226,7 @@ private:
 
   // Distance from the corner on the back face of the vacuum chamber
   G4double fTPixDistanceToCorner;
+  G4double fTPixYDisplacement;
 
   // Coordinates of the corner on the back face of the vacuum chamber
   G4ThreeVector fTPixChamberWallCorner;

@@ -93,6 +93,7 @@ TPixGeometry::TPixGeometry()
   fTPixDistanceToCorner = 400.0*mm-102.70*mm; // Selected by looking at photos: need check
   //fTPixDistanceToCorner = 400.0*mm- 55.70*mm;
   //fTPixDistanceToCorner = 400.0*mm-145.68*mm;
+  fTPixYDisplacement = 0*mm; // default value for y dispacement
 
   // Distance between back surface of the diagonal wall of the vacuum chamber and front surface of the TimePix
   fTPixSupportThickness = 62.5*mm; // 1.5mm(extra)+35mm(steel cap)+16mm(Al flange)+10mm(TimePix box thickness)
@@ -156,6 +157,15 @@ void TPixGeometry::SetTPixDistanceToCorner(G4double d)
   UpdateDerivedMeasures();
 }
 
+void TPixGeometry::SetTPixYDisplacement(G4double d)
+{
+  printf("TPixGeometry - Setting DistanceToCorner to %5.1f mm\n",d/mm);
+  fTPixYDisplacement = d;
+  UpdateDerivedMeasures();
+}
+
+
+
 void TPixGeometry::SetTPixChamberWallCorner(G4ThreeVector c)
 {
   printf("TPixGeometry - Setting ChamberWallCorner coordinates to (%.1f,%.1f,%.1f) mm\n",c.x()/mm,c.y()/mm,c.z()/mm);
@@ -194,7 +204,10 @@ void TPixGeometry::UpdateDerivedMeasures()
   if (fDetectorSetup >= 40) {
     fTPixRotY = 0.;
     fTPixPosX = 0.;
-    fTPixPosY = 0.;
+    //fTPixPosY = 0.;
+
+    fTPixPosY = fTPixYDisplacement;
+    
     fTPixPosZ = 3100.*mm-50.*um-fBoxSizeZ+10.*mm+0.5*fTPixSizeZ; // Back of TPix box just in front of LeadGlass block
     // Displace box according to desired position of TimePix
     fBoxPosX = fTPixPosX-fTPixDispX;

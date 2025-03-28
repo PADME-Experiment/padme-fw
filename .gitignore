@@ -21,3 +21,58 @@ tmp/
 lib/
 bin/
 *.dSYM
+
+# Ignore system files that shouldn't be committed
+.DS_Store  # macOS Finder metadata file
+Thumbs.db  # Windows thumbnail cache
+
+# Ignore compiled files and build artifacts
+*.o  # Object files
+*.a  # Static libraries
+*.so  # Shared libraries
+*.dll  # Windows dynamic libraries
+*.exe  # Windows executables
+*.out  # Linux/macOS executables
+
+# Ignore Python-related files
+__pycache__/  # Bytecode cache
+*.pyc  # Compiled Python files
+*.pyo  # Compiled Python files
+*.pyd  # Windows compiled Python extensions
+
+# Ignore Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+*.swp  # Vim swap files
+*.swo  # Vim swap files
+
+# Ignore version control directories (e.g., for SVN or Mercurial)
+.svn/
+.hg/
+
+# Ignore environment and configuration files
+.env  # Environment variables file
+.env.local  # Local environment variables
+.vscode/  # VS Code settings
+.idea/  # JetBrains IDE settings
+
+# Ignore database files
+*.sqlite
+*.db
+
+# Ignore specific project-related files (customize as needed)
+build/
+dist/
+coverage/
+*.bak  # Backup files
+
+# Ignore JSON and VSCode-related files
+*.jsonc  # JSON with comments (VSCode settings, etc.)
+*.code-workspace  # VSCode workspace settings
+settings.json  # VSCode user settings
+extensions.json  # VSCode extensions settings

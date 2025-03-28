@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 
 #define NTUPLE_N_BOARDS 1
-#define NTUPLE_N_CHANNELS 2
+#define NTUPLE_N_CHANNELS 1
 #define VPP 1.
 
 const int NPed = 100;
@@ -64,9 +64,8 @@ struct Eve{
   Double_t NTCFTime[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTTFit[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTChi2[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
-  //Double_t Waves[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][1024];
-  //Double_t SampleTime[1024];
-  
+  Double_t Waves[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][1024];
+  Double_t SampleTime[1024];
   Int_t NTTrigMask;
 };
 
@@ -74,8 +73,7 @@ void go_ahead(){
   go_ahead_flag = 1;
 }
 
-
-int fillTGraph(TGraphErrors *graph, int i,  double x, double y, double dx, double dy) {
+int fillTGraph(TGraphErrors *graph, int i, double x, double y, double dx, double dy) {
   graph->SetPoint(i, x, y);
   int n = graph->GetN();
   graph->SetPointError(n-1, dx, dy);
@@ -240,7 +238,7 @@ int main(int argc, char* argv[]) {
 
   // Create ntuple -- maybe not needed in this case?
   Eve Event; 
-  
+    
   TTree* tree = new TTree("NTU","Event3");
   tree->Branch("Nevent",&(Event.NTNevent),"Nevent/I");
   tree->Branch("QCh",&(Event.NTQCh),Form("QCh[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
@@ -252,10 +250,9 @@ int main(int argc, char* argv[]) {
   tree->Branch("CFTime",&(Event.NTCFTime),Form("CFTime[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("TFit",&(Event.NTTFit),Form("TFit[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("Chi2",&(Event.NTChi2),Form("Chi2[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  // tree->Branch("Time",&(Event.SampleTime),Form("Time[%d]/D", 1024));
-
+  tree->Branch("Waves",&(Event.Waves), Form("Waves[%d][%d][1024]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
+  tree->Branch("Time",&(Event.SampleTime),Form("Time[%d]/D", 1024));
   tree->Branch("TrigMask",&(Event.NTTrigMask),Form("TrigMask/I"));
-  //tree->Branch("Waves",&(Event.Waves), Form("Waves[%d][%d][1024]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   
   // Create output file for histograms
   TFile* histoFile = new TFile(outputFileName,"RECREATE");
@@ -280,7 +277,7 @@ int main(int argc, char* argv[]) {
 
   // Loop over the events
   for(Int_t iev=0; iev<runNEntries; iev++){
-    double toss = gRandom->Uniform(0, runNEntries/100);
+    double toss = 1; // gRandom->Uniform(0, runNEntries/100);
     Bool_t Saturated = false;
     
     // Read event info
@@ -303,9 +300,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Get event trigger mask and select cosmics events
-    //UInt_t trigMask = rawEv->GetEventTrigMask();
-    //if ( !(trigMask & 0x01) ) continue; //da rimettere
-    //Event.NTTrigMask= trigMask;
+    UInt_t trigMask = rawEv->GetEventTrigMask();
+    if ( !(trigMask & 0x01) ) continue; //da rimettere
+    Event.NTTrigMask= trigMask;
     
     // Loop over boards, ORA NON SERVE
     for(UChar_t brd = 0; brd<rawEv->GetNADCBoards(); brd++){
@@ -318,10 +315,11 @@ int main(int argc, char* argv[]) {
 
       TADCBoard* adcB = rawEv->ADCBoard(brd);
       UChar_t nTrg = adcB->GetNADCTriggers();
-      UChar_t nChn = adcB->GetNADCChannels();
+      // UChar_t nChn = adcB->GetNADCChannels();
+      UChar_t nChn = adcB->GetNADCChannels() - 1; //hardcoded perché c'è un solo channel acquisito!
 
       // Analyse the signals
-      if (brdID == 0 || brdID == 1) { //to be done not hardcoded
+      if (brdID == 0) { //to be done not hardcoded
 
         // Loop over the channels
         for(UChar_t chan=0; chan<nChn; chan++){
@@ -386,9 +384,9 @@ int main(int argc, char* argv[]) {
             Sample[s] = (Double_t)ADCChn->GetSample(s);          
             
             if(brdID == 0 && chan == 0){ //eventuali segnali negativi
-              AbsRecoSample[s] = VPP*(PedTemp-Sample[s])/4096.*1000.;//Signal in mV
+              AbsRecoSample[s] = VPP*(PedTemp-Sample[s])/4096.*1000.; //Signal in mV
             } else{
-              AbsRecoSample[s] = VPP*(Sample[s]-PedTemp)/4096.*1000.;//Signal in mV
+              AbsRecoSample[s] = VPP*(Sample[s]-PedTemp)/4096.*1000.; //Signal in mV
             }
 
             //AbsRecoSample[s] = VPP*(TMath::Abs(Sample[s]-PedTemp))/4096.*1000.; //Signal in mV
@@ -402,11 +400,14 @@ int main(int argc, char* argv[]) {
           } // end of loop on samples
 
           //Check saturation HERE
-          if(VMax>FEEThre) Saturated = true;        
-        
+          if(VMax>FEEThre) Saturated = true;    // WARNING : SATURATION WON'T WORK!!
+          // saturazione: devi guardare il counts: 0 counts-->saturato
+          // in pratica se nADCcounts<10 allora SATURATION!!   
 
           //Compute CHARGES
-          Int_t qStart = TMax-20/1.;  //PROVA 2.5GS
+          //check time integration start-stop!
+          // negli header dei rawdata ci sono nsample e samling rate: sono dei bit (numeri salvati) facilmente accessibili con una funzioncina
+          Int_t qStart = TMax-20/1.;  // PROVA 2.5GS
           Int_t qStop = TMax+50/1.;   //it will be needed a different window for tagger and SiPMs
 
           for(UShort_t t=0; t<NAvg; t++){
@@ -419,13 +420,13 @@ int main(int argc, char* argv[]) {
           if(brdID == 0 && chan == 0){
             ChargeCh1 = Charge;
             hCh1Charge->Fill(Charge);
-            grCharge.AddPoint(grCharge.GetN(),Charge);
+            grCharge.SetPoint(grCharge.GetN(),grCharge.GetN(),Charge);
           }
 
           Int_t idx = brdID;
 
           //CF time evaluation through Spline Intertpolation
-          if(1){ // before  5
+          // if(1){ // before  5
             TSpline5 waveSp = TSpline5("wsp", &WaveGraph); 
             auto waveSpFun = [&waveSp](double *x, double *){ return waveSp.Eval(x[0]); };
             TF1 waveFitFun = TF1("fitf", waveSpFun ,(TMax-tStart) , (TMax+tStop), 0); 
@@ -463,12 +464,12 @@ int main(int argc, char* argv[]) {
             
             // for(UShort_t t=0;t<1024;t++){
             //   if(t<NAvg){
-            //   Event.Waves[idx][ch][t] = AbsSamRec[t];
-            //   Event.SampleTime[t]=t*digiTime;
+            //     Event.Waves[idx][chan][t] = AbsRecoSample[t];
+            //     Event.SampleTime[t]=t*digiTime;
             //   }else{
-            //   Event.Waves[idx][ch][t] = 0.;
+            //     Event.Waves[idx][chan][t] = 0.;
             //   }
-            //   }
+            // }
 
             // for(UShort_t s=0;s<NAvg;s++){
             //       Sam[s] = (Double_t) chn->GetSample(s);          
@@ -486,30 +487,29 @@ int main(int argc, char* argv[]) {
             // } // end of loop on samples
 
             //Saves some waveforms for diagnostics
-            if (toss < 1) { //toss < 1 &&
+            std::cout << "writing the fucking wf!!" << std::endl;
 
-              histoFile->cd();
-              TCanvas *cc = new TCanvas(Form("e%d_b%d_c%d", iev,brd,chan)); cc->cd(); 
+            histoFile->cd();
+            // TCanvas *cc = new TCanvas(Form("e%d_b%d_c%d", iev,brd,chan)); cc->cd(); 
 
-              WaveGraph.SetLineWidth(0); WaveGraph.SetMarkerStyle(20); WaveGraph.SetMarkerSize(.2); WaveGraph.SetMarkerColor(kBlue); WaveGraph.Draw(); 
-              waveFitFun.SetLineColor(kTeal); waveFitFun.Draw("same");
-              waveSp.SetLineColor(kBlack); waveSp.Draw("same");
-              TMarker tp = TMarker(CFTimeTmp, waveSp.Eval(CFTimeTmp), 2); tp.SetMarkerSize(3); tp.SetMarkerColor(kRed); tp.Draw("same"); 
-              TLine lqstart = TLine(qStart, 0, qStart, VMax );  lqstart.SetLineColor(kBlue); lqstart.Draw("same"); 
-              TLine lqstop = TLine(qStop,0, qStop, VMax);  lqstop.SetLineColor(kBlue); lqstop.Draw("same");
-              TLine ltstart = TLine((TMax-tStart), 0, (TMax-tStart), VMax );  ltstart.SetLineColor(kGreen+3); ltstart.Draw("same"); 
-              TLine ltstop = TLine((TMax+tStop),0, (TMax+tStop), VMax);  ltstop.SetLineColor(kGreen+3); ltstop.Draw("same");
+            WaveGraph.SetLineWidth(1); WaveGraph.SetMarkerStyle(20); WaveGraph.SetMarkerSize(.2); WaveGraph.SetMarkerColor(kBlue); WaveGraph.Draw(); 
+            // waveFitFun.SetLineColor(kTeal); waveFitFun.Draw("same");
+            // waveSp.SetLineColor(kBlack); waveSp.Draw("same");
+            // TMarker tp = TMarker(CFTimeTmp, waveSp.Eval(CFTimeTmp), 2); tp.SetMarkerSize(3); tp.SetMarkerColor(kRed); tp.Draw("same"); 
+            // TLine lqstart = TLine(qStart, 0, qStart, VMax );  lqstart.SetLineColor(kBlue); lqstart.Draw("same"); 
+            // TLine lqstop = TLine(qStop,0, qStop, VMax);  lqstop.SetLineColor(kBlue); lqstop.Draw("same");
+            // TLine ltstart = TLine((TMax-tStart), 0, (TMax-tStart), VMax );  ltstart.SetLineColor(kGreen+3); ltstart.Draw("same"); 
+            // TLine ltstop = TLine((TMax+tStop),0, (TMax+tStop), VMax);  ltstop.SetLineColor(kGreen+3); ltstop.Draw("same");
 
-              TMarker tMax = TMarker(TMax, WaveGraph.Eval(TMax), 2); tMax.SetMarkerSize(3); tMax.SetMarkerColor(kGreen+3); tMax.Draw("same");
-              TLine PedEnd=  TLine(NPed, 0, NPed, VMax);  PedEnd.SetLineColor(kGreen); PedEnd.Draw("same"); 
-              TLine t0 = TLine(baseFrom,-5, baseFrom, VMax/5);  t0.SetLineColor(kPink); t0.Draw("same");
-              TLine t1 = TLine(baseTo, -5, baseTo, VMax/5);  t1.SetLineColor(kPink); t1.Draw("same");
-            
-              //cc->Draw();
-              //cc->Write(); 
-              histoFile->cd();
-            }
-          } // if su rms1000  
+            // TMarker tMax = TMarker(TMax, WaveGraph.Eval(TMax), 2); tMax.SetMarkerSize(3); tMax.SetMarkerColor(kGreen+3); tMax.Draw("same");
+            // TLine PedEnd=  TLine(NPed, 0, NPed, VMax);  PedEnd.SetLineColor(kGreen); PedEnd.Draw("same"); 
+            // TLine t0 = TLine(baseFrom,-5, baseFrom, VMax/5);  t0.SetLineColor(kPink); t0.Draw("same");
+            // TLine t1 = TLine(baseTo, -5, baseTo, VMax/5);  t1.SetLineColor(kPink); t1.Draw("same");
+          
+            // cc->Draw();
+            WaveGraph.Write(); 
+            // histoFile->cd();
+          // } // if su rms1000  
         } // end loop on channels
       
 
@@ -751,7 +751,7 @@ int main(int argc, char* argv[]) {
   //cQ->Write();
   //cQ->SaveAs(Form("%s_hCh1Charge.png",baseName.Data()));
 
-  TCanvas* cgrQ = new TCanvas("cgrQ"); cgrQ->cd();
+  // TCanvas* cgrQ = new TCanvas("cgrQ"); cgrQ->cd();
   grCharge.SetTitle(baseName.Data());
   grCharge.SetMarkerStyle(6); grCharge.SetMarkerSize(.4); grCharge.SetMarkerColor(kBlue+2); grCharge.Draw("AP");
   grCharge.Write("grCharge");

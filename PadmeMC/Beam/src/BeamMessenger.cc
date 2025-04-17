@@ -78,7 +78,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYCmd->SetGuidance("Set center of beam Y coordinate at t=0.");
   fSetBeamCenterPosYCmd->SetParameterName("Y",false);
   fSetBeamCenterPosYCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosYCmd->SetRange("Y >= -20. && Y <= 20.");
+  fSetBeamCenterPosYCmd->SetRange("Y >= -90. && Y <= 90."); //EDM--> changed for LG Y scan
   fSetBeamCenterPosYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosZCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_z",this);
@@ -100,7 +100,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosXSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosXSpreadCmd->SetParameterName("XS",false);
   fSetBeamCenterPosXSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 10.");
+  fSetBeamCenterPosXSpreadCmd->SetRange("XS >= 0. && XS <= 20.");
   fSetBeamCenterPosXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamCenterPosYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/position_y_spread",this);
@@ -108,7 +108,7 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamCenterPosYSpreadCmd->SetGuidance("N.B. spread is on plane perpendicular to beam direction.");
   fSetBeamCenterPosYSpreadCmd->SetParameterName("YS",false);
   fSetBeamCenterPosYSpreadCmd->SetDefaultUnit("mm");
-  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 10.");
+  fSetBeamCenterPosYSpreadCmd->SetRange("YS >= 0. && YS <= 20.");
   fSetBeamCenterPosYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBeamMomentumCmd = new G4UIcmdWithADoubleAndUnit("/beam/momentum",this);
@@ -156,6 +156,51 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamEmittanceYCmd->SetRange("EY >= 0. && EY <= 1000.");
   fSetBeamEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  // beam spot treatment
+
+  fEnableBeamSpotCmd = new G4UIcmdWithABool("/beam/beamspot_on",this);
+  fEnableBeamSpotCmd->SetGuidance("Enable (true) or disable (false) spread of beam direction using input spot-spread values at given Z values. Overrides emittance treatment if both are set.");
+  fEnableBeamSpotCmd->SetParameterName("EBS",true);
+  fEnableBeamSpotCmd->SetDefaultValue(false);
+  fEnableBeamSpotCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotXCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_x",this);
+  fSetBeamSpotXCmd->SetGuidance("Set mean of gaussian of beam spot in X.");
+  fSetBeamSpotXCmd->SetParameterName("BSX",false);
+  fSetBeamSpotXCmd->SetDefaultUnit("mm");
+  fSetBeamSpotXCmd->SetRange("BSX >= 0. && BSX <= 200.");
+  fSetBeamSpotXCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotYCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_y",this);
+  fSetBeamSpotYCmd->SetGuidance("Set mean of gaussian of beam spot in Y.");
+  fSetBeamSpotYCmd->SetParameterName("BSY",false);
+  fSetBeamSpotYCmd->SetDefaultUnit("mm");
+  fSetBeamSpotYCmd->SetRange("BSY >= 0. && BSY <= 200.");
+  fSetBeamSpotYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotZCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_z",this);
+  fSetBeamSpotZCmd->SetGuidance("Set Z position used for the gaussian beam spots in X,Y.");
+  fSetBeamSpotZCmd->SetParameterName("BSZ",false);
+  fSetBeamSpotZCmd->SetDefaultUnit("mm");
+  fSetBeamSpotZCmd->SetRange("BSZ >= -1000. && BSZ <= 5000.");
+  fSetBeamSpotZCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotXSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_xsigma",this);
+  fSetBeamSpotXSpreadCmd->SetGuidance("Set X sigma of position of the gaussian beam spot in X");
+  fSetBeamSpotXSpreadCmd->SetParameterName("BSXS",false);
+  fSetBeamSpotXSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamSpotXSpreadCmd->SetRange("BSXS >= 0. && BSXS <= 100.");
+  fSetBeamSpotXSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamSpotYSpreadCmd = new G4UIcmdWithADoubleAndUnit("/beam/beamspot_ysigma",this);
+  fSetBeamSpotYSpreadCmd->SetGuidance("Set Y sigma of position of the gaussian beam spot in Y");
+  fSetBeamSpotYSpreadCmd->SetParameterName("BSYS",false);
+  fSetBeamSpotYSpreadCmd->SetDefaultUnit("mm");
+  fSetBeamSpotYSpreadCmd->SetRange("BSYS >= 0. && BSYS <= 100.");
+  fSetBeamSpotYSpreadCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  //
+
   fSetNUbosonDecaysPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_uboson_per_bunch",this);
   fSetNUbosonDecaysPerBunchCmd->SetGuidance("Set number of Uboson decays in each bunch.");
   fSetNUbosonDecaysPerBunchCmd->SetParameterName("NU",false);
@@ -188,16 +233,57 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetTwoPhotonDecaysFilenameCmd = new G4UIcmdWithAString("/beam/2g_file",this);
   fSetTwoPhotonDecaysFilenameCmd->SetParameterName("TwPF",false);
   fSetTwoPhotonDecaysFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   // Settings for BhaBha M. Raggi 20/05/2021
   fSetNBhaBhaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BhaBha_per_bunch",this);
   fSetNBhaBhaPerBunchCmd->SetGuidance("Set number of BhaBha per bunch.");
-  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false);
+  fSetNBhaBhaPerBunchCmd->SetParameterName("NTwP",false); // IS IT A PROBLEM THAT THE PARAMETER NAME IS EQUAL TO THAT USED FOR OTHER COMMANDS???
   fSetNBhaBhaPerBunchCmd->SetRange("NTwP == 0 || NTwP == 1");
   fSetNBhaBhaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetBhaBhaFilenameCmd = new G4UIcmdWithAString("/beam/BhaBha_file",this);
-  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false);
+  fSetBhaBhaFilenameCmd->SetParameterName("TwPF",false); // IS IT A PROBLEM THAT THE PARAMETER NAME IS EQUAL TO THAT USED FOR OTHER COMMANDS???
   fSetBhaBhaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBhaBhaLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/BhaBha_lines_to_skip",this);
+  fSetBhaBhaLinesToSkipCmd->SetGuidance("Set number of lines of BhaBha file to skip.");
+  fSetBhaBhaLinesToSkipCmd->SetParameterName("BBLTS",false);
+  fSetBhaBhaLinesToSkipCmd->SetRange("BBLTS >= 0");
+  fSetBhaBhaLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetNBabayagaPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_Babayaga_per_bunch",this);
+  fSetNBabayagaPerBunchCmd->SetGuidance("Set number of Babayaga per bunch.");
+  fSetNBabayagaPerBunchCmd->SetParameterName("NTwPBBY",false);
+  fSetNBabayagaPerBunchCmd->SetRange("NTwPBBY == 0 || NTwPBBY == 1");
+  fSetNBabayagaPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaFilenameCmd = new G4UIcmdWithAString("/beam/Babayaga_file",this);
+  fSetBabayagaFilenameCmd->SetParameterName("TwPFBBY",false);
+  fSetBabayagaFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/Babayaga_lines_to_skip",this);
+  fSetBabayagaLinesToSkipCmd->SetGuidance("Set number of lines of Babayaga file to skip.");
+  fSetBabayagaLinesToSkipCmd->SetParameterName("BBYLTS",false);
+  fSetBabayagaLinesToSkipCmd->SetRange("BBYLTS >= 0");
+  fSetBabayagaLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
+  fSetNBabayagaGGPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_BabayagaGG_per_bunch",this);
+  fSetNBabayagaGGPerBunchCmd->SetGuidance("Set number of BabayagaGG per bunch.");
+  fSetNBabayagaGGPerBunchCmd->SetParameterName("NTwPBBY",false);
+  fSetNBabayagaGGPerBunchCmd->SetRange("NTwPBBY == 0 || NTwPBBY == 1");
+  fSetNBabayagaGGPerBunchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaGGFilenameCmd = new G4UIcmdWithAString("/beam/BabayagaGG_file",this);
+  fSetBabayagaGGFilenameCmd->SetParameterName("TwPFBBY",false);
+  fSetBabayagaGGFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBabayagaGGLinesToSkipCmd = new G4UIcmdWithAnInteger("/beam/BabayagaGG_lines_to_skip",this);
+  fSetBabayagaGGLinesToSkipCmd->SetGuidance("Set number of lines of BabayagaGG file to skip.");
+  fSetBabayagaGGLinesToSkipCmd->SetParameterName("BBYLTS",false);
+  fSetBabayagaGGLinesToSkipCmd->SetRange("BBYLTS >= 0");
+  fSetBabayagaGGLinesToSkipCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 
   fSetDecayLengthCmd = new G4UIcmdWithADoubleAndUnit("/beam/decay_length",this);
   fSetDecayLengthCmd->SetGuidance("Set decay length for displaced vertex (used in Two/ThreeGamma events).");
@@ -210,6 +296,16 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fEnableCalibRunCmd->SetGuidance("Enable (true) or disable (false) calibration beam, i.e. photon of given energy pointing to ECal.");
   fEnableCalibRunCmd->SetParameterName("CR",false);
   fEnableCalibRunCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCalibRunDetectorCmd = new G4UIcmdWithAString("/beam/calib_detector",this);
+  fSetCalibRunDetectorCmd->SetParameterName("CDet",false);
+  fSetCalibRunDetectorCmd->SetCandidates("ECal LeadGlass");
+  fSetCalibRunDetectorCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCalibRunParticleCmd = new G4UIcmdWithAString("/beam/calib_particle",this);
+  fSetCalibRunParticleCmd->SetParameterName("CPar",false);
+  fSetCalibRunParticleCmd->SetCandidates("gamma e+ e-");
+  fSetCalibRunParticleCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetCalibRunEnergyCmd = new G4UIcmdWithADoubleAndUnit("/beam/calib_energy",this);
   fSetCalibRunEnergyCmd->SetGuidance("Set energy of calibration gamma.");
@@ -310,6 +406,14 @@ BeamMessenger::~BeamMessenger()
   delete fSetBeamEmittanceXCmd;
   delete fSetBeamEmittanceYCmd;
 
+  delete fEnableBeamSpotCmd;
+  delete fSetBeamSpotXCmd;
+  delete fSetBeamSpotYCmd;
+  delete fSetBeamSpotZCmd;
+  delete fSetBeamSpotXSpreadCmd;
+  delete fSetBeamSpotYSpreadCmd;
+
+
   delete fSetNUbosonDecaysPerBunchCmd;
   delete fSetUbosonMassCmd;
 
@@ -322,6 +426,8 @@ BeamMessenger::~BeamMessenger()
   delete fSetDecayLengthCmd;
 
   delete fEnableCalibRunCmd;
+  delete fSetCalibRunDetectorCmd;
+  delete fSetCalibRunParticleCmd;
   delete fSetCalibRunEnergyCmd;
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
@@ -424,6 +530,25 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBeamEmittanceYCmd )
     fBeamParameters->SetBeamEmittanceY(fSetBeamEmittanceYCmd->GetNewDoubleValue(par));
 
+  else if ( cmd == fEnableBeamSpotCmd ) {
+    if (fEnableBeamSpotCmd->GetNewBoolValue(par)) {
+      fBeamParameters->BeamEnableSpot();
+    } else {
+      fBeamParameters->BeamDisableSpot();
+    }
+  }
+  else if ( cmd == fSetBeamSpotXCmd )
+    fBeamParameters->SetBeamSpotX(fSetBeamSpotXCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotYCmd )
+    fBeamParameters->SetBeamSpotY(fSetBeamSpotYCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotZCmd )
+    fBeamParameters->SetBeamSpotZ(fSetBeamSpotZCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotXSpreadCmd )
+    fBeamParameters->SetBeamSpotSpreadX(fSetBeamSpotXSpreadCmd->GetNewDoubleValue(par));
+  else if ( cmd == fSetBeamSpotYSpreadCmd )
+    fBeamParameters->SetBeamSpotSpreadY(fSetBeamSpotYSpreadCmd->GetNewDoubleValue(par));
+
+
   else if ( cmd == fSetNUbosonDecaysPerBunchCmd )
     fBeamParameters->SetNUbosonDecaysPerBunch(fSetNUbosonDecaysPerBunchCmd->GetNewIntValue(par));
 
@@ -448,6 +573,28 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBhaBhaFilenameCmd )
     fBeamParameters->SetBhaBhaFilename(par);
 
+  else if ( cmd == fSetBhaBhaLinesToSkipCmd )
+    fBeamParameters->SetBhaBhaLinesToSkip(fSetBhaBhaLinesToSkipCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetNBabayagaPerBunchCmd )
+    fBeamParameters->SetNBabayagaPerBunch(fSetNBabayagaPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBabayagaFilenameCmd )
+    fBeamParameters->SetBabayagaFilename(par);
+
+  else if ( cmd == fSetBabayagaLinesToSkipCmd )
+    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
+  
+  else if ( cmd == fSetNBabayagaGGPerBunchCmd )
+    fBeamParameters->SetNBabayagaGGPerBunch(fSetNBabayagaGGPerBunchCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBabayagaGGFilenameCmd )
+    fBeamParameters->SetBabayagaGGFilename(par);
+
+  else if ( cmd == fSetBabayagaLinesToSkipCmd )
+    fBeamParameters->SetBabayagaGGLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
+
+
   else if ( cmd == fSetDecayLengthCmd )
     fBeamParameters->SetDecayLength(fSetDecayLengthCmd->GetNewDoubleValue(par));
 
@@ -458,6 +605,12 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
       fBeamParameters->CalibrationRunDisable();
     }
   }
+
+  else if ( cmd == fSetCalibRunDetectorCmd )
+    fBeamParameters->SetCalibRunDetector(par);
+
+  else if ( cmd == fSetCalibRunParticleCmd )
+    fBeamParameters->SetCalibRunParticle(par);
 
   else if ( cmd == fSetCalibRunEnergyCmd )
     fBeamParameters->SetCalibRunEnergy(fSetCalibRunEnergyCmd->GetNewDoubleValue(par));
@@ -576,6 +729,12 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
+
+  else if ( cmd == fSetCalibRunDetectorCmd )
+    cv = fBeamParameters->GetCalibRunDetector();  
+
+  else if ( cmd == fSetCalibRunParticleCmd )
+    cv = fBeamParameters->GetCalibRunParticle();  
 
   else if ( cmd == fSetCalibRunEnergyCmd )
     cv = fSetCalibRunEnergyCmd->ConvertToString(fBeamParameters->GetCalibRunEnergy());

@@ -64,6 +64,14 @@ private:
   G4UIcmdWithABool* fEnableBeamEmittanceCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceXCmd;
   G4UIcmdWithADoubleAndUnit* fSetBeamEmittanceYCmd;
+
+  G4UIcmdWithABool* fEnableBeamSpotCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotXCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotYCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotZCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotXSpreadCmd;
+  G4UIcmdWithADoubleAndUnit* fSetBeamSpotYSpreadCmd;
+
   
   G4UIcmdWithAnInteger* fSetNUbosonDecaysPerBunchCmd;
   G4UIcmdWithADoubleAndUnit* fSetUbosonMassCmd;
@@ -76,10 +84,23 @@ private:
 
   G4UIcmdWithAnInteger* fSetNBhaBhaPerBunchCmd;
   G4UIcmdWithAString* fSetBhaBhaFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBhaBhaLinesToSkipCmd;
+
+  G4UIcmdWithAnInteger* fSetNBabayagaPerBunchCmd;
+  G4UIcmdWithAString* fSetBabayagaFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBabayagaLinesToSkipCmd;
+
+
+  G4UIcmdWithAnInteger* fSetNBabayagaGGPerBunchCmd;
+  G4UIcmdWithAString* fSetBabayagaGGFilenameCmd;
+  G4UIcmdWithAnInteger* fSetBabayagaGGLinesToSkipCmd;
+
 
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 
   G4UIcmdWithABool* fEnableCalibRunCmd;
+  G4UIcmdWithAString* fSetCalibRunDetectorCmd;
+  G4UIcmdWithAString* fSetCalibRunParticleCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunEnergyCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterXCmd;
   G4UIcmdWithADoubleAndUnit* fSetCalibRunCenterYCmd;

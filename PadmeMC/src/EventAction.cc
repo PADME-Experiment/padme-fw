@@ -30,6 +30,7 @@
 #include "SACDigitizer.hh"
 #include "TPixDigitizer.hh"
 #include "ETagDigitizer.hh"
+#include "LeadGlassDigitizer.hh" 
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -38,6 +39,10 @@
 #include "ECalGeometry.hh"
 #include "SACGeometry.hh"
 #include "TPixGeometry.hh"
+#include "LeadGlassGeometry.hh"
+
+//PRINTOUT VERTICES#include "MCTruthManager.hh"
+//PRINTOUT VERTICES#include "MCTruthVertex.hh"
 
 #include "SystemInfo.hh"
 
@@ -59,6 +64,8 @@ EventAction::EventAction(RunAction* run)
   fECalDigitizer    = NULL;
   fSACDigitizer     = NULL;
   fTPixDigitizer    = NULL;
+  fLeadGlassDigitizer = NULL; //MR 6/12/2023
+
 
   fHistoManager = HistoManager::GetInstance();
   Egeom = ECalGeometry::GetInstance();
@@ -87,6 +94,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
 
   // Get current run and event numbers
   ETotCal  = 0;
+  ETotLG   = 0;
   ECalHitT = 0;
   CalEvtT  = 0;
   ClPosX   = 0;
@@ -161,9 +169,8 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fECalDigitizer    = (ECalDigitizer*)theDM->FindDigitizerModule(ECalGeometry::GetInstance()->GetECalDigitizerName());
     fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
     fTPixDigitizer    = (TPixDigitizer*)theDM->FindDigitizerModule(TPixGeometry::GetInstance()->GetTPixDigitizerName());
-
+    fLeadGlassDigitizer = (LeadGlassDigitizer*)theDM->FindDigitizerModule(LeadGlassGeometry::GetInstance()->GetLeadGlassDigitizerName()); //MR 
     fFirstEvent = false;
-
   }
 
   // Digitize existing detectors
@@ -175,6 +182,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fSACDigitizer)     fSACDigitizer->Digitize();
   if (fETagDigitizer)    fETagDigitizer->Digitize();
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
+  if (fLeadGlassDigitizer) fLeadGlassDigitizer->Digitize();
 
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
@@ -208,8 +216,19 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddMylarWHits((MylarWHitsCollection*)(LHC->GetHC(iHC)));
     } else if (HCname == "BeamFlagCollection") {        //M. Raggi 30/08/2019
       AddBeamFlagHits((BeamFlagHitsCollection*)(LHC->GetHC(iHC)));
+    } else if (HCname == "LeadGlassCollection") {        //M. Raggi 30/08/2019
+      AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
+//PRINTOUT VERTICES  MCTruthManager* mct = MCTruthManager::GetInstance();
+//PRINTOUT VERTICES  if (mct->IsEnabled()) {
+//PRINTOUT VERTICES    G4cout << "Number of MC vertices " << mct->GetNVertices() << G4endl;
+//PRINTOUT VERTICES    for (int i=0; i<mct->GetNVertices(); i++){
+//PRINTOUT VERTICES      MCTruthVertex* vtx = mct->Vertex(i);
+//PRINTOUT VERTICES      G4cout << " vtx " << i << " properties are: " << vtx->GetPosX() << " " << vtx->GetPosY() << " " << vtx->GetPosZ() << " process = " << vtx->GetProcess() << G4endl;
+//PRINTOUT VERTICES    }
+//PRINTOUT VERTICES  }
+
   //int Ncells=0;
 
   //Retrieve beam Infos!
@@ -732,9 +751,11 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       if(NFlag==7 || NFlag==4 || NFlag==1){
 	//	std::cout<<"Theta x"<<hthetaX<<std::endl;
 	hthetaX += 0.785398;
+      }else if(NFlag==8){
+	hthetaX += 2*0.785398;
       }
       //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
-      if (NFlag<8){
+      if (NFlag<9){
 	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
 	fHistoManager->FillHisto(NHisto+1,htheta); // after the target
 	fHistoManager->FillHisto(NHisto+2,hX);     // 
@@ -749,6 +770,35 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
   //  XBeW/=NBeW;
   //  YBeW/=NBeW;
 }
+// Reading info from Beam Flags M. Raggi 29/08/2019
+void EventAction::AddLeadGlassHits(LeadGlassHitsCollection* hcont)  //BeW readout module
+{
+  G4int nHits = hcont->entries();
+  G4double X,Y,Z,TrEne;
+  for (G4int h=0; h<nHits; h++) {    
+    LeadGlassHit* hit = (*hcont)[h]; //prende l'elemento h del vettore hit
+    if ( hit != 0 ) {
+      //G4int index = hit->GetCryNb();
+      //      G4int index = hit->GetChannelId();
+      ETotLG += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+      X = hit->GetLocalPosX();
+      Y = hit->GetLocalPosY();
+      Z = hit->GetLocalPosZ();
+      //      TrEne = hit->GetTrackEnergy();   // track energy
+ 
+      if(Z>182.){
+	//std::cout<<"ELG "<<ETotLG<<" Z "<<Z<<std::endl;
+	fHistoManager->FillHisto(42,X);  
+	fHistoManager->FillHisto(43,Y);  
+	fHistoManager->FillHisto(44,Z); 
+      }
+    } 
+  }
+  fHistoManager->FillHisto(40,ETotLG);     // All hit energies
+  //  std::cout<<"ELG "<<ETotLG<<std::endl;
+}
+    
+
 
 void EventAction::AddHEPVetoHits(HEPVetoHitsCollection* hcont)
 {
@@ -958,7 +1008,6 @@ void EventAction::AddEVetoHits(EVetoHitsCollection* hcont){
 	EVetoX[NEVetoTracks]          = hit->GetX();
 	EVetoY[NEVetoTracks]          = hit->GetY();
 	NEVetoTracks++;
-	//	G4cout<<"cazzo "<<NEVetoTracks<<G4endl;
 	//G4cout<<"trkID "<<hit->GetTrackID()<<" edep "<<hit->GetEdep()<<" Strip Numb "<<hit->GetEVetoNb()<<G4endl;
       }
       if(NEVetoTracks>MaxTracks) break; 
@@ -1047,8 +1096,8 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
       G4int iRow = hChID/10;
       G4int iCol = hChID%10;
       
-      hX+=iCol*14.10;
-      hY+=iRow*14.10;
+      hX+=iCol*14.10-35.25;
+      hY+=iRow*14.10-7.;
 
       fHistoManager->FillHisto(50,hE);     //50 has Tpix Histos
       fHistoManager->FillHisto(51,hTime);  //50 has Tpix Histos
@@ -1060,9 +1109,7 @@ void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019
       fHistoManager->FillHisto2(56,hX,hTrE,1.); //X vs Track energy
       //      G4cout<<"CC Nhits "<<nHits<<" time  "<<hTime<<" edep "<<hE<<" X "<<hX<<" Y "<<hY<<G4endl;
     }
-  }
- 
- 
+  } 
 }
 
 void EventAction::AddETagHits(ETagHitsCollection* hcont)

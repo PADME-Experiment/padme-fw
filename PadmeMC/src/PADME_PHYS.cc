@@ -1,10 +1,8 @@
-//
-// ********************************************************************
+// **********************************************************************************
 //  PADME modular physics list
 //  Based on QGSP_BERT + OpticalPhotons
-//
-// ********************************************************************
-//
+//  6/06/2023 M. Raggi added different models to test cross sections at low energies.
+// **********************************************************************************
 
 #include <iomanip>   
 
@@ -20,14 +18,15 @@
 
 #include "G4DecayPhysics.hh"
 #include "G4EmStandardPhysics.hh"
+// MR 06/06/2023 
+#include "G4EmPenelopePhysics.hh"
+#include "G4EmLivermorePhysics.hh"
+
 #include "G4EmExtraPhysics.hh"
 #include "G4IonPhysics.hh"
 #include "G4StoppingPhysics.hh"
 #include "G4HadronElasticPhysics.hh"
 #include "G4HadronElasticPhysicsHP.hh"
-
-
-
 
 #include "G4NeutronTrackingCut.hh"
 
@@ -53,10 +52,7 @@
 
 #endif
 
-
-
 #include "PADME_PHYS.hh"
-
 #include "Constants.hh"
 
 PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
@@ -79,7 +75,10 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
   //    Bremsstrahlung
   //    eplusAnnihilation
   this->RegisterPhysics( new G4EmStandardPhysics(ver) );
-  
+  //MR Livermore 
+  //  this->RegisterPhysics(new G4EmLivermorePhysics(ver));
+  //MR Penelope
+  //  this->RegisterPhysics( new G4EmPenelopePhysics(ver) );
 
   // Synchroton Radiation & GN Physics
   // includes: 

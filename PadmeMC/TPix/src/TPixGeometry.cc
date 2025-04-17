@@ -27,11 +27,60 @@ TPixGeometry::TPixGeometry()
   fTPixNRows = 2;
   fTPixNCols = 6;
 
-  fChipSizeX =  14.08*mm; // 256 pixels of 55um each
-  fChipSizeY =  14.08*mm; // 256 pixels of 55um each
+  //fChipSizeX =  14.08*mm; // 256 pixels of 55um each
+  //fChipSizeY =  14.08*mm; // 256 pixels of 55um each
+  fChipSizeX =  14.111*mm; // See https://indico.cern.ch/event/267425/attachments/477859/661149/Timepix3_final.pdf
+  fChipSizeY =  14.111*mm;
   fChipSizeZ =   0.30*mm; // Thickness M. Raggi after E. Spiriti Mail 29/03/2019
 
-  fChipStep = 14.10*mm; // Step between TPix chips
+  //fChipStep = 14.10*mm; // Step between TPix chips
+  fChipStep = (14.111+0.127)*mm; // Step between TPix chips. Total size = 85.30*mm as per technical design
+
+  // TimePix box dimensions
+  fBoxSizeX = 270.*mm;
+  fBoxSizeY = 256.*mm;
+  fBoxSizeZ = 135.*mm;
+
+  // TimePix position wrt center of box
+  fTPixDispX = (270./2.-55.82-85.30/2.)*mm; // Half width of box - lateral TPix displacement - half TPix length (see technical design)
+  fTPixDispY = 0.*mm;     // i.e. centered on the vertical
+  fTPixDispZ = (-135./2.+10.+fChipSizeZ/2.)*mm;  // - Half depth of box + longitudinal displacement + half TPix thickness (see technical design)
+
+  // Thickness of Cu slab behind TimePix
+  fCuSlabThick = 1.*mm;
+  fCuSlabFingerWidth = 2.*mm;
+
+  // Chip Cu support structure (above and below chips)
+  fCuShapePolygon = { {0.0*mm,0.0*mm}, {0.0*mm,7.3*mm}, {17.0*mm,7.3*mm}, {17.0*mm,5.3*mm}, {21.0*mm,5.3*mm}, {21.0*mm,8.5*mm}, {23.0*mm,8.5*mm}, {23.0*mm,0.0*mm} };
+  fCuShapeWidth = 14.0*mm;
+  fCuShapeHeight = 23.0*mm;
+  fCuShapeDepth = 8.5*mm;
+
+  // Dimension of Cu bars behind TimePix readout electronics
+  fCuBlockWidth = 14.*mm;
+  fCuBlockHeight = 15.5*mm;
+  fCuBlockDepth = 5.*mm;
+
+  // Dimensions of Cu support frame
+  fCuSuppThick = 10.*mm;
+  fCuSuppWidth = 129.*mm;
+  fCuSuppHeight = 80.*mm;
+  fCuSuppToChipDispX = 26.32*mm; // Cu support is displaced in X wrt TimePix chips
+  fCuHoleWidth = 94.*mm;
+  fCuHoleHeight = 29.*mm;
+  fCuHoleDispX = 25.*mm;
+  fCuHoleDispY = 25.5*mm;
+
+  // Dimensions and position of water pipes inside Cu support frame
+  fWaterPipeRadius = 2.1*mm;
+  fWaterPipeLength = fCuSuppWidth;
+  fWaterPipeUpDisp = 20.5*mm;
+  fWaterPipeDownDisp = 20.5*mm;
+
+  // Dimensions and displacement of PCB bars
+  fPCBBarThick = 2.*mm;
+  fPCBBarHeight = 24.6*mm;
+  fPCBBarDispZ = 2.*mm; // Distance between back face of PCB and front face of TimePix
 
   // Distance from the corner on the back wall of the vacuum chamber and
   // the projection of the center of the external side of the TPix on the
@@ -44,6 +93,7 @@ TPixGeometry::TPixGeometry()
   fTPixDistanceToCorner = 400.0*mm-102.70*mm; // Selected by looking at photos: need check
   //fTPixDistanceToCorner = 400.0*mm- 55.70*mm;
   //fTPixDistanceToCorner = 400.0*mm-145.68*mm;
+  fTPixYDisplacement = 0*mm; // default value for y dispacement
 
   // Distance between back surface of the diagonal wall of the vacuum chamber and front surface of the TimePix
   fTPixSupportThickness = 62.5*mm; // 1.5mm(extra)+35mm(steel cap)+16mm(Al flange)+10mm(TimePix box thickness)
@@ -107,6 +157,15 @@ void TPixGeometry::SetTPixDistanceToCorner(G4double d)
   UpdateDerivedMeasures();
 }
 
+void TPixGeometry::SetTPixYDisplacement(G4double d)
+{
+  printf("TPixGeometry - Setting DistanceToCorner to %5.1f mm\n",d/mm);
+  fTPixYDisplacement = d;
+  UpdateDerivedMeasures();
+}
+
+
+
 void TPixGeometry::SetTPixChamberWallCorner(G4ThreeVector c)
 {
   printf("TPixGeometry - Setting ChamberWallCorner coordinates to (%.1f,%.1f,%.1f) mm\n",c.x()/mm,c.y()/mm,c.z()/mm);
@@ -125,7 +184,7 @@ void TPixGeometry::UpdateDerivedMeasures()
   // Angle of the rotation of TPix around the Y axis
   fTPixRotY = -fTPixChamberWallAngle;
   
-  // Position of center of TPix box
+  // Position of center of TPix detector
   //fTPixPosX = fTPixChamberWallCorner.x()-fTPixDistanceToCorner*cos(fTPixChamberWallAngle)
   //  -(fTPixSupportThickness+0.5*fTPixSizeZ)*sin(fTPixChamberWallAngle)
   //  -0.5*fTPixSizeX*cos(fTPixChamberWallAngle);
@@ -136,13 +195,24 @@ void TPixGeometry::UpdateDerivedMeasures()
   fTPixPosZ = fTPixChamberWallCorner.z()
     -(fTPixDistanceToCorner+0.5*fTPixSizeX)*sin(fTPixChamberWallAngle)
     +(fTPixSupportThickness+0.5*fTPixSizeZ)*cos(fTPixChamberWallAngle);
+  // Displace box according to desired position of TimePix
+  fBoxPosX = fTPixPosX-fTPixDispX*cos(fTPixChamberWallAngle)-fTPixDispZ*sin(fTPixChamberWallAngle);
+  fBoxPosY = fTPixPosY-fTPixDispY;
+  fBoxPosZ = fTPixPosZ+fTPixDispX*sin(fTPixChamberWallAngle)-fTPixDispZ*cos(fTPixChamberWallAngle);
 
   // Move TimePix behind ECal for 2022 run (RunIII)
   if (fDetectorSetup >= 40) {
     fTPixRotY = 0.;
     fTPixPosX = 0.;
-    fTPixPosY = 0.;
-    fTPixPosZ = 3000.*mm; // Former SAC Front Face position (review after ECal repositioning) 
+    //fTPixPosY = 0.;
+
+    fTPixPosY = fTPixYDisplacement;
+    
+    fTPixPosZ = 3100.*mm-50.*um-fBoxSizeZ+10.*mm+0.5*fTPixSizeZ; // Back of TPix box just in front of LeadGlass block
+    // Displace box according to desired position of TimePix
+    fBoxPosX = fTPixPosX-fTPixDispX;
+    fBoxPosY = fTPixPosY-fTPixDispY;
+    fBoxPosZ = fTPixPosZ-fTPixDispZ; // TimePix is 1cm from front face of box
   }
 
   //printf("TPix size %f %f %f\n",fTPixSizeX,fTPixSizeY,fTPixSizeZ);

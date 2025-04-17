@@ -47,27 +47,14 @@
 #/analysis/SaveSAC   false
 #/analysis/SaveVeto  false
 
-# Enable IO for single detectors
-#/output/EnableDetectorIO Target:D
-#/output/EnableDetectorIO PVeto:HD
-#/output/EnableDetectorIO EVeto:HD
-#/output/EnableDetectorIO HEPVeto:HD
-#/output/EnableDetectorIO ECal:D
-#/output/EnableDetectorIO SAC:D
-#/output/EnableDetectorIO TPix:D
-
-# Disable IO for single detectors
-#/output/DisableDetectorIO Target
-#/output/DisableDetectorIO PVeto
-#/output/DisableDetectorIO EVeto
-#/output/DisableDetectorIO HEPVeto
-#/output/DisableDetectorIO ECal
-#/output/DisableDetectorIO SAC
-#/output/DisableDetectorIO TPix
-
 # Detector settings
 
 #/Detector/VerboseLevel 0
+
+# General setup for desired year: 10=2019, 20=2020, 30=2021, 40=2022
+#/Detector/Setup 10
+
+# Any detector customization must be done after the initial setup
 
 #/Detector/EnableSubDetector ECal
 #/Detector/EnableSubDetector Target
@@ -77,6 +64,8 @@
 #/Detector/EnableSubDetector HEPVeto
 #/Detector/EnableSubDetector TDump
 #/Detector/EnableSubDetector TPix
+#/Detector/EnableSubDetector ETag
+#/Detector/EnableSubDetector LeadGlass
 
 #/Detector/EnableStructure Magnet
 #/Detector/EnableStructure Chamber
@@ -90,6 +79,8 @@
 #/Detector/DisableSubDetector HEPVeto
 #/Detector/DisableSubDetector TDump
 #/Detector/DisableSubDetector TPix
+#/Detector/DisableSubDetector ETag
+#/Detector/DisableSubDetector LeadGlass
 
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
@@ -117,8 +108,8 @@
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
 
-# Beam line settings 0=2019 setup 1=2020 setup
-#/Detector/BeamLine/Setup 1.   
+# Beam line setup
+
 #/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/EnableMylarWindow true
 #/Detector/BeamLine/DHSTB002_FieldY -1.055 tesla
@@ -129,7 +120,7 @@
 #/Detector/BeamLine/Q3_FieldGrad 5.
 #/Detector/BeamLine/Q4_FieldGrad 5.
 
-# semiapertura dei collimatori 
+# Half of collimators aperture
 #/Detector/BeamLine/SLTB2Aperture 1.7 mm
 #/Detector/BeamLine/SLTB3Aperture 1.7 mm
 #/Detector/BeamLine/SLTB4Apertuer 2 mm
@@ -193,7 +184,43 @@
 #/Detector/TPix/NColumns 6
 #/Detector/TPix/DistanceToCorner 29.73 cm
 
-# Beam setup
+#/Detector/ETag/VerboseLevel 0
+#/Detector/ETag/FrontFaceZ 237.236 cm
+
+#/Detector/LeadGlass/VerboseLevel 0
+#/Detector/LeadGlass/FullSimulation true
+#/Detector/LeadGlass/FrontFaceZ 310. cm
+
+# IO initialization must be done after detector configuration
+# This is mostly to use the correrct VerboseLevel
+
+# Enable IO for single detectors
+#/output/EnableDetectorIO Target:D
+#/output/EnableDetectorIO PVeto:HD
+#/output/EnableDetectorIO EVeto:HD
+#/output/EnableDetectorIO HEPVeto:HD
+#/output/EnableDetectorIO ECal:D
+#/output/EnableDetectorIO SAC:D
+#/output/EnableDetectorIO TPix:D
+#/output/EnableDetectorIO ETag:HD
+#/output/EnableDetectorIO LeadGlasss:D
+
+# Disable IO for single detectors
+#/output/DisableDetectorIO Target
+#/output/DisableDetectorIO PVeto
+#/output/DisableDetectorIO EVeto
+#/output/DisableDetectorIO HEPVeto
+#/output/DisableDetectorIO ECal
+#/output/DisableDetectorIO SAC
+#/output/DisableDetectorIO TPix
+#/output/DisableDetectorIO ETag
+#/output/DisableDetectorIO LeadGlass
+
+# Create detectors and initialize run
+/run/initialize
+
+# Initial beam setup for each year is done at run initialization
+# So all beam customizations must be done after the run initialization is done
 
 # Primary positrons setup (default PADMEMC configuration)
 #/beam/n_e+_per_bunch 25000
@@ -266,13 +293,12 @@
 
 # Calibration run setup: single 50MeV photon pointing to a spot on ECal front face
 #/beam/calibration true
+#/beam/calib_detector ECal
+#/beam/calib_particle gamma
 #/beam/calib_energy 50. MeV
 #/beam/calib_x 14. cm
 #/beam/calib_y 14. cm
 #/beam/calib_radius 1. cm
-
-# Create detectors and initialize run
-/run/initialize
 
 # Use this open statement to create an OpenGL view:
 /vis/open OGL 600x600-0+0
@@ -379,5 +405,8 @@
 /vis/filtering/trajectories/create/attributeFilter
 /vis/filtering/trajectories/attributeFilter-0/setAttribute IMag
 /vis/filtering/trajectories/attributeFilter-0/addInterval 1. MeV 1000. MeV
+
+# Assign a number to current run
+#/run/setRunID 0
 
 #/run/beamOn 1	

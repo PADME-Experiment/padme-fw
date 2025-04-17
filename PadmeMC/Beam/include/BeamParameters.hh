@@ -30,6 +30,13 @@ protected:
 
 public:
 
+  void SetDetectorSetup(G4int);
+  G4int GetDetectorSetup() { return fDetectorSetup; }
+
+  void EnableBeamLine() { fBeamLineEnabled = true; }
+  void DisableBeamLine() { fBeamLineEnabled = false; }
+  G4bool BeamLineEnabled() { return fBeamLineEnabled; }
+
   G4int GetNPositronsPerBunch()        { return fNPositronsPerBunch; }
   void  SetNPositronsPerBunch(G4int n) { fNPositronsPerBunch = n;    }
 
@@ -93,6 +100,23 @@ public:
   G4double GetBeamEmittanceY() { return fBeamEmittanceY; }
   void SetBeamEmittanceY(G4double e) { fBeamEmittanceY = e; }
 
+  void BeamEnableSpot()  { fBeamApplySpot = true;  }
+  void BeamDisableSpot() { fBeamApplySpot = false;  }
+  G4bool BeamApplySpot() { return fBeamApplySpot; }
+  void SetBeamSpotX(G4double e) { fBeamSpotX = e; }
+  G4double GetBeamSpotX() { return fBeamSpotX; }
+  void SetBeamSpotY(G4double e) { fBeamSpotY = e; }
+  G4double GetBeamSpotY() { return fBeamSpotY; }
+  void SetBeamSpotZ(G4double e) { fBeamSpotZ = e; }
+  G4double GetBeamSpotZ() { return fBeamSpotZ; }
+  void SetBeamSpotSpreadX(G4double e) { fBeamSpotSpreadX = e; }
+  G4double GetBeamSpotSpreadX() { return fBeamSpotSpreadX; }
+  void SetBeamSpotSpreadY(G4double e) { fBeamSpotSpreadY = e; }
+  G4double GetBeamSpotSpreadY() { return fBeamSpotSpreadY; }
+
+
+
+
   G4int GetNUbosonDecaysPerBunch()        { return fNUbosonDecaysPerBunch; }
   void  SetNUbosonDecaysPerBunch(G4int n) { fNUbosonDecaysPerBunch = n;    }
 
@@ -118,12 +142,41 @@ public:
   G4String GetBhaBhaFilename()        { return fBhaBhaFilename; }
   void SetBhaBhaFilename(G4String f) { fBhaBhaFilename = f; }
 
+  G4int GetBhaBhaLinesToSkip()       { return fBhaBhaLinesToSkip; }
+  void SetBhaBhaLinesToSkip(G4int n) { fBhaBhaLinesToSkip = n;    }
+
+  G4int GetNBabayagaPerBunch()        { return fNBabayagaPerBunch; }
+  void SetNBabayagaPerBunch(G4int n) { fNBabayagaPerBunch = n;    }
+
+  G4String GetBabayagaFilename()        { return fBabayagaFilename; }
+  void SetBabayagaFilename(G4String f) { fBabayagaFilename = f; }
+
+  G4int GetBabayagaLinesToSkip()       { return fBabayagaLinesToSkip; }
+  void SetBabayagaLinesToSkip(G4int n) { fBabayagaLinesToSkip = n;    }
+
+  G4int GetNBabayagaGGPerBunch()        { return fNBabayagaGGPerBunch; }
+  void SetNBabayagaGGPerBunch(G4int n) { fNBabayagaGGPerBunch = n;    }
+
+  G4String GetBabayagaGGFilename()        { return fBabayagaGGFilename; }
+  void SetBabayagaGGFilename(G4String f) { fBabayagaGGFilename = f; }
+
+  G4int GetBabayagaGGLinesToSkip()       { return fBabayagaGGLinesToSkip; }
+  void SetBabayagaGGLinesToSkip(G4int n) { fBabayagaGGLinesToSkip = n;    }
+
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
+
+  // Calibration run parameters
 
   void CalibrationRunEnable()  { fCalibrationRun = true; }
   void CalibrationRunDisable() { fCalibrationRun = false; }
   G4bool CalibrationRun() { return fCalibrationRun; }
+
+  G4String GetCalibRunDetector() { return fCalibRunDetector; }
+  void SetCalibRunDetector(G4String d) { fCalibRunDetector = d; }
+
+  G4String GetCalibRunParticle() { return fCalibRunParticle; }
+  void SetCalibRunParticle(G4String p) { fCalibRunParticle = p; }
 
   G4double GetCalibRunEnergy() { return fCalibRunEnergy; }
   void SetCalibRunEnergy(G4double e) { fCalibRunEnergy  = e; }
@@ -157,6 +210,10 @@ public:
 
 private:
 
+  G4int fDetectorSetup;
+
+  G4bool fBeamLineEnabled;
+
   // Average number of positrons in each bunch
   G4int  fNPositronsPerBunch;
   G4bool fNPositronsPerBunchApplySpread; // Poisson distribution
@@ -189,6 +246,14 @@ private:
   G4double fBeamEmittanceX;
   G4double fBeamEmittanceY;
 
+  // Beam spot (spread of X at a given ZForX and Y at a given ZForY)
+  G4bool   fBeamApplySpot;
+  G4double fBeamSpotX;
+  G4double fBeamSpotY;
+  G4double fBeamSpotZ;
+  G4double fBeamSpotSpreadX;
+  G4double fBeamSpotSpreadY;
+
   // Insert Uboson decays
   G4int fNUbosonDecaysPerBunch;
   G4double fUbosonMass;
@@ -204,6 +269,15 @@ private:
   // Insert BhaBha M. Raggi 20/05/2021
   G4int fNBhaBhaPerBunch;
   G4String fBhaBhaFilename;
+  G4int fBhaBhaLinesToSkip;
+
+  G4int fNBabayagaPerBunch;
+  G4String fBabayagaFilename;
+  G4int fBabayagaLinesToSkip;
+
+  G4int fNBabayagaGGPerBunch;
+  G4String fBabayagaGGFilename;
+  G4int fBabayagaGGLinesToSkip;
 
   // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
   G4double fDecayLength;
@@ -211,9 +285,11 @@ private:
   // In calibration mode we shoot gamma of fixed energy from
   // the center of the Target to a circle on the ECal surface (flat distribution)
   G4bool   fCalibrationRun;
+  G4String fCalibRunDetector; // Detector to be calibrated
+  G4String fCalibRunParticle; // Particle to use for calibration
   G4double fCalibRunEnergy;  // Energy of the photon
-  G4double fCalibRunCenterX; // X of center of cirlce 
-  G4double fCalibRunCenterY; // Y of center of circle
+  G4double fCalibRunCenterX; // X of center of cirlce at detector position
+  G4double fCalibRunCenterY; // Y of center of circle at detector position
   G4double fCalibRunRadius;  // Radius of circle
 
   // Beam distribution at target

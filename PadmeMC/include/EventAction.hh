@@ -13,11 +13,13 @@
 #include "BeWHit.hh"  //M. Raggi 29/04/2019
 #include "MylarWHit.hh"  //M. Raggi 15/03/2021
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
+#include "LeadGlassHit.hh"
 
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "ETagGeometry.hh"
 #include "TargetGeometry.hh"
+#include "LeadGlassGeometry.hh"
 #include "BeamParameters.hh"
 
 class G4Event;
@@ -33,6 +35,7 @@ class ECalDigitizer;
 class SACDigitizer;
 class TPixDigitizer;
 class ETagDigitizer;
+class LeadGlassDigitizer; //MR
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -90,6 +93,8 @@ class EventAction : public G4UserEventAction
   void  AddMylarWHits(MylarWHitsCollection*);        //M. Raggi 15/03/2021
   void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
 
+  void  AddLeadGlassHits(LeadGlassHitsCollection*); //M. Raggi 02/2025
+
   G4double GetCharge(G4double Energia);
   //G4double GGMass();
 
@@ -115,9 +120,11 @@ class EventAction : public G4UserEventAction
   ECalDigitizer*    fECalDigitizer;
   SACDigitizer*     fSACDigitizer;
   TPixDigitizer*    fTPixDigitizer;
+  LeadGlassDigitizer*    fLeadGlassDigitizer; //MR
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;
+  G4double ETotLG;
   G4double EtotEVeto;
   G4double ProcID;
   G4double ECalHitT,CalEvtT,EtotFiltEvt; 

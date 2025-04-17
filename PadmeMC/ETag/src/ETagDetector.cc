@@ -40,100 +40,140 @@ ETagDetector::~ETagDetector()
 
 void ETagDetector::CreateGeometry()
 {
-  G4VisAttributes ETagBarVisAtt = G4VisAttributes(G4Colour::Green());
+
+  G4VisAttributes colourETag = G4VisAttributes::Invisible;
+  //G4VisAttributes colourETag = G4VisAttributes(G4Colour::Magenta());
+  G4VisAttributes colourBar = G4VisAttributes(G4Colour::Green());
+  G4VisAttributes colourPaint = G4VisAttributes(G4Colour::White());
+  G4VisAttributes colourFrame = G4VisAttributes(G4Colour::Gray());
+  G4VisAttributes colourTedlar = G4VisAttributes(G4Colour::Blue());
+
   ETagGeometry* geo = ETagGeometry::GetInstance();
+
   // Create ETag container box
-  printf("ETag be placed at %f %f %f\n",geo->GetETagPosX(),geo->GetETagPosY(),geo->GetETagPosZ());
-  G4ThreeVector ETagPos = G4ThreeVector(geo->GetETagPosX(),geo->GetETagPosY(),geo->GetETagPosZ()); 
 
   //ETag main volume
   G4double ETagSizeX = geo->GetETagSizeX();
   G4double ETagSizeY = geo->GetETagSizeY();
   G4double ETagSizeZ = geo->GetETagSizeZ();
+  printf("ETag main box size is %.2fmm %.2fmm %.2fmm\n",ETagSizeX/mm,ETagSizeY/mm,ETagSizeZ/mm);
+  G4Box* solidETag = new G4Box("solidETag",0.5*ETagSizeX+1.*um,0.5*ETagSizeY+1.*um,0.5*ETagSizeZ+1.*um);
+  fETagVolume = new G4LogicalVolume(solidETag,G4Material::GetMaterial("Air"),"ETagLogic",0,0,0);
+  fETagVolume->SetVisAttributes(colourETag);
 
-  //ETag Hole volume
-  G4double ETagHoleSizeX  = geo->GetETagHoleSizeX();
-  G4double ETagHoleSizeY  = geo->GetETagHoleSizeY();
-  G4double ETagHoleSizeZ  = geo->GetETagHoleSizeZ();
+  // Position main ETag box
+  G4double ETagPosX = geo->GetETagPosX();
+  G4double ETagPosY = geo->GetETagPosY();
+  G4double ETagPosZ = geo->GetETagPosZ();
+  printf("ETag main box placed at %.2fmm %.2fmm %.2fmm\n",ETagPosX/mm,ETagPosY/mm,ETagPosZ/mm);
+  G4ThreeVector ETagPos = G4ThreeVector(ETagPosX,ETagPosY,ETagPosZ); 
+  new G4PVPlacement(0,ETagPos,fETagVolume,"ETag",fMotherVolume,false,0,true);
 
-  printf("ETag size is %f %f %f\n",ETagSizeX,ETagSizeX,ETagSizeZ);
-  G4Box* solidETagFull = new G4Box("solidETagFull",0.5*ETagSizeX,0.5*ETagSizeY,0.5*ETagSizeZ);
-  G4Box* solidETagHole = new G4Box("solidETagHole",0.5*ETagHoleSizeX,0.5*ETagHoleSizeY,0.5*ETagHoleSizeZ);
-  G4SubtractionSolid* solidETag = new G4SubtractionSolid("solidETag",solidETagFull,solidETagHole,0,G4ThreeVector(0.,0.,0.));
+  //ETag frame volume
+  G4double ETagFrameSizeX  = geo->GetETagFrameSizeX();
+  G4double ETagFrameSizeY  = geo->GetETagFrameSizeY();
+  G4double ETagFrameSizeZ  = geo->GetETagFrameSizeZ();
+  G4double ETagFrameThick  = geo->GetETagFrameThick();
+  printf("ETag metal frame size is %.2fmm %.2fmm %.2fmm and has thickness %.2fmm\n",ETagFrameSizeX/mm,ETagFrameSizeY/mm,ETagFrameSizeZ/mm,ETagFrameThick/mm);
+  G4Box* solidETagFrameFull = new G4Box("solidETagFrameFull",0.5*ETagFrameSizeX,0.5*ETagFrameSizeY,0.5*ETagFrameSizeZ);
+  G4Box* solidETagFrameHole = new G4Box("solidETagFrameHole",0.5*ETagFrameSizeX-ETagFrameThick,0.5*ETagFrameSizeY-ETagFrameThick,0.5*ETagFrameSizeZ+1.*mm);
+  G4SubtractionSolid* solidETagFrame = new G4SubtractionSolid("solidETagFrame",solidETagFrameFull,solidETagFrameHole,0,G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* logicETagFrame = new G4LogicalVolume(solidETagFrame,G4Material::GetMaterial("G4_Al"),"ETagFrameLogic",0,0,0);
+  logicETagFrame->SetVisAttributes(colourFrame);
+  G4ThreeVector ETagFramePos = G4ThreeVector(0.,0.,0.); 
+  new G4PVPlacement(0,ETagFramePos,logicETagFrame,"ETagFrame",fETagVolume,false,0,true);
 
-  fETagVolume = new G4LogicalVolume(solidETag,G4Material::GetMaterial("Vacuum"),"ETagLogic",0,0,0);
-  fETagVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
-  fETagVolume->SetVisAttributes(G4VisAttributes::Invisible);
-  new G4PVPlacement(0,ETagPos,fETagVolume,"ETag",fMotherVolume,false,0,false);
+  // Tedlar cover
+  G4double ETagTedlarSizeX  = geo->GetETagTedlarSizeX();
+  G4double ETagTedlarSizeY  = geo->GetETagTedlarSizeY();
+  G4double ETagTedlarSizeZ  = geo->GetETagTedlarSizeZ();
+  printf("ETag Tedlar cover size is %.2fmm %.2fmm %.2fmm\n",ETagTedlarSizeX/mm,ETagTedlarSizeX/mm,ETagTedlarSizeZ/mm);
+  G4Box* solidETagTedlar = new G4Box("solidETagTedlar",0.5*ETagTedlarSizeX,0.5*ETagTedlarSizeY,0.5*ETagTedlarSizeZ);
+  G4LogicalVolume* logicETagTedlar = new G4LogicalVolume(solidETagTedlar,G4Material::GetMaterial("G4_POLYVINYLIDENE_FLUORIDE"),"ETagTedlarLogic",0,0,0);
+  logicETagTedlar->SetVisAttributes(colourTedlar);
+  G4ThreeVector ETagTedlarPos = G4ThreeVector(0.,0.,-0.5*ETagFrameSizeZ+0.5*ETagTedlarSizeZ); 
+  new G4PVPlacement(0,ETagTedlarPos,logicETagTedlar,"ETagTedlar",fETagVolume,false,0,true);
 
-  // Delta ray absorber
-  //Delta Abs size
-  G4double DeltaAbsSizeX = ETagSizeX; 
-  G4double DeltaAbsSizeY = ETagSizeY;
-  G4double DeltaAbsSizeZ = 6*mm;
+  // ETagBars
 
-  //Delta Abs size
-  G4double DeltaAbsHoleSizeX = ETagHoleSizeX-3*mm; 
-  G4double DeltaAbsHoleSizeY = ETagHoleSizeY-3*mm;
-  G4double DeltaAbsHoleSizeZ = DeltaAbsSizeZ+0.2*mm;
+  // Thickness of paint around bars
+  G4double ETagBarPaintThick = geo->GetETagBarPaintThick();
 
-  printf("ETag be placed at %f %f %f\n",geo->GetETagPosX(),geo->GetETagPosY(),geo->GetETagPosZ());
-  G4ThreeVector DeltaAbsPos = G4ThreeVector(geo->GetETagPosX(),geo->GetETagPosY(),geo->GetETagPosZ()-3*ETagSizeZ); 
-
-  G4Box* solidDeltaAbsFull = new G4Box("solidDeltaAbsFull",0.5*DeltaAbsSizeX,0.5*DeltaAbsSizeY,0.5*DeltaAbsSizeZ);
-  G4Box* solidDeltaAbsHole = new G4Box("solidDeltaAbsHole",0.5*DeltaAbsHoleSizeX,0.5*DeltaAbsHoleSizeY,0.5*DeltaAbsHoleSizeZ);
-  G4SubtractionSolid* solidDeltaAbs = new G4SubtractionSolid("solidDeltaAbs",solidDeltaAbsFull,solidDeltaAbsHole,0,G4ThreeVector(0.,0.,0.));
-
-  fDeltaAbsVolume = new G4LogicalVolume(solidDeltaAbs,G4Material::GetMaterial("G4_PLEXIGLASS"),"DeltaAbs",0,0,0);
-  fDeltaAbsVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  new G4PVPlacement(0,DeltaAbsPos,fDeltaAbsVolume,"DeltaAbs",fMotherVolume,false,0,false);
-
-//  //ETagBars
-//  
+  // Long bar
   G4double ETagBarSizeX  = geo->GetETagBarSizeX();
   G4double ETagBarSizeY  = geo->GetETagBarSizeY();
   G4double ETagBarSizeZ  = geo->GetETagBarSizeZ();
-  printf("ETag size is %f %f %f\n",ETagSizeX,ETagSizeX,ETagSizeZ);
+  printf("ETag long bar size is %.2fmm %.2fmm %.2fmm\n",ETagBarSizeX/mm,ETagBarSizeX/mm,ETagBarSizeZ/mm);
   G4Box* solidETagBar = new G4Box("solidETagBar",0.5*ETagBarSizeX,0.5*ETagBarSizeY,0.5*ETagBarSizeZ);
   fETagBarVolume = new G4LogicalVolume(solidETagBar,G4Material::GetMaterial("G4_POLYSTYRENE"),"ETagBar",0,0,0);
-  fETagBarVolume->SetVisAttributes(ETagBarVisAtt);
-  
-  G4double ETagShortBarSizeX  = geo->GetETagShortBarSizeX();  //dai anche Y e Z metodi
+  fETagBarVolume->SetVisAttributes(colourBar);
+
+  // Add paint coating
+  G4Box* solidETagBarPaint = new G4Box("solidETagBarPaint",0.5*ETagBarSizeX+ETagBarPaintThick,0.5*ETagBarSizeY+ETagBarPaintThick,0.5*ETagBarSizeZ+ETagBarPaintThick);
+  G4LogicalVolume* logicETagBarPaint = new G4LogicalVolume(solidETagBarPaint,G4Material::GetMaterial("EJ510Paint"),"ETagCell",0,0,0);
+  logicETagBarPaint->SetVisAttributes(colourPaint);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fETagBarVolume,"ETagBar",logicETagBarPaint,false,0,true);
+
+  // Short bar
+  G4double ETagShortBarSizeX  = geo->GetETagShortBarSizeX();
   G4double ETagShortBarSizeY  = geo->GetETagShortBarSizeY();
   G4double ETagShortBarSizeZ  = geo->GetETagShortBarSizeZ();
-  printf("ETag size is %f %f %f\n",ETagShortBarSizeX,ETagShortBarSizeX,ETagShortBarSizeZ);
+  printf("ETag short bar size is %.2fmm %.2fmm %.2fmm\n",ETagShortBarSizeX/mm,ETagShortBarSizeX/mm,ETagShortBarSizeZ/mm);
   G4Box* solidETagShortBar = new G4Box("solidETagShortBar",0.5*ETagShortBarSizeX,0.5*ETagShortBarSizeY,0.5*ETagShortBarSizeZ);
   fETagShortBarVolume = new G4LogicalVolume(solidETagShortBar,G4Material::GetMaterial("G4_POLYSTYRENE"),"ETagShortBar",0,0,0);
-  fETagShortBarVolume->SetVisAttributes(ETagBarVisAtt);
+  fETagShortBarVolume->SetVisAttributes(colourBar);
  
-  G4double ETagBarPosX=0;
-  G4double ETagBarPosY=0;
-  G4double ETagBarPosZ=0;
-  G4int  NBars = geo->GetETagNBars();
-  G4int  BarIndex = 0;
+  // Add paint coating
+  G4Box* solidETagShortBarPaint = new G4Box("solidETagShortBarPaint",0.5*ETagShortBarSizeX+ETagBarPaintThick,0.5*ETagShortBarSizeY+ETagBarPaintThick,0.5*ETagShortBarSizeZ+ETagBarPaintThick);
+  G4LogicalVolume* logicETagShortBarPaint = new G4LogicalVolume(solidETagShortBarPaint,G4Material::GetMaterial("EJ510Paint"),"ETagShortCell",0,0,0);
+  logicETagShortBarPaint->SetVisAttributes(colourPaint);
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,0.),fETagShortBarVolume,"ETagShortBar",logicETagShortBarPaint,false,0,true);
 
-  for(G4int nb=0;nb<NBars;nb++){
-    //    printf("Bars be placed at %f %f %f\n",ETagBarPosX,ETagBarPosY,geo->GetETagPosZ());
-    ETagBarPosX=0;
-    //place the bars from top to bottom.
-    ETagBarPosY = ETagSizeY/2-2.5*mm-ETagBarSizeY/2-ETagBarSizeY*nb; //compensate for extra dimension of Etag volume +5*mm
-    if(nb>5 && nb<9){
-      for(G4int lr=0;lr<2;lr++){
-	if(lr==0) ETagBarPosX = ETagSizeX/2  - ETagShortBarSizeX/2 -2.5*mm; //compensate for extra dimension of Etag volume +5*mm
-	if(lr==1) ETagBarPosX = -ETagSizeX/2 + ETagShortBarSizeX/2 +2.5*mm; //compensate for extra dimension of Etag volume +5*mm
-	printf("ETag Bars %d be placed at %f %f %f %d\n",nb,ETagBarPosX,ETagBarPosY,geo->GetETagPosZ(),lr);
-	G4ThreeVector ETagBarPos = G4ThreeVector(ETagBarPosX,ETagBarPosY,ETagBarPosZ); 
-	new G4PVPlacement(0,ETagBarPos,fETagShortBarVolume,"ETagBar",fETagVolume,false,BarIndex,false);
-      }
-    }else{
-      ETagBarPosX=0;
-      printf("ETag Bars be placed at %d %f %f %f \n",nb,ETagBarPosX,ETagBarPosY,geo->GetETagPosZ());
-      G4ThreeVector ETagBarPos = G4ThreeVector(ETagBarPosX,ETagBarPosY,ETagBarPosZ); 
-      new G4PVPlacement(0,ETagBarPos,fETagBarVolume,"ETagBar",fETagVolume,false,BarIndex,false);
+  G4double ETagBarPosX = 0.;
+  G4double ETagBarPosY = 0.;
+  G4double ETagBarPosZ = 0.5*ETagFrameSizeZ-geo->GetETagBarBackDisp()-0.5*ETagBarSizeZ-ETagBarPaintThick;
+  G4ThreeVector ETagBarPos;
+  G4int ETagBarID;
+
+  // Vertical gap between two bars
+  G4double ETagBarGapY = geo->GetETagBarGapY();
+
+  // Create 15 rows (0-15). Rows 0-5 and 9-14 are a single long bars, Rows 6-8 are two short bars
+  for(G4int nb=0; nb<geo->GetETagNBars(); nb++){
+
+    // Start with row 0 at lower position
+    
+    ETagBarID = nb*10;
+
+    // Bar 7 is at center
+    ETagBarPosY = (nb-7)*(ETagBarSizeY+2.*ETagBarPaintThick+ETagBarGapY);
+
+    if (nb>=6 && nb<9) {
+
+      // Short bars
+      ETagBarPosX = -0.5*ETagBarSizeX+0.5*ETagShortBarSizeX;
+      printf("ETag Bar row %2d left  (wall) (ID=%3d) placed at %7.2fmm %7.2fmm %7.2fmm\n",nb,ETagBarID,ETagBarPosX,ETagBarPosY,ETagBarPosZ);
+      ETagBarPos = G4ThreeVector(ETagBarPosX,ETagBarPosY,ETagBarPosZ); 
+      new G4PVPlacement(0,ETagBarPos,logicETagShortBarPaint,"ETagPaint",fETagVolume,false,ETagBarID,true);
+
+      ETagBarID++;
+      ETagBarPosX = 0.5*ETagBarSizeX-0.5*ETagShortBarSizeX;
+      printf("ETag Bar row %2d right (door) (ID=%3d) placed at %7.2fmm %7.2fmm %7.2fmm\n",nb,ETagBarID,ETagBarPosX,ETagBarPosY,ETagBarPosZ);
+      ETagBarPos = G4ThreeVector(ETagBarPosX,ETagBarPosY,ETagBarPosZ); 
+      new G4PVPlacement(0,ETagBarPos,logicETagShortBarPaint,"ETagPaint",fETagVolume,false,ETagBarID,true);
+
+    } else {
+
+      // Long bars
+      ETagBarPosX = 0.;
+      printf("ETag Bar row %2d              (ID=%3d) placed at %7.2fmm %7.2fmm %7.2fmm\n",nb,ETagBarID,ETagBarPosX,ETagBarPosY,ETagBarPosZ);
+      ETagBarPos = G4ThreeVector(ETagBarPosX,ETagBarPosY,ETagBarPosZ); 
+      new G4PVPlacement(0,ETagBarPos,logicETagBarPaint,"ETagPaint",fETagVolume,false,ETagBarID,true);
+
     }
-    BarIndex++;
+
   }
-  
+
   // Create digitizer for ETag
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   G4String ETagDName = geo->GetETagDigitizerName();
@@ -141,7 +181,7 @@ void ETagDetector::CreateGeometry()
   ETagDigitizer* ETagD = new ETagDigitizer(ETagDName);
   theDM->AddNewModule(ETagD);
 
-  // Make whole ETag a sensitive detector
+  // Make all ETag bars a sensitive detector
   G4SDManager* sdMan = G4SDManager::GetSDMpointer();
   G4String etagSDName = geo->GetETagSensitiveDetectorName();
   printf("Registering ETag SD %s\n",etagSDName.data());
@@ -149,5 +189,5 @@ void ETagDetector::CreateGeometry()
   sdMan->AddNewDetector(etagSD);
   fETagBarVolume->SetSensitiveDetector(etagSD);
   fETagShortBarVolume->SetSensitiveDetector(etagSD);
-  //  fETagVolume->SetSensitiveDetector(etagSD);
+
 }

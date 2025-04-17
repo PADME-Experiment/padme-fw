@@ -194,8 +194,8 @@ void ECalDigitizer::Digitize()
       G4double hEnergy  = (*ECalHC)[i]->GetEnergy();
       G4ThreeVector hLocPos = (*ECalHC)[i]->GetLocalPosition();
       // Add information to digi (just an example)
-      dEnergy[hChannel] += hEnergy;
-      if (hTime < dTime[hChannel]) dTime[hChannel] = hTime;
+      dEnergy[hChannel] += hEnergy;      
+      if (hTime < dTime[hChannel]) dTime[hChannel] = hTime;   // collect time of first hit.
       
       // Check if the hit is related to some of the present digis
       

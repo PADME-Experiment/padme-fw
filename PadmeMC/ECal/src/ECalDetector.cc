@@ -223,17 +223,17 @@ void ECalDetector::CreateGeometry()
 
     // Insert honeycomb inside main panel volume
     G4double ecalPanelHoneycombPosZ = 0.;
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelHoneycombPosZ),ecalPanelHoneycombVolume,"ECalPanelHoneycomb",fECalPanelVolume,false,0,false);
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelHoneycombPosZ),ecalPanelHoneycombVolume,"ECalPanelHoneycomb",fECalPanelVolume,false,0,true);
 
     // Insert glue layers inside main panel volume
     G4double ecalPanelGluePosZ = 0.5*ecalPanelHoneycombThick+0.5*ecalPanelGlueThick;
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,-ecalPanelGluePosZ),ecalPanelGlueVolume,"ECalPanelGlue",fECalPanelVolume,false,0,false);
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelGluePosZ),ecalPanelGlueVolume,"ECalPanelGlue",fECalPanelVolume,false,1,false);
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,-ecalPanelGluePosZ),ecalPanelGlueVolume,"ECalPanelGlue",fECalPanelVolume,false,0,true);
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelGluePosZ),ecalPanelGlueVolume,"ECalPanelGlue",fECalPanelVolume,false,1,true);
 
     // Insert foils inside main panel volume
     G4double ecalPanelFoilPosZ = 0.5*ecalPanelHoneycombThick+ecalPanelGlueThick+0.5*ecalPanelFoilThick;
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,-ecalPanelFoilPosZ),ecalPanelFoilVolume,"ECalPanelFoil",fECalPanelVolume,false,0,false);
-    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelFoilPosZ),ecalPanelFoilVolume,"ECalPanelFoil",fECalPanelVolume,false,1,false);
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,-ecalPanelFoilPosZ),ecalPanelFoilVolume,"ECalPanelFoil",fECalPanelVolume,false,0,true);
+    new G4PVPlacement(0,G4ThreeVector(0.,0.,ecalPanelFoilPosZ),ecalPanelFoilVolume,"ECalPanelFoil",fECalPanelVolume,false,1,true);
 
     // Place panel in front of ECal
     G4double ecalPanelPosX = geo->GetECalPanelPosX();

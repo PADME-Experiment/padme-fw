@@ -12,6 +12,7 @@
 
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
+#include "G4TwoVector.hh"
 #include "G4ThreeVector.hh"
 
 class G4LogicalVolume;
@@ -41,7 +42,22 @@ public:
   void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
-  // Position of center of TPix box
+  // Position of center of TPix main box
+  G4double GetBoxPosX() { return fBoxPosX; }
+  G4double GetBoxPosY() { return fBoxPosY; }
+  G4double GetBoxPosZ() { return fBoxPosZ; }
+
+  // Dimensions of TPix main box
+  G4double GetBoxSizeX() { return fBoxSizeX; }
+  G4double GetBoxSizeY() { return fBoxSizeY; }
+  G4double GetBoxSizeZ() { return fBoxSizeZ; }
+
+  // Displacement of center of TimePix within TPix box
+  G4double GetTPixDispX() { return fTPixDispX; }
+  G4double GetTPixDispY() { return fTPixDispY; }
+  G4double GetTPixDispZ() { return fTPixDispZ; }
+
+  // Absolute position of center of TPix
   G4double GetTPixPosX() { return fTPixPosX; }
   G4double GetTPixPosY() { return fTPixPosY; }
   G4double GetTPixPosZ() { return fTPixPosZ; }
@@ -49,7 +65,7 @@ public:
   // Rotation of TPix box
   G4double GetTPixRotY() { return fTPixRotY; }
 
-  // Size of TPix box
+  // Size of TPix volume
   G4double GetTPixSizeX() { return fTPixSizeX; }
   G4double GetTPixSizeY() { return fTPixSizeY; }
   G4double GetTPixSizeZ() { return fTPixSizeZ; }
@@ -70,6 +86,36 @@ public:
   G4double GetChipSizeY() { return fChipSizeY; }
   G4double GetChipSizeZ() { return fChipSizeZ; }
 
+  G4double GetCuSlabThick() { return fCuSlabThick; }
+  G4double GetCuSlabFingerWidth() { return fCuSlabFingerWidth; }
+
+  std::vector<G4TwoVector> GetCuShapePolygon() { return fCuShapePolygon; }
+  G4double GetCuShapeWidth() { return fCuShapeWidth; }
+  G4double GetCuShapeHeight() { return fCuShapeHeight; }
+  G4double GetCuShapeDepth() { return fCuShapeDepth; }
+
+  G4double GetCuBlockWidth() { return fCuBlockWidth; }
+  G4double GetCuBlockHeight() { return fCuBlockHeight; }
+  G4double GetCuBlockDepth() { return fCuBlockDepth; }
+
+  G4double GetCuSuppThick() { return fCuSuppThick; }
+  G4double GetCuSuppHeight() { return fCuSuppHeight; }
+  G4double GetCuSuppWidth() { return fCuSuppWidth; }
+  G4double GetCuSuppToChipDispX() { return fCuSuppToChipDispX; }
+  G4double GetCuHoleWidth() { return fCuHoleWidth; }
+  G4double GetCuHoleHeight() { return fCuHoleHeight; }
+  G4double GetCuHoleDispX() { return fCuHoleDispX; }
+  G4double GetCuHoleDispY() { return fCuHoleDispY; }
+
+  G4double GetWaterPipeRadius() { return fWaterPipeRadius;}
+  G4double GetWaterPipeLength() { return fWaterPipeLength; }
+  G4double GetWaterPipeUpDisp() { return fWaterPipeUpDisp; }
+  G4double GetWaterPipeDownDisp() { return fWaterPipeDownDisp; }
+
+  G4double GetPCBBarThick() { return fPCBBarThick; }
+  G4double GetPCBBarHeight() { return fPCBBarHeight; }
+  G4double GetPCBBarDispZ() { return fPCBBarDispZ; }
+
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   void SetTPixChamberWallAngle(G4double);
 
@@ -80,6 +126,11 @@ public:
    // Distance from the corner on the back face of the vacuum chamber
   G4double GetTPixDistanceToCorner() { return fTPixDistanceToCorner; }
   void SetTPixDistanceToCorner(G4double);
+
+  G4double GetTPixYDisplacement() { return fTPixDistanceToCorner; }
+  void SetTPixYDisplacement(G4double);
+
+
 
   // Coordinates of the corner on the back face of the vacuum chamber
   void SetTPixChamberWallCorner(G4ThreeVector);
@@ -111,17 +162,71 @@ private:
   G4double fTPixSizeY;
   G4double fTPixSizeZ;
 
-  G4double fTPixPosX; // Position along X axis of TPix center
-  G4double fTPixPosY; // Position along Y axis of TPix center
-  G4double fTPixPosZ; // Position along Z axis of TPix center
+  G4double fTPixPosX; // Absolute position along X axis of TPix center
+  G4double fTPixPosY; // Absolute position along Y axis of TPix center
+  G4double fTPixPosZ; // Absolute position along Z axis of TPix center
 
   G4double fTPixRotY; // Rotation of TPix around Y axis
+
+  // TimePix main box dimensions
+  G4double fBoxSizeX;
+  G4double fBoxSizeY;
+  G4double fBoxSizeZ;
+
+  // TimePix main box position
+  G4double fBoxPosX;
+  G4double fBoxPosY;
+  G4double fBoxPosZ;
+
+  // TimePix displacement within main box
+  G4double fTPixDispX;
+  G4double fTPixDispY;
+  G4double fTPixDispZ;
+
+  // Copper support structure
+
+  // Thin copper slab behind TimePix itself (X,Y dimensions = TimePix)
+  G4double fCuSlabThick;
+  G4double fCuSlabFingerWidth;
+
+  // Chip Cu support structure (above and below chips)
+  std::vector<G4TwoVector> fCuShapePolygon;
+  G4double fCuShapeWidth;
+  G4double fCuShapeHeight;
+  G4double fCuShapeDepth;
+
+  // Top and bottom Cu bars behind the readout boards
+  G4double fCuBlockWidth;
+  G4double fCuBlockHeight;
+  G4double fCuBlockDepth;
+
+  // Cu support frame
+  G4double fCuSuppThick;
+  G4double fCuSuppWidth;
+  G4double fCuSuppHeight;
+  G4double fCuSuppToChipDispX;
+  G4double fCuHoleWidth;
+  G4double fCuHoleHeight;
+  G4double fCuHoleDispX;
+  G4double fCuHoleDispY;
+
+  // Water pipes
+  G4double fWaterPipeRadius;
+  G4double fWaterPipeLength;
+  G4double fWaterPipeUpDisp;
+  G4double fWaterPipeDownDisp;
+
+  // PCB bars
+  G4double fPCBBarThick;
+  G4double fPCBBarHeight;
+  G4double fPCBBarDispZ; // Distance between back face of PCB and front face of TimePix
 
   // Angle of vacuum chamber wall behind HEPVeto wrt X axis
   G4double fTPixChamberWallAngle;
 
   // Distance from the corner on the back face of the vacuum chamber
   G4double fTPixDistanceToCorner;
+  G4double fTPixYDisplacement;
 
   // Coordinates of the corner on the back face of the vacuum chamber
   G4ThreeVector fTPixChamberWallCorner;

@@ -33,7 +33,8 @@ protected:
 
 public:
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  //void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
   void EnableBeWindow() { fBeWindowEnable = true; }
@@ -72,6 +73,11 @@ public:
   void DisableQuadrupoles() { fQuadrupolesEnable = false; }
   G4bool QuadrupolesAreEnabled() { return fQuadrupolesEnable; }
 
+  // Enable/disable BTF Target Region
+  void EnableBTFTarget() { fBTFTargetEnable = true; }
+  void DisableBTFTarget() { fBTFTargetEnable = false; }
+  G4bool BTFTargetIsEnabled() { return fBTFTargetEnable; }
+
   // Magnetic field gradient inside quadrupoles
   void SetQ1MagneticFieldGrad(G4double g) { fQ1MagneticFieldGrad = g*tesla/m; }
   G4double GetQ1MagneticFieldGrad() { return fQ1MagneticFieldGrad; }
@@ -85,7 +91,6 @@ public:
   void SetQ4MagneticFieldGrad(G4double g) { fQ4MagneticFieldGrad = g*tesla/m; }
   G4double GetQ4MagneticFieldGrad() { return fQ4MagneticFieldGrad; }
 
-
   //Aperture of the collimators
   void SetSLTB2Aperture(G4double g) { fSLTB2Aperture = g; }
   G4double GetSLTB2Aperture() { return fSLTB2Aperture; }
@@ -97,9 +102,12 @@ public:
   void SetSLTB4Aperture(G4double g) { fSLTB4Aperture = g; }
   G4double GetSLTB4Aperture() { return fSLTB4Aperture; }
 
+  void SetSLTB5Aperture(G4double g) { fSLTB5Aperture = g; }
+  G4double GetSLTB5Aperture() { return fSLTB5Aperture; }
+
   //setup line configuration M. Raggi 06/2020
-  void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
-  G4double GetBeamLineSetup() { return fBeamLineSetup; }
+  //void SetBeamLineSetup(G4double g) { fBeamLineSetup = g; }
+  //G4double GetBeamLineSetup() { return fBeamLineSetup; }
 
   // Dimensions of DHSTB002 magnet yoke
 
@@ -126,7 +134,6 @@ public:
   G4double GetMagVolMaxRadius() { return fMagVolMaxRadius; }
 
   // Dimensions of beam pipe inside magnet
-
   G4double GetMagPipeSizeX() { return fMagPipeSizeX; }
   G4double GetMagPipeSizeY() { return fMagPipeSizeY; }
   G4double GetMagPipeMinRadius() { return fMagPipeMinRadius; }
@@ -234,13 +241,26 @@ public:
   G4double GetWallHoleRadius(){ return fWallHoleRadius;}
   G4double GetWallMylarWinDistance(){ return fWallMylarWinDistance;}
 
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022
+  G4double GetDHSTB002ToPulsedMagnet()  { return fDHSTB002ToPulsedMagnet;}      
+  G4double GetPulsedPipeSizeX()		{ return fPulsedPipeSizeX ;}      
+  G4double GetPulsedPipeSizeY()		{ return fPulsedPipeSizeY ;}   
+  G4double GetPulsedPipeStraightLength(){ return fPulsedPipeLength;}
 
+  G4double GetPulsedPipeHoleSizeX()	{ return  fPulsedPipeHoleSizeX;}   
+  G4double GetPulsedPipeHoleSizeY()	{ return  fPulsedPipeHoleSizeY;}   
+
+  G4double GetPulsedPipeFlangeRadius()	{ return fPulsedFlangeR;}   
+  G4double GetPulsedPipeFlangeThick()	{ return fPulsedFlangeThick;}   
+
+  G4double GetBTFTargetThickness()	{ return fBTFTargetThickness;}   
+  G4double GetBTFTargetDistance()	{ return fBTFTargetDistance;}   
+  
 private:
 
   G4int fDetectorSetup;
 
   //  Berillium thin window and stainless still flange
-
   G4bool fBeWindowEnable;
   G4bool fMylarWindowEnable;
   G4bool fBeamFlagEnable;
@@ -251,20 +271,20 @@ private:
   G4double fWindowThickness;
 
   // Gradient of Quadrupoles Magnetic field 
-  //G4double fQ1_FieldGrad;  //from data cards
-
   G4bool fQuadrupolesEnable;
+
   G4double fQ1MagneticFieldGrad;
   G4double fQ2MagneticFieldGrad;
   G4double fQ3MagneticFieldGrad;
   G4double fQ4MagneticFieldGrad;
 
-
+  G4double fSLTB5Aperture;
   G4double fSLTB4Aperture;
   G4double fSLTB3Aperture;
   G4double fSLTB2Aperture;
 
   G4double fBeamLineSetup;
+  G4bool fBTFTargetEnable;
 
   // Radius of magnet at center of beam line
   G4double fDHSTB002CenterRadius;
@@ -418,6 +438,24 @@ private:
   G4double f2020PipeInnerRadius; 
 
 
+  //
+  // BEAM line 2022 geometry parameters M. Raggi 08.2022 
+  //
+  G4double fDHSTB002ToPulsedMagnet; 
+  // Dimensions of the beam pipe inside the pulsed magnet
+  // Transverse section
+  G4double fPulsedPipeSizeX; 
+  G4double fPulsedPipeSizeY; 
+  G4double fPulsedPipeLength;
+
+  G4double fPulsedPipeHoleSizeX;
+  G4double fPulsedPipeHoleSizeY;
+ 
+  G4double fPulsedFlangeR ;
+  G4double fPulsedFlangeThick;
+
+  G4double fBTFTargetThickness;
+  G4double fBTFTargetDistance;  
 };
 
 #endif

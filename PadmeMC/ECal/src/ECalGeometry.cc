@@ -105,6 +105,27 @@ ECalGeometry::ECalGeometry()
 ECalGeometry::~ECalGeometry()
 {}
 
+void ECalGeometry::SetDetectorSetup(G4int setup)
+{
+
+  fDetectorSetup = setup;
+
+  if (fDetectorSetup < 40) {
+    // Front face position and X/Y displacements from Jan 2020 survey
+    fECalFrontFacePosZ = 2435.51*mm;
+    fECalDisplacementX = 3.13*mm;
+    fECalDisplacementY = 3.86*mm;
+    fECalPanelEnable = true; // AluStep panel was there
+  } else {
+    // Front face position and X/Y displacements for Run III (2022)
+    fECalFrontFacePosZ = 2612.41*mm; // +176.90mm
+    fECalDisplacementX = 3.41*mm;      // +0.28mm
+    fECalDisplacementY = 3.86*mm;      // +0.00mm
+    fECalPanelEnable = false; // AluStep panel was removed
+  }
+
+}
+
 void ECalGeometry::SetCrystalMap()
 {
 

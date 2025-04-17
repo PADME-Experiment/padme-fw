@@ -182,10 +182,115 @@ int main(int argc, char* argv[])
   Int_t oldMSec = 0;
   Int_t oldSrsTS = 0;
   Int_t dt,ds,dst,nroll;
-  Float_t ratio;
   Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
   Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
 
+  Int_t oldPSec  = 0;
+  Int_t oldPMSec = 0;
+  Int_t oldPTrgT = 0;
+  Int_t pSec,pMSec,pTrgT;
+  Long64_t pdClockRollover = 1099511627776; // PADME trigger clock counter has 40 bits -> 2^40=1099511627776. Rollover every 2^40/(80E6 Hz)=13744 sec
+
+  Int_t oldPdTime = 0;
+  Int_t oldPdMSec = 0;
+  Int_t oldPdClk = 0;
+  Int_t pdTime,pdMSec,pdClk;
+  Int_t oldChTime = 0;
+  Int_t oldChMSec = 0;
+  Int_t oldChClk = 0;
+  Int_t chTime,chMSec,chClk;
+
+  Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
+
+  // Get first PADME event
+  TRawEvent* rawEv = IH->NextEvent();
+  TTimeStamp tts = rawEv->GetEventAbsTime();
+  oldPdTime = tts.GetSec();
+  oldPdMSec = tts.GetNanoSec()/1000;
+  oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
+
+  // Get first chamber event
+  iEntry = CH->LoadTree(chEntry);
+  nBytes = CH->GetEntry(chEntry);
+  oldChTime = CH->daqTimeSec;
+  oldChMSec = CH->daqTimeMicroSec;
+  oldChClk = CH->srsTimeStamp;
+  chEntry++;
+
+  while(true) {
+
+    Int_t delta = (oldPdTime*1000+oldPdMSec/1000)-(oldChTime*1000+oldChMSec/1000);
+    printf("PADME time %10d.%6.6d Chamber time %10d.%6.6d Delta %8d\n",oldPdTime,oldPdMSec,oldChTime,oldChMSec,delta);
+ 
+    if ( (oldPdTime>oldChTime) || ( (oldPdTime==oldChTime) && (oldPdMSec>oldChMSec) ) ) {
+      // PADME is ahead of chamber: read next chamber event
+      iEntry = CH->LoadTree(chEntry);
+      nBytes = CH->GetEntry(chEntry);
+      chTime = CH->daqTimeSec;
+      chMSec = CH->daqTimeMicroSec;
+      chClk = CH->srsTimeStamp;
+      chEntry++;
+      if (chEntry >= chEntries) {
+	printf("- Reached end of chamber streams: exiting\n");
+	break;
+      }
+      oldChTime = chTime;
+      oldChMSec = chMSec;
+      oldChClk = chClk;
+
+    } else {
+      // Chamber is ahead of PADME: read next PADME event
+      TRawEvent* rawEv = IH->NextEvent();
+      if (rawEv == 0) {
+	printf("- Reached end of PADME streams: exiting\n");
+	break;
+      }
+      TTimeStamp tts = rawEv->GetEventAbsTime();
+      pdTime = tts.GetSec();
+      pdMSec = tts.GetNanoSec()/1000;
+      pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      rawEv->Clear("C");
+      oldPdTime = pdTime;
+      oldPdMSec = pdMSec;
+      oldPdClk = pdClk;
+    }
+
+  }
+
+  /*
+  while(true) {
+
+    Int_t delta = (pdTime*1000+pdMSec/1000)-(chTime*1000+chMSec/1000);
+    printf("PADME time %10d.%6.6d Chamber time %10d.%6.6d Delta %8d\n",pdTime,pdMSec,chTime,chMSec,delta);
+
+    if ( (pdTime>chTime) || ( (pdTime==chTime) && (pdMSec>chMSec) ) ) {
+      // PADME is ahead of chamber: read next chamber event
+      iEntry = CH->LoadTree(chEntry);
+      nBytes = CH->GetEntry(chEntry);
+      chTime = CH->daqTimeSec;
+      chMSec = CH->daqTimeMicroSec;
+      chEntry++;
+      if (chEntry >= chEntries) {
+	printf("- Reached end of chamber streams: exiting\n");
+	break;
+      }
+    } else {
+      // Chamber is ahead of PADME: read next PADME event
+      TRawEvent* rawEv = IH->NextEvent();
+      if (rawEv == 0) {
+	printf("- Reached end of PADME streams: exiting\n");
+	break;
+      }
+      TTimeStamp tts = rawEv->GetEventAbsTime();
+      pdTime = tts.GetSec();
+      pdMSec = tts.GetNanoSec()/1000;
+      rawEv->Clear("C");
+    }
+
+  }
+  */
+
+  /*
   while(true) {
 
     // Get next PADME event
@@ -206,15 +311,40 @@ int main(int argc, char* argv[])
       //ds = CH->srsTimeStamp-oldSrsTS;
       //if (ds<0) ds = chClockRollover+ds; // We can use absolute time to check if the clock counter rolled over more than once
       ds = CH->srsTimeStamp-oldSrsTS;
-      if (ds<0) ds = chClockRollover+ds; // Correct for clock counter rollover
+      if (ds<0) ds += chClockRollover; // Correct for clock counter rollover
       if (nroll) ds += nroll*chClockRollover; // Take into account additional rollovers using info from absolute clock
-      ratio = (1.*ds)/(1.*dt);
       dst = int(ds/chClockFreq+0.5);
-      if (nroll) printf("Chamber NRoll = %2d\tSRSts = %8u\tdt = %6d us\tds = %7d\tratio = %9.6f\tSRSdT = %6d us\tdelay = %d us\n",nroll,CH->srsTimeStamp,dt,ds,ratio,dst,dst-dt);
+      //printf("Chamber NRoll = %2d\tSRSts = %8u\tdt = %6d us\tds = %7d\tSRSdT = %6d us\tdelay = %d us\n",nroll,CH->srsTimeStamp,dt,ds,dst,dst-dt);
+      //printf("Chamber NRoll = %2d\tSRSts = %8u\tds = %8d\tds(50Hz) = %10.6f\n",nroll,CH->srsTimeStamp,ds,(1.*ds)/786408.5);
+      printf("Chamber NRoll = %2d\tSRSts = %8u\tds = %8d\tds(50Hz) = %10.6f\n",nroll,CH->srsTimeStamp,ds,(1.*ds)/786407.87);
+    } else {
+      printf("Chamber NRoll = %2d\tSRSts = %8u\n",0,CH->srsTimeStamp);
     }
-    oldSec = CH->daqTimeSec;
-    oldMSec = CH->daqTimeMicroSec;
+
+    oldSec   = CH->daqTimeSec;
+    oldMSec  = CH->daqTimeMicroSec;
     oldSrsTS = CH->srsTimeStamp;
+
+    pSec  = rawEv->GetEventAbsTime().GetSec();
+    pMSec = rawEv->GetEventAbsTime().GetNanoSec()/1000;
+    pTrgT = rawEv->TriggerInfo()->GetTriggerTime();
+
+    if (oldPSec) {
+      dt = 1000000*(pSec-oldPSec)+(pMSec-oldPMSec);
+      ds = pTrgT-oldPTrgT;
+      nroll = 0;
+      if (ds<0) {
+	ds += pdClockRollover;
+	nroll = 1;
+      }
+      printf("PADME   NRoll = %2d\tSRSts = %8u\tds = %8d\n",nroll,pTrgT,ds);
+    } else {
+      printf("PADME   NRoll = %2d\tSRSts = %8u\n",0,pTrgT);
+    }
+
+    oldPSec  = pSec;
+    oldPMSec = pMSec;
+    oldPTrgT = pTrgT;
 
     // Show event header once in a while (if required)
     if ( cfg->DebugScale() && (IH->EventNumber()%cfg->DebugScale() == 0) ) {
@@ -228,20 +358,19 @@ int main(int argc, char* argv[])
       printf("Chamber Entry %8lld Bytes %6lld Event %8lld Time %8d-%06d.%09d TimeStamp %11d Trigger %10d\n",iEntry,nBytes,CH->evt,chts.GetDate(),chts.GetTime(),chts.GetNanoSec(),CH->srsTimeStamp,CH->srsTrigger);
     }
 
-    /* switch off output during testing period
-    // Copy current input event to output event structure
-    if (EC->CopyEvent(OH->GetRawEvent(),rawEv)) {
-      perror("- ERROR while copying input event to output event");
-      exit(EXIT_FAILURE);
-    }
-
-    // Write current event to output file
-    //if (OH->WriteEvent(rawEv)) {
-    if (OH->WriteEvent()) {
-      perror("- ERROR while writing output file");
-      exit(EXIT_FAILURE);
-    }
-    */
+    // switch off output during testing period
+    //// Copy current input event to output event structure
+    //if (EC->CopyEvent(OH->GetRawEvent(),rawEv)) {
+    //  perror("- ERROR while copying input event to output event");
+    //  exit(EXIT_FAILURE);
+    //}
+    //
+    //// Write current event to output file
+    ////if (OH->WriteEvent(rawEv)) {
+    //if (OH->WriteEvent()) {
+    //  perror("- ERROR while writing output file");
+    //  exit(EXIT_FAILURE);
+    //}
 
     // Clear event
     rawEv->Clear("C");
@@ -260,6 +389,7 @@ int main(int argc, char* argv[])
     }
 
   } // End loop over events
+  */
 
   // Finalize event copier
   //EC->Finalize();

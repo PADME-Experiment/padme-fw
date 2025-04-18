@@ -5,7 +5,7 @@
 
 #include "Configuration.hh"
 #include "ChamberInputHandler.hh"
-//#include "ChamberMonitor.hh"
+#include "ChamberMonitor.hh"
 
 #include "utlConfigParser.hh"
 
@@ -169,12 +169,12 @@ int main(int argc, char* argv[])
 
   // Configure Chamber analyzer
   Bool_t analyzeChamber = true;
-  //ChamberMonitor* chamber_mon = 0;
+  ChamberMonitor* chamber_mon = 0;
   if ( configParser->HasConfig("ANALYZE","Chamber") && (std::stoi(configParser->GetSingleArg("ANALYZE","Chamber")) == 0) ) analyzeChamber = false;
   if (analyzeChamber) {
     TString configFileChamber = "config/Chamber.cfg";
     if (configParser->HasConfig("CONFIGFILE","Chamber")) configFileChamber = configParser->GetSingleArg("CONFIGFILE","Chamber");
-    //chamber_mon = new ChamberMonitor(configFileChamber);
+    chamber_mon = new ChamberMonitor(configFileChamber);
   }
 
   // N.B. InputHandler must be created AFTER all detectors have been initialized to avoid clashes on histogram booking
@@ -212,17 +212,17 @@ int main(int argc, char* argv[])
 
     // Show event header once in a while (if required)
     if ( (cfg->DebugScale() != 0) && (IH->EventNumber()%cfg->DebugScale() == 0) ) {
-      printf("%7u Run 0000000 Event %7llu Time %8d-%06d.%09d RunTime %13d\n",
-	     IH->EventNumber(),rawEv->evt,tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),rawEv->srsTimeStamp);
+      printf("%7u Run 0000000 Event %7llu Time %8d-%06d.%09d RunTime %8d Trigger %8u Error %8u\n",
+	     IH->EventNumber(),rawEv->evt,tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
+	     rawEv->srsTimeStamp,rawEv->srsTrigger,rawEv->error);
     }
 
-    // Call "start of event" procedures for all detectors
-    //if (analyzeChamber) chamber_mon->StartOfEvent();
-
-    //if (analyzeChamber) chamber_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
-
-    // Call "end of event" procedures for all detectors
-    //if (analyzeChamber)   chamber_mon->EndOfEvent();
+    // Analyze event
+    if (analyzeChamber) {
+      chamber_mon->StartOfEvent();
+      chamber_mon->AnalyzeEvent(rawEv);
+      chamber_mon->EndOfEvent();
+    }
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -232,8 +232,8 @@ int main(int argc, char* argv[])
 
   } // End loop over events
 
-  // Finalize all detectors
-  //if (analyzeChamber) chamber_mon->Finalize();
+  // Finalize detector
+  if (analyzeChamber) chamber_mon->Finalize();
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -252,7 +252,7 @@ int main(int argc, char* argv[])
 
   // Final cleanup
   delete IH;
-  //if (chamber_mon) delete chamber_mon;
+  if (chamber_mon) delete chamber_mon;
 
   exit(EXIT_SUCCESS);
 

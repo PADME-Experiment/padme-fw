@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Configuration.hh"
-//#include "ChamberInputHandler.hh"
+#include "ChamberInputHandler.hh"
 //#include "ChamberMonitor.hh"
 
 #include "utlConfigParser.hh"
@@ -179,14 +179,12 @@ int main(int argc, char* argv[])
 
   // N.B. InputHandler must be created AFTER all detectors have been initialized to avoid clashes on histogram booking
 
-  /*
   // Create input handler
   ChamberInputHandler* IH = new ChamberInputHandler();
   if (IH->Initialize()) {
     perror("- ERROR while initializing InputHandler");
     exit(EXIT_FAILURE);
   }
-  */
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -194,39 +192,37 @@ int main(int argc, char* argv[])
   }
   TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
   printf("=== ChamberMonitor starting on %s\n",cfg->FormatTime(now.tv_sec));
-  /*
+
   while(true) {
 
-    TRawEvent* rawEv = IH->NextEvent();
+    ChamberEvent* rawEv = IH->NextEvent();
     if (rawEv == 0) {
       printf("- Reached end of streams: exiting\n");
       break;
     }
 
+    // Save event information
+    //cfg->SetRunNumber(rawEv->GetRunNumber());
+    cfg->SetEventNumber(rawEv->evt);
+    TTimeStamp tts = TTimeStamp(rawEv->daqTimeSec,1000*rawEv->daqTimeMicroSec);
+    cfg->SetEventAbsTime(tts);
+    cfg->SetEventRunTime(rawEv->srsTimeStamp);
+    //cfg->SetEventTrigMask(rawEv->GetEventTrigMask());
+    //cfg->SetEventStatus(rawEv->GetEventStatus());
+
     // Show event header once in a while (if required)
     if ( (cfg->DebugScale() != 0) && (IH->EventNumber()%cfg->DebugScale() == 0) ) {
-      TTimeStamp tts = rawEv->GetEventAbsTime();
-      printf("%7u Run %7d Event %7d Time %8d-%06d.%09d RunTime %13llu TrigMask 0x%02x EvtStatus 0x%04x Boards %2d MissBoard 0x%04x\n",
-	     IH->EventNumber(),rawEv->GetRunNumber(),rawEv->GetEventNumber(),tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
-	     rawEv->GetEventRunTime(),(rawEv->GetEventTrigMask() & 0xff),(rawEv->GetEventStatus() & 0xffff),
-	     rawEv->GetNADCBoards(),(rawEv->GetMissingADCBoards() & 0xffff));
+      printf("%7u Run 0000000 Event %7llu Time %8d-%06d.%09d RunTime %13d\n",
+	     IH->EventNumber(),rawEv->evt,tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),rawEv->srsTimeStamp);
     }
 
-    // Save event information
-    cfg->SetRunNumber(rawEv->GetRunNumber());
-    cfg->SetEventNumber(rawEv->GetEventNumber());
-    cfg->SetEventAbsTime(rawEv->GetEventAbsTime());
-    cfg->SetEventRunTime(rawEv->GetEventRunTime());
-    cfg->SetEventTrigMask(rawEv->GetEventTrigMask());
-    cfg->SetEventStatus(rawEv->GetEventStatus());
-
     // Call "start of event" procedures for all detectors
-    if (analyzeChamber) chamber_mon->StartOfEvent();
+    //if (analyzeChamber) chamber_mon->StartOfEvent();
 
-    if (analyzeChamber) chamber_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
+    //if (analyzeChamber) chamber_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
 
     // Call "end of event" procedures for all detectors
-    if (analyzeChamber)   chamber_mon->EndOfEvent();
+    //if (analyzeChamber)   chamber_mon->EndOfEvent();
 
     // Check if we processed enough events
     if ( nEventsToProcess && (IH->EventsRead() >= nEventsToProcess) ) {
@@ -235,7 +231,6 @@ int main(int argc, char* argv[])
     }
 
   } // End loop over events
-  */
 
   // Finalize all detectors
   //if (analyzeChamber) chamber_mon->Finalize();
@@ -251,12 +246,12 @@ int main(int argc, char* argv[])
   Double_t t_end_f = 1.*t_end.GetSec()+1.E-9*t_end.GetNanoSec();
   Double_t t_run_f = t_end_f-t_start_f;
   printf("- Total run time %.3fs\n",t_run_f);
-  //printf("- Total processed events %d\n",IH->EventsRead());
-  //if (IH->EventsRead()>0) printf("- Event processing time %.3f ms/evt\n",1000.*t_run_f/IH->EventsRead());
-  //if (t_run_f>0.) printf("- Event processing rate %.2f evt/s\n",IH->EventsRead()/t_run_f);
+  printf("- Total processed events %d\n",IH->EventsRead());
+  if (IH->EventsRead()>0) printf("- Event processing time %.3f ms/evt\n",1000.*t_run_f/IH->EventsRead());
+  if (t_run_f>0.) printf("- Event processing rate %.2f evt/s\n",IH->EventsRead()/t_run_f);
 
   // Final cleanup
-  //delete IH;
+  delete IH;
   //if (chamber_mon) delete chamber_mon;
 
   exit(EXIT_SUCCESS);

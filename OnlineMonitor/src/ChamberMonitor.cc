@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fstream>
+#include <iostream>
 
 #include "ChamberMonitor.hh"
+#include "ChamberEvent.hh"
 
 #include "Configuration.hh"
 
@@ -60,7 +62,16 @@ void ChamberMonitor::Initialize()
   */
 
   // Create histograms
-  //fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
+  for(int i=0; i<MMCH_N_LAYERS; i++) {
+    h_occupancy[i] = new TH1D(TString::Format("h_occupancy%d",i),TString::Format("Occupancy Layer %d",i),maxStrip,0,xmax);
+    hw_occupancy[i] = new TH1D(TString::Format("hw_occupancy%d",i),TString::Format("Weighted Occupancy Layer %d",i),maxStrip,0,xmax);
+    hqmax_totevent[i] = new TH1D(TString::Format("hqmax_totevent%d",i),TString::Format("hqmax_totevent%d",i),1000,10,2500);
+    htmax_totevent[i] = new TH1D(TString::Format("htmax_totevent%d",i),TString::Format("htmax_totevent%d",i),1000,10,2500);
+    //hqmax_strip[i] = new TH2D(TString::Format("hqmax_strip%d",i),TString::Format("hqmax_strip%d",i),maxStrip,0,xmax,1000,10,2500);;
+    //htmax_strip[i] = new TH2D(TString::Format("htmax_strip%d",i),TString::Format("htmax_strip%d",i),maxStrip,0,xmax,1000,10,2500);
+    hqmax_perevent[i] = new TH1D(TString::Format("hqmax_perevent%d",i),TString::Format("Q_max Layer %d; # strip ; Charge [ADC counts]",i),maxStrip,0,xmax);
+    htmax_perevent[i] = new TH1D(TString::Format("htmax_perevent%d",i),TString::Format("Time Layer %d; # strip ; Time [ns]",i),maxStrip,0,xmax);
+  }
 
   // Reset global counters
   fBeamEventCount = 0;
@@ -72,39 +83,6 @@ void ChamberMonitor::Initialize()
 
 void ChamberMonitor::StartOfEvent()
 {
-  /*
-  // Check if event was triggered by BTF beam
-  if (fConfig->GetEventTrigMask() & 0x01) {
-    fIsBeam = true;
-    fBeamEventCount++;
-  } else {
-    fIsBeam = false;
-  }
-
-  // Check if event was triggered by cosmics
-  if (fConfig->GetEventTrigMask() & 0x02) {
-    fIsCosmics = true;
-    fCosmicsEventCount++;
-  } else {
-    fIsCosmics = false;
-  }
- 
-  // Check if event was a random trigger
-  if (fConfig->GetEventTrigMask() & 0x40) {
-    fIsRandom = true;
-    fRandomEventCount++;
-  } else {
-    fIsRandom = false;
-  }
-  
-  // Check if event was an off-beam trigger
-  if (fConfig->GetEventTrigMask() & 0x80) {
-    fIsOffBeam = true;
-    fOffBeamEventCount++;
-  } else {
-    fIsOffBeam = false;
-  }
-  */
 
   // Chamber rawdata file has no trigger info: assume all events are beam events
   fIsBeam = true;
@@ -112,6 +90,11 @@ void ChamberMonitor::StartOfEvent()
   fIsRandom = false;
   fIsOffBeam = false;
   fBeamEventCount++;
+
+  // Reset Time fit objects
+  for(int i=0; i<MMCH_N_LAYERS; i++) {
+    t_mean[i].clear(); z_mean[i].clear(); x_mean[i].clear(); q_mean[i].clear();
+  }
 
 }
 
@@ -141,7 +124,16 @@ void ChamberMonitor::EndOfEvent()
       OutputBeam();
 
       // Reset histograms
-      //fHLGPedestalBM->Reset();
+      for(int i=0; i<MMCH_N_LAYERS; i++) {
+	h_occupancy[i]->Reset();
+	hw_occupancy[i]->Reset();
+	hqmax_totevent[i]->Reset();
+	htmax_totevent[i]->Reset();
+	//hqmax_strip[i]->Reset();
+	//htmax_strip[i]->Reset();
+	hqmax_perevent[i]->Reset();
+	htmax_perevent[i]->Reset();
+      }
 
     }
 
@@ -152,131 +144,85 @@ void ChamberMonitor::EndOfEvent()
 void ChamberMonitor::Finalize()
 {
   printf("ChamberMonitor::Finalize - Total number of events: %d\n",fBeamEventCount);
-  //printf("ChamberMonitor::Finalize - Total number of beam     events: %d\n",fBeamEventCount);
-  //printf("ChamberMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
-  //printf("ChamberMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
-  //printf("ChamberMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
 }
 
 void ChamberMonitor::AnalyzeEvent(ChamberEvent* rawEv)
 {
-  /*
-  // Compute pedestal and total charge in leadglass and save them to histogram
-  ComputeTotalCharge(samples);
 
-  if (fIsBeam) {
+  int layer, channel;
+  std::vector<double> camp;   
 
-    // Compute lenght of bunch (period above a given thershold) and bunch quality (BBQ)
-    ComputeBunchLength(samples);
+  for (UInt_t j=0; j<rawEv->mmLayer->size(); j++){  // loop on fired strips
 
-    // Compute number of positrons on target (NPoTs)
-    fLGNPoTs = fChannelCharge/fChargeToNPoTs;
+    layer = rawEv->mmLayer->at(j);
+    channel = rawEv->mmStrip->at(j);
 
-    // Compute bunch density
-    if (fBunchLength) {
-      fBunchDensity = fLGNPoTs/fBunchLength;
-    } else {
-      fBunchDensity = 0.;
+    // Find hit coordinates by looping on 25ns bin sampling
+    double t_strip=0,x_strip=0,z_strip=0, q_strip=0;
+    camp.clear();
+    for(UInt_t n=0; n<rawEv->raw_q->at(j).size(); n++) camp.push_back(rawEv->raw_q->at(j).at(n));  
+    CoordinateFinder(channel, layer, camp, t_strip, x_strip, z_strip, q_strip);
+
+    // Fill summary vectors
+    //std::cout <<"Layer "<<layer<<" channel "<<channel<<" : x="<<x_strip<<" z="<<z_strip<<" q_max="<<q_strip<<" time="<<t_strip<<std::endl;
+    t_mean[layer].push_back(t_strip);
+    x_mean[layer].push_back(x_strip);
+    z_mean[layer].push_back(z_strip);
+    q_mean[layer].push_back(q_strip);
+
+    // Fill event histograms
+    //hqmax_strip[layer]->Fill(channel,q_strip);
+    //htmax_strip[layer]->Fill(channel,t_strip); 
+    htmax_totevent[layer]->Fill(t_strip);
+    hqmax_totevent[layer]->Fill(q_strip);
+    h_occupancy[layer]->Fill(channel);
+    hw_occupancy[layer]->Fill(channel,q_strip);
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
+      hqmax_perevent[layer]->Fill(channel,q_strip);
+      htmax_perevent[layer]->Fill(channel,t_strip);
     }
-
-    fHLGPedestalBM->Fill(fChannelPedestal);
-    fHLGPedRMSBM->Fill(fChannelPedRMS);
-    fHLGTotChargeBM->Fill(fChannelCharge);
-    fHLGNPoTsBM->Fill(fLGNPoTs);
-    fHLGNPoTsTotBM->Fill(fLGNPoTs);
-    fHLGBunchLengthBM->Fill(fBunchLength);
-    fHLGBunchLengthTotBM->Fill(fBunchLength);
-    fHLGBunchBBQBM->Fill(fBunchBBQ);
-    fHLGBunchBBQTotBM->Fill(fBunchBBQ);
-    fHLGBunchDensityBM->Fill(fBunchDensity);
-    fHLGBunchDensityTotBM->Fill(fBunchDensity);
-
-    // Add waveform to cumulative for bunch shape studies
-    for(UInt_t i = 0; i<1024; i++) {
-      fLGWaveSumBM[i] += samples[i];
-      if (samples[i] < 10) fWFSaturated = true;
-    }
-
-    // Save waveform once every few events
-    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
-      for(UInt_t i = 0; i<1024; i++) fLGWaveformBM[i] = samples[i];
-
+ 
   }
-  */
-}
 
-/*
-void ChamberMonitor::ComputeTotalCharge(Short_t* samples)
+}
+void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double> camp, double &t_strip, double &x_strip, double &z_strip, double &q_strip) 
 {
 
-  // Get total signal area using first fPedestalSamples samples as pedestal
-  Int_t sum = 0;
-  Int_t sum_ped = 0;
-  ULong_t sum2_ped = 0;
-  for(UInt_t s = 0; s<1024; s++) {
-    if (s<fPedestalSamples) {
-      sum_ped += samples[s];
-      sum2_ped += samples[s]*samples[s];
-    } else if (s >= fSignalSamplesStart) {
-      if (s < fSignalSamplesEnd) {
-	sum += samples[s];
-      } else {
-	break;
-      }
+  int Nbins = camp.size();
+  double qtot = std::accumulate(camp.begin(),camp.end(),0);
+  double qtotT = 0;
+  double threshold = 0.2 * qtot / Nbins;
+  double qmax = -1000;      
+  double t0 = 0.; //offset tempo in ns DA FITTARE!
+
+  for (int ibin = 0; ibin < Nbins; ibin++) {
+    double qbin = camp.at(ibin); // Charge in the bin
+    double tbin = ibin*clock+clock/2.;  // Time (center of the bin)
+
+	
+    if (qbin > qmax) {
+      qmax = qbin;
     }
+    
+    if (qbin < threshold) continue;
+    
+    t_strip += qbin * tbin;
+    qtotT += qbin;
   }
 
-  fChannelPedestal = (Double_t)sum_ped/(Double_t)fPedestalSamples;
-  fChannelPedRMS = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fChannelPedestal)/((Double_t)fPedestalSamples-1.));
-  fChannelCharge = fChannelPedestal*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
-  // Convert counts to charge in pC
-  //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
-  fChannelCharge *= 4.8828E-3;
+  t_strip /= qtotT;
+  
+  if(iStrip <=256) x_strip = iStrip * pitch + pitch / 2;
+  else x_strip = iStrip * pitch + pitch / 2 + geo_hole[iLayer];
+
+  double z_ion = 2;//mm first signal from ionization
+
+  if(iLayer>3) z_strip = zm+z_ion-(t_strip-t0)*vd;//plane 1 (close to the beam)
+  else z_strip = (t_strip-t0)*vd-zm-z_ion;//plane 2 (far from to the beam)
+
+  q_strip = qmax;
 
 }
-
-void ChamberMonitor::ComputeBunchLength(Short_t* samples)
-{
-
-  // Get length of bunch using a given threshold.
-  // N.B. Assumes that pedestal was already computed
-  Bool_t bunch = false;
-  UInt_t bunchStart =0.;
-  UInt_t bunchEnd = 0.;
-  Int_t sum = 0;
-  ULong_t sum2 = 0;
-  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
-    if (bunch) {
-      if (fChannelPedestal-(Double_t)samples[s] < fBunchLengthThreshold) {
-	if (s-bunchStart > 1) { // Ignore noise ffluctuations
-	  bunchEnd = s;
-	  break;
-	}
-	sum += samples[s];
-	sum2 += samples[s]*samples[s];
-      }
-    } else {
-      if (fChannelPedestal-(Double_t)samples[s] > fBunchLengthThreshold) {
-	bunch = true;
-	bunchStart = s;
-	sum = samples[s];
-	sum2 = samples[s]*samples[s];
-      }
-    }
-  }
-  if (bunch && bunchEnd == 0.) {
-    printf("ChamberMonitor::ComputeBunchLength - WARNING - Bunch length longer than signal interval\n");
-    bunchEnd = fSignalSamplesEnd;
-  }
-
-  // Convert sample interval to ns. DAQ is assumed at 1GHz.
-  fBunchLength = (Double_t)(bunchEnd-bunchStart)*1.;
-
-  // Compute bunch quality parameter BBQ
-  fBunchBBQ = sqrt(((Double_t)sum2 - (Double_t)sum*(Double_t)sum/(Double_t)(bunchEnd-bunchStart))/(Double_t)(bunchEnd-bunchStart-1));
-
-}
-*/
 
 Int_t ChamberMonitor::OutputBeam()
 {
@@ -286,22 +232,102 @@ Int_t ChamberMonitor::OutputBeam()
   TString ftname = fConfig->TmpDirectory()+"/ChamberMon_Beam.txt";
   TString ffname = fConfig->OutputDirectory()+"/ChamberMon_Beam.txt";
   FILE* outf = fopen(ftname.Data(),"w");
-  /*
-  // Pedestal
-  fprintf(outf,"PLOTID ChamberMon_beampedestal\n");
-  fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LG BM Pedestal - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-  fprintf(outf,"CHANNELS %d\n",fHLGPedestalBM->GetNbinsX());
-  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalBM->GetXaxis()->GetXmin(),fHLGPedestalBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X Counts\n");
-  fprintf(outf,"TITLE_Y Bunches\n");
-  fprintf(outf,"DATA [[");
-  for(Int_t b = 1; b <= fHLGPedestalBM->GetNbinsX(); b++) {
-    if (b>1) fprintf(outf,",");
-    fprintf(outf,"%.0f",fHLGPedestalBM->GetBinContent(b));
-  }
-  fprintf(outf,"]]\n\n");
 
+  for(int i=0; i<MMCH_N_LAYERS; i++) {
+
+    // Layer Occupancy
+    fprintf(outf,"PLOTID MMCh_occupancy%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh Occupancy Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",h_occupancy[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",h_occupancy[i]->GetXaxis()->GetXmin(),h_occupancy[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= h_occupancy[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",h_occupancy[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+    // Layer Weighted Occupancy
+    fprintf(outf,"PLOTID MMCh_woccupancy%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh Weighted Occupancy Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",hw_occupancy[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",hw_occupancy[i]->GetXaxis()->GetXmin(),hw_occupancy[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= hw_occupancy[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",hw_occupancy[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+    // Layer QMax Total events
+    fprintf(outf,"PLOTID MMCh_qmax_totevent%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh QMax Total Event Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",hqmax_totevent[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_totevent[i]->GetXaxis()->GetXmin(),hqmax_totevent[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= hqmax_totevent[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",hqmax_totevent[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+    // Layer TMax Total events
+    fprintf(outf,"PLOTID MMCh_tmax_totevent%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh TMax Total Event Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",htmax_totevent[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_totevent[i]->GetXaxis()->GetXmin(),htmax_totevent[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= htmax_totevent[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",htmax_totevent[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+    // Layer QMax Single event
+    fprintf(outf,"PLOTID MMCh_qmax_perevent%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh QMax Single Event Layer %d (%s) - Run %d Event %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",hqmax_perevent[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_perevent[i]->GetXaxis()->GetXmin(),hqmax_perevent[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= hqmax_perevent[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",hqmax_perevent[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+    // Layer TMax Single event
+    fprintf(outf,"PLOTID MMCh_tmax_perevent%d\n",i);
+    fprintf(outf,"PLOTTYPE histo1d\n");
+    fprintf(outf,"PLOTNAME MMCh TMax Single Event Layer %d (%s) - Run %d Event %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"CHANNELS %d\n",htmax_perevent[i]->GetNbinsX());
+    fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_perevent[i]->GetXaxis()->GetXmin(),htmax_perevent[i]->GetXaxis()->GetXmax());
+    fprintf(outf,"TITLE_X Counts\n");
+    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"DATA [[");
+    for(Int_t b = 1; b <= htmax_perevent[i]->GetNbinsX(); b++) {
+      if (b>1) fprintf(outf,",");
+      fprintf(outf,"%.0f",htmax_perevent[i]->GetBinContent(b));
+    }
+    fprintf(outf,"]]\n\n");
+
+  }
+  
+  /* Trend plot example
   // Bunch Density trend plot
   fprintf(outf,"PLOTID ChamberMon_trendbunchdensity\n");
   fprintf(outf,"PLOTNAME LG Bunch Density - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
@@ -318,6 +344,7 @@ Int_t ChamberMonitor::OutputBeam()
   }
   fprintf(outf,"] ]\n\n");
   */
+
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {
     printf("ChamberMonitor::OutputBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());

@@ -28,3 +28,4 @@ export CPATH=${(pja:a)"${(f)$(ls -d $PADME/**/include)}"}:$CPATH
 export LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMERECO/**/lib)}"}:$LIBRARY_PATH
 export LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMEROOT/**/lib)}"}:$LIBRARY_PATH
 export LD_LIBRARY_PATH=${(pja:a)"${(f)$(ls -d $PADMERECO/**/lib)}"}:$LD_LIBRARY_PATH
+export PYTHONPATH=$PYTHONPATH:$PADMEROOT/python

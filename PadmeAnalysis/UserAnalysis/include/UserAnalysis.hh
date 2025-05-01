@@ -6,6 +6,8 @@
 #include "TRecoVCluster.hh"
 
 #include "PadmeAnalysisEvent.hh"
+#include "GeneralInfo.hh"
+
 
 class UserAnalysis {
 
@@ -18,7 +20,7 @@ public:
   Bool_t Process();
 
   
-  Bool_t Finalize(){return true;}
+  Bool_t Finalize(){printf("tuka sam");return true;}
 
 private:
   int fMode;

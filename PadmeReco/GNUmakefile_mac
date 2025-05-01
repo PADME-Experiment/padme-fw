@@ -12,7 +12,7 @@ ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC re
 
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
-CPPFLAGS += -IRecoBase/include -g -std=c++11 $(ROOTLIBS) $(ROOTCFLAGS)
+CPPFLAGS += -IRecoBase/include -g -std=c++17 $(ROOTLIBS) $(ROOTCFLAGS)
 
 all: allobjs alllibs bin
 

@@ -81,7 +81,12 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
    // Origin of calibration beam is on back face of Target
     //bpar->SetBeamOriginPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
     bpar->SetBeamCenterPosZ(fDetector->GetTargetFrontFaceZ()+fDetector->GetTargetThickness());
-    GenerateCalibrationGamma();
+    G4int npart = G4UniformRand()*bpar->GetCalibRunNgamma();
+    if(npart ==0) npart=1;
+    //G4cout << "BeamGenerator - Number of particles in event: " << npart<< G4endl;
+    for(G4int ngamma=0; ngamma<npart;ngamma++){
+      GenerateCalibrationGamma();
+    }
     return;
   }
 
@@ -100,7 +105,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nPositrons = nTotPositrons-nUbosonDecays-nTwoPhotonDecays -nThreePhotonDecays - nBhaBha;
   if (nPositrons<0) {
     G4cout << "BeamGenerator - WARNING - Negative number of primary positrons in event. Please check your settings" << G4endl;
-    G4cout << "- Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays <<" NBhaBha "<<nBhaBha<<G4endl;
+    // G4cout << "- Ntot " << nTotPositrons << " Npos " << nPositrons << " nUboson " << nUbosonDecays << " n3gamma " << nThreePhotonDecays<< " n2gamma " << nTwoPhotonDecays <<" NBhaBha "<<nBhaBha<<G4endl;
     nPositrons = 0;
     exit(1);
   }
@@ -161,7 +166,8 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
 
     // Generate primary e+
     GeneratePrimaryPositron();
-    //G4cout << "Positron " << fPositron.t << " " << fPositron.pos << " " << fPositron.P << " " << fPositron.dir << G4endl;
+    
+    // G4cout << "Positron " << fPositron.t << " " << fPositron.pos << " " << fPositron.P << " " << fPositron.dir << G4endl;
 
     // Create e+ primary particle with generated four-momentum
     G4PrimaryParticle* positron = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),
@@ -187,7 +193,7 @@ void BeamGenerator::GeneratePrimaryPositron()
 {
 
   BeamParameters* bpar = BeamParameters::GetInstance();
-
+  //G4cout << "Generating primary positron." << G4endl;
   // Generate a primary e+ with right time/energy/position/direction
 
   // Get mass of positron
@@ -250,6 +256,9 @@ void BeamGenerator::GeneratePrimaryPositron()
     // Theta is gaussian with sigma from a phi-based combination of emittance along X and Y
     G4double sigma_theta = bpar->GetBeamEmittanceX()*cos(phi)+bpar->GetBeamEmittanceX()*sin(phi);
     G4double theta = G4RandGauss::shoot(0.,sigma_theta);
+    
+  
+    //G4cout << "BeamGenerator - positron theta: " << theta << G4endl;
 
     // Compute particle direction assuming beam is directed along Z (default direction)
     G4double pX = sin(theta)*cos(phi);
@@ -257,6 +266,8 @@ void BeamGenerator::GeneratePrimaryPositron()
     G4double pZ = cos(theta);
     part_dir = G4ThreeVector(pX,pY,pZ);
 
+    // G4cout << "BeamGenerator - positron position: " << pX << " " << pY << G4endl;
+    
     // Now rotate to the real beam direction
     part_dir.rotateUz(beam_dir);
 
@@ -279,18 +290,18 @@ void BeamGenerator::GeneratePrimaryPositron()
   fPositron.p = G4ThreeVector(fPositron.P*fPositron.dir.x(),
 			      fPositron.P*fPositron.dir.y(),
 			      fPositron.P*fPositron.dir.z());
-  //  G4cout << "BeamGenerator - Positron momentum vector " << fPositron.p << G4endl;
+  //G4cout << "BeamGenerator - Positron momentum vector " << fPositron.p << G4endl;
 
 }
 
 void BeamGenerator::GenerateTargetPositron()
 {
-
   // Generate a standard positron so that timing and energy are correct
   GeneratePrimaryPositron();
 
   BeamParameters* bpar = BeamParameters::GetInstance();
 
+  //G4cout << "Generating target positron. bpar->GetBeamTargetPathLength() == " << bpar->GetBeamTargetPathLength() << G4endl;
   // If the beam is generated at Target front face, do nothing
   if (bpar->GetBeamTargetPathLength() == 0.) return;
 
@@ -308,7 +319,9 @@ void BeamGenerator::GenerateTargetPositron()
   G4double phi = twopi*G4UniformRand();
   G4double sigmaTheta = emitX*cos(phi)+emitY*sin(phi);
   G4double theta = G4RandGauss::shoot(0.,sigmaTheta);
-
+  
+  //G4cout << "BeamGenerator - target positron theta: " << theta << G4endl;
+  
   // Compute direction vector
   G4double pX = sin(theta)*cos(phi);
   G4double pY = sin(theta)*sin(phi);
@@ -356,26 +369,27 @@ void BeamGenerator::CreateFinalStateUboson()
   G4double Dy = fPositron.pos.y()+s_decay*sin(theta_p)*sin(phi_p);
   G4double Dz = fPositron.pos.z()+z_decay;
   G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
-
+  //G4cout << "BeamGenerator - Decay point x and y" << Dx << " " << Dy << G4endl;
+  
   // Get e+ four-momentum
   G4double pp[4];
   pp[0] = fPositron.E;     // Total energy
   pp[1] = fPositron.p.x(); // Momentum x
   pp[2] = fPositron.p.y(); // Momentum y
   pp[3] = fPositron.p.z(); // Momentum z
-  //  G4cout << "BeamGenerator - P(e+) " << pp[0] << " " << pp[1] << " " << pp[2] << " " << pp[3] << G4endl;
+  //G4cout << "BeamGenerator - P(e+) " << pp[0] << " " << pp[1] << " " << pp[2] << " " << pp[3] << G4endl;
 
   // e- is at rest
   G4double ep[4];
   ep[0] = G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGMass();
   ep[1]=ep[2]=ep[3]=0.*MeV;
-  //  G4cout << "BeamGenerator - P(e-) " << ep[0] << " " << ep[1] << " " << ep[2] << " " << ep[3] << G4endl;
+  //G4cout << "BeamGenerator - P(e-) " << ep[0] << " " << ep[1] << " " << ep[2] << " " << ep[3] << G4endl;
 
   // Compute four-momentum and mass of the virtual state e+e-
   G4double vsp[4];
   for(G4int i=0; i<4; i++) { vsp[i] = pp[i]+ep[i]; }
   G4double vsM = sqrt( vsp[0]*vsp[0]-vsp[1]*vsp[1]-vsp[2]*vsp[2]-vsp[3]*vsp[3] );
-  //  G4cout << "BeamGenerator - P(VS) " << vsp[0] << " " << vsp[1] << " " << vsp[2] << " " << vsp[3]
+  //G4cout << "BeamGenerator - P(VS) " << vsp[0] << " " << vsp[1] << " " << vsp[2] << " " << vsp[3]
   //	 << " M(VS) " << vsM << G4endl;
 
   // === Compute Uboson+gamma final state in the CM ===
@@ -404,7 +418,7 @@ void BeamGenerator::CreateFinalStateUboson()
   //double phi=rand.Uniform(0,2*M_PI);
   G4double phi = G4UniformRand()*2.*M_PI;
   G4ThreeVector dir = G4ThreeVector(sintheta*cos(phi),sintheta*sin(phi),costheta);
-  //  G4cout << "Cos(theta): " << costheta << G4endl;
+  //G4cout << "Cos(theta): " << costheta << G4endl;
 
   //G4cout << "UthetaCM: " << acos(dir.z()/sqrt(dir.x()*dir.x()+dir.y()*dir.y()+dir.z()*dir.z())) << G4endl;
 
@@ -415,7 +429,7 @@ void BeamGenerator::CreateFinalStateUboson()
   UpCM[1] = UP*dir.x();
   UpCM[2] = UP*dir.y();
   UpCM[3] = UP*dir.z();
-  //  G4cout << "BeamGenerator - PCM(Uboson) " << UpCM[0] << " " << UpCM[1] << " " << UpCM[2] << " " << UpCM[3] << G4endl;
+  //G4cout << "BeamGenerator - PCM(Uboson) " << UpCM[0] << " " << UpCM[1] << " " << UpCM[2] << " " << UpCM[3] << G4endl;
 
   // Compute gamma four-momentum
   G4double gpCM[4];
@@ -423,7 +437,7 @@ void BeamGenerator::CreateFinalStateUboson()
   gpCM[1] = -gpCM[0]*dir.x();
   gpCM[2] = -gpCM[0]*dir.y();
   gpCM[3] = -gpCM[0]*dir.z();
-  //  G4cout << "BeamGenerator - PCM(gamma) " << gpCM[0] << " " << gpCM[1] << " " << gpCM[2] << " " << gpCM[3] << G4endl;
+  //G4cout << "BeamGenerator - PCM(gamma) " << gpCM[0] << " " << gpCM[1] << " " << gpCM[2] << " " << gpCM[3] << G4endl;
 
   // === Boost UBoson+gamma final state to the lab ===
 
@@ -433,7 +447,7 @@ void BeamGenerator::CreateFinalStateUboson()
   Up[1] = UpCM[1]+UC*vsp[1];
   Up[2] = UpCM[2]+UC*vsp[2];
   Up[3] = UpCM[3]+UC*vsp[3];
-  //  G4cout << "BeamGenerator - P(Uboson) " << Up[0] << " " << Up[1] << " " << Up[2] << " " << Up[3] << G4endl;
+  //G4cout << "BeamGenerator - P(Uboson) " << Up[0] << " " << Up[1] << " " << Up[2] << " " << Up[3] << G4endl;
 
   G4double gp[4];
   gp[0] = ( gpCM[0]*vsp[0]+gpCM[1]*vsp[1]+gpCM[2]*vsp[2]+gpCM[3]*vsp[3] )/vsM;
@@ -441,7 +455,7 @@ void BeamGenerator::CreateFinalStateUboson()
   gp[1] = gpCM[1]+gC*vsp[1];
   gp[2] = gpCM[2]+gC*vsp[2];
   gp[3] = gpCM[3]+gC*vsp[3];
-  //  G4cout << "BeamGenerator - P(gamma) " << gp[0] << " " << gp[1] << " " << gp[2] << " " << gp[3] << G4endl;
+  //G4cout << "BeamGenerator - P(gamma) " << gp[0] << " " << gp[1] << " " << gp[2] << " " << gp[3] << G4endl;
 
   // Create UBoson primary particle with generated four-momentum (use geantino)
   G4PrimaryParticle* uboson = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("geantino"),
@@ -453,6 +467,7 @@ void BeamGenerator::CreateFinalStateUboson()
 
   // Compute gamma emission angle
   G4double Genergy = sqrt(gp[1]*gp[1]+gp[2]*gp[2]+gp[3]*gp[3]);
+  //std::cout<<"Gamma energy: "<<Genergy<<std::endl;
   G4double Gtheta = acos(gp[3]/Genergy);
   fHistoManager->FillHisto(17,Gtheta);
   fHistoManager->FillHisto2(37,Gtheta,Genergy,1.);
@@ -472,7 +487,7 @@ void BeamGenerator::CreateFinalStateUboson()
     tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("geantino")->GetPDGEncoding(),Up[0],G4ThreeVector(Up[1],Up[2],Up[3]));
     tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),gp[0],G4ThreeVector(gp[1],gp[2],gp[3]));
   }
-  
+  //std::cout<<"Uboson generated."<<std::endl;
 }
 
 void BeamGenerator::CreateFinalStateThreeGamma(G4double decayLength)
@@ -830,6 +845,11 @@ void BeamGenerator::GenerateCalibrationGamma()
 
   // Create primary vertex at center of back face of target with t=0.
   G4double vT = 0.*ns;
+  vT= 1000*G4UniformRand();
+  if(vT<16){
+    vT=vT+16;
+  }
+  //G4cout << "Gamma time " << vT << G4endl;
   G4double vX = 0.*cm;
   G4double vY = 0.*cm;
   G4double vZ = bpar->GetBeamCenterPosZ();
@@ -853,9 +873,14 @@ void BeamGenerator::GenerateCalibrationGamma()
   // Create gamma pointing from vertex to generated point
   // Will be improved to use different particles (e.g. e+)
   G4ParticleDefinition* part = G4ParticleTable::GetParticleTable()->FindParticle("gamma");
-  G4double part_E = bpar->GetCalibRunEnergy();
+  //G4double part_E = bpar->GetCalibRunEnergy();
+  G4double part_E = 0.0;
+  do {part_E = G4RandGauss::shoot(bpar->GetCalibRunEnergy(),bpar->GetCalibRunEnergySigma());} while(part_E<=0.0);
+  //if(part_E<0) partE=0;
   G4PrimaryParticle* particle = new G4PrimaryParticle(part,part_E*vp.x(),part_E*vp.y(),part_E*vp.z(),part_E);
   vtx->SetPrimary(particle);
+  //G4cout << "Gamma energy " << part_E << G4endl;
+  //G4cout << "Gamma coordinates " << pX << " " << pY << G4endl;
 
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);

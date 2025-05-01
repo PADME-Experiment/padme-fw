@@ -67,7 +67,9 @@ BeamParameters::BeamParameters()
 
   // Initialize calibration run to some sensible values
   fCalibrationRun  = false;
+  fCalibRunNgamma = 10;
   fCalibRunEnergy  = 50.*MeV;
+  fCalibRunEnergySigma  = 50.*MeV;
   fCalibRunCenterX = 14.*cm;
   fCalibRunCenterY = 14.*cm;
   fCalibRunRadius  =  1.*cm;

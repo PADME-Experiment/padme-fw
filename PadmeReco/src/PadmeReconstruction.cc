@@ -28,6 +28,7 @@
 #include "TETagRecoEvent.hh"
 //#include "TTPixRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TECalMLRecoEvent.hh"
 
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
@@ -38,6 +39,7 @@
 #include "ETagReconstruction.hh"
 #include "TPixReconstruction.hh"
 #include "LeadGlassReconstruction.hh"
+#include "ECalMLReconstruction.hh"
 
 #include "ECalParameters.hh"
 
@@ -69,6 +71,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fPVetoRecoEvent   = 0;
   fHEPVetoRecoEvent = 0;
   fECalRecoEvent    = 0;
+  fECalMLRecoEvent  = 0;
   fSACRecoEvent     = 0;
   fETagRecoEvent    = 0;
   fTPixRecoEvent    = 0;
@@ -160,6 +163,12 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling LeadGlass with configuration file "<<configLeadGlass<<std::endl;
     fRecoLibrary.push_back(new LeadGlassReconstruction(fHistoFile,configLeadGlass));
   }
+   if (fConfig->GetParOrDefault("RECOALGORITHMS","ECalML",1)) {
+    TString configECalML = fConfig->GetParOrDefault("RECOCONFIG","ECalML","config/ECalML.cfg");
+    std::cout<<"=== Enabling ECalML with configuration file "<<configECalML<<std::endl;
+    fRecoLibrary.push_back(new ECalMLReconstruction(fHistoFile,configECalML));
+  }
+ 
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
     std::cout << " **** <" << fRecoLibrary[j]->GetName() << "> is in library at location " << j <<std::endl;
@@ -182,6 +191,7 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
+  if (FindReco("ECalML"))    ((ECalMLReconstruction*)    FindReco("ECalML"))   ->Init(this);
 
 }
 
@@ -229,6 +239,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"SAC");
 	ShowSubDetectorInfo(detInfo,"ETag");
 	ShowSubDetectorInfo(detInfo,"TPix");
+	ShowSubDetectorInfo(detInfo,"ECalML");
 	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
 
 	// Pass detector info to corresponding Parameters class for decoding
@@ -343,6 +354,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      } else if (branchName=="ECalML_Hits") {
+	fECalMLRecoEvent = new TECalMLRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fECalMLRecoEvent);
       } else if (branchName=="MCTruth") {
 	printf("PadmeReconstruction - Found MCTruth branch\n");
 	fMCTruthEvent = new TMCTruthEvent();
@@ -441,6 +455,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fECalRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "ECalML" && fECalMLRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fECalMLRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "SAC" && fSACRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fSACRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ETag" && fETagRecoEvent) {

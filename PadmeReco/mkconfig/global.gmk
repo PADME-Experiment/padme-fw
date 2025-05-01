@@ -12,12 +12,12 @@ ROOTINCDIR   := $(shell $(ROOTCONFIG) --incdir)
 ROOTLDFLAGS  := $(shell $(ROOTCONFIG) --ldflags)
 ROOTLIBS     := $(shell $(ROOTCONFIG) --libs) -lMinuit -lSpectrum -lGenVector
 
-CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -g
+CPPFLAGS     += -Iinclude -I$(PADMERECO)/include -I$(PADMEROOT)/include -I/home/kalina/software/include -I/home/kalina/.local/lib/python3.9/site-packages/tensorflow/include -g
 #CPPFLAGS     += -I$(PADMERECO)/Service/include
 CPPFLAGS     += -I$(PADMERECO)/RecoBase/include
 CXXFLAGS     += $(ROOTCFLAGS) $(CPPFLAGS)
 CPPFLAGS     += -I$(ROOTINCDIR)
-LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS)
+LDFLAGS      += $(ROOTLDFLAGS) $(ROOTLIBS) $(TF2_LIBS)
 
 #LDFLAGS      += -L$(NA62MCSOURCE)/Persistency/lib -lNA62Persistency \
 #                -L$(NA62MCSOURCE)/$(NAME)/Persistency/lib -l$(NAME)Persistency

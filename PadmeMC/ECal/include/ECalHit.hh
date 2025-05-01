@@ -71,6 +71,13 @@ public:
   void SetTrackID(G4int track) { trackID = track; };
   G4int GetTrackID() { return trackID; };
 
+  void SetTrackEnergy(G4double e) { fTrackEnergy = e; }
+  G4double GetTrackEnergy() { return fTrackEnergy; }
+
+  G4int GetBoundary(){return fBoundary;};
+  void SetBoundary(G4int b){fBoundary = b;};
+  
+  
 private:
   
   G4int         fTrackType;
@@ -79,6 +86,8 @@ private:
   G4double      fEnergy;
   G4ThreeVector fPosition;
   G4ThreeVector fLocalPosition;
+  G4double      fTrackEnergy;
+  G4int         fBoundary;
   
   // Obsolete and probably not used
   G4int         trackID;

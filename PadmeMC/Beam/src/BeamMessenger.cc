@@ -217,6 +217,19 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetCalibRunEnergyCmd->SetDefaultUnit("MeV");
   fSetCalibRunEnergyCmd->SetRange("GE > 0. && GE <= 1000.");
   fSetCalibRunEnergyCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  
+  fSetCalibRunNgammaCmd = new G4UIcmdWithAnInteger("/beam/n_gamma_for_calib_run",this);
+  fSetCalibRunNgammaCmd->SetGuidance("Set maximum number of gammas.");
+  fSetCalibRunNgammaCmd->SetParameterName("NGC",false);
+  fSetCalibRunNgammaCmd->SetRange("NGC > 0 && NGC <= 100");
+  fSetCalibRunNgammaCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetCalibRunEnergySigmaCmd = new G4UIcmdWithADoubleAndUnit("/beam/calib_energy_sigma",this);
+  fSetCalibRunEnergySigmaCmd->SetGuidance("Set energy sigma of calibration gammas.");
+  fSetCalibRunEnergySigmaCmd->SetParameterName("GES",false);
+  fSetCalibRunEnergySigmaCmd->SetDefaultUnit("MeV");
+  fSetCalibRunEnergySigmaCmd->SetRange("GES >= 0. && GES <= 1000.");
+  fSetCalibRunEnergySigmaCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fSetCalibRunCenterXCmd = new G4UIcmdWithADoubleAndUnit("/beam/calib_x",this);
   fSetCalibRunCenterXCmd->SetGuidance("Set x coordinate for the impact point of the calibration gamma on ECal front face.");
@@ -322,7 +335,9 @@ BeamMessenger::~BeamMessenger()
   delete fSetDecayLengthCmd;
 
   delete fEnableCalibRunCmd;
+  delete fSetCalibRunNgammaCmd;
   delete fSetCalibRunEnergyCmd;
+  delete fSetCalibRunEnergySigmaCmd;
   delete fSetCalibRunCenterXCmd;
   delete fSetCalibRunCenterYCmd;
   delete fSetCalibRunRadiusCmd;
@@ -459,8 +474,14 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     }
   }
 
+  else if ( cmd == fSetCalibRunNgammaCmd )
+    fBeamParameters->SetCalibRunNgamma(fSetCalibRunNgammaCmd->GetNewIntValue(par));
+
   else if ( cmd == fSetCalibRunEnergyCmd )
     fBeamParameters->SetCalibRunEnergy(fSetCalibRunEnergyCmd->GetNewDoubleValue(par));
+  
+  else if ( cmd == fSetCalibRunEnergySigmaCmd )
+    fBeamParameters->SetCalibRunEnergySigma(fSetCalibRunEnergySigmaCmd->GetNewDoubleValue(par));
 
   else if ( cmd == fSetCalibRunCenterXCmd )
     fBeamParameters->SetCalibRunCenterX(fSetCalibRunCenterXCmd->GetNewDoubleValue(par));
@@ -577,8 +598,14 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
   else if ( cmd == fEnableCalibRunCmd )
     cv = fEnableCalibRunCmd->ConvertToString(fBeamParameters->CalibrationRun());
 
+  else if ( cmd == fSetCalibRunNgammaCmd )
+    cv = fSetCalibRunNgammaCmd->ConvertToString(fBeamParameters->GetCalibRunNgamma());
+
   else if ( cmd == fSetCalibRunEnergyCmd )
     cv = fSetCalibRunEnergyCmd->ConvertToString(fBeamParameters->GetCalibRunEnergy());
+
+  else if ( cmd == fSetCalibRunEnergySigmaCmd )
+    cv = fSetCalibRunEnergySigmaCmd->ConvertToString(fBeamParameters->GetCalibRunEnergySigma());
 
   else if ( cmd == fSetCalibRunCenterXCmd )
     cv = fSetCalibRunCenterXCmd->ConvertToString(fBeamParameters->GetCalibRunCenterX());

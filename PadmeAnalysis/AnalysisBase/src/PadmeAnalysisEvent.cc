@@ -8,6 +8,7 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   PVetoRecoEvent       =0;
   HEPVetoRecoEvent     =0;
   ECalRecoEvent        =0;
+  ECalMLRecoEvent      =0;
   SACRecoEvent         =0;
   TargetRecoBeam       =0;
   SACRecoCl            =0;

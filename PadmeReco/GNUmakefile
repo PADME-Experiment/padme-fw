@@ -2,7 +2,7 @@
 
 NAME := PadmeReco
 
-SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix ETag LeadGlass
+SUBDIRS := Target EVeto PVeto HEPVeto ECal SAC TPix ETag LeadGlass ECalML
 #ALLTARGETDIRS := $(SUBDIRS) RecoBase EventDisplay Service
 ALLTARGETDIRS := $(SUBDIRS) RecoBase
 
@@ -13,9 +13,11 @@ ISSLC6 = $(shell cat /etc/redhat-release |grep -ic "Scientific Linux CERN SLC re
 CPPFLAGS += $(addprefix -I,$(addsuffix /include,$(SUBDIRS)))
 #CPPFLAGS += -IEventDisplay/include -IService/include
 CPPFLAGS += -IRecoBase/include -g
-
+CPPFLAGS += -I/home/kalina/software/include
+CPPFLAGS += -I/home/kalina/.local/lib/python3.9/site-packages/tensorflow/include
 
 include ./mkconfig/global.gmk
+
 
 # Define libraries used for the creation of the final executable
 LIBS += -Llib -lPadmeReco$(STATIC) 
@@ -25,6 +27,10 @@ LIBS += -LRecoBase/lib -lRecoBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 #LIBS += -L/usr/lib64/mysql -lmysqlclient
 LIBS += -Llib -lPadmeReco$(STATIC)
+#LIBS += -L/home/kalina/software/lib -ltensorflow
+#LIBS += -L/home/kalina/software/NewTF/lib -ltensorflow
+LIBS += -L/home/kalina/.local/lib/python3.9/site-packages/tensorflow -ltensorflow_cc
+LIBS += -L/home/kalina/.local/lib/python3.9/site-packages/tensorflow -ltensorflow_framework
 
 
 #EXTRALIBS += -LEventDisplay/lib -lEventDisplay$(STATIC) -lEve -lGeom -lRGL -lFTGL -lGui -lGed -lTreePlayer -lEG 

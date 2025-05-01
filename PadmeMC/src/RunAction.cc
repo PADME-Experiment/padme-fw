@@ -52,7 +52,10 @@ void RunAction::BeginOfRunAction(const G4Run* aRun)
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   RootIOManager::GetInstance()->NewRun(aRun->GetRunID());
   fHistoManager->book();
-
+  //fOutTextFileECalML.open("Tervel-ML-ECal-100000-2D-15clu.dat");
+  //fOutTextFileHits.open("Tervel-ML-Hits-1000-new.dat");
+  //fOutTextFileTruth.open("Tervel-ML-Truth-100000-2D-15clu.dat");
+  
   long seeds[2];
   seeds[0] = 0;
   seeds[1] = 0;
@@ -135,7 +138,9 @@ void RunAction::EndOfRunAction(const G4Run* aRun)
   //G4double nEvt   = (G4double)(theRun->GetNumberOfEvent());
   //G4double nGamma = theRun->GetNGamma(0);
   //G4cout<<"Nevent Run Action "<<nEvt<<" "<<nGamma<<G4endl;
-
+  //fOutTextFileECalML.close();
+  //fOutTextFileTruth.close();
+  
   RootIOManager::GetInstance()->EndRun();
 
   // Print some summary info

@@ -228,6 +228,7 @@ class EventAction : public G4UserEventAction
    G4double MatQtot[30][30];   
    G4double MatTstart[30][30]; 
    G4int    MatUsed[30][30];   
+  G4float fECalWaveForm[30][30][1024];
   
 
    G4int Used[1000];

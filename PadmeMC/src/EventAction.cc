@@ -41,8 +41,13 @@
 
 #include "SystemInfo.hh"
 
+#include <fstream>
+
 extern double NNeutrons;
 extern double Npionc;
+static std::ofstream *foutECalML;
+static std::ofstream *foutHits;
+static std::ofstream *foutTruth;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
@@ -73,6 +78,9 @@ EventAction::EventAction(RunAction* run)
   fEnableSaveSAC  = 0; 
   fEnableSaveVeto = 0;
 
+  foutECalML = run->GetOutputTextFileECalML();
+  // foutHits = run->GetOutputTextFileHits();
+  foutTruth = run->GetOutputTextFileTruth();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -414,7 +422,11 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       MatEtot  [jj][kk]=0.;   
       MatQtot  [jj][kk]=0.;   
       MatTstart[jj][kk]=1.e6; 
-      MatUsed  [jj][kk]=0;   
+      MatUsed  [jj][kk]=0;
+      for(G4int ll=0;ll<1024;ll++) {
+	fECalWaveForm [jj][kk][ll] = 0.;
+      }
+      
     }
   }
   
@@ -427,20 +439,78 @@ void EventAction::AddECryHits(ECalHitsCollection* hcont)
       G4int index = hit->GetChannelId();
       G4int Xind = index%100;
       G4int Yind = index/100;
-      MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+
+      if( hit->GetPType()==2 || hit->GetPType()==3 ){
+	MatEtot[Yind][Xind] += hit->GetEnergy(); //somma le energie su tutti gli hit di ogni cristallo
+	G4float hTime = hit->GetTime();
+	//Energy of the hit, time of hit, position of the hit.
+      
+	for( int ll = 0; ll<1024;ll++ ) {
+	  //Propagation time = 0
+	  if(ll < (int) (hTime)) continue;
+
+	  //fECalWaveForm[Xind][Yind][ll] += f(ll - (hTime + signalPropagationTime)  *(hit->GetEnergy());
+	  fECalWaveForm[Xind][Yind][ll] +=   (hit->GetEnergy())*(exp(- (ll-hTime)/300. ) - exp( -(ll-hTime)/10.));
+	
+	}
+      }
+
+      
       ETotCal += hit->GetEnergy();
       //  std::cout << "Hit energy : " << hit->GetEnergy() << std::endl;
       if(hit->GetTime() < MatTstart[Yind][Xind]) MatTstart[Yind][Xind] =  hit->GetTime();//assing to each crystal the time of the first hit!
+      // if(hit->GetBoundary()) 
+	// {
+      //  	(*(foutHits)) << hit->GetChannelId()
+      // // 	  //<< std::setw(11) << std::setprecision(5)
+      // 		      << " " << hit->GetPType()
+      // 		      << " " << hit->GetTrackEnergy()
+      // 		      << " " << hit->GetPosX()/CLHEP::cm
+      // 		      << " " << hit->GetPosY()/CLHEP::cm
+      // 		      << " " << hit->GetPosZ()/CLHEP::cm
+      // 		      << " " << hit->GetTime() 
+      // 		      << " ";
+      // 	std::cout << "Hit energy if boundary=1: " << hit->GetTrackEnergy() << std::endl;
+      // 	 }
+      // std::cout << "Hit boundary: " << hit->GetBoundary() << "Hit energy : " << hit->GetTrackEnergy() << std::endl;
     }
   }//end of loop on hits
+
+  //G4cout<<"CalNPart "<<CalNPart<<std::endl;
+  // for( int iparticle=0; iparticle<CalNPart; iparticle++) {
+  //   G4double E =     CalE[CalNPart];
+  //   G4double T = CalTime[CalNPart] ;
+  //   G4int    Ptype = CalPType[CalNPart];
+  //   G4double X = CalX[CalNPart];
+  //   G4double Y = CalY[CalNPart];
+    
+    // //(*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " " << T << " ";
+    // //G4cout<<"PType "<<Ptype << "E " << E << "X " << X << "Y " << Y << "T " << T << " "<<std::endl;
+  // }
   
-  for(int xx=0;xx<NCols;xx++){
-    for(int yy=0;yy<NRows;yy++){
-      MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
-    }
-  }
+  // for (int tt=0;tt<1024;tt++){
+    for(int xx=0;xx<NCols;xx++){
+      for(int yy=0;yy<NRows;yy++){
+	MatQtot[yy][xx]=GetCharge(MatEtot[yy][xx]);
+	//For 2D networks
+	(*(foutECalML)) << std::setw(7) << std::setprecision(2) << MatEtot[yy][xx] << "  ";
+
+	//For 3D networks, uncomment tt loop
+	//	(*(foutECalML)) <<fECalWaveForm[xx][yy][tt] << " ";
+	// if (fabs(fECalWaveForm[xx][yy][tt])>0){
+	  //(*(foutECalML)) <<xx<<" "<<yy<<" "<<tt<<" "<<fECalWaveForm[xx][yy][tt]<<" ";
+	  
+	//	}
+      }
+     }
+    //(*(foutECalML)) << std::endl;
+    // }
   
+  (*(foutECalML)) << std::endl;
+  //(*(foutHits)) << std::endl;
+  (*(foutTruth)) << std::endl;
 }
+
 void EventAction::FindClusters()
 {
   //  G4int NcellsCl=0;
@@ -1020,15 +1090,19 @@ void EventAction::AddSACHitsStep(G4double E,G4double T, G4int Ptype, G4double X,
 void EventAction::AddCalHitsStep(G4double E,G4double T, G4int Ptype, G4double X, G4double Y)
 {
   //  static G4int SACTracks  = 0;
-  if(CalNPart < 39){
+  //if(CalNPart < 39){
+  if(Ptype == 1){
     CalE[CalNPart]    = E;
     CalTime[CalNPart] = T;
     CalPType[CalNPart]= Ptype;
     CalX[CalNPart]    = X;
     CalY[CalNPart]    = Y;
     CalNPart++;
-    //    G4cout<<CalNPart<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<G4endl;
-  }
+    //G4cout<<CalNPart<<" E "<< E <<" T "<< T <<"Ptype "<<Ptype<<" X "<<X<<" Y "<<Y<<G4endl;
+    // (*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " " << T << " ";
+    (*(foutTruth)) << Ptype << " " << E << " " << X << " " << Y << " ";
+    }
+    //}
 }
 
 void EventAction::AddTPixHits(TPixHitsCollection* hcont){ //M. Raggi 26/03/2019 

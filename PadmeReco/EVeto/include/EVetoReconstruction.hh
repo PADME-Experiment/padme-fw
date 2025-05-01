@@ -8,7 +8,10 @@
 #define EVetoReconstruction_H
 
 #include "PadmeVReconstruction.hh"
+#include "VetoClusterHits.hh"
+#include "VetoClusterization.hh"
 #include "TRandom2.h"
+
 
 class EVetoReconstruction : public PadmeVReconstruction
 {
@@ -17,18 +20,34 @@ public:
   
   EVetoReconstruction(TFile*, TString);
   ~EVetoReconstruction();
-
-  // void ParseConfFile(TString);
-  // virtual void Init(PadmeVReconstruction*);
   // virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
-  // virtual void EndProcessing();
   virtual void HistoInit();
   virtual void AnalyzeEvent(TRawEvent* evt);
   void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
-  TRandom2 *random;
-  
-  Double_t fSigmaNoiseForMC;
-  Double_t fEVetoDigiTimeWindow;
+  void BuildHits(TRawEvent* rawEv); //Get the CH_ID MR 
+  void BuildClusters(TRawEvent* rawEv);
+  void BuildClusters(TMCEvent* MCEv);
+  void Clusterise();
+  void MergeClusters();
+  virtual void ProcessEvent(TRawEvent* rawEv); //Get the CH_ID MR 
+  virtual void ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent); //Get the CH_ID MR 
+  //void Init(PadmeVReconstruction* MainReco);
+  bool TriggerToBeSkipped();
+  // std::vector<Cluster*> GetClusters(){return ClusVec;}
+
+private:
+
+  TRandom2* random;
+  Double_t  fSigmaNoiseForMC;
+  Double_t  fEVetoDigiTimeWindow;
+  Bool_t    fMCSimBrokenChas;
+  Int_t     fClusterAlgo;
+  Double_t fMCEnergyScale;
+  Double_t fMCEnergyThr;
+  Double_t fClusterHitEnThr;
+  VetoClusterHits fClusterHits;
+  VetoClusterStructure fClusStruc;
+  // std::vector<Cluster*> ClusVec;
 
 };
 #endif

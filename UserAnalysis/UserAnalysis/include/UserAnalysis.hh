@@ -3,6 +3,7 @@
 
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
+#include "PadmeVRecoConfig.hh"
 
 class HistoSvc;
 class NPoTAnalysis;
@@ -12,6 +13,12 @@ class Is22GGAnalysis;
 class Is3GAnalysis;
 class ETagAnalysis;
 class MCTruth;
+class BhabhaAnalysis;
+class BremsstrahlungAnalysis;
+class ReversedBFieldBremsstrahlungAnalysis;
+class T0sAnalysis;
+class HitCharacteristicsAnalysis;
+class KinematicsBhabha;
 
 class UserAnalysis {
 
@@ -33,8 +40,20 @@ private:
   PadmeAnalysisEvent* fEvent;
 
   utl::ConfigParser* fCfgParser;
+  PadmeVRecoConfig* fConfig;
 
   HistoSvc* fHS;
+
+  Bool_t fRunECalCalib;
+  Bool_t fRunMCTruth;
+  Bool_t fRunNPoT;
+  Bool_t fRunIsGGAnalysis;
+  Bool_t fRunBhabha;
+  Bool_t fRunBremsstrahlung;
+  Bool_t fRunReversedFieldBremsstrahlung;
+  Bool_t fRunT0s;
+  Bool_t fRunHitCharacteristics;
+  Bool_t fRunKinematicsBhabha;
 
   NPoTAnalysis* fNPoTAnalysis;
   IsGGAnalysis* fIsGGAnalysis;
@@ -43,5 +62,12 @@ private:
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;
   ECalCalib* fECalCalib;
+  BhabhaAnalysis* fBhabhaAnalysis;
+  BremsstrahlungAnalysis* fBremsstrahlungAnalysis;
+  ReversedBFieldBremsstrahlungAnalysis* fReversedBFieldBremsstrahlungAnalysis;
+  T0sAnalysis* fT0sAnalysis;
+  HitCharacteristicsAnalysis* fHitCharacteristicsAnalysis;
+  KinematicsBhabha* fKinematicsBhabha;
+
 };
 #endif

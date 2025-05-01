@@ -2,7 +2,7 @@
 // History:
 //
 // Created by Emanuele Leonardi (emanuele.leonardi@roma1.infn.it) 2016-03-23
-//
+// Modified by Beth Long 2022-04-07 
 // --------------------------------------------------------------
 #include "Riostream.h"
 
@@ -11,12 +11,13 @@
 #include "TPVetoMCEvent.hh"
 #include "TPVetoMCHit.hh"
 #include "TPVetoMCDigi.hh"
-#include "TPVetoRecoEvent.hh"
-#include "DigitizerChannelReco.hh"
+#include "DigitizerChannelPVeto.hh"
 #include "PVetoCalibration.hh"
 #include "PVetoGeometry.hh"
 #include "PVetoSimpleClusterization.hh"
-#include "ADCChannelVReco.hh"
+#include "VetoClusterization.hh"
+#include "VetoClusterHits.hh"
+#include "TRecoVCluster.hh"
 
 #include "TH1F.h"
 #include "TH2F.h"
@@ -25,20 +26,32 @@
 PVetoReconstruction::PVetoReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "PVeto", ConfigFileName)
 {
-  fChannelReco = new DigitizerChannelReco();
+  // configurable parameters 
+  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
+  fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
+  fClusterAlgo             = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "ClusterAlgo", 0.);
+  fMCEnergyScale           = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyScale",0.8636);
+  fMCEnergyThr             = (Double_t)fConfig->GetParOrDefault("RECO","MCEnergyThr",0.366);
+  fClusterHitEnThr         = (Double_t)fConfig->GetParOrDefault("RECO","ClusterHitEnThr",0.366);
+
+//  fChannelReco = new DigitizerChannelReco();
+  fChannelReco = new DigitizerChannelPVeto();
   fChannelCalibration = new PVetoCalibration();
-  fClusterization = new PVetoSimpleClusterization();
+  if(fClusterAlgo==0){//Use old clusterisation
+    std::cout<<"PVETOCLUSTERS:clusterising oldly"<<std::endl;
+    fClusterization = new PVetoSimpleClusterization();
+  }
+  else if(fClusterAlgo==1){//Use new clusterisation
+    std::cout<<"PVETOCLUSTERS:clusterising newly"<<std::endl;
+    fClusStruc = VetoClusterStructure();
+    fClusterHits = VetoClusterHits();
+  }
   //fChannelCalibration  = new PadmeVCalibration();
   fTriggerProcessor = new PadmeVTrigger();
   fGeometry = new PVetoGeometry();
 
   random = new TRandom2();    
   gRandom->SetSeed(time(NULL));
-
-
-  // configurable parameters 
-  fSigmaNoiseForMC         = (Double_t)fConfig->GetParOrDefault("RECO", "SigmaNoiseForMC", .4);
-  fPVetoDigiTimeWindow     = (Double_t)fConfig->GetParOrDefault("RECO", "DigitizationTimeWindowForMC", 17.);
 
 }
 
@@ -76,57 +89,35 @@ void PVetoReconstruction::HistoInit(){
   }
   //  AddHisto("PVetoDTch1ch2",new TH1F("PVetoDTch1ch2","Difference in time",100,-10.,10.));
 
-}
-
-
-/* only for debugging 
-void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
-{
-  PadmeVReconstruction::ProcessEvent(tEvent,tMCEvent);
-  TPVetoMCEvent* tPVetoEvent = (TPVetoMCEvent*)tEvent;
-  std::cout << "--- PVetoReconstruction --- run/event/#hits/#digi " << tPVetoEvent->GetRunNumber() << " " << tPVetoEvent->GetEventNumber() << " " << tPVetoEvent->GetNHits() << " " << tPVetoEvent->GetNDigi() << std::endl;
-  for (Int_t iH=0; iH<tPVetoEvent->GetNHits(); iH++) {
-    TPVetoMCHit* hit = (TPVetoMCHit*)tPVetoEvent->Hit(iH);
-    hit->Print();
-  }
-  for (Int_t iD=0; iD<tPVetoEvent->GetNDigi(); iD++) {
-    TPVetoMCDigi* digi = (TPVetoMCDigi*)tPVetoEvent->Digi(iD);
-    digi->Print();
-  }
 
 }
-*/
 
 void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) 
 {
   if (tEvent==NULL) return;
   for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
   fHits.clear();
+
+  vector<TRecoVHit *> TempHits;
+  
   // MC to reco hits
-  //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
     TMCVDigi* digi = tEvent->Digi(i);
-    //TRecoVHit *Hit = new TRecoVHit(digi);
 
     Int_t    digiCh = digi->GetChannelId();
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
-    //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
 
     Bool_t toBeMerged = false;
-    // merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
     if (fPVetoDigiTimeWindow > 0) {
-      for (unsigned int ih=0; ih<fHits.size(); ++ih)
+      for (unsigned int ih=0; ih<TempHits.size(); ++ih)
 	{
-	  if (fHits[ih]->GetChannelId() != digiCh) continue;
-	  if (fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
+	  if (TempHits[ih]->GetChannelId() != digiCh) continue;
+	  if (fabs(TempHits[ih]->GetTime()/TempHits[ih]->GetEnergy()-digiT)<fPVetoDigiTimeWindow)
 	    {
 	      toBeMerged = true;
-	      // this digit must be merged with a previously defined recoHit
-	      //std::cout<<" -- merging with hit in ch "<<fHits[ih]->GetChannelId()<<" at time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" diffT = "<<fabs(fHits[ih]->GetTime()/fHits[ih]->GetEnergy()-digiT)<<std::endl;
-	      fHits[ih]->SetEnergy(fHits[ih]->GetEnergy() + digiE);
-	      fHits[ih]->SetTime(fHits[ih]->GetTime() + digiE*digiT);
-	      //std::cout<<" -- updated  Ch "<<fHits[ih]->GetChannelId()<<" time "<<fHits[ih]->GetTime()/fHits[ih]->GetEnergy()<<" so far "<<std::endl;
+	      TempHits[ih]->SetEnergy(TempHits[ih]->GetEnergy() + digiE);
+	      TempHits[ih]->SetTime(TempHits[ih]->GetTime() + digiE*digiT);
 	    }
 	}
     }
@@ -137,25 +128,78 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	Hit->SetEnergy   (digiE);
 	Hit->SetTime     (digiT*digiE);
 	Hit->SetPosition (TVector3(0.,0.,0.)); 
-	fHits.push_back(Hit);
-	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
+	TempHits.push_back(Hit);
       }
-  }
-  // last loop to correct the time 
+  }//end hit to digi merge
+  
+  // correct the time & add noise
   TRecoVHit *Hit;
   Double_t Noise=0.;
-  for (unsigned int ih=0; ih<fHits.size(); ++ih)
+  for (unsigned int ih=0; ih<TempHits.size(); ++ih)
     {
-      Hit = fHits[ih];
+      Hit = TempHits[ih];
+      //pre-smear time = GetTime()/Hit->GetEnergy());
+      //smearing in time
+      //      Hit->SetTime(smearedtime);
       Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
-
-      if (fSigmaNoiseForMC >0.0001) {
-	Noise=random->Gaus(0.,fSigmaNoiseForMC);   
-	Hit->SetEnergy(Hit->GetEnergy()+Noise);
-      }
+      Noise=random->Gaus(0.,fSigmaNoiseForMC);
+      Hit->SetEnergy(fMCEnergyScale*(Hit->GetEnergy()+Noise));
+      if(Hit->GetEnergy()>fMCEnergyThr) fHits.push_back(Hit);
     }
-    // end of merge digits in the same channel closer in time than a configurable parameter (fPVetoDigiTimeWindow){
+    //
   return;
+}
+
+
+void PVetoReconstruction::ProcessEvent(TRawEvent* rawEv){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    BuildTriggerInfo(rawEv);
+    if (TriggerToBeSkipped()) return;
+  }
+    
+  // from waveforms to Hits
+  BuildHits(rawEv);
+
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+  //    std::cout<<"about to clusterise pveto"<<std::endl;
+  // from Hits to Clusters
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
+  if(fClusterAlgo==1)
+    PVetoReconstruction::BuildClusters(rawEv);
+  //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
+  //Processing is over, let's analyze what's here, if foreseen
+  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+    AnalyzeEvent(rawEv);
+  }
+
+}
+
+void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent){//Beth 22/2/22: copied from virtual class to override virtual class. I removed the calibration it's done by gain equalisation directly in digitizer. I will want to change as it  will use the new battleships algorithm
+
+  //  std::cout<<"!?><using pveto process event"<<std::endl;
+
+  // MC to reco hits
+  ConvertMCDigitsToRecoHits(tEvent, tMCEvent);
+  if(fChannelCalibration) fChannelCalibration->PerformMCCalibration(GetRecoHits());
+  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+
+  if(fClusterAlgo==0){
+    ClearClusters();
+    PadmeVReconstruction::BuildClusters();
+  }
+  if(fClusterAlgo==1)
+    PVetoReconstruction::BuildClusters(tMCEvent);
+  //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+
 }
 
 
@@ -245,11 +289,222 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
       GetHisto("PVetoOccupancyLast")->Fill(Hits[iHit1]->GetChannelId());
     }
   }  
-
-  
-  
-  
-  
+ 
 }
 
 
+void PVetoReconstruction::BuildHits(TRawEvent* rawEv)//copied from ECal 24/6/19 to have board & channel ID in digitizer
+{
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetTrigMask(GetTriggerProcessor()->GetTrigMask());
+  UChar_t nBoards = rawEv->GetNADCBoards();
+  ((DigitizerChannelPVeto*)fChannelReco)->SetEventNumber(rawEv->GetEventNumber());
+  TADCBoard* ADC;
+
+  for(Int_t iBoard = 0; iBoard < nBoards; iBoard++) {
+    ADC = rawEv->ADCBoard(iBoard);
+    Int_t iBdID=ADC->GetBoardId();
+    //    std::cout<<"iBdID "<<iBdID<<std::endl;
+    if(GetConfig()->BoardIsMine( ADC->GetBoardId())) {
+      //Loop over the channels and perform recoH
+      for(unsigned ich = 0; ich < ADC->GetNADCChannels();ich++) {
+	TADCChannel* chn = ADC->ADCChannel(ich);
+	fChannelReco->SetDigis(chn->GetNSamples(),chn->GetSamplesArray());
+
+	//New M. Raggi
+ 	Int_t ChID   = GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()); //give the geographical position
+	//	std::cout<<"Event no "<<rawEv->GetEventNumber()<<" ChID "<<ChID<<std::endl; 
+	Int_t ElChID = chn->GetChannelNumber();
+	//Store info for the digitizer class
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetChID(ChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetElChID(ElChID);
+ 	((DigitizerChannelPVeto*)fChannelReco)->SetBdID(iBdID);
+	
+	unsigned int nHitsBefore = Hits.size();
+	fChannelReco->Reconstruct(Hits);
+	unsigned int nHitsAfter = Hits.size();
+
+	for(unsigned int iHit = nHitsBefore; iHit < nHitsAfter;++iHit) {
+	  Hits[iHit]->SetChannelId(GetChannelID(ADC->GetBoardId(),chn->GetChannelNumber()));
+	  Hits[iHit]->setBDCHid( ADC->GetBoardId(), chn->GetChannelNumber() );
+	  if(fTriggerProcessor)
+	    Hits[iHit]->SetTime(
+				Hits[iHit]->GetTime() - 
+				fTriggerProcessor->GetChannelTriggerTime( ADC->GetBoardId(), chn->GetChannelNumber() ));
+	}
+      }
+    } else {
+      //std::cout<<GetName()<<"::Process(TRawEvent*) - unknown board .... "<<std::endl;
+    }
+  }    
+}
+  
+void PVetoReconstruction::BuildClusters(TRawEvent* rawEv)
+{
+  std::vector<VetoClusterHits> VetoClusterHitVec;//Contains all the PVetoHits to be clusterised per event
+  Int_t nhitpass=0;
+  std::vector<VetoCluster*> vVetoClusters;
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  std::vector<TRecoVCluster *> &myClusters = GetClusters();
+  myClusters.clear();
+
+  TRecoVCluster* myCl;
+  VetoClusterHitVec.clear();
+
+  for(int iHit=0;iHit<Hits.size();iHit++){
+    fClusterHits.Clear();
+    fClusterHits.SetEnergy(Hits[iHit]->GetEnergy());
+    fClusterHits.SetTime(Hits[iHit]->GetTime());
+    fClusterHits.SetChannelId(Hits[iHit]->GetChannelId());
+    fClusterHits.SetPosition(Hits[iHit]->GetPosition());
+    fClusterHits.SetIndex(iHit);
+    //    std::cout<<"iHit "<<iHit<<std::endl;
+    VetoClusterHitVec.push_back(fClusterHits);
+  }
+
+  vVetoClusters.clear();
+  fClusStruc.Clear();//contains a structure for vectors of clusters for each event
+
+  for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){//100 keV is the threshold for hits in the virtual class
+      nhitpass++; 
+      fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
+    }  
+  }
+
+  fClusStruc.HitSort();//sort hits in energy
+  fClusStruc.Clusterise();//clusterise hits
+  fClusStruc.MergeClusters();//merge adjacent, in time clusters (data)
+  vVetoClusters = fClusStruc.GetClusters();//vector of clusters
+  std::vector<Int_t> clHitIndices;
+
+  for(int iPClus=0;iPClus<vVetoClusters.size();iPClus++){
+    myCl = new TRecoVCluster();
+    clHitIndices.clear();
+
+    int chID;
+    double clE;
+    double clT;
+    double clX;
+    double clY;
+    double clZ;
+    int clSize;
+
+    chID = vVetoClusters[iPClus]->GetMostUpstreamChannel();
+    clE = vVetoClusters[iPClus]->GetEnergy();
+    clT = vVetoClusters[iPClus]->GetAverageTime();
+    clSize = vVetoClusters[iPClus]->GetNHits();
+    TVector3 clPos = fGeometry->LocalPosition(chID);
+    
+    clHitIndices = vVetoClusters[iPClus]->GetHitIndex();
+    // for(int ii=0; ii<clHitIndices.size();ii++){
+    //   std::cout<<"Hit index "<<vVetoClusters[iPClus]->GetHitIndex()[ii]<<std::endl;
+    //   std::cout<<Hits[clHitIndices[ii]]->GetChannelId()<<std::endl;
+    // }
+
+    myCl->SetChannelId   ( chID );
+    myCl->SetEnergy      ( clE );
+    myCl->SetTime        ( clT );
+    myCl->SetPosition    ( clPos );
+    myCl->SetNHitsInClus ( clSize );
+    myCl->SetHitVecInClus( clHitIndices );
+    //     myCl->SetSeed        ( iSeed );
+
+    myClusters.push_back(myCl);
+  }
+}
+
+void PVetoReconstruction::BuildClusters(TMCEvent* MCEv)
+{
+  std::vector<VetoClusterHits> VetoClusterHitVec;//Contains all the PVetoHits to be clusterised per event 
+  Int_t nhitpass=0;
+  std::vector<VetoCluster*> vVetoClusters;
+
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  std::vector<TRecoVCluster *> &myClusters = GetClusters();
+  myClusters.clear();
+
+  TRecoVCluster* myCl;
+  VetoClusterHitVec.clear();
+
+  for(int iHit=0;iHit<Hits.size();iHit++){
+    fClusterHits.Clear();
+    fClusterHits.SetEnergy(Hits[iHit]->GetEnergy());
+    fClusterHits.SetTime(Hits[iHit]->GetTime());
+    fClusterHits.SetChannelId(Hits[iHit]->GetChannelId());
+    fClusterHits.SetPosition(Hits[iHit]->GetPosition());
+    fClusterHits.SetIndex(iHit);
+    VetoClusterHitVec.push_back(fClusterHits);
+  }
+
+  vVetoClusters.clear();
+  fClusStruc.Clear();//contains a structure for vectors of clusters for each event
+    
+  for(Int_t iPHit=0;iPHit<VetoClusterHitVec.size();iPHit++){
+    if(VetoClusterHitVec[iPHit].GetEnergy()>fClusterHitEnThr){
+      nhitpass++;
+      fClusStruc.AddHit(VetoClusterHitVec[iPHit],iPHit);
+    }
+  }
+
+  fClusStruc.HitSort();//sort hits in energy
+  fClusStruc.Clusterise();//clusterise hits
+  fClusStruc.MergeClusters();//merge adjacent, in time clusters (MC)
+  vVetoClusters = fClusStruc.GetClusters();//vector of clusters
+  std::vector<Int_t> clHitIndices;
+
+  for(int iPClus=0;iPClus<vVetoClusters.size();iPClus++){
+    myCl = new TRecoVCluster();
+    clHitIndices.clear();
+ 
+    int chID;
+    double clE;
+    double clT;
+    double clX;
+    double clY;
+    double clZ;
+    int clSize;
+
+    chID = vVetoClusters[iPClus]->GetMostUpstreamChannel();
+    clE = vVetoClusters[iPClus]->GetEnergy();
+    clT = vVetoClusters[iPClus]->GetAverageTime();
+    clSize = vVetoClusters[iPClus]->GetNHits();
+    TVector3 clPos = fGeometry->LocalPosition(chID);
+
+    clHitIndices = vVetoClusters[iPClus]->GetHitIndex();
+
+    //    if(clE>100){
+      for(int ii=0;ii<clSize;ii++){
+	if(clHitIndices[ii]>250){
+	  // std::cout<<"rawEvNo "<<MCEv->GetEventNumber()<<" PVeto clE "<<clE<<std::endl;
+	  // std::cout<<" ii "<<ii<<std::endl;
+	  // std::cout<<" no. hits "<<clHitIndices.size()<<std::endl;
+	  // std::cout<<" hit "<<clHitIndices[ii]<<std::endl;
+	  // std::cout<< " hitE "<<Hits[clHitIndices[ii]]->GetEnergy()<<std::endl;
+	}
+      }
+      //}
+
+    myCl->SetChannelId   ( chID );
+    myCl->SetEnergy      ( clE );
+    myCl->SetTime        ( clT );
+    myCl->SetPosition    ( clPos );
+    myCl->SetNHitsInClus ( clSize );
+    myCl->SetHitVecInClus( clHitIndices );
+    //     myCl->SetSeed        ( iSeed );
+
+    myClusters.push_back(myCl);
+    //    std::cout<<"my clusters size "<<myClusters.size()<<std::endl;
+  }
+  //  std::cout<<"size "<<myClusters.size()<<std::endl;
+}
+
+bool PVetoReconstruction::TriggerToBeSkipped()
+{
+  //if ( GetGlobalRecoConfigOptions()->IsRecoMode()    && !(GetTriggerProcessor()->IsBTFTrigger())     ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsPedestalMode()&& !(GetTriggerProcessor()->IsAutoTrigger())    ) return true;
+  if ( GetGlobalRecoConfigOptions()->IsCosmicsMode() && !(GetTriggerProcessor()->IsCosmicsTrigger()) ) return true;
+  return false; 
+}

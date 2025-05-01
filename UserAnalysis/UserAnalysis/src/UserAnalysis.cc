@@ -11,6 +11,13 @@
 #include "MCTruth.hh"     //MR
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
+#include "BhabhaAnalysis.hh" //BL
+#include "BremsstrahlungAnalysis.hh" //BL
+#include "ReversedBFieldBremsstrahlungAnalysis.hh" //BL
+#include "T0sAnalysis.hh"
+#include "PadmeVRecoConfig.hh"
+#include "HitCharacteristicsAnalysis.hh"
+#include "KinematicsBhabha.hh" //BL
 
 UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 {
@@ -22,40 +29,75 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fECalCalib    = ECalCalib::GetInstance();
-  //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
-  fMCTruth      = MCTruth::GetInstance();
+  fConfig = new PadmeVRecoConfig(fCfgParser,"PadmeReconstructionConfiguration");
 
-  //Physics analysis last reviewed by M. Raggi 05/22
-  fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
-  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
-  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+  fRunECalCalib                   = fConfig->GetParOrDefault("ANALYSES","ECalCalib",1.);
+  fRunMCTruth                     = fConfig->GetParOrDefault("ANALYSES","MCTruth",1.);
+  fRunNPoT                        = fConfig->GetParOrDefault("ANALYSES","NPoT",1.);
+  fRunIsGGAnalysis                = fConfig->GetParOrDefault("ANALYSES","IsGGAnalysis",1.);
+  fRunBhabha                      = fConfig->GetParOrDefault("ANALYSES","BhabhaAnalysis",1.);
+  fRunBremsstrahlung              = fConfig->GetParOrDefault("ANALYSES","BremsstrahlungAnalysis",1.);
+  fRunReversedFieldBremsstrahlung = fConfig->GetParOrDefault("ANALYSES","ReversedFieldBremsstrahlungAnalysis",1.);
+  fRunT0s                         = fConfig->GetParOrDefault("ANALYSES","T0sAnalysis",1.);
+  fRunHitCharacteristics          = fConfig->GetParOrDefault("ANALYSES","HitCharacteristics",1.);
+  fRunKinematicsBhabha            = fConfig->GetParOrDefault("ANALYSES","KinematicsBhabha",1.);
+
+  if(fRunECalCalib)  fECalCalib    = ECalCalib::GetInstance();
+  if(fRunMCTruth)    fMCTruth      = MCTruth::GetInstance();
+
+  if(fRunNPoT)                        fNPoTAnalysis                         = new NPoTAnalysis(cfgFile,fVerbose);
+  if(fRunIsGGAnalysis)                fIsGGAnalysis                         = new IsGGAnalysis(cfgFile,fVerbose);
+  if(fRunBhabha)                      fBhabhaAnalysis                       = new BhabhaAnalysis(cfgFile,fVerbose);
+  if(fRunBremsstrahlung)              fBremsstrahlungAnalysis               = new BremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunT0s)                         fT0sAnalysis                          = new T0sAnalysis(cfgFile,fVerbose);
+  if(fRunHitCharacteristics)          fHitCharacteristicsAnalysis           = new HitCharacteristicsAnalysis(cfgFile,fVerbose);
+  if(fRunReversedFieldBremsstrahlung) fReversedBFieldBremsstrahlungAnalysis = new ReversedBFieldBremsstrahlungAnalysis(cfgFile,fVerbose);
+  if(fRunKinematicsBhabha)            fKinematicsBhabha                     = new KinematicsBhabha(cfgFile,fVerbose);
+
+  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  // fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
+  // fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
+  // fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
-  delete fECalCalib;
-  delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
-  delete fETagAnalysis;
-  delete fIs22GGAnalysis;
-  delete fIs3GAnalysis;
+  if(fRunMCTruth&&fEvent->MCTruthEvent)   delete fMCTruth;
+  if(fRunECalCalib)                       delete fECalCalib;
+  if(fRunNPoT)                            delete fNPoTAnalysis;
+  if(fRunIsGGAnalysis)                    delete fIsGGAnalysis;
+  if(fRunBhabha)                          delete fBhabhaAnalysis;
+  if(fRunBremsstrahlung)                  delete fBremsstrahlungAnalysis;
+  if(fRunReversedFieldBremsstrahlung)     delete fReversedBFieldBremsstrahlungAnalysis;
+  if(fRunHitCharacteristics)              delete fHitCharacteristicsAnalysis;
+  if(fRunT0s)                             delete fT0sAnalysis;
+  if(fRunKinematicsBhabha)                delete fKinematicsBhabha;
+  // delete fETagAnalysis;
+  // delete fIs22GGAnalysis;
+  // delete fIs3GAnalysis;
 }
 
 Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  fECalCalib->Init();
 
-  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
-  fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
-  fETagAnalysis->Init(fEvent);
-  fIs22GGAnalysis->Init(fEvent);
-  fIs3GAnalysis->Init(fEvent);
+  if(fRunECalCalib)  fECalCalib->Init();
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
+
+  if(fRunNPoT)                          fNPoTAnalysis->Init(fEvent);
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Init(fEvent);
+  if(fRunBhabha)                        fBhabhaAnalysis->Init(fEvent);
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Init(fEvent);
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Init(fEvent);
+  if(fRunT0s)                           fT0sAnalysis->Init(fEvent);
+  if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Init(fEvent);
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Init(fEvent);
+  //  fIs3GAnalysis->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
+  // fETagAnalysis->Init(fEvent);
+  // fIs22GGAnalysis->Init(fEvent);
+  // fIs3GAnalysis->Init(fEvent);
   return true;
 }
 
@@ -73,10 +115,10 @@ Bool_t UserAnalysis::InitHistos(){
   fHS->BookHisto2List("MyHistos","Test2D",10,0.,10.,10,0.,10.);
 
   // Histograms for MCTruth information
-  fHS->CreateList("MCTruth");
-  fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
-  fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
-  fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
+  // fHS->CreateList("MCTruth");
+  // fHS->BookHistoList("MCTruth","Vertices",10,0.,10.); // Number of vertices in event
+  // fHS->BookHistoList("MCTruth","Vertex Type",10,0.,10.); // 0:eBrem - 1:eIoni - 2:annihil - 9:other
+  // fHS->BookHistoList("MCTruth","Bremstrahlung Gamma Energy",1000,0.,1000.);
 
   return true;
 }
@@ -87,14 +129,28 @@ Bool_t UserAnalysis::Process(){
 
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
-  for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
+  for (int i=0;i<8;i++) { 
+    if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); 
+  }
 
-  fNPoTAnalysis->Process();
-  fIsGGAnalysis->Process();
+  if(fRunNPoT)    fNPoTAnalysis->Process();
+
+  if(fRunNPoT && fNPoTAnalysis->GetNPoT()>20000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Process();
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Process();
+  if(fRunBhabha)                        fBhabhaAnalysis->Process();
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Process();
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Process();
+  if(fRunT0s)                           fT0sAnalysis->Process();
+  if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Process();
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Process();
+
+  //  fIs3GAnalysis->Process();
+  //std::cout<<"E Ecal "<<fIsGGAnalysis->GetETotECal()<<std::endl;
+  /*  fIsGGAnalysis->Process();
   fIs22GGAnalysis->Process();
   fIs3GAnalysis->Process();   
-  fETagAnalysis->Process();
-
+  fETagAnalysis->Process();*/
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
     double tPv = fEvent->PVetoRecoEvent->Hit(ipv)->GetTime();
@@ -118,30 +174,30 @@ Bool_t UserAnalysis::Process(){
   }
   */
 
-  // MCTruth analysis
-  if (fEvent->MCTruthEvent) {
-    fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
-    if (fEvent->MCTruthEvent->GetNVertices()>0) {
-      for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
-	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-	if (mcVtx->GetProcess() == "eBrem") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
-	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
-	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-	    if (mcOPart->GetPDGCode() == 22) {
-	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
-	    }
-	  }
-	} else if (mcVtx->GetProcess() == "eIoni") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
-	} else if (mcVtx->GetProcess() == "annihil") {
-	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
-	} else {
-	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
-	}
-      }
-    }
-  }
+  // // MCTruth analysis
+  // if (fEvent->MCTruthEvent) {
+  //   fHS->FillHistoList("MCTruth","Vertices",fEvent->MCTruthEvent->GetNVertices(),1.);
+  //   if (fEvent->MCTruthEvent->GetNVertices()>0) {
+  //     for(Int_t iV = 0; iV<fEvent->MCTruthEvent->GetNVertices(); iV++) {
+  // 	TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
+  // 	if (mcVtx->GetProcess() == "eBrem") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",0,1.);
+  // 	  for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+  // 	    TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+  // 	    if (mcOPart->GetPDGCode() == 22) {
+  // 	      fHS->FillHistoList("MCTruth","Bremstrahlung Gamma Energy",mcOPart->GetEnergy(),1.);
+  // 	    }
+  // 	  }
+  // 	} else if (mcVtx->GetProcess() == "eIoni") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",1,1.);
+  // 	} else if (mcVtx->GetProcess() == "annihil") {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
+  // 	} else {
+  // 	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);
+  // 	}
+  //     }
+  //   }
+  // }
 
   return true;
 }
@@ -149,13 +205,20 @@ Bool_t UserAnalysis::Process(){
 Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
-  fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
-  fETagAnalysis->Finalize();
-  fIs22GGAnalysis->Finalize();
-  fIs3GAnalysis->Finalize();
-  
+  if(fRunMCTruth&&fEvent->MCTruthEvent) fMCTruth->Finalize();
+  if(fRunNPoT)                          fNPoTAnalysis->Finalize();
+  if(fRunIsGGAnalysis)                  fIsGGAnalysis->Finalize();
+  if(fRunBhabha)                        fBhabhaAnalysis->Finalize();
+  if(fRunBremsstrahlung)                fBremsstrahlungAnalysis->Finalize();
+  if(fRunReversedFieldBremsstrahlung)   fReversedBFieldBremsstrahlungAnalysis->Finalize();
+  if(fRunT0s)                           fT0sAnalysis->Finalize();
+  if(fRunHitCharacteristics)            fHitCharacteristicsAnalysis->Finalize();
+  if(fRunKinematicsBhabha)              fKinematicsBhabha->Finalize();
+  //  fIs3GAnalysis->Finalize();
+  // fIsGGAnalysis->Finalize();
+  // fETagAnalysis->Finalize();
+  // fIs22GGAnalysis->Finalize();
+  // fIs3GAnalysis->Finalize();
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

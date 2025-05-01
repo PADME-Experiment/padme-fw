@@ -135,6 +135,10 @@ Bool_t MCTruth::Process(){
 	  fHS->FillHistoList("MCTruth","Vertex Type",2,1.);
 	  AnalyzeG4_GG(iV);
 	  //	  std::vector<double> EGamma;
+	}
+	if(mcVtx->GetProcess() == "Bhabha") {	  
+	  fHS->FillHistoList("MCTruth","Vertex Type",6,1.);
+	  AnalyzeG4_EE(iV);
 	} 
 	//else {
 	//	  fHS->FillHistoList("MCTruth","Vertex Type",9,1.);

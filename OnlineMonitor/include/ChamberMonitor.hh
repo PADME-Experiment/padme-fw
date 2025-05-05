@@ -73,7 +73,7 @@ private:
   std::vector<double> x_mean[MMCH_N_LAYERS];
   std::vector<double> q_mean[MMCH_N_LAYERS];
 
-  TString mmch_tag[MMCH_N_LAYERS] = { "P1YD","P1YS","P1XT","P1XB","P2YD","P2YS","P2XT","P2XB" };
+  TString mmch_tag[MMCH_N_LAYERS] = { "P1YR","P1YL","P1XT","P1XB","P2YR","P2YL","P2XT","P2XB" };
 
   // Histograms
   TH1D* h_occupancy[MMCH_N_LAYERS];

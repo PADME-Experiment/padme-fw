@@ -238,11 +238,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer Occupancy
     fprintf(outf,"PLOTID MMCh_occupancy%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh Occupancy Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s Occupancy - Run %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",h_occupancy[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",h_occupancy[i]->GetXaxis()->GetXmin(),h_occupancy[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X Channel\n");
+    fprintf(outf,"TITLE_Y Hits\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= h_occupancy[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");
@@ -253,11 +253,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer Weighted Occupancy
     fprintf(outf,"PLOTID MMCh_woccupancy%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh Weighted Occupancy Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s Weighted Occupancy - Run %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hw_occupancy[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hw_occupancy[i]->GetXaxis()->GetXmin(),hw_occupancy[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X Channel\n");
+    fprintf(outf,"TITLE_Y W_Hits\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= hw_occupancy[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");
@@ -268,11 +268,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer QMax Total events
     fprintf(outf,"PLOTID MMCh_qmax_totevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh QMax Total Event Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s QMax Total Event - Run %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hqmax_totevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_totevent[i]->GetXaxis()->GetXmin(),hqmax_totevent[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X QMax\n");
+    fprintf(outf,"TITLE_Y Strips\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= hqmax_totevent[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");
@@ -283,11 +283,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer TMax Total events
     fprintf(outf,"PLOTID MMCh_tmax_totevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh TMax Total Event Layer %d (%s) - Run %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s TMax Total Event - Run %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",htmax_totevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_totevent[i]->GetXaxis()->GetXmin(),htmax_totevent[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X TMax\n");
+    fprintf(outf,"TITLE_Y Strips\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= htmax_totevent[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");
@@ -298,11 +298,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer QMax Single event
     fprintf(outf,"PLOTID MMCh_qmax_perevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh QMax Single Event Layer %d (%s) - Run %d Event %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s QMax Single Event - Run %d Event %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hqmax_perevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_perevent[i]->GetXaxis()->GetXmin(),hqmax_perevent[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X Channel\n");
+    fprintf(outf,"TITLE_Y QMax\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= hqmax_perevent[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");
@@ -313,11 +313,11 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer TMax Single event
     fprintf(outf,"PLOTID MMCh_tmax_perevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh TMax Single Event Layer %d (%s) - Run %d Event %d - %s\n",i,mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s TMax Single Event - Run %d Event %d - %s\n",mmch_tag[i].Data(),fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",htmax_perevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_perevent[i]->GetXaxis()->GetXmin(),htmax_perevent[i]->GetXaxis()->GetXmax());
-    fprintf(outf,"TITLE_X Counts\n");
-    fprintf(outf,"TITLE_Y Bunches\n");
+    fprintf(outf,"TITLE_X Channel\n");
+    fprintf(outf,"TITLE_Y TMax\n");
     fprintf(outf,"DATA [[");
     for(Int_t b = 1; b <= htmax_perevent[i]->GetNbinsX(); b++) {
       if (b>1) fprintf(outf,",");

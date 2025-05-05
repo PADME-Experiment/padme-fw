@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"\nChamberMonitor -R run_name [-D datadir] [-S streams] [-o outdir] [-f] [-r] [-s stopfile] [-c configfile] [-n events] [-d debug] [-v] [-h]\n\n");
         fprintf(stdout,"  -R: define name of run to process\n");
         fprintf(stdout,"  -D: define path to top rawdata directory [default: '%s']\n",cfg->DataDirectory().Data());
-        fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
+        //fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -o: define directory where PadmeMonitor files will be written [default: '%s']\n",cfg->OutputDirectory().Data());
         fprintf(stdout,"  -t: define directory where trend files will be written [default: '%s']\n",cfg->TrendDirectory().Data());
         fprintf(stdout,"  -n: define number of events to process [default: 0 (all events)]\n");

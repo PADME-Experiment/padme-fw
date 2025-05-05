@@ -310,14 +310,11 @@ Int_t ChamberInputHandler::Resume()
 
 TString ChamberInputHandler::FormatFilename(UInt_t filenr)
 {
-  // This must be finalized when the Chamber daq works
-  //return TString::Format("%s/%s/%s_lvl1_%2.2d_%3.3d.root",
-  //			 fConfig->DataDirectory().Data(),
-  //			 fConfig->RunName().Data(),
-  //			 fConfig->RunName().Data(),
-  //			 stream,filenr);
-  //return TString::Format("run2178.root");
-  return TString::Format("run84.root");
+  if (filenr == 0) {
+    return TString::Format("%s/%s.root",fConfig->DataDirectory().Data(),fConfig->RunName().Data());
+  } else {
+    return TString::Format("%s/%s_%d.root",fConfig->DataDirectory().Data(),fConfig->RunName().Data(),filenr);
+  }
 }
 
 Bool_t ChamberInputHandler::FileExists(TString fileName)

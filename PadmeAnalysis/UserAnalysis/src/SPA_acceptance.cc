@@ -129,14 +129,29 @@ Bool_t SPA_acceptance::InitHistos(){
   hSvcVal->BookHisto(this->GetName()+"_PVeto_z",2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_PVeto_z_vs_ChID",2000,-1000.0,1000.0,90,0.,90.);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_EnergyvsZ",500,0.0,500.0,2000,-1000.0,1000.0);
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_EnergyvsZ",500,0.0,500.0,2000,-1000.0,1000.0);
+  hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_EnergyvsChID",500,0.0,500.0,90,0.0,90.0);
   hSvcVal->BookHisto2(this->GetName()+"_PVeto_ZvsE",86,-447.0,500.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_EnergyvsZ_inTime",500,0.0,500.0,2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_EnergyvsZ_1clu",500,0.0,500.0,2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_EnergyvsZ_inTime_1clu",500,0.0,500.0,2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsEnergy",2000,-1000.0,1000.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsEnergy_inTime",2000,-1000.0,1000.0,500,0.0,500.0);
+  
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_beforeCut",2000,-1000.0,1000.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_ZvsEnergy_beforeCut",2000,-1000.0,1000.0,500,0.0,500.0);  
+  hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_beforeCut",90,0.0,90.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_beforeCut",90,0.0,90.0,500,0.0,500.0);
+ 
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",2000,-1000.0,1000.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_Cut",90,0.0,90.0,500,0.0,500.0); 
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_ZvsEnergy_Cut",2000,-1000.0,1000.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_Cut",90,0.0,90.0,500,0.0,500.0);
+
+  
+  hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_beforeCut",90,0.0,90.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_beforeCut",90,0.0,90.0,500,0.0,500.0);
+  
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_afterCut",2000,-1000.0,1000.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsEnergy_1clu",2000,-1000.0,1000.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_ECal_PVeto_ZvsEnergy_inTime_1clu",2000,-1000.0,1000.0,500,0.0,500.0);
@@ -304,10 +319,32 @@ Bool_t SPA_acceptance::Process(){
     //Int_t cluBrem=0;
     Float_t cluPVetoZ=0;
     Float_t cluPVetoE=0;
-    Float_t aline=0.000266708;
-    Float_t bline=0.328642;
-    Float_t cgore=232.682;
-    Float_t cdolu=72.682;
+    Float_t cluPVetoEECal=0;
+    Float_t cluPVetoChID=0;
+
+    //Fit parameters for Bremsstrahlung fit using expected positron energy from beam energy - ECal photon energy and Z position of the cluster in the PVeto
+    Float_t alineECalZ=0.000266708;
+    Float_t blineECalZ=0.328642;
+    Float_t cgoreECalZ=232.682;
+    Float_t cdoluECalZ=72.682;
+
+    //Fit parameters for Bremsstrahlung fit using expected positron energy from beam energy - ECal photon energy and Channel ID of the cluster in the PVeto
+    // Float_t alineECalCh=0.000266708;
+    // Float_t blineECalCh=0.328642;
+    // Float_t cgoreECalCh=232.682;
+    // Float_t cdoluECalCh=72.682;
+
+    //Fit parameters for Bremsstrahlung fit using positron energy from PVeto  and Z position of the cluster in the PVeto
+    // Float_t alineEZ=0.000266708;
+    // Float_t blineEZ=0.328642;
+    // Float_t cgoreEZ=232.682;
+    // Float_t cdoluEZ=72.682;
+
+    //Fit parameters for Bremsstrahlung fit using positron energy from PVeto and ChannelID of the cluster in the PVeto
+    // Float_t alineECh=0.000266708;
+    // Float_t blineECh=0.328642;
+    // Float_t cgoreECh=232.682;
+    // Float_t cdoluECh=72.682;
 
 
       
@@ -345,17 +382,46 @@ Bool_t SPA_acceptance::Process(){
 	for (Int_t i=0; i<NclusPVeto; ++i){
 	  cluPVetoR    = evt->PVetoRecoCl->Element(i);
 	  cluPVetoZ = cluPVetoR->GetPosition().Z();
-	  //cluPVetoE = cluPVetoR->GetEnergy();
-	  cluPVetoE = BeamEnergy - cluU->GetEnergy();
+	  cluPVetoE = cluPVetoR->GetEnergy();
+	  cluPVetoEECal = BeamEnergy - cluU->GetEnergy();
+	  cluPVetoChID = cluPVetoR->GetChannelId();
 	  //if(cluPVetoE>0.01) cluBrem+=1;
+
+	  //Select intime clusters in ECal and PVeto for vetoing
 	  if(fabs(cluPVetoR->GetTime()-cluU->GetTime()) < 5.){
-	    cluBrem+=1;
-	    hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_beforeCut",cluPVetoR->GetPosition().Z(), BeamEnergy -cluU->GetEnergy());
-	    if(cluPVetoE < (aline*cluPVetoZ*cluPVetoZ+bline*cluPVetoZ+cgore) &&
-	       cluPVetoE > (aline*cluPVetoZ*cluPVetoZ+bline*cluPVetoZ+cdolu)){
-	      hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoR->GetPosition().Z(),BeamEnergy -cluU->GetEnergy());
-	      cluBrem+=1;
-	    }
+	    //cluBrem+=1;
+
+	    //See energy vs. position only after time cut. GammaEnergy histos have the expected positron energy from beam energy - ECal photon energy.
+	    hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_beforeCut",cluPVetoZ,cluPVetoEECal);	    
+	    hSvc->FillHisto2(this->GetName()+"_PVeto_ZvsEnergy_beforeCut",cluPVetoZ,cluPVetoE);
+	    hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_beforeCut",cluPVetoChID,cluPVetoEECal);
+	    hSvc->FillHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_beforeCut",cluPVetoChID,cluPVetoE);
+
+	    //Veto using expected energy from BeamE-ECalE and Z position
+	    // if(cluPVetoEECal < (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cgoreECalZ) &&
+	    //    cluPVetoEECal > (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cdoluECalZ)){
+	    //   hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoZ,cluPVetoEECal);
+	    //   cluBrem+=1;
+	    // }
+	    //Veto using expected energy from BeamE-ECalE and Channel ID
+	    // if(cluPVetoEECal < (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cgoreECalCh) &&
+	    //    cluPVetoEECal > (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cdoluECalCh)){
+	    //   hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_Cut",cluPVetoChID,cluPVetoEECal);
+	    //   cluBrem+=1;
+	    // }
+	    //Veto using energy from PVeto and Z position
+	    // if(cluPVetoE < (alineEZ*cluPVetoZ*cluPVetoZ+blineEZ*cluPVetoZ+cgoreEZ) &&
+	    //    cluPVetoE > (alineEZ*cluPVetoZ*cluPVetoZ+blineEZ*cluPVetoZ+cdoluEZ)){
+	    //   hSvc->FillHisto2(this->GetName()+"_PVeto_ZvsEnergy_Cut",cluPVetoZ,cluPVetoE);
+	    //   cluBrem+=1;
+	    // }
+	    
+	    //Veto using energy from PVeto and Channel ID    
+	    // if(cluPVetoE < (alineECh*cluPVetoChID*cluPVetoChID+blineECh*cluPVetoChID+cgoreECh) &&
+	    //    cluPVetoE > (alineECh*cluPVetoChID*cluPVetoChID+blineECh*cluPVetoChID+cdoluECh)){
+	    //   hSvc->FillHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_Cut",cluPVetoChID,cluPVetoE);
+	    //   cluBrem+=1;
+	    // }
 	  }
 	}
       }

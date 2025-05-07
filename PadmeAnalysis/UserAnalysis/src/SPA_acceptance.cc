@@ -334,16 +334,16 @@ Bool_t SPA_acceptance::Process(){
     Float_t cluPVetoChID=0;
 
     //Fit parameters for Bremsstrahlung fit using expected positron energy from beam energy - ECal photon energy and Z position of the cluster in the PVeto
+    Float_t alineECalCh=0.03;
+    Float_t blineECalCh=1.13;
+    Float_t cgoreECalCh=96.24;
+    Float_t cdoluECalCh=-23.76;
+
+    //Fit parameters for Bremsstrahlung fit using expected positron energy from beam energy - ECal photon energy and Channel ID of the cluster in the PVeto
     Float_t alineECalZ=0.000266708;
     Float_t blineECalZ=0.328642;
     Float_t cgoreECalZ=232.682;
     Float_t cdoluECalZ=72.682;
-
-    //Fit parameters for Bremsstrahlung fit using expected positron energy from beam energy - ECal photon energy and Channel ID of the cluster in the PVeto
-    // Float_t alineECalCh=0.000266708;
-    // Float_t blineECalCh=0.328642;
-    // Float_t cgoreECalCh=232.682;
-    // Float_t cdoluECalCh=72.682;
 
     //Fit parameters for Bremsstrahlung fit using positron energy from PVeto  and Z position of the cluster in the PVeto
     // Float_t alineEZ=0.000266708;
@@ -409,17 +409,17 @@ Bool_t SPA_acceptance::Process(){
 	    hSvc->FillHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_beforeCut",cluPVetoChID,cluPVetoE);
 
 	    //Veto using expected energy from BeamE-ECalE and Z position
-	    if(cluPVetoEECal < (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cgoreECalZ) &&
-	       cluPVetoEECal > (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cdoluECalZ)){
-	      hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoZ,cluPVetoEECal);
+	    //if(cluPVetoEECal < (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cgoreECalZ) &&
+	    //  cluPVetoEECal > (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cdoluECalZ)){
+	    // hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoZ,cluPVetoEECal);
+	    // cluBrem+=1;
+	    // }
+	    //Veto using expected energy from BeamE-ECalE and Channel ID
+	    if(cluPVetoEECal < (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cgoreECalCh) &&
+	       cluPVetoEECal > (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cdoluECalCh)){
+	      hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_Cut",cluPVetoChID,cluPVetoEECal);
 	      cluBrem+=1;
 	    }
-	    //Veto using expected energy from BeamE-ECalE and Channel ID
-	    // if(cluPVetoEECal < (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cgoreECalCh) &&
-	    //    cluPVetoEECal > (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cdoluECalCh)){
-	    //   hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ChIDvsGammaEnergy_Cut",cluPVetoChID,cluPVetoEECal);
-	    //   cluBrem+=1;
-	    // }
 	    //Veto using energy from PVeto and Z position
 	    // if(cluPVetoE < (alineEZ*cluPVetoZ*cluPVetoZ+blineEZ*cluPVetoZ+cgoreEZ) &&
 	    //    cluPVetoE > (alineEZ*cluPVetoZ*cluPVetoZ+blineEZ*cluPVetoZ+cdoluEZ)){

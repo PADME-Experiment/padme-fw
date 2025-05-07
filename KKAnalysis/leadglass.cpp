@@ -29,14 +29,15 @@
 #include <sys/stat.h>
 
 #define NTUPLE_N_BOARDS 1
-#define NTUPLE_N_CHANNELS 1
+#define NTUPLE_N_CHANNELS 2
 #define VPP 1.
 
-const int NPed = 100;
+const int NPed = 150;
 static const int NAvg = 1000;
+static const int NSampleTime = 1024;
 
 const double DigThre = 1000; //mV digitizer saturation threshold
-const double FEEThre = 1000; //mV, FEE saturation
+const double FEEThre = 900; //mV, FEE saturation
 const double fImpedance = 50.;
   
 const double digiTime = 1.; // Sampled at 5 GS/s  ---> da prendere dalla rootupla
@@ -56,7 +57,7 @@ int write_to_file_flag = 1;
 struct Eve{
   Int_t NTNevent;
   Double_t NTQCh[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
-  Double_t NTQCh1;
+  // Double_t NTQCh1;
   Double_t NTPedCh[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTVMax[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTTMax[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
@@ -64,8 +65,9 @@ struct Eve{
   Double_t NTCFTime[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTTFit[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Double_t NTChi2[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
-  Double_t Waves[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][1024];
-  Double_t SampleTime[1024];
+  Double_t Waves[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][NSampleTime];
+  Double_t SampleTime[NSampleTime];
+  Bool_t Saturation[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS];
   Int_t NTTrigMask;
 };
 
@@ -242,7 +244,7 @@ int main(int argc, char* argv[]) {
   TTree* tree = new TTree("NTU","Event3");
   tree->Branch("Nevent",&(Event.NTNevent),"Nevent/I");
   tree->Branch("QCh",&(Event.NTQCh),Form("QCh[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("QCh1",&(Event.NTQCh1),"QCh1/D");
+  // tree->Branch("QCh1",&(Event.NTQCh1),"QCh1/D");
   tree->Branch("PedCh",&(Event.NTPedCh),Form("PedCh[%d][%d]/D,",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("VMax",&(Event.NTVMax),Form("VMax[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("TMax",&(Event.NTTMax),Form("TMax[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
@@ -250,8 +252,9 @@ int main(int argc, char* argv[]) {
   tree->Branch("CFTime",&(Event.NTCFTime),Form("CFTime[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("TFit",&(Event.NTTFit),Form("TFit[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("Chi2",&(Event.NTChi2),Form("Chi2[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("Waves",&(Event.Waves), Form("Waves[%d][%d][1024]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("Time",&(Event.SampleTime),Form("Time[%d]/D", 1024));
+  tree->Branch("Waves",&(Event.Waves), Form("Waves[%d][%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS,NSampleTime));
+  tree->Branch("Time",&(Event.SampleTime),Form("Time[%d]/D", NSampleTime));
+  tree->Branch("Saturation",&(Event.Saturation),Form("Saturation[%d][%d]/B",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
   tree->Branch("TrigMask",&(Event.NTTrigMask),Form("TrigMask/I"));
   
   // Create output file for histograms
@@ -262,14 +265,16 @@ int main(int argc, char* argv[]) {
   }
 
   // Create more histograms
-  TH1F* hCh1Charge = new TH1F("hCh1Charge","hCh1Charge; Q [pC]; Number of events",625,-5.,120.);
-  TGraph grCharge; grCharge.SetName("grCharge"); grCharge.SetTitle("grCharge; Event number; Q [pC]"); //Graph of the charge in the run -- for data quality check
+  // TH1F* hCh1Charge = new TH1F("hCh1Charge","hCh1Charge; Q [pC]; Number of events", 625, -5., 120.);
+  TGraph grCharge; //Graph of the charge in the run -- for data quality check
+  grCharge.SetName("grCharge");
+  grCharge.SetTitle("grCharge; Event number; Q [pC]"); 
 
 
   // Define parameters for signal analysis  
-  Double_t Sample[1024];
-  Double_t RecoSample[1024];
-  Double_t AbsRecoSample[1024];
+  Double_t Sample[NSampleTime];
+  Double_t RecoSample[NSampleTime];
+  Double_t AbsRecoSample[NSampleTime];
     
   Int_t readEvent = 0;
   //Double_t SpikeCheck = 1.; //mV
@@ -277,7 +282,7 @@ int main(int argc, char* argv[]) {
 
   // Loop over the events
   for(Int_t iev=0; iev<runNEntries; iev++){
-    double toss = 1; // gRandom->Uniform(0, runNEntries/100);
+    int toss = gRandom->Uniform(0, runNEntries);
     Bool_t Saturated = false;
     
     // Read event info
@@ -285,7 +290,7 @@ int main(int argc, char* argv[]) {
     Int_t runNumber = rawEv->GetRunNumber();
     Int_t evtNumber = rawEv->GetEventNumber();
     // Check if this event number was selected
-    if ( (events.size() > 0) && (std::count(events.begin(),events.end(),evtNumber) == 0) ) {
+    if ( (events.size() > 0) && (std::count(events.begin(), events.end(), evtNumber) == 0) ) {
       continue;
     }
     readEvent++;
@@ -301,36 +306,38 @@ int main(int argc, char* argv[]) {
 
     // Get event trigger mask and select cosmics events
     UInt_t trigMask = rawEv->GetEventTrigMask();
-    if ( !(trigMask & 0x01) ) continue; //da rimettere
+    if ( !(trigMask & 0x01) ) continue; 
     Event.NTTrigMask= trigMask;
     
-    // Loop over boards, ORA NON SERVE
+    // Loop over boards
     for(UChar_t brd = 0; brd<rawEv->GetNADCBoards(); brd++){
 
       // Check if this board was selected
       Int_t brdID = rawEv->ADCBoard(brd)->GetBoardId();
+      // std::cout << "brdID= " << (int)brdID << std::endl;
       if ( (boards.size() > 0) && (std::count(boards.begin(),boards.end(),brdID) == 0) ){
         continue;
       }
 
-      TADCBoard* adcB = rawEv->ADCBoard(brd);
+      TADCBoard* adcB = rawEv->ADCBoard(brd); 
       UChar_t nTrg = adcB->GetNADCTriggers();
-      // UChar_t nChn = adcB->GetNADCChannels();
-      UChar_t nChn = adcB->GetNADCChannels() - 1; //hardcoded perché c'è un solo channel acquisito!
+      UChar_t nChn = adcB->GetNADCChannels(); // hardcoded selecting only 1 channel, the other one is just pedestal 
+      // std::cout << "number of available channels= " << (int)adcB->GetNADCChannels() << std::endl;
+      // find a wah to flag them and do the analysis on both ped and signals
 
       // Analyse the signals
-      if (brdID == 0) { //to be done not hardcoded
-
-        // Loop over the channels
-        for(UChar_t chan=0; chan<nChn; chan++){
-
+      // Loop over the channels
+      for(UChar_t chan=0; chan<nChn; chan++){
+        // chan == 0 --> channel with waveforms
+        // chan == 1 --> channel with pedestal only
+        // if(chan==0){
           TGraphErrors WaveGraph(NAvg-1);
 
-          int tStart= 250; //prima era 100
-          int tStop = 25;        
+          // int tStart= 250; //prima era 100
+          // int tStop = 25;        
         
           Double_t Charge = 0.;
-          Double_t ChargeCh1;
+          // Double_t ChargeCh1;
           Double_t MaxHeight = 5000.;
           Double_t MaxSample = 0.;
           Double_t PedTemp = 0.;
@@ -339,8 +346,8 @@ int main(int argc, char* argv[]) {
 
           // Loop over the samples
           for(UShort_t s=0; s<NAvg; s++){
-            Sample[s] = (Double_t) ADCChn->GetSample(s);
-            if(Sample[s] < MaxHeight){
+            Sample[s] = (Double_t)ADCChn->GetSample(s);
+            if(Sample[s] < MaxHeight){ // NOT USED
               MaxHeight = Sample[s];
               MaxSample = (Double_t) s;
             }
@@ -348,29 +355,26 @@ int main(int argc, char* argv[]) {
 
           // Check if channels has some signal (poor man zero suppression)
 
-          Double_t rms1000 = TMath::RMS(NAvg,&Sample[0]); // get the rms of the samples
+          Double_t rms1000 = TMath::RMS(NAvg,&Sample[0]); // get the rms of the samples - NOT USED
 
-          //Double_t rms100 = TMath::RMS(NPed,&Sample[0]);
+          Double_t rms100 = TMath::RMS(NPed,&Sample[0]);
 
           //if(rms1000<10 && brdId!=29) continue; //2 mV Zsupp on BGOs brd
-
-
 
           // Compute the PEDESTAL
           PedTemp  = TMath::Mean(NPed,&Sample[0]);
           Double_t baseFrom{0},baseTo{0},baselineSum{0},baseN{0};
 
           // if( rms100>10 || trigMask>3)
-          if(1) {
+          // if(1) {
           // MaxSample>360 ? ( bFrom = MaxSample-350,  bTo = MaxSample-250) : ( bFrom = MaxSample+350,  bTo = MaxSample+450) ;
-            baseFrom = 0,  baseTo = 150;
-            for(Int_t s = baseFrom; s < baseTo; s++) {  
-              baselineSum += Sample[s]; 
-              baseN++;
-            }
-            PedTemp = (Double_t)baselineSum/(Double_t)baseN;
+          baseFrom = 0,  baseTo = 150; // maybe it is possible to extend the range for the pedestal calculation
+          for(Int_t s = baseFrom; s < baseTo; s++) {  
+            baselineSum += Sample[s]; 
+            baseN++;
           }
-  
+          PedTemp = (Double_t)baselineSum/(Double_t)baseN;
+          // }
 
           Double_t TatThre = -999;
           // Get total charge and position of maximum
@@ -381,13 +385,14 @@ int main(int argc, char* argv[]) {
 
           // Loop over the samples
           for(UShort_t s=0; s<NAvg; s++){
-            Sample[s] = (Double_t)ADCChn->GetSample(s);          
+            Sample[s] = (Double_t)ADCChn->GetSample(s);   
             
-            if(brdID == 0 && chan == 0){ //eventuali segnali negativi
+            // if(brdID == 0 && chan == 0){ //eventuali segnali negativi
+            // corretto??? sembrano essere tutti ADC counts "negativi", quindi anche il ch1, che è solo ped va "ribaltato"
               AbsRecoSample[s] = VPP*(PedTemp-Sample[s])/4096.*1000.; //Signal in mV
-            } else{
-              AbsRecoSample[s] = VPP*(Sample[s]-PedTemp)/4096.*1000.; //Signal in mV
-            }
+            // } else{
+            //   AbsRecoSample[s] = VPP*(Sample[s]-PedTemp)/4096.*1000.; //Signal in mV
+            // }
 
             //AbsRecoSample[s] = VPP*(TMath::Abs(Sample[s]-PedTemp))/4096.*1000.; //Signal in mV
             
@@ -400,9 +405,9 @@ int main(int argc, char* argv[]) {
           } // end of loop on samples
 
           //Check saturation HERE
-          if(VMax>FEEThre) Saturated = true;    // WARNING : SATURATION WON'T WORK!!
-          // saturazione: devi guardare il counts: 0 counts-->saturato
-          // in pratica se nADCcounts<10 allora SATURATION!!   
+          if(VMax>FEEThre) Saturated = true; // WARNING : SATURATION WON'T WORK!!
+          
+          // saturation properly evaluated: doing VMax<900mV plays the same role of asking a cut directly on ADCChn->GetSample(s);   
 
           //Compute CHARGES
           //check time integration start-stop!
@@ -416,82 +421,82 @@ int main(int argc, char* argv[]) {
             }
           }
 
-          //Get the charge in first channel
-          if(brdID == 0 && chan == 0){
-            ChargeCh1 = Charge;
-            hCh1Charge->Fill(Charge);
-            grCharge.SetPoint(grCharge.GetN(),grCharge.GetN(),Charge);
-          }
+          // Get the charge in first channel
+          // if(brdID == 0 && chan == 0){
+          //   ChargeCh1 = Charge;
+          //   hCh1Charge->Fill(Charge);
+          //   grCharge.SetPoint(grCharge.GetN(),grCharge.GetN(),Charge);
+          // }
 
-          Int_t idx = brdID;
+          // Int_t idx = brdID;
 
           //CF time evaluation through Spline Intertpolation
           // if(1){ // before  5
-            TSpline5 waveSp = TSpline5("wsp", &WaveGraph); 
-            auto waveSpFun = [&waveSp](double *x, double *){ return waveSp.Eval(x[0]); };
-            TF1 waveFitFun = TF1("fitf", waveSpFun ,(TMax-tStart) , (TMax+tStop), 0); 
-            Double_t thr = VMax * CFvalue;
-            // if(brdId == 29 && (c == 19 || c==20)){
-            //   TF1 *FitFun = new TF1("FitFun","landau",(TMax-tStart),(TMax+tStop));
+          // TSpline5 waveSp = TSpline5("wsp", &WaveGraph); 
+          // auto waveSpFun = [&waveSp](double *x, double *){ return waveSp.Eval(x[0]); };
+          // TF1 waveFitFun = TF1("fitf", waveSpFun ,(TMax-tStart) , (TMax+tStop), 0); 
+          // Double_t thr = VMax * CFvalue;
+          // if(brdID == 0 && chan == 0){
+          //   TF1 *FitFun = new TF1("FitFun","landau",(TMax-tStart),(TMax+tStop));
+          //   WaveGraph.Fit(FitFun, "REMQ", "",(TMax-tStart),(TMax+tStop));
+              
+          //   std::cout<< "!!!!!!!!!! Sbaglio con  il fit !!!!!!!! ev: "<< iev << " brdID " << (int)brdID << " ch " << (int)chan << std::endl;  
+          //   CFTimeTmp = FitFun->GetX(thr);   
+          //   TatThre = FitFun->GetX(FixThre);
+          //   TFromFit = FitFun->GetParameter(2); // WoodSaxonFun->GetParameter(0);
 
-            //   waveGra.Fit(FitFun, "REMQ", "",(TMax-tStart),(TMax+tStop));
+          //   Event.NTChi2[idx][chan] =  FitFun->GetChisquare()/FitFun->GetNDF();
+          //   FitFun->ReleaseParameter(0);
+          // }else{
+          //   std::cout<< "!!!!!!!!!! Sbaglio con  il fit !!!!!!!! ev: "<< iev << " brdID " << (int)brdID << " ch " << (int)chan << std::endl;  
+          //   // CFTimeTmp = waveFitFun.GetX(thr);
+          //   // TatThre = waveFitFun.GetX(FixThre);
+          //   // TFromFit = FitFun->GetParameter(2); // WoodSaxonFun->GetParameter(0);
+          // }
+          // CFTimeTmp = waveFitFun.GetX(thr);
+          // TatThre = waveFitFun.GetX(FixThre);
+            
+
+          // Save values into ntuple
+          //TO DO --> save waveforms with a flag
+          Event.NTQCh[brdID][chan] = Charge;
+          // Event.NTQCh1 = ChargeCh1;
+          Event.NTPedCh[brdID][chan] = PedTemp;
+          Event.NTVMax[brdID][chan] = VMax;
+          Event.NTTMax[brdID][chan] = TMax * digiTime;
+          Event.NTCFTime[brdID][chan] = CFTimeTmp * digiTime;
+          Event.Saturation[brdID][chan] = Saturated;
+
+          
+          for(UShort_t t=0;t<NSampleTime;t++){
+            if(t<NAvg){
+              Event.Waves[brdID][chan][t] = AbsRecoSample[t];
+              Event.SampleTime[t]=t*digiTime;
+            }else{
+              Event.Waves[brdID][chan][t] = 0.;
+            }
+          }
+
+          // for(UShort_t s=0;s<NAvg;s++){
+          //       Sam[s] = (Double_t) chn->GetSample(s);          
+          //       if(brdId == 0 && (c ==18 || c== 19 || c==20)){ //eventuali segnali negativi
+          //         AbsSamRec[s] = 2*(PedTemp-Sam[s])/4096.*1000.;//Signal in mV, 2 per Vpp
+          //       }else{
+          //         AbsSamRec[s] = 2*(Sam[s]-PedTemp)/4096.*1000.;//Signal in mV
+          //       }
                 
-            //   //std::cout<<"!!!!!!!!!! Sbaglio con  il fit !!!!!!!! ev:"<<iev<<" b "<<(int)b<<" ch "<<(int)c<<std::endl;  
-            //   CFTimeTmp = FitFun->GetX(thr);   
-            //   TatThre = 0; // FitFun->GetX(FixThre);
-            //   TFromFit =  FitFun->GetParameter(2);// WoodSaxonFun->GetParameter(0);
+          //       fillGraph(&waveGra,s, s, AbsSamRec[s], 0, 0);
+          //       if (AbsSamRec[s] > VMax) {  
+          //         VMax = AbsSamRec[s];
+          //         TMax = (Double_t)s;
+          //       }  
+          // } // end of loop on samples
 
-            //   Event.NTChi2[idx][ch] =  FitFun->GetChisquare()/FitFun->GetNDF();
-            //   FitFun->ReleaseParameter(0);
-            // }else{
-              //std::cout<<"!!!!!!!!!! Sbaglio con la spline fit !!!!!!!!ev:"<<iev<<" b "<<(int)b<<" ch "<<(int)c<<std::endl;      c = new TCanvas("c", "c");
-              CFTimeTmp = waveFitFun.GetX(thr);
-              TatThre = 0; // waveFitFun.GetX(FixThre);
-              TFromFit =  0;// WoodSaxonFun->GetParameter(0);
-            //}
-            // CFTimeTmp = waveFitFun.GetX(thr);
-            // TatThre = waveFitFun.GetX(FixThre);
-            
+          // Saves some waveforms for diagnostics
 
-            // Save values into ntuple
-            //TO DO --> save waveforms with a flag
-            Event.NTQCh[idx][chan] = Charge;
-            Event.NTQCh1 = ChargeCh1;
-            Event.NTPedCh[idx][chan] = PedTemp;
-            Event.NTVMax[idx][chan] = VMax;
-            Event.NTTMax[idx][chan] = TMax * digiTime;
-            Event.NTCFTime[idx][chan] = CFTimeTmp * digiTime;
-            
-            // for(UShort_t t=0;t<1024;t++){
-            //   if(t<NAvg){
-            //     Event.Waves[idx][chan][t] = AbsRecoSample[t];
-            //     Event.SampleTime[t]=t*digiTime;
-            //   }else{
-            //     Event.Waves[idx][chan][t] = 0.;
-            //   }
-            // }
-
-            // for(UShort_t s=0;s<NAvg;s++){
-            //       Sam[s] = (Double_t) chn->GetSample(s);          
-            //       if(brdId == 0 && (c ==18 || c== 19 || c==20)){ //eventuali segnali negativi
-            //         AbsSamRec[s] = 2*(PedTemp-Sam[s])/4096.*1000.;//Signal in mV, 2 per Vpp
-            //       }else{
-            //         AbsSamRec[s] = 2*(Sam[s]-PedTemp)/4096.*1000.;//Signal in mV
-            //       }
-                  
-            //       fillGraph(&waveGra,s, s, AbsSamRec[s], 0, 0);
-            //       if (AbsSamRec[s] > VMax) {  
-            //         VMax = AbsSamRec[s];
-            //         TMax = (Double_t)s;
-            //       }  
-            // } // end of loop on samples
-
-            //Saves some waveforms for diagnostics
-            std::cout << "writing the fucking wf!!" << std::endl;
-
-            histoFile->cd();
-            // TCanvas *cc = new TCanvas(Form("e%d_b%d_c%d", iev,brd,chan)); cc->cd(); 
-
+          histoFile->cd();
+          // TCanvas *cc = new TCanvas(Form("e%d_b%d_c%d", iev,brd,chan)); cc->cd(); 
+          if(chan == 0 && toss%100==0){
             WaveGraph.SetLineWidth(1); WaveGraph.SetMarkerStyle(20); WaveGraph.SetMarkerSize(.2); WaveGraph.SetMarkerColor(kBlue); WaveGraph.Draw(); 
             // waveFitFun.SetLineColor(kTeal); waveFitFun.Draw("same");
             // waveSp.SetLineColor(kBlack); waveSp.Draw("same");
@@ -508,12 +513,12 @@ int main(int argc, char* argv[]) {
           
             // cc->Draw();
             WaveGraph.Write(); 
-            // histoFile->cd();
-          // } // if su rms1000  
-        } // end loop on channels
-      
-
-
+            histoFile->cd();
+          // } //channel selection
+        }
+        // } // if su rms1000  
+      } // end loop on channels
+    
       // for(UChar_t t=0;t<nTrg;t++){
 
       //   TGraphErrors waveGra(NAvg-1);
@@ -549,20 +554,11 @@ int main(int argc, char* argv[]) {
       //         TMax = (Double_t)s;
       //     }
           
-      //   } // end of loop on samples
-
-      
-      // 
-      //   
-      //  
-
-      //   
-        
-      //   
+      //   } // end of loop on samples  
       //   }
-      // }//end loop on triggers
+      // } //end loop on triggers
+        
       
-    
       // for(UChar_t t=0;t<nTrg;t++){
 
       //   TGraphErrors waveGra(NAvg-1);
@@ -709,24 +705,21 @@ int main(int argc, char* argv[]) {
       //     histoFile->cd();
         
       //   }
-      // }//end loop on triggers
-      
-      } // end board selection
-
+      // } //end loop on triggers
     } // end loop on boards
     
-  Event.NTNevent = iev;
-  
-  if(Saturated == false){
+    Event.NTNevent = iev;
     tree->Fill();
-  }  //va fixato
+
+    // if(Saturated == false){
+    // }  //va fixato
 
 
-  //memset(&Event, 0, sizeof(Event));
+    //memset(&Event, 0, sizeof(Event));
 
-  // Clear event
-  rawEv->Clear("C");
-  
+    // Clear event
+    rawEv->Clear("C");
+    
   } // end loop on events
 
 
@@ -745,7 +738,7 @@ int main(int argc, char* argv[]) {
   //TCanvas* cQ = new TCanvas(); cQ->cd();
   //hCh1Charge->SetTitle("");
 
-  hCh1Charge->Draw();
+  // hCh1Charge->Draw();
   //hCh1Charge->Write("hCh1Charge");
   //cQ->Draw();
   //cQ->Write();
@@ -753,7 +746,8 @@ int main(int argc, char* argv[]) {
 
   // TCanvas* cgrQ = new TCanvas("cgrQ"); cgrQ->cd();
   grCharge.SetTitle(baseName.Data());
-  grCharge.SetMarkerStyle(6); grCharge.SetMarkerSize(.4); grCharge.SetMarkerColor(kBlue+2); grCharge.Draw("AP");
+  grCharge.SetMarkerStyle(6); grCharge.SetMarkerSize(.4); grCharge.SetMarkerColor(kBlue+2); 
+  // grCharge.Draw("AP");
   grCharge.Write("grCharge");
   //cgrQ->Draw();
   //cgrQ->Write();

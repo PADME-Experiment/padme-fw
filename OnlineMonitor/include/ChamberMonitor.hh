@@ -30,8 +30,7 @@ public:
 private:
 
   void CoordinateFinder(int, int, std::vector<double>, double &, double &, double &, double &);
-  Int_t ComputeBeamCoordinates();
-  Int_t ComputeBeamMultiplicty();
+  Int_t ComputeBeamSpot();
   Int_t OutputBeam();
 
   Configuration* fConfig;
@@ -55,23 +54,34 @@ private:
   // Beamspot position and spread
   Double_t fP1_BeamX;
   Double_t fP1_BeamXSpread;
+  Double_t fP1_BeamXCharge;
   Double_t fP1_BeamY;
   Double_t fP1_BeamYSpread;
+  Double_t fP1_BeamYCharge;
   Double_t fP2_BeamX;
   Double_t fP2_BeamXSpread;
+  Double_t fP2_BeamXCharge;
   Double_t fP2_BeamY;
   Double_t fP2_BeamYSpread;
+  Double_t fP2_BeamYCharge;
 
   // Trend vectors
   std::vector<Double_t> fVTime_Beam;
+
   std::vector<Double_t> fVP1_BeamX;
-  std::vector<Double_t> fVP1_BeamXSpread;
   std::vector<Double_t> fVP1_BeamY;
-  std::vector<Double_t> fVP1_BeamYSpread;
   std::vector<Double_t> fVP2_BeamX;
-  std::vector<Double_t> fVP2_BeamXSpread;
   std::vector<Double_t> fVP2_BeamY;
+
+  std::vector<Double_t> fVP1_BeamXSpread;
+  std::vector<Double_t> fVP1_BeamYSpread;
+  std::vector<Double_t> fVP2_BeamXSpread;
   std::vector<Double_t> fVP2_BeamYSpread;
+
+  std::vector<Double_t> fVP1_BeamXCharge;
+  std::vector<Double_t> fVP1_BeamYCharge;
+  std::vector<Double_t> fVP2_BeamXCharge;
+  std::vector<Double_t> fVP2_BeamYCharge;
 
   // Trend support file
   TString fTFChTrendsBM;

@@ -143,15 +143,23 @@ void ChamberMonitor::EndOfEvent()
       if ( (fVTime_Beam.size() == 0) || (fConfig->GetEventAbsTime().AsDouble() > fVTime_Beam.back()) ) {
 
 	// Update trend vectors
+
 	fVTime_Beam.push_back(fConfig->GetEventAbsTime().AsDouble());
+
 	fVP1_BeamX.push_back(fP1_BeamX);
-	fVP1_BeamXSpread.push_back(fP1_BeamXSpread);
 	fVP1_BeamY.push_back(fP1_BeamY);
-	fVP1_BeamYSpread.push_back(fP1_BeamYSpread);
 	fVP2_BeamX.push_back(fP2_BeamX);
-	fVP2_BeamXSpread.push_back(fP2_BeamXSpread);
 	fVP2_BeamY.push_back(fP2_BeamY);
+
+	fVP1_BeamXSpread.push_back(fP1_BeamXSpread);
+	fVP1_BeamYSpread.push_back(fP1_BeamYSpread);
+	fVP2_BeamXSpread.push_back(fP2_BeamXSpread);
 	fVP2_BeamYSpread.push_back(fP2_BeamYSpread);
+
+	fVP1_BeamXCharge.push_back(fP1_BeamXCharge);
+	fVP1_BeamYCharge.push_back(fP1_BeamYCharge);
+	fVP2_BeamXCharge.push_back(fP2_BeamXCharge);
+	fVP2_BeamYCharge.push_back(fP2_BeamYCharge);
 
 	/*
 	// Update trends file
@@ -227,8 +235,8 @@ void ChamberMonitor::AnalyzeEvent(ChamberEvent* rawEv)
  
   }
 
-  // Compute beam coordinates
-  Int_t ok = ComputeBeamCoordinates();
+  // Compute beam spot properties (coordinates and total charge) from low HV sector
+  ComputeBeamSpot();
 
 }
 void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double> camp, double &t_strip, double &x_strip, double &z_strip, double &q_strip) 
@@ -277,8 +285,23 @@ void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double
 
 }
 
-Int_t ChamberMonitor::ComputeBeamCoordinates()
+Int_t ChamberMonitor::ComputeBeamSpot()
 {
+
+  fP1_BeamX = 0.;
+  fP1_BeamY = 0.;
+  fP2_BeamX = 0.;
+  fP2_BeamY = 0.;
+
+  fP1_BeamXSpread = 0.;
+  fP1_BeamYSpread = 0.;
+  fP2_BeamXSpread = 0.;
+  fP2_BeamYSpread = 0.;
+
+  fP1_BeamXCharge = 0.;
+  fP1_BeamYCharge = 0.;
+  fP2_BeamXCharge = 0.;
+  fP2_BeamYCharge = 0.;
 
   // Compute weighted average position for each layer 
   for(Int_t i=0; i<MMCH_N_LAYERS; i++) {
@@ -295,29 +318,40 @@ Int_t ChamberMonitor::ComputeBeamCoordinates()
     Double_t x = 0.;
     if (sum_q != 0.) x = sum_qx/sum_q;
 
-    if        (i == 3) {  // P1XB
-      fP1_BeamX = x;
-    } else if (i == 7) {  // P2XB
-      fP2_BeamX = x;
-    } else if (i == 0) {  // P1YR
+    // Save compute quantitites to corresponding layer
+    switch(i) {
+    case 0:          // P1YR
       fP1_BeamY = x;
-    } else if (i == 4) {  // P2YR
+      fP1_BeamYCharge += sum_q;
+      break;
+    case 1:          // P1YL
+      fP1_BeamYCharge += sum_q;
+      break;
+    case 2:          // P1XT
+      fP1_BeamXCharge += sum_q;
+      break;
+    case 3:          // P1XB
+      fP1_BeamX = x;
+      fP1_BeamXCharge += sum_q;
+      break;
+    case 4:          // P2YR
       fP2_BeamY = x;
+      fP2_BeamYCharge += sum_q;
+      break;
+    case 5:          // P2YL
+      fP2_BeamYCharge += sum_q;
+      break;
+    case 6:          // P2XT
+      fP2_BeamXCharge += sum_q;
+      break;
+    case 7:          // P2XB
+      fP2_BeamX = x;
+      fP2_BeamXCharge += sum_q;
+      break;
     }
 
   }
 
-  // Will be added later
-  fP1_BeamXSpread = 0.;
-  fP1_BeamYSpread = 0.;
-  fP2_BeamXSpread = 0.;
-  fP2_BeamYSpread = 0.;
-
-  return 0;
-}
-
-Int_t ChamberMonitor::ComputeBeamMultiplicty()
-{
   return 0;
 }
 
@@ -424,8 +458,10 @@ Int_t ChamberMonitor::OutputBeam()
 
   }
 
-  // Beam position trend plot
   UInt_t jout;
+
+  // Beam position trend plot2
+
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
@@ -477,6 +513,64 @@ Int_t ChamberMonitor::OutputBeam()
     if (fVP2_BeamY[j] != 0.) {
       if (jout) fprintf(outf,",");
       fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamY[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Beam charge trend plot2
+
+  fprintf(outf,"PLOTID ChamberMon_trendbeamchargex\n");
+  fprintf(outf,"PLOTNAME MMCh Beam X Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Charge\n");
+  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"DATA [ [");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP1_BeamXCharge[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXCharge[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"],[");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP2_BeamXCharge[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXCharge[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fprintf(outf,"PLOTID ChamberMon_trendbeamchargey\n");
+  fprintf(outf,"PLOTNAME MMCh Beam Y Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Charge\n");
+  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"DATA [ [");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP1_BeamYCharge[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYCharge[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"],[");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP2_BeamYCharge[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYCharge[j]);
       jout++;
     }
   }

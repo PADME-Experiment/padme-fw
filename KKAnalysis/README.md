@@ -1,7 +1,7 @@
 README of the october 2024 PbGl test beam 
 
 how to compile:
-  g++ -o "file.exe name" leadglass.cpp  -I ../reco/PadmeRoot/include -L ../reco/PadmeRoot/lib/ -lPadmeRoot  `root-config --libs  --cflags`
+  g++ -o "file.exe" leadglass.cpp  -I ../PadmeRoot/include -L ../PadmeRoot/lib/ -lPadmeRoot `root-config --libs  --cflags`
 
 this is a dedicated version of compiling the code for the TB data analysis. There would be a better and optimized one, but this works, so it's fine (for the moment at least!)
 

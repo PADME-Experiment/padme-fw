@@ -48,10 +48,12 @@ while true; do
 	# File used to stop this OnlineMonitor
 	stopFile="run/MM_${current_run}.stop"
 
-	now=$( date )
+	# Add a pause to allow file to really appear (NFS is tricky)
+	sleep $pause
 
+	now=$( date -u )
 	echo
-	echo "*** $( date ) - Starting ChamberMonitor ***"
+	echo "*** $now - Starting ChamberMonitor ***"
 	echo "  Run: $current_run"
 	echo "  Input rawdata directory: $inputDir"
 
@@ -72,7 +74,7 @@ while true; do
     if [ "$om_running" -eq "1" ]; then
 	kill -s 0 $om_pid 2>/dev/null
 	if [ $? -ne 0 ]; then
-	    now=$( date )
+	    now=$( date -u )
 	    echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
 	    echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
 	    stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &

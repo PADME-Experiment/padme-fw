@@ -30,6 +30,8 @@ public:
 private:
 
   void CoordinateFinder(int, int, std::vector<double>, double &, double &, double &, double &);
+  Int_t ComputeBeamCoordinates();
+  Int_t ComputeBeamMultiplicty();
   Int_t OutputBeam();
 
   Configuration* fConfig;
@@ -50,11 +52,26 @@ private:
   UInt_t fCosmicsEventCount;
   UInt_t fRandomEventCount;
 
-  // Histograms
-  //TH1D* fHLGPedestalBM;
+  // Beamspot position and spread
+  Double_t fP1_BeamX;
+  Double_t fP1_BeamXSpread;
+  Double_t fP1_BeamY;
+  Double_t fP1_BeamYSpread;
+  Double_t fP2_BeamX;
+  Double_t fP2_BeamXSpread;
+  Double_t fP2_BeamY;
+  Double_t fP2_BeamYSpread;
 
   // Trend vectors
-  //std::vector<Double_t> fVLGTimeBM;
+  std::vector<Double_t> fVTime_Beam;
+  std::vector<Double_t> fVP1_BeamX;
+  std::vector<Double_t> fVP1_BeamXSpread;
+  std::vector<Double_t> fVP1_BeamY;
+  std::vector<Double_t> fVP1_BeamYSpread;
+  std::vector<Double_t> fVP2_BeamX;
+  std::vector<Double_t> fVP2_BeamXSpread;
+  std::vector<Double_t> fVP2_BeamY;
+  std::vector<Double_t> fVP2_BeamYSpread;
 
   // Trend support file
   TString fTFChTrendsBM;
@@ -64,14 +81,11 @@ private:
   //Double_t fNPoTsRangeMax;
 
   // Time fit objects
-  //std::vector<double> t_mean0, t_mean1, t_mean2, t_mean3, t_mean4, t_mean5, t_mean6, t_mean7;
-  //std::vector<double> z_mean0, z_mean1, z_mean2, z_mean3, z_mean4, z_mean5, z_mean6, z_mean7;
-  //std::vector<double> x_mean0, x_mean1, x_mean2, x_mean3, x_mean4, x_mean5, x_mean6, x_mean7;
-  //std::vector<double> q_mean0, q_mean1, q_mean2, q_mean3, q_mean4, q_mean5, q_mean6, q_mean7;
-  std::vector<double> t_mean[MMCH_N_LAYERS];
-  std::vector<double> z_mean[MMCH_N_LAYERS];
-  std::vector<double> x_mean[MMCH_N_LAYERS];
-  std::vector<double> q_mean[MMCH_N_LAYERS];
+  std::vector<Double_t> t_mean[MMCH_N_LAYERS]; // Time
+  std::vector<Double_t> z_mean[MMCH_N_LAYERS]; // Z coordinate
+  std::vector<Double_t> x_mean[MMCH_N_LAYERS]; // X coordinate
+  std::vector<Double_t> q_mean[MMCH_N_LAYERS]; // Charge
+  std::vector<Int_t>    c_mean[MMCH_N_LAYERS]; // Channel
 
   TString mmch_tag[MMCH_N_LAYERS] = { "P1YR","P1YL","P1XT","P1XB","P2YR","P2YL","P2XT","P2XB" };
 
@@ -86,27 +100,29 @@ private:
   TH1D* htmax_perevent[MMCH_N_LAYERS];
 
   // Signal conversion parameters
-  float pitch=1.2; //mm
+  Double_t fStripPitch=1.2; //mm - Pitch between two consecutive strips
 
-  //float geo_hole[8] = {2.4,2.4,8.4,8.4,8.4,8.4,2.4,2.4};//mm
-  float geo_hole[8] = {8.4,8.4,2.4,2.4,2.4,2.4,8.4,8.4};//mm
+  Double_t fGeometryHole[MMCH_N_LAYERS] = {8.4,8.4,2.4,2.4,2.4,2.4,8.4,8.4};//mm
                                                                                 
-  int maxStrip=512, maxStripApv=128;                                                                                      
-  float xmax = maxStrip*pitch;
+  UInt_t fNStrips=512;
+  UInt_t fNStripsApv=128;
 
-  float z0=0, zm=50., z2=100.; //mm          z coord of the chamber starting from bottom to top 
+  //float xmax = fNStrips*fStripPitch;
 
-  //float vd=0.105; //mm/ns in place of 0.105      
-  float vd=0.1002; //mm/ns for run 2292 and 2271
-  //float vd=0.1210; //mm/ns for run 2417 
+  Double_t z0=0, zm=50., z2=100.; //mm          z coord of the chamber starting from bottom to top 
+
+  //Double_t vd=0.105; //mm/ns in place of 0.105      
+  Double_t vd=0.1002; //mm/ns for run 2292 and 2271
+  //Double_t vd=0.1210; //mm/ns for run 2417 
   
-  float clock = 25., ncamp=27; //with the 675ns time window (for the 450 one ncamp is 18)                               
-  double qnoisecut = 10000;
+  Double_t clock = 25.;
+  Int_t ncamp=27.; //with the 675ns time window (for the 450 one ncamp is 18)
 
-  int maxholes=2;
-  double xnstrip=3;
-  
-  double sigma_x = 0.5; //mm (per hit adjoint)
+  // Position of central "Low HV" square to use for beam studies (mm)
+  Double_t fLowHV_MeshRadius = 60.; // Radius of the low HV mesh area
+  Double_t fLowHV_MeshGap[MMCH_N_LAYERS] = {8.4,8.4,0.,0.,0.,0.,8.4,8.4};
+  Double_t fLowHV_XMin[MMCH_N_LAYERS];
+  Double_t fLowHV_XMax[MMCH_N_LAYERS];
 
 };
 #endif

@@ -160,11 +160,22 @@ Bool_t SPA_acceptance::InitHistos(){
   hSvcVal->BookHisto(this->GetName()+"_SAC_PVeto_TimeDiff",1200,-600.0,600.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_TimeDiff_vs_Z",1200,-600.0,600.0,2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ",500,0.0,500.0,2000,-1000.0,1000.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID",500,0.0,500.0,90,0.0,90.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ_inTime",500,0.0,500.0,2000,-1000.0,1000.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ_inTime_banan",500,0.0,500.0,2000,-1000.0,1000.0);
-  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy",2000,-1000.0,1000.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID_inTime",500,0.0,500.0,90,0.0,90.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyFromVetovsChID_inTime_banan",500,0.0,500.0,90,0.0,90.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID_inTime_banan",500,0.0,500.0,90,0.0,90.0);
+
+  
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy",2000,-1000.0,1000.0,500,0.0,500.0); 
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy",90,0.0,90.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime",2000,-1000.0,1000.0,500,0.0,500.0);
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime_banan",2000,-1000.0,1000.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy_inTime",90,0.0,90.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy_inTime_banan",90,0.0,90.0,500,0.0,500.0);
+  hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergyFromVeto_inTime_banan",90,0.0,90.0,500,0.0,500.0);
+  
   hSvcVal->BookHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime_banan_rebin",86,-447.0,500.0,500,0.0,500.0);
 
   hSvcVal->BookHisto2(this->GetName()+"_PVeto_Energy_vs_Z",1000,0.0,500.0,2000,-1000.0,1000.0);
@@ -398,11 +409,11 @@ Bool_t SPA_acceptance::Process(){
 	    hSvc->FillHisto2(this->GetName()+"_PVeto_ChIDvsEnergy_beforeCut",cluPVetoChID,cluPVetoE);
 
 	    //Veto using expected energy from BeamE-ECalE and Z position
-	    // if(cluPVetoEECal < (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cgoreECalZ) &&
-	    //    cluPVetoEECal > (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cdoluECalZ)){
-	    //   hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoZ,cluPVetoEECal);
-	    //   cluBrem+=1;
-	    // }
+	    if(cluPVetoEECal < (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cgoreECalZ) &&
+	       cluPVetoEECal > (alineECalZ*cluPVetoZ*cluPVetoZ+blineECalZ*cluPVetoZ+cdoluECalZ)){
+	      hSvc->FillHisto2(this->GetName()+"_ECal_PVeto_ZvsGammaEnergy_Cut",cluPVetoZ,cluPVetoEECal);
+	      cluBrem+=1;
+	    }
 	    //Veto using expected energy from BeamE-ECalE and Channel ID
 	    // if(cluPVetoEECal < (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cgoreECalCh) &&
 	    //    cluPVetoEECal > (alineECalCh*cluPVetoChID*cluPVetoChID+blineECalCh*cluPVetoChID+cdoluECalCh)){
@@ -718,15 +729,25 @@ Bool_t SPA_acceptance::Process(){
 	hSvc->FillHisto(this->GetName()+"_SAC_PVeto_TimeDiff", (cluPVeto2->GetTime()-cluSAC->GetTime()));
 	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_TimeDiff_vs_Z", (cluPVeto2->GetTime()-cluSAC->GetTime()),cluPVeto2->GetPosition().Z());
 	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ",cluSAC->GetEnergy(),cluPVeto2->GetPosition().Z());
-	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy",cluPVeto2->GetPosition().Z(),BeamEnergy-(cluSAC->GetEnergy()));
+	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID",cluSAC->GetEnergy(),cluPVeto2->GetChannelId());
+	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy",cluPVeto2->GetPosition().Z(),cluSAC->GetEnergy());
+	hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy",cluPVeto2->GetChannelId(),cluSAC->GetEnergy());
 	if((cluPVeto2->GetTime()-cluSAC->GetTime())>-1.&&(cluPVeto2->GetTime()-cluSAC->GetTime())<1.){
 	  hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ_inTime",cluSAC->GetEnergy(),cluPVeto2->GetPosition().Z());
-	  hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime",cluPVeto2->GetPosition().Z(),BeamEnergy-(cluSAC->GetEnergy()));
+	  hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime",cluPVeto2->GetPosition().Z(),cluSAC->GetEnergy());
 	  
+	  hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID_inTime",cluSAC->GetEnergy(),cluPVeto2->GetChannelId());
+	  hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy_inTime",cluPVeto2->GetChannelId(),cluSAC->GetEnergy());
 	  
 	  if(cluPVeto2->GetPosition().Z()<500){
 	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsZ_inTime_banan",cluSAC->GetEnergy(),cluPVeto2->GetPosition().Z());
 	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime_banan",cluPVeto2->GetPosition().Z(),BeamEnergy-(cluSAC->GetEnergy()));
+	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyvsChID_inTime_banan",cluSAC->GetEnergy(),cluPVeto2->GetChannelId());
+	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergy_inTime_banan",cluPVeto2->GetChannelId(),BeamEnergy-(cluSAC->GetEnergy()));
+	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_EnergyFromVetovsChID_inTime_banan",cluPVeto2->GetEnergy(),cluPVeto2->GetChannelId());
+	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ChIDvsEnergyFromVeto_inTime_banan",cluPVeto2->GetChannelId(),cluPVeto2->GetEnergy());
+
+	    
 	    hSvc->FillHisto2(this->GetName()+"_SAC_PVeto_ZvsEnergy_inTime_banan_rebin",cluPVeto2->GetPosition().Z(),BeamEnergy-(cluSAC->GetEnergy()));
 	    
 	  }

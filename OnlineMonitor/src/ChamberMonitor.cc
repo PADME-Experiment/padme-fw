@@ -429,7 +429,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\" ], \"lines+markers\"]\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");
@@ -457,7 +457,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamposy\n");
   fprintf(outf,"PLOTNAME MMCh Beam Y Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\" ], \"lines+markers\"]\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");

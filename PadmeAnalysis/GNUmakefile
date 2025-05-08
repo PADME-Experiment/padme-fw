@@ -17,8 +17,9 @@ CPPFLAGS += -IAnalysisBase/include -g
 include ./config/global.gmk
 
 # Define libraries used for the creation of the final executable
-LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) $(addprefix -l,$(addsuffix Analysis$(STATIC),$(SUBDIRS)))
-LIBS += -LAnalysisBase/lib -lAnalysisBase$(STATIC)
+LIBS += $(addprefix -L,$(addsuffix /lib,$(SUBDIRS))) -Wl,--whole-archive $(addprefix -l,$(addsuffix Analysis$(STATIC),$(SUBDIRS)))
+
+LIBS += -Wl,--no-whole-archive -LAnalysisBase/lib -lAnalysisBase$(STATIC)
 LIBS += -L$(PADMEROOT)/lib -lPadmeRoot
 #LIBS += -L/usr/lib64/mysql -lmysqlclient
 

@@ -32,6 +32,7 @@ private:
   void CoordinateFinder(int, int, std::vector<double>, double &, double &, double &, double &);
   Int_t ComputeBeamSpot();
   Int_t OutputBeam();
+  Int_t ClearBeamAccumulators();
 
   Configuration* fConfig;
   utl::ConfigParser* fConfigParser;
@@ -52,18 +53,43 @@ private:
   UInt_t fRandomEventCount;
 
   // Beamspot position and spread
+  UInt_t   fNEventsBeam;
+
   Double_t fP1_BeamX;
+  UInt_t fP1_BeamX_N;
   Double_t fP1_BeamXSpread;
-  Double_t fP1_BeamXCharge;
+  UInt_t fP1_BeamXSpread_N;
+  Double_t fP1_BeamXTCharge;
+  UInt_t fP1_BeamXTCharge_N;
+  Double_t fP1_BeamXBCharge;
+  UInt_t fP1_BeamXBCharge_N;
+
   Double_t fP1_BeamY;
+  UInt_t fP1_BeamY_N;
   Double_t fP1_BeamYSpread;
-  Double_t fP1_BeamYCharge;
+  UInt_t fP1_BeamYSpread_N;
+  Double_t fP1_BeamYLCharge;
+  UInt_t fP1_BeamYLCharge_N;
+  Double_t fP1_BeamYRCharge;
+  UInt_t fP1_BeamYRCharge_N;
+
   Double_t fP2_BeamX;
+  UInt_t fP2_BeamX_N;
   Double_t fP2_BeamXSpread;
-  Double_t fP2_BeamXCharge;
+  UInt_t fP2_BeamXSpread_N;
+  Double_t fP2_BeamXTCharge;
+  UInt_t fP2_BeamXTCharge_N;
+  Double_t fP2_BeamXBCharge;
+  UInt_t fP2_BeamXBCharge_N;
+
   Double_t fP2_BeamY;
+  UInt_t fP2_BeamY_N;
   Double_t fP2_BeamYSpread;
-  Double_t fP2_BeamYCharge;
+  UInt_t fP2_BeamYSpread_N;
+  Double_t fP2_BeamYLCharge;
+  UInt_t fP2_BeamYLCharge_N;
+  Double_t fP2_BeamYRCharge;
+  UInt_t fP2_BeamYRCharge_N;
 
   // Trend vectors
   std::vector<Double_t> fVTime_Beam;
@@ -78,10 +104,14 @@ private:
   std::vector<Double_t> fVP2_BeamXSpread;
   std::vector<Double_t> fVP2_BeamYSpread;
 
-  std::vector<Double_t> fVP1_BeamXCharge;
-  std::vector<Double_t> fVP1_BeamYCharge;
-  std::vector<Double_t> fVP2_BeamXCharge;
-  std::vector<Double_t> fVP2_BeamYCharge;
+  std::vector<Double_t> fVP1_BeamXTCharge;
+  std::vector<Double_t> fVP1_BeamXBCharge;
+  std::vector<Double_t> fVP1_BeamYLCharge;
+  std::vector<Double_t> fVP1_BeamYRCharge;
+  std::vector<Double_t> fVP2_BeamXTCharge;
+  std::vector<Double_t> fVP2_BeamXBCharge;
+  std::vector<Double_t> fVP2_BeamYLCharge;
+  std::vector<Double_t> fVP2_BeamYRCharge;
 
   // Trend support file
   TString fTFChTrendsBM;

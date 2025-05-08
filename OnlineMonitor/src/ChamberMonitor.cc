@@ -47,6 +47,8 @@ void ChamberMonitor::Initialize()
     fLowHV_XMax[i] = 0.5*(fNStrips*fStripPitch+fGeometryHole[i])+0.5*fLowHV_MeshGap[i]+fLowHV_MeshRadius;
   }
 
+  ClearBeamAccumulators();
+
   // Get output rates from config file
   fBeamOutputRate = fConfigParser->HasConfig("RECO","BeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","BeamOutputRate")):500;
   fOffBeamOutputRate = fConfigParser->HasConfig("RECO","OffBeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate")):100;
@@ -143,23 +145,90 @@ void ChamberMonitor::EndOfEvent()
       if ( (fVTime_Beam.size() == 0) || (fConfig->GetEventAbsTime().AsDouble() > fVTime_Beam.back()) ) {
 
 	// Update trend vectors
-
 	fVTime_Beam.push_back(fConfig->GetEventAbsTime().AsDouble());
 
-	fVP1_BeamX.push_back(fP1_BeamX);
-	fVP1_BeamY.push_back(fP1_BeamY);
-	fVP2_BeamX.push_back(fP2_BeamX);
-	fVP2_BeamY.push_back(fP2_BeamY);
+	if (fP1_BeamX_N) {
+	  fVP1_BeamX.push_back(fP1_BeamX/fP1_BeamX_N);
+	} else {
+	  fVP1_BeamX.push_back(0.);
+	}
+	if (fP1_BeamY_N) {
+	  fVP1_BeamY.push_back(fP1_BeamY/fP1_BeamY_N);
+	} else {
+	  fVP1_BeamY.push_back(0.);
+	}
+	if (fP2_BeamX_N) {
+	  fVP2_BeamX.push_back(fP2_BeamX/fP2_BeamX_N);
+	} else {
+	  fVP2_BeamX.push_back(0.);
+	}
+	if (fP2_BeamY_N) {
+	  fVP2_BeamY.push_back(fP2_BeamY/fP1_BeamY_N);
+	} else {
+	  fVP2_BeamY.push_back(0.);
+	}
 
-	fVP1_BeamXSpread.push_back(fP1_BeamXSpread);
-	fVP1_BeamYSpread.push_back(fP1_BeamYSpread);
-	fVP2_BeamXSpread.push_back(fP2_BeamXSpread);
-	fVP2_BeamYSpread.push_back(fP2_BeamYSpread);
+	if (fP1_BeamXSpread_N) {
+	  fVP1_BeamXSpread.push_back(fP1_BeamXSpread/fP1_BeamXSpread_N);
+	} else {
+	  fVP1_BeamXSpread.push_back(0.);
+	}
+	if (fP1_BeamYSpread_N) {
+	  fVP1_BeamYSpread.push_back(fP1_BeamYSpread/fP1_BeamYSpread_N);
+	} else {
+	  fVP1_BeamYSpread.push_back(0.);
+	}
+	if (fP2_BeamXSpread_N) {
+	  fVP2_BeamXSpread.push_back(fP2_BeamXSpread/fP2_BeamXSpread_N);
+	} else {
+	  fVP2_BeamXSpread.push_back(0.);
+	}
+	if (fP2_BeamYSpread_N) {
+	  fVP2_BeamYSpread.push_back(fP2_BeamYSpread/fP2_BeamYSpread_N);
+	} else {
+	  fVP2_BeamYSpread.push_back(0.);
+	}
 
-	fVP1_BeamXCharge.push_back(fP1_BeamXCharge);
-	fVP1_BeamYCharge.push_back(fP1_BeamYCharge);
-	fVP2_BeamXCharge.push_back(fP2_BeamXCharge);
-	fVP2_BeamYCharge.push_back(fP2_BeamYCharge);
+	if (fP1_BeamXTCharge_N) {
+	  fVP1_BeamXTCharge.push_back(fP1_BeamXTCharge/fP1_BeamXTCharge_N);
+	} else {
+	  fVP1_BeamXTCharge.push_back(0.);
+	}
+	if (fP1_BeamXBCharge_N) {
+	  fVP1_BeamXBCharge.push_back(fP1_BeamXBCharge/fP1_BeamXBCharge_N);
+	} else {
+	  fVP1_BeamXBCharge.push_back(0.);
+	}
+	if (fP1_BeamYLCharge_N) {
+	  fVP1_BeamYLCharge.push_back(fP1_BeamYLCharge/fP1_BeamYLCharge_N);
+	} else {
+	  fVP1_BeamYLCharge.push_back(0.);
+	}
+	if (fP1_BeamYRCharge_N) {
+	  fVP1_BeamYRCharge.push_back(fP1_BeamYRCharge/fP1_BeamYRCharge_N);
+	} else {
+	  fVP1_BeamYRCharge.push_back(0.);
+	}
+	if (fP2_BeamXTCharge_N) {
+	  fVP2_BeamXTCharge.push_back(fP2_BeamXTCharge/fP2_BeamXTCharge_N);
+	} else {
+	  fVP2_BeamXTCharge.push_back(0.);
+	}
+	if (fP2_BeamXBCharge_N) {
+	  fVP2_BeamXBCharge.push_back(fP2_BeamXBCharge/fP2_BeamXBCharge_N);
+	} else {
+	  fVP2_BeamXBCharge.push_back(0.);
+	}
+	if (fP2_BeamYLCharge_N) {
+	  fVP2_BeamYLCharge.push_back(fP2_BeamYLCharge/fP2_BeamYLCharge_N);
+	} else {
+	  fVP2_BeamYLCharge.push_back(0.);
+	}
+	if (fP2_BeamYRCharge_N) {
+	  fVP2_BeamYRCharge.push_back(fP2_BeamYRCharge/fP2_BeamYRCharge_N);
+	} else {
+	  fVP2_BeamYRCharge.push_back(0.);
+	}
 
 	/*
 	// Update trends file
@@ -167,6 +236,8 @@ void ChamberMonitor::EndOfEvent()
 	fprintf(tf,"%f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
 	fclose(tf);
 	*/
+
+	ClearBeamAccumulators();
 
       }
 
@@ -288,30 +359,17 @@ void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double
 Int_t ChamberMonitor::ComputeBeamSpot()
 {
 
-  fP1_BeamX = 0.;
-  fP1_BeamY = 0.;
-  fP2_BeamX = 0.;
-  fP2_BeamY = 0.;
-
-  fP1_BeamXSpread = 0.;
-  fP1_BeamYSpread = 0.;
-  fP2_BeamXSpread = 0.;
-  fP2_BeamYSpread = 0.;
-
-  fP1_BeamXCharge = 0.;
-  fP1_BeamYCharge = 0.;
-  fP2_BeamXCharge = 0.;
-  fP2_BeamYCharge = 0.;
-
   // Compute weighted average position for each layer 
   for(Int_t i=0; i<MMCH_N_LAYERS; i++) {
 
+    UInt_t used = 0;
     Double_t sum_q = 0.;
     Double_t sum_qx = 0.;
     Double_t sum_qx2 = 0.;
     for(UInt_t h=0; h<x_mean[i].size(); h++) {
       // Only use strips in the low HV zone
       if (x_mean[i][h]>fLowHV_XMin[i] && x_mean[i][h]<fLowHV_XMax[i]) {
+	used++;
 	sum_q += q_mean[i][h];
 	sum_qx += q_mean[i][h]*x_mean[i][h];
 	sum_qx2 += q_mean[i][h]*x_mean[i][h]*x_mean[i][h];
@@ -321,48 +379,94 @@ Int_t ChamberMonitor::ComputeBeamSpot()
     Double_t rms = 0.;
     if (sum_q != 0.) {
       x = sum_qx/sum_q; // Average beam position on this layer. Position of each channel is weighted with the corresponding qmax
-      rms = sqrt(sum_qx2/sum_q-x*x); // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
+      if (used >= 2) {
+	Double_t variance = sum_qx2/sum_q-x*x; // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
+	rms = sqrt(variance);
+      }
     }
 
-    // Save computed quantitites to corresponding layer
+    // Add computed quantitites to accumulators for corresponding layer
     // Here we assume that beam is impacting on the XB-YR sector and is not very large
     // This algorithm should be improved
-    switch(i) {
-    case 0:          // P1YR
-      fP1_BeamY = x;
-      fP1_BeamYSpread = rms;
-      fP1_BeamYCharge += sum_q;
-      break;
-    case 1:          // P1YL
-      fP1_BeamYCharge += sum_q;
-      break;
-    case 2:          // P1XT
-      fP1_BeamXCharge += sum_q;
-      break;
-    case 3:          // P1XB
-      fP1_BeamX = x;
-      fP1_BeamXSpread = rms;
-      fP1_BeamXCharge += sum_q;
-      break;
-    case 4:          // P2YR
-      fP2_BeamY = x;
-      fP2_BeamYSpread = rms;
-      fP2_BeamYCharge += sum_q;
-      break;
-    case 5:          // P2YL
-      fP2_BeamYCharge += sum_q;
-      break;
-    case 6:          // P2XT
-      fP2_BeamXCharge += sum_q;
-      break;
-    case 7:          // P2XB
-      fP2_BeamX = x;
-      fP2_BeamXSpread = rms;
-      fP2_BeamXCharge += sum_q;
-      break;
+    if (x != 0.) {
+      switch(i) {
+      case 0:          // P1YR
+	fP1_BeamY += x;
+	fP1_BeamY_N++;
+	break;
+      case 3:          // P1XB
+	fP1_BeamX += x;
+	fP1_BeamX_N++;
+	break;
+      case 4:          // P2YR
+	fP2_BeamY += x;
+	fP2_BeamY_N++;
+	break;
+      case 7:          // P2XB
+	fP2_BeamX += x;
+	fP2_BeamX_N++;
+	break;
+      }
+    }
+    if (rms != 0.) {
+      switch(i) {
+      case 0:          // P1YR
+	fP1_BeamYSpread += rms;
+	fP1_BeamYSpread_N++;
+	break;
+      case 3:          // P1XB
+	fP1_BeamXSpread += rms;
+	fP1_BeamXSpread_N++;
+	break;
+      case 4:          // P2YR
+	fP2_BeamYSpread += rms;
+	fP2_BeamYSpread_N++;
+	break;
+      case 7:          // P2XB
+	fP2_BeamXSpread += rms;
+	fP2_BeamXSpread_N++;
+	break;
+      }
+    }
+    if (sum_q != 0.) {
+      switch(i) {
+      case 0:          // P1YR
+	fP1_BeamYRCharge += sum_q;
+	fP1_BeamYRCharge_N++;
+	break;
+      case 1:          // P1YL
+	fP1_BeamYLCharge += sum_q;
+	fP1_BeamYLCharge_N++;
+	break;
+      case 2:          // P1XT
+	fP1_BeamXTCharge += sum_q;
+	fP1_BeamXTCharge_N++;
+	break;
+      case 3:          // P1XB
+	fP1_BeamXBCharge += sum_q;
+	fP1_BeamXBCharge_N++;
+	break;
+      case 4:          // P2YR
+	fP2_BeamYRCharge += sum_q;
+	fP2_BeamYRCharge_N++;
+	break;
+      case 5:          // P2YL
+	fP2_BeamYLCharge += sum_q;
+	fP2_BeamYLCharge_N++;
+	break;
+      case 6:          // P2XT
+	fP2_BeamXTCharge += sum_q;
+	fP2_BeamXTCharge_N++;
+	break;
+      case 7:          // P2XB
+	fP2_BeamXBCharge += sum_q;
+	fP2_BeamXBCharge_N++;
+	break;
+      }
     }
 
   }
+  fNEventsBeam++;
 
   return 0;
 }
@@ -470,8 +574,6 @@ Int_t ChamberMonitor::OutputBeam()
 
   }
 
-  UInt_t jout;
-
   // Beam position trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
@@ -483,22 +585,14 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"TITLE_Y [mm]\n");
   fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamX[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamX[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamX[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamX[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamX[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamX[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -511,22 +605,14 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"TITLE_Y [mm]\n");
   fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamY[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamY[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamY[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamY[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamY[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamY[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -541,22 +627,14 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"TITLE_Y [mm]\n");
   fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamXSpread[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamXSpread[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXSpread[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXSpread[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -569,22 +647,14 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"TITLE_Y [mm]\n");
   fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamYSpread[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamYSpread[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYSpread[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYSpread[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -593,56 +663,60 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargex\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Charge\n");
-  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"LEGEND [ \"P1XT\", \"P1XB\", \"P2XT\", \"P2XB\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamXCharge[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXCharge[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXTCharge[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamXCharge[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXCharge[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXBCharge[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXTCharge[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXBCharge[j]);
   }
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargey\n");
   fprintf(outf,"PLOTNAME MMCh Beam Y Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Charge\n");
-  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"LEGEND [ \"P1YR\", \"P1YL\", \"P2YR\", \"P2YL\" ]\n");
   fprintf(outf,"DATA [ [");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP1_BeamYCharge[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYCharge[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYRCharge[j]);
   }
   fprintf(outf,"],[");
-  jout = 0;
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
-    if (fVP2_BeamYCharge[j] != 0.) {
-      if (jout) fprintf(outf,",");
-      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYCharge[j]);
-      jout++;
-    }
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYLCharge[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYRCharge[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYLCharge[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -651,6 +725,51 @@ Int_t ChamberMonitor::OutputBeam()
     printf("ChamberMonitor::OutputBeam - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
     return 1;
   }
+
+  return 0;
+}
+
+Int_t ChamberMonitor::ClearBeamAccumulators()
+{
+
+  // Clear beam related accumulators
+
+  fNEventsBeam = 0;
+
+  fP1_BeamX = 0.;
+  fP1_BeamY = 0.;
+  fP2_BeamX = 0.;
+  fP2_BeamY = 0.;
+  fP1_BeamX_N = 0;
+  fP1_BeamY_N = 0;
+  fP2_BeamX_N = 0;
+  fP2_BeamY_N = 0;
+
+  fP1_BeamXSpread = 0.;
+  fP1_BeamYSpread = 0.;
+  fP2_BeamXSpread = 0.;
+  fP2_BeamYSpread = 0.;
+  fP1_BeamXSpread_N = 0;
+  fP1_BeamYSpread_N = 0;
+  fP2_BeamXSpread_N = 0;
+  fP2_BeamYSpread_N = 0;
+
+  fP1_BeamXTCharge = 0.;
+  fP1_BeamXBCharge = 0.;
+  fP1_BeamYLCharge = 0.;
+  fP1_BeamYRCharge = 0.;
+  fP2_BeamXTCharge = 0.;
+  fP2_BeamXBCharge = 0.;
+  fP2_BeamYLCharge = 0.;
+  fP2_BeamYRCharge = 0.;
+  fP1_BeamXTCharge_N = 0;
+  fP1_BeamXBCharge_N = 0;
+  fP1_BeamYLCharge_N = 0;
+  fP1_BeamYRCharge_N = 0;
+  fP2_BeamXTCharge_N = 0;
+  fP2_BeamXBCharge_N = 0;
+  fP2_BeamYLCharge_N = 0;
+  fP2_BeamYRCharge_N = 0;
 
   return 0;
 }

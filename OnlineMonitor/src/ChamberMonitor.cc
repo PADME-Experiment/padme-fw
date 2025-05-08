@@ -270,7 +270,7 @@ void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double
     t_strip = 0.;
   }
   
-  x_strip = iStrip * fStripPitch + fStripPitch / 2;
+  x_strip = (1.*iStrip-0.5)*fStripPitch;
   if (iStrip>256) x_strip += fGeometryHole[iLayer]; // Take into account small gap for second half of layer
 
   Double_t z_ion = 2.; //mm first signal from ionization
@@ -308,20 +308,29 @@ Int_t ChamberMonitor::ComputeBeamSpot()
 
     Double_t sum_q = 0.;
     Double_t sum_qx = 0.;
+    Double_t sum_qx2 = 0.;
     for(UInt_t h=0; h<x_mean[i].size(); h++) {
       // Only use strips in the low HV zone
       if (x_mean[i][h]>fLowHV_XMin[i] && x_mean[i][h]<fLowHV_XMax[i]) {
 	sum_q += q_mean[i][h];
-	sum_qx += x_mean[i][h]*q_mean[i][h];
+	sum_qx += q_mean[i][h]*x_mean[i][h];
+	sum_qx2 += q_mean[i][h]*x_mean[i][h]*x_mean[i][h];
       }
     }
     Double_t x = 0.;
-    if (sum_q != 0.) x = sum_qx/sum_q;
+    Double_t rms = 0.;
+    if (sum_q != 0.) {
+      x = sum_qx/sum_q; // Average beam position on this layer. Position of each channel is weighted with the corresponding qmax
+      rms = sqrt(sum_qx2/sum_q-x*x); // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
+    }
 
-    // Save compute quantitites to corresponding layer
+    // Save computed quantitites to corresponding layer
+    // Here we assume that beam is impacting on the XB-YR sector and is not very large
+    // This algorithm should be improved
     switch(i) {
     case 0:          // P1YR
       fP1_BeamY = x;
+      fP1_BeamYSpread = rms;
       fP1_BeamYCharge += sum_q;
       break;
     case 1:          // P1YL
@@ -332,10 +341,12 @@ Int_t ChamberMonitor::ComputeBeamSpot()
       break;
     case 3:          // P1XB
       fP1_BeamX = x;
+      fP1_BeamXSpread = rms;
       fP1_BeamXCharge += sum_q;
       break;
     case 4:          // P2YR
       fP2_BeamY = x;
+      fP2_BeamYSpread = rms;
       fP2_BeamYCharge += sum_q;
       break;
     case 5:          // P2YL
@@ -346,6 +357,7 @@ Int_t ChamberMonitor::ComputeBeamSpot()
       break;
     case 7:          // P2XB
       fP2_BeamX = x;
+      fP2_BeamXSpread = rms;
       fP2_BeamXCharge += sum_q;
       break;
     }
@@ -460,7 +472,7 @@ Int_t ChamberMonitor::OutputBeam()
 
   UInt_t jout;
 
-  // Beam position trend plot2
+  // Beam position trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
@@ -518,7 +530,65 @@ Int_t ChamberMonitor::OutputBeam()
   }
   fprintf(outf,"] ]\n\n");
 
-  // Beam charge trend plot2
+  // Beam spread trend plots
+
+  fprintf(outf,"PLOTID ChamberMon_trendbeamspreadx\n");
+  fprintf(outf,"PLOTNAME MMCh Beam X Spread - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y [mm]\n");
+  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"DATA [ [");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP1_BeamXSpread[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"],[");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP2_BeamXSpread[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXSpread[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fprintf(outf,"PLOTID ChamberMon_trendbeamspready\n");
+  fprintf(outf,"PLOTNAME MMCh Beam Y Spread - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y [mm]\n");
+  fprintf(outf,"LEGEND [ \"P1\", \"P2\" ]\n");
+  fprintf(outf,"DATA [ [");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP1_BeamYSpread[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"],[");
+  jout = 0;
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (fVP2_BeamYSpread[j] != 0.) {
+      if (jout) fprintf(outf,",");
+      fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYSpread[j]);
+      jout++;
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Beam charge trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargex\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));

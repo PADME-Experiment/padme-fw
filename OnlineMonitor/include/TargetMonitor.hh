@@ -66,7 +66,7 @@ private:
   Short_t fWaveform[32][1024] = {{0}};
 
   // Array to store cumulative pedestal-subtracted waveforms for each channel
-  Double_t fWF_Total[32][1024] = {{0}};
+  Double_t fWF_Cumulative[32][1024] = {{0}};
 
   // Counters
   UInt_t fBeamEventCount = 0;
@@ -86,7 +86,7 @@ private:
 
   Double_t fTL_RunPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Total PoTs in this run
   Double_t fTL_EventPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average values of PoTs in last 500 events
-  UInt_t   fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0}; // Event time of last event in average
+  Double_t fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Event time of last event in average
   UInt_t   fTL_Current = 0; // Store current position in timeline (round-robin)
 
 };

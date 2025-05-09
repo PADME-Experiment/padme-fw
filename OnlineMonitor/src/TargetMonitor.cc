@@ -101,7 +101,7 @@ void TargetMonitor::Initialize()
   // Reset cumlative waveforms array
   for (UChar_t i=0;i<32;i++) {
     for (UInt_t j=0;j<1024;j++) {
-      fWF_Total[i][j] = 0.;
+      fWF_Cumulative[i][j] = 0.;
     }
   }
 
@@ -158,7 +158,8 @@ void TargetMonitor::EndOfEvent()
     // Update timelines
     fTL_RunPoTs[fTL_Current] = fRunPoTsTotal;
     fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fBeamOutputRate;
-    fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
+    //fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
+    fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().AsDouble();
     fTL_Current++;
     if (fTL_Current == TARGETMONITOR_TIMELINE_SIZE) fTL_Current = 0;
 
@@ -175,7 +176,7 @@ void TargetMonitor::EndOfEvent()
     // Reset cumlative waveforms array
     for (UChar_t i=0;i<32;i++) {
       for (UInt_t j=0;j<1024;j++) {
-	fWF_Total[i][j] = 0.;
+	fWF_Cumulative[i][j] = 0.;
       }
     }
 
@@ -202,7 +203,7 @@ void TargetMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sample
 
   // Subtract pedestal and add waveform to cumulative array
   Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= 1.*fPedestalSamples;
-  for (UInt_t i=0;i<1024;i++) fWF_Total[channel][i] += samples[i]-ped;
+  for (UInt_t i=0;i<1024;i++) fWF_Cumulative[channel][i] += samples[i]-ped;
 
   // Save waveforms of last event. Center on pedestal to improve visibility
   //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
@@ -374,7 +375,7 @@ Int_t TargetMonitor::OutputBeam()
     Bool_t first = true;
     for(UInt_t s = 0; s<1024; s++) {
       if (first) { first = false; } else { fprintf(outf,","); }
-      fprintf(outf,"[%d,%.0f]",s,fWF_Total[i][s]);
+      fprintf(outf,"[%d,%.0f]",s,fWF_Cumulative[i][s]);
     }
     fprintf(outf,"] ]\n\n");
 
@@ -395,9 +396,9 @@ Int_t TargetMonitor::OutputBeam()
   first = true;
   for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
     UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
-    if (fTL_Time[ii] != 0) {
+    if (fTL_Time[ii] != 0.) {
       if (first) { first = false; } else { fprintf(outf,",");	}
-      fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+      fprintf(outf,"[\"%f\",%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
     }
   }
   fprintf(outf,"] ]\n\n");
@@ -417,9 +418,9 @@ Int_t TargetMonitor::OutputBeam()
   first = true;
   for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
     UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
-    if (fTL_Time[ii] != 0) {
+    if (fTL_Time[ii] != 0.) {
       if (first) { first = false; } else { fprintf(outf,",");	}
-      fprintf(outf,"[%d,%.1f]",fTL_Time[ii],fTL_RunPoTs[ii]);
+      fprintf(outf,"[\"%f\",%.1f]",fTL_Time[ii],fTL_RunPoTs[ii]);
     }
   }
   fprintf(outf,"] ]\n\n");

@@ -65,6 +65,9 @@ private:
   Double_t fPedestal[32];
   Short_t fWaveform[32][1024] = {{0}};
 
+  // Array to store cumulative pedestal-subtracted waveforms for each channel
+  Double_t fWF_Total[32][1024] = {{0}};
+
   // Counters
   UInt_t fBeamEventCount = 0;
   Double_t fStrip_charge[32]; // Strips 1-32 are mapped to index 0-31

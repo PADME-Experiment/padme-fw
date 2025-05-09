@@ -97,6 +97,16 @@ void TargetMonitor::Initialize()
   fEventPoTsTotal = 0.;
   fRunPoTsTotal = 0.;
   for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+
+  // Reset cumlative waveforms array
+  for (UChar_t i=0;i<32;i++) {
+    for (UInt_t j=0;j<1024;j++) {
+      fWF_Total[i][j] = 0.;
+    }
+  }
+
+  printf("TargetMonitor::Initialize - Exiting\n");
+
 }
 
 void TargetMonitor::StartOfEvent()
@@ -161,6 +171,13 @@ void TargetMonitor::EndOfEvent()
     // Reset counters
     fEventPoTsTotal = 0.;
     for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+    
+    // Reset cumlative waveforms array
+    for (UChar_t i=0;i<32;i++) {
+      for (UInt_t j=0;j<1024;j++) {
+	fWF_Total[i][j] = 0.;
+      }
+    }
 
   }
 
@@ -179,8 +196,14 @@ void TargetMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sample
 {
   // Do not analyze off-beam events
   if (! fIsBeam) return;
+
   ComputeChannelCharge(board,channel,samples);
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
+
+  // Subtract pedestal and add waveform to cumulative array
+  Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= 1.*fPedestalSamples;
+  for (UInt_t i=0;i<1024;i++) fWF_Total[channel][i] += samples[i]-ped;
+
   // Save waveforms of last event. Center on pedestal to improve visibility
   //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
   if (fBeamEventCount % fBeamOutputRate == 0) {
@@ -329,6 +352,29 @@ Int_t TargetMonitor::OutputBeam()
     for(UInt_t s = 0; s<1024; s++) {
       if (first) { first = false; } else { fprintf(outf,","); }
       fprintf(outf,"[%d,%d]",s,fWaveform[i][s]);
+    }
+    fprintf(outf,"] ]\n\n");
+
+  }
+
+
+  // Cumulative waveforms
+  for(UInt_t i=0; i<32; i++) {
+
+    fprintf(outf,"PLOTID TargetMon_WFTot%2.2d\n",i);
+    fprintf(outf,"PLOTTYPE scatter\n");
+    fprintf(outf,"PLOTNAME Target Tot ch%2.2d %d %s\n",i,fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+    fprintf(outf,"RANGE_X 0 1024\n");
+    //fprintf(outf,"RANGE_Y 0 4096\n");
+    fprintf(outf,"TITLE_X Sample\n");
+    fprintf(outf,"TITLE_Y Counts\n");
+    fprintf(outf,"MODE [ \"lines\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+    fprintf(outf,"DATA [ [");
+    Bool_t first = true;
+    for(UInt_t s = 0; s<1024; s++) {
+      if (first) { first = false; } else { fprintf(outf,","); }
+      fprintf(outf,"[%d,%.0f]",s,fWF_Total[i][s]);
     }
     fprintf(outf,"] ]\n\n");
 

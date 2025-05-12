@@ -177,37 +177,44 @@ int main(int argc, char* argv[])
   printf("=== MergeRun starting on %s\n",cfg->FormatTime(now.tv_sec));
 
   Long64_t chEntry = 0;
-  Long64_t iEntry, nBytes;
-  Int_t oldSec = 0;
-  Int_t oldMSec = 0;
-  Int_t oldSrsTS = 0;
-  Int_t dt,ds,dst,nroll;
-  Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
+  //Long64_t iEntry, nBytes;
+  //Int_t oldSec = 0;
+  //Int_t oldMSec = 0;
+  //Int_t oldSrsTS = 0;
+  //Int_t dt,ds,dst,nroll;
+  //Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
   Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
 
-  Int_t oldPSec  = 0;
-  Int_t oldPMSec = 0;
-  Int_t oldPTrgT = 0;
-  Int_t pSec,pMSec,pTrgT;
+  //Int_t oldPSec  = 0;
+  //Int_t oldPMSec = 0;
+  //Int_t oldPTrgT = 0;
+  //Int_t pSec,pMSec,pTrgT;
   Long64_t pdClockRollover = 1099511627776; // PADME trigger clock counter has 40 bits -> 2^40=1099511627776. Rollover every 2^40/(80E6 Hz)=13744 sec
 
-  Int_t oldPdTime = 0;
-  Int_t oldPdMSec = 0;
+  //Int_t oldPdTime = 0;
+  //Int_t oldPdMSec = 0;
   Int_t oldPdClk = 0;
-  Int_t pdTime,pdMSec,pdClk;
-  Int_t oldChTime = 0;
-  Int_t oldChMSec = 0;
+  //Int_t pdTime,pdMSec;
+  ULong64_t pdClk;
+  Int_t pdDiff;
+  UInt_t pdTrig,pdPatt;
+  //Int_t oldChTime = 0;
+  //Int_t oldChMSec = 0;
   Int_t oldChClk = 0;
-  Int_t chTime,chMSec,chClk;
+  //Int_t chTime,chMSec;
+  Int_t chClk,chDiff;
+  UInt_t chTrig;
 
-  Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
+  //Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
 
+  /*
   // Get first PADME event
   TRawEvent* rawEv = IH->NextEvent();
   TTimeStamp tts = rawEv->GetEventAbsTime();
   oldPdTime = tts.GetSec();
   oldPdMSec = tts.GetNanoSec()/1000;
   oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
+  pdTrig = rawEv->TriggerInfo()->GetTriggerCounter();
 
   // Get first chamber event
   iEntry = CH->LoadTree(chEntry);
@@ -215,12 +222,69 @@ int main(int argc, char* argv[])
   oldChTime = CH->daqTimeSec;
   oldChMSec = CH->daqTimeMicroSec;
   oldChClk = CH->srsTimeStamp;
+  chTrig = CH->srsTrigger;
   chEntry++;
+  */
 
+  oldPdClk = 0;
+  oldChClk = 0;
+
+  UInt_t nMiss = 0;
+
+  // Skip first PADME event
+  TRawEvent* rawEv = IH->NextEvent();
+  oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
+  nMiss++;
+
+  chEntry = 0;
+  while(true) {
+    rawEv = IH->NextEvent();
+    if (rawEv == 0) {
+      printf("- Reached end of PADME streams: exiting\n");
+      break;
+    }
+    pdTrig = rawEv->GetEventNumber();
+    pdPatt = rawEv->GetEventTrigMask();
+    pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+    pdDiff = pdClk-oldPdClk;
+
+    //iEntry = CH->LoadTree(chEntry);
+    //nBytes = CH->GetEntry(chEntry);
+    CH->LoadTree(chEntry);
+    CH->GetEntry(chEntry);
+    chTrig = CH->srsTrigger;
+    chClk = CH->srsTimeStamp;
+    chDiff = chClk-oldChClk;
+    if (chDiff<0) chDiff += chClockRollover;
+
+    // Check if PADME and chamber are aligned
+    if (chEntry) {
+      while (abs(2*chDiff-pdDiff)>100) {
+	nMiss++;
+	rawEv = IH->NextEvent();
+	if (rawEv == 0) {
+	  printf("- Reached end of PADME streams: exiting\n");
+	  break;
+	}
+	pdTrig = rawEv->GetEventNumber();
+	pdPatt = rawEv->GetEventTrigMask();
+	pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+	pdDiff = pdClk-oldPdClk;
+      }
+    }
+
+    printf("PADME %4x %7d %10d Chamber %7d %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
+
+    oldPdClk = pdClk;
+    oldChClk = chClk;
+    chEntry++;
+  }
+
+  /*
   while(true) {
 
     Int_t delta = (oldPdTime*1000+oldPdMSec/1000)-(oldChTime*1000+oldChMSec/1000);
-    printf("PADME time %10d.%6.6d Chamber time %10d.%6.6d Delta %8d\n",oldPdTime,oldPdMSec,oldChTime,oldChMSec,delta);
+    printf("PADME time %10d.%6.6d %d Chamber time %10d.%6.6d %d Delta %8d\n",oldPdTime,oldPdMSec,pdTrig,oldChTime,oldChMSec,chTrig,delta);
  
     if ( (oldPdTime>oldChTime) || ( (oldPdTime==oldChTime) && (oldPdMSec>oldChMSec) ) ) {
       // PADME is ahead of chamber: read next chamber event
@@ -229,6 +293,7 @@ int main(int argc, char* argv[])
       chTime = CH->daqTimeSec;
       chMSec = CH->daqTimeMicroSec;
       chClk = CH->srsTimeStamp;
+      chTrig = CH->srsTrigger;
       chEntry++;
       if (chEntry >= chEntries) {
 	printf("- Reached end of chamber streams: exiting\n");
@@ -249,6 +314,7 @@ int main(int argc, char* argv[])
       pdTime = tts.GetSec();
       pdMSec = tts.GetNanoSec()/1000;
       pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      pdTrig = rawEv->TriggerInfo()->GetTriggerCounter();
       rawEv->Clear("C");
       oldPdTime = pdTime;
       oldPdMSec = pdMSec;
@@ -256,6 +322,7 @@ int main(int argc, char* argv[])
     }
 
   }
+  */
 
   /*
   while(true) {
@@ -412,6 +479,7 @@ int main(int argc, char* argv[])
   Double_t t_run_f = t_end_f-t_start_f;
   printf("- Total run time: %.3fs\n",t_run_f);
   printf("- Total processed events: %d\n",IH->EventsRead());
+  printf("- Total discarded PADME events: %d\n",nMiss);
   //printf("- Output files: %d\n",OH->GetTotalOutFiles());
   //printf("- Total output events: %d\n",OH->GetTotalEvents());
   //printf("- Total output data: %lld\n",OH->GetTotalSize());

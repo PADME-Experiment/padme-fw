@@ -385,13 +385,13 @@ Int_t TargetMonitor::OutputBeam()
   fprintf(outf,"PLOTID TargetMon_PoTs_TL\n");
   fprintf(outf,"PLOTNAME Target PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"TIME_FORMAT fine\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  //fprintf(outf,"TIME_FORMAT fine\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Pots (average)\n");
   //fprintf(outf,"RANGE_Y 0. 100.\n");
-  fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-  //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
+  fprintf(outf,"LEGEND [ \"NPoTs\" ]\n");
   fprintf(outf,"DATA [ [");
   first = true;
   for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
@@ -407,13 +407,13 @@ Int_t TargetMonitor::OutputBeam()
   fprintf(outf,"PLOTID TargetMon_RunPoTs_TL\n");
   fprintf(outf,"PLOTNAME Target Total PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"TIME_FORMAT fine\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  //fprintf(outf,"TIME_FORMAT fine\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Pots\n");
   //fprintf(outf,"RANGE_Y 0. 100.\n");
-  fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-  //fprintf(outf,"LEGEND [ \"PoTs\" ]\n");
+  fprintf(outf,"LEGEND [ \"NPoTs\" ]\n");
   fprintf(outf,"DATA [ [");
   first = true;
   for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {

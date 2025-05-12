@@ -18,7 +18,9 @@ int main(int argc, char* argv[])
   int c;
 
   TString runName = "";
+  TString chamberRunName = "";
   TString dataDirectory = "";
+  TString chamberDataDirectory = "";
   TString outputDirectory = "";
   TString stopFileName = "";
   UInt_t nStreams = 0;
@@ -34,14 +36,20 @@ int main(int argc, char* argv[])
   cfg->SetNumberOfStreams(cfg->NumberOfStreamsMax());
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:I:O:S:N:n:d:vh")) != -1) {
+  while ((c = getopt(argc, argv, "R:C:I:D:O:S:N:n:d:vh")) != -1) {
     switch (c)
       {
       case 'R':
 	runName = optarg;
 	break;
+      case 'C':
+	chamberRunName = optarg;
+	break;
       case 'I':
 	dataDirectory = optarg;
+	break;
+      case 'D':
+	chamberDataDirectory = optarg;
 	break;
       case 'O':
         outputDirectory = optarg;
@@ -86,9 +94,11 @@ int main(int argc, char* argv[])
 	cfg->SetVerbose(cfg->Verbose()+1);
         break;
       case 'h':
-        fprintf(stdout,"\nMergeRun -R run_name [-I inputdir] [-O outputdir] [-S streams] [-N events] [-n events] [-d debug] [-v] [-h]\n\n");
-        fprintf(stdout,"  -R: define name of run to process\n");
-        fprintf(stdout,"  -I: define path to top input directory [default: '%s']\n",cfg->DataDirectory().Data());
+        fprintf(stdout,"\nMergeRun -R run_name -C chamber_run_name [-I inputdir] [-D chamber_inputdir] [-O outputdir] [-S streams] [-N events] [-n events] [-d debug] [-v] [-h]\n\n");
+        fprintf(stdout,"  -R: define name of PADME run to merge\n");
+        fprintf(stdout,"  -C: define name of Chamber run to merge\n");
+        fprintf(stdout,"  -I: define path to PADME top input directory [default: '%s']\n",cfg->DataDirectory().Data());
+        fprintf(stdout,"  -D: define path to Chamber top input directory [default: '%s']\n",cfg->ChamberDataDirectory().Data());
         fprintf(stdout,"  -O: define path to top output directory [default: '%s']\n",cfg->OutputDirectory().Data());
         fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -N: define maximum number of events to write in each output file (0: no limit) [default: %u]\n",cfg->EventsPerFile());
@@ -98,7 +108,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(EXIT_SUCCESS);
       case '?':
-	if (optopt == 'R' || optopt == 'I' || optopt == 'O' || optopt == 'S' || optopt == 'N' || optopt == 'n' || optopt == 'd')
+	if (optopt == 'R' || optopt == 'C' || optopt == 'I' || optopt == 'D' || optopt == 'O' || optopt == 'S' || optopt == 'N' || optopt == 'n' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -110,23 +120,31 @@ int main(int argc, char* argv[])
       }
   }
 
-  // Check if run name was defined
+  // Check if run names were defined
   if (runName.IsNull()) {
-    fprintf (stderr,"ERROR - No run name defined with -R option.\n");
+    fprintf (stderr,"ERROR - No PADME run name defined with -R option.\n");
     exit(EXIT_FAILURE);
   }
   cfg->SetRunName(runName);
+  if (chamberRunName.IsNull()) {
+    fprintf (stderr,"ERROR - No Chamber run name defined with -C option.\n");
+    exit(EXIT_FAILURE);
+  }
+  cfg->SetChamberRunName(chamberRunName);
 
   // Save configuration parameters for this run
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
+  if (! chamberDataDirectory.IsNull()) cfg->SetChamberDataDirectory(chamberDataDirectory);
   if (! outputDirectory.IsNull()) cfg->SetOutputDirectory(outputDirectory);
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (nEventsPerFile != -1) cfg->SetEventsPerFile(nEventsPerFile);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
 
   // Show settings for this run
-  fprintf(stdout,"- Run name: '%s'\n",cfg->RunName().Data());
-  fprintf(stdout,"- Input Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
+  fprintf(stdout,"- PADME run name: '%s'\n",cfg->RunName().Data());
+  fprintf(stdout,"- MMChamber run name: '%s'\n",cfg->ChamberRunName().Data());
+  fprintf(stdout,"- PADME Input Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
+  fprintf(stdout,"- Chamber Input Rawdata top directory: '%s'\n",cfg->ChamberDataDirectory().Data());
   fprintf(stdout,"- Output Rawfile top directory: '%s'\n",cfg->OutputDirectory().Data());
   fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   fprintf(stdout,"- Number of events per file: %u\n",cfg->EventsPerFile());
@@ -164,7 +182,7 @@ int main(int argc, char* argv[])
   }
 
   // Create chamber reader
-  Chamber* CH = new Chamber();
+  Chamber* CH = new Chamber(cfg->ChamberDataDirectory()+"/"+cfg->ChamberRunName()+".root");
   TTree* chTree = CH->fChain;
   Long64_t chEntries = chTree->GetEntriesFast();
   printf("Chamber entries = %lld\n",chEntries);
@@ -189,7 +207,7 @@ int main(int argc, char* argv[])
   //Int_t oldPMSec = 0;
   //Int_t oldPTrgT = 0;
   //Int_t pSec,pMSec,pTrgT;
-  Long64_t pdClockRollover = 1099511627776; // PADME trigger clock counter has 40 bits -> 2^40=1099511627776. Rollover every 2^40/(80E6 Hz)=13744 sec
+  //Long64_t pdClockRollover = 1099511627776; // PADME trigger clock counter has 40 bits -> 2^40=1099511627776. Rollover every 2^40/(80E6 Hz)=13744 sec
 
   //Int_t oldPdTime = 0;
   //Int_t oldPdMSec = 0;
@@ -197,12 +215,15 @@ int main(int argc, char* argv[])
   //Int_t pdTime,pdMSec;
   ULong64_t pdClk;
   Int_t pdDiff;
+  Double_t pdDiff_us; // PADME trigger clock increment converted to microseconds
   UInt_t pdTrig,pdPatt;
   //Int_t oldChTime = 0;
   //Int_t oldChMSec = 0;
   Int_t oldChClk = 0;
   //Int_t chTime,chMSec;
   Int_t chClk,chDiff;
+  Double_t chDiff_us; // PADME trigger clock increment converted to microseconds
+  Double_t chDiff_us_corr; // PADME trigger clock increment converted to microseconds and corrected for clock drift
   UInt_t chTrig;
 
   //Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
@@ -229,12 +250,19 @@ int main(int argc, char* argv[])
   oldPdClk = 0;
   oldChClk = 0;
 
+  Double_t eps = 0.;
+  Double_t totEps = 0.;
+  UInt_t nEps = 0;
+
   UInt_t nMiss = 0;
+  UInt_t nMissBTF = 0;
 
   // Skip first PADME event
   TRawEvent* rawEv = IH->NextEvent();
   oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
+  pdPatt = rawEv->GetEventTrigMask();
   nMiss++;
+  if (pdPatt == 1) nMissBTF++;
 
   chEntry = 0;
   while(true) {
@@ -247,6 +275,7 @@ int main(int argc, char* argv[])
     pdPatt = rawEv->GetEventTrigMask();
     pdClk = rawEv->TriggerInfo()->GetTriggerTime();
     pdDiff = pdClk-oldPdClk;
+    pdDiff_us = pdDiff/80.;
 
     //iEntry = CH->LoadTree(chEntry);
     //nBytes = CH->GetEntry(chEntry);
@@ -256,11 +285,15 @@ int main(int argc, char* argv[])
     chClk = CH->srsTimeStamp;
     chDiff = chClk-oldChClk;
     if (chDiff<0) chDiff += chClockRollover;
+    chDiff_us = chDiff/40.;
+    chDiff_us_corr = chDiff/(40.-0.000197);
 
     // Check if PADME and chamber are aligned
-    if (chEntry) {
-      while (abs(2*chDiff-pdDiff)>100) {
+    if (chEntry) { // Don't check the first chamber event
+      //while (abs(2*chDiff-pdDiff)>100) {
+      while ( (chDiff_us_corr-pdDiff_us) > 0.1) { // Tolerance is 100ns
 	nMiss++;
+	if (pdPatt == 1) nMissBTF++;
 	rawEv = IH->NextEvent();
 	if (rawEv == 0) {
 	  printf("- Reached end of PADME streams: exiting\n");
@@ -270,10 +303,17 @@ int main(int argc, char* argv[])
 	pdPatt = rawEv->GetEventTrigMask();
 	pdClk = rawEv->TriggerInfo()->GetTriggerTime();
 	pdDiff = pdClk-oldPdClk;
+	pdDiff_us = pdDiff/80.;
       }
     }
 
-    printf("PADME %4x %7d %10d Chamber %7d %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
+    eps = 40.*(2.*(Double_t)chDiff/(Double_t)pdDiff-1.);
+    if (abs(eps)<0.001) {
+      totEps += eps;
+      nEps++;
+    }
+    printf("PADME %4x %7d %10d Chamber %7lld %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
+    printf("PADME %.3fus Chamber %.3fus Diff %.3fus CorrDiff %.3fus Eps %.6fMHz\n",pdDiff_us,chDiff_us,chDiff_us-pdDiff_us,chDiff_us_corr-pdDiff_us,eps);
 
     oldPdClk = pdClk;
     oldChClk = chClk;
@@ -480,6 +520,8 @@ int main(int argc, char* argv[])
   printf("- Total run time: %.3fs\n",t_run_f);
   printf("- Total processed events: %d\n",IH->EventsRead());
   printf("- Total discarded PADME events: %d\n",nMiss);
+  printf("- Total discarded PADME BTF events: %d\n",nMissBTF);
+  printf("- Average frequency correction on 40MHz: %.6f\n",totEps/nEps);
   //printf("- Output files: %d\n",OH->GetTotalOutFiles());
   //printf("- Total output events: %d\n",OH->GetTotalEvents());
   //printf("- Total output data: %lld\n",OH->GetTotalSize());

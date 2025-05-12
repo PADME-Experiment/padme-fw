@@ -56,7 +56,7 @@ public :
   TBranch        *b_max_q;   //!
   TBranch        *b_t_max_q;   //!
 
-  Chamber(TTree *tree=0);
+  Chamber(TString, TTree *tree=0);
   ~Chamber();
   Int_t    Cut(Long64_t entry);
   Int_t    GetEntry(Long64_t entry);

@@ -6,8 +6,10 @@ Configuration::Configuration()
 {
   // Set default configuration parameters
   fRunName = "";
+  fChamberRunName = "";
   fEventsPerFile = 1000;
   fDataDirectory = "rawdata";
+  fChamberDataDirectory = "mmchdata";
   fOutputDirectory = "watchdir";
   fTrendDirectory = "trend";
   fTmpDirectory = "tmp";

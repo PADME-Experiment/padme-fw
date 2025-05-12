@@ -4,9 +4,12 @@
 
 #include "Chamber.hh"
 
-Chamber::Chamber(TTree *tree) : fChain(0) 
+//Chamber::Chamber(TTree *tree) : fChain(0) 
+Chamber::Chamber(TString fileName, TTree *tree) : fChain(0) 
 {
-  TFile* f = new TFile("run30.root");
+  //TFile* f = new TFile("run30.root");
+  printf("Opening file %s\n",fileName.Data());
+  TFile* f = new TFile(fileName);
   f->GetObject("apv_raw",tree);
   Init(tree);
 }

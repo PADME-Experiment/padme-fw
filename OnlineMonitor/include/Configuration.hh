@@ -78,8 +78,14 @@ public:
   void SetDataDirectory(TString f) { fDataDirectory = f; }
   TString DataDirectory() { return fDataDirectory; }
 
+  void SetChamberDataDirectory(TString f) { fChamberDataDirectory = f; }
+  TString ChamberDataDirectory() { return fChamberDataDirectory; }
+
   void SetRunName(TString f) { fRunName = f; }
   TString RunName() { return fRunName; }
+
+  void SetChamberRunName(TString f) { fChamberRunName = f; }
+  TString ChamberRunName() { return fChamberRunName; }
 
   void EnableFollowMode() { fFollowMode = true; }
   void DisableFollowMode() { fFollowMode = false; }
@@ -142,11 +148,17 @@ private:
   // Number of streams to use
   UChar_t fNumberOfStreams;
 
-  // Directory where all rawdata files are stored
+  // Directory where all PADME rawdata files are stored
   TString fDataDirectory;
 
-  // Run name, e.g. run_0030571_20201028_194712
+  // PADME run name, e.g. run_0030571_20201028_194712
   TString fRunName;
+
+  // Directory where all Chamber rawdata files are stored
+  TString fChamberDataDirectory;
+
+  // Chamber run name, e.g. run123
+  TString fChamberRunName;
 
   // Follow mode enabled/disabled
   Bool_t fFollowMode;

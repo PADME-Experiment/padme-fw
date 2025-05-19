@@ -1,5 +1,3 @@
-// Written by M. Raggi   28/03/2022 
-// Added GetInstance by M. Raggi 2/06/2022
 #include "MCTruthECal.hh"
 #include "TLorentzVector.h"
 #include <iostream>
@@ -306,20 +304,21 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           sumBabayaga+=pcle;
           TVector3 VtxPosAtCalo;
           VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
-          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
-          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
+          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - 3.13);
+          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - 3.86);
        
-          int icellX = VtxPosAtCalo.X()/cellSize+0.5 + ncells/2;
-          int icellY = VtxPosAtCalo.Y()/cellSize+0.5 + ncells/2;
+          int icellX = VtxPosAtCalo.X()/cellSize + ncells/2;
+          int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
           //
           
           //if (mcVtx->GetProcess()=="Babayaga") std::cout<<"en prima cut"<<mcOPart->GetEnergy()<<std::endl;
           if(icellX>ncells || icellX<0) continue;
           if(icellY>ncells || icellY<0) continue;
           
-          // Double_t PhiPcle0 = TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X());
+          Double_t PhiPcle0 = TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X());
 
           //if(abs((abs(PhiPcle0)-TMath::Pi()/2))<TMath::Pi()/6) continue;
+          //if ((TMath::Abs(TMath::Cos(PhiPcle0)) < 0.7648) ) continue;
 
           // if (icellY > 26) continue; //magnet shadow for the 1st clu
           // if (icellY < 4) continue; //magnet shadow for the 1st clu
@@ -329,7 +328,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           //if (mcVtx->GetProcess()=="Babayaga") std::cout<<"en DOPO cut"<<mcOPart->GetEnergy()<<std::endl;
 
           // if (VtxPosAtCalo.Perp() < fGeneralInfo->GetRadiusMin()) continue; // cluster should be within the radius range of the 2gamma cluster pair //for tag and probe comparison
-          // if (VtxPosAtCalo.Perp() > fGeneralInfo->GetRadiusMax()) continue; // cluster should be within the radius range of the 2gamma cluster pair
+          // if (VtxPosAtCalo.Perp() > 300.) continue; // cluster should be within the radius range of the 2gamma cluster pair
           
 
           // if (pcleE < fGeneralInfo->GetEnergyMin()) continue; // cluster should be within the energy range of the 2gamma cluster pair //for tag and probe comparison
@@ -341,9 +340,17 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           EPcleOut[iO]=pcleE;
           
 
-          fHS->FillHisto2List("MCTruthECal","XYmap",icellX,icellY, 1.);
-          fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
-          fHS->FillHistoList("MCTruthECal","EPcle",pcleE, 1.);
+            fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
+
+          //fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
+          Bool_t notClosetoDead;
+          notClosetoDead = (icellX == 23 || icellX == 24 || icellX == 25 || icellX == 26 || icellX == 27);
+          notClosetoDead = !(notClosetoDead && (icellY == 7 || icellY == 8|| icellY == 9));
+          if( ((TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648) )) {
+            if(notClosetoDead)fHS->FillHistoList("MCTruthECal","EPcle",pcleE, 1.);
+            if(pcleE > 110. && pcleE < 200)fHS->FillHisto2List("MCTruthECal","XYmap",icellX,icellY, 1.);
+
+          }
           fHS->FillHistoList("MCTruthECal",Form("EPcle_%s",mcVtx->GetProcess().Data()),pcleE);
           Double_t Rpcle = TMath::Sqrt((VtxPosAtCalo.X()*VtxPosAtCalo.X())+(VtxPosAtCalo.Y()*VtxPosAtCalo.Y()));
 
@@ -419,8 +426,10 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
               enSum+= cluEnergy;
               npclesass++;
               enTrue_atcalo+=pcleE;
-              fHS->FillHistoList("MCTruthECal","EPcleAss",pcleE);
-              fHS->FillHisto2List("MCTruthECal","XYmapAss",icellX,icellY, 1.);
+              if( (TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648))
+               {if(notClosetoDead)fHS->FillHistoList("MCTruthECal","EPcleAss",pcleE);
+              if(pcleE > 110. && pcleE < 200) fHS->FillHisto2List("MCTruthECal","XYmapAss",icellX,icellY, 1.);
+              }
               fHS->FillHisto2List("MCTruthECal","XYmapEwAss",icellX,icellY, pcleE);
               fHS->FillHistoList("MCTruthECal",Form("EPcleAss_%s",mcVtx->GetProcess().Data()),pcleE);
               fHS->FillHisto2List("MCTruthECal",Form("DEvsEtrue"),pcleE, ECluOut[iO]-pcleE,1.);

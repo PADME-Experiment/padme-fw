@@ -165,6 +165,7 @@ private:
   Double_t fSigmaCut =3;
   Double_t HitAvgEn =0;
   Double_t NPoTAvg =0;
+  Double_t QLGAvg =0;
   TFile *fileIn;
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            

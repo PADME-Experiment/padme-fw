@@ -3,6 +3,18 @@
 
 #include <map>
 
+#include "TFile.h"
+#include "TTree.h"
+#include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphBentErrors.h"
+#include "TGraphPolar.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TString.h"
+
+
 class TFile;
 class TTree;
 class TGraph;
@@ -44,6 +56,9 @@ public:
   TTree* BookNtuple(std::string);
   void FillHisto (std::string, Double_t, Double_t weight = 1.0);
   void FillHisto2(std::string, Double_t, Double_t, Double_t weight = 1.0);
+  TH1D* GetHisto(std::string hname);
+  TH2D* GetHisto2(std::string hname);
+
   void FillNtuple(std::string);
   //void Normalize (std::string name, Double_t fac);    
 
@@ -55,6 +70,8 @@ public:
   void FillHistoList(std::string, std::string, Double_t, Double_t weight = 1.0);
   void FillHisto2List(std::string, std::string, Double_t, Double_t, Double_t weight = 1.0);
   void FillNtupleList(std::string, std::string);
+  TH1D* GetHistoList(std::string, std::string);
+  TH2D* GetHisto2List(std::string, std::string);
 
   // Allow saving user's TGraphs to output file
   void SaveTGraph(std::string,TGraph*);

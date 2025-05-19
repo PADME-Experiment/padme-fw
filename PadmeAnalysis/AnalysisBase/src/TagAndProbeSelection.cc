@@ -115,7 +115,7 @@ Bool_t TagAndProbeSelection::Process(Bool_t isMC)
     Double_t pi=3.14159265358979;
     pos1 = ecalclu->GetPosition();
     double phi1 = pos1.Phi()*180/pi;
-    if(phi1<0.)phi1=360+phi1;
+    if(phi1<0.) phi1=360+phi1;
     //std::cout<<"loop " << jecal<< " pos1 rad " << pos1.Phi() << " in deg " << phi1  << "energy " << g1E << std::endl;
      
     // Double_t EBeam=490.0;

@@ -1,4 +1,5 @@
 // Written by M. Raggi 1/04/2022
+// Aligned with offline db and event-level info by T. Spadaro 17/9/2023
 #include "ECalCalib.hh"
 
 //Added the Finstance to allow to use the information in all the enalyzers
@@ -17,11 +18,7 @@ ECalCalib::ECalCalib(TString cfgFile, Int_t verbose)
     printf("     Configuration file %s\n",cfgFile.Data());
     if (fVerbose>1) printf("     Verbose level %d\n",fVerbose);
   }
-  fHS = HistoSvc::GetInstance();
-  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fNRun=0;	     
-  fCurrentRun=-1.;     
-  fCurrentRunIndex=-1.;
+  fCfgFile = cfgFile;
 }
 
 ECalCalib::~ECalCalib(){
@@ -31,45 +28,31 @@ ECalCalib::~ECalCalib(){
 
 Bool_t ECalCalib::Init(){
   if (fVerbose) printf("---> Initializing ECalCalib\n");
-  InitHistos(); 
-  int NRun;
-  double EBeam;
-  double EAvgRun;
-  double SlopeRun;
-  double E0;
-  double COGX;
-  double COGY;
-  double NPoT;
-  double NPoTRes;
 
-  // read calibration file data
-  ifstream InFile("ParamECal.txt");
-  if(!InFile.is_open()) {
-    cout<<"Cannot open ECal calibration File!!!";
-  }else{
-    while(!InFile.eof()){
-      InFile>>NRun>>EBeam>>EAvgRun>>E0>>SlopeRun>>COGX>>COGY>>NPoT>>NPoTRes;
-      vNRun.push_back(NRun);
-      vEBeam.push_back(EBeam);
-      vEAvgRun.push_back(EAvgRun);
-      vE0Run.push_back(E0);
-      vSlopeRun.push_back(SlopeRun);
-      vCOGX.push_back(COGX);
-      vCOGY.push_back(COGY);
-      cout<<"NRun "<<NRun<<" EBeam "<<EBeam<<" EAvgRun "<<EAvgRun<<" SlopeRun "<<SlopeRun<<" "<<COGX<<" "<<COGY<<" "<<NPoT<<" "<<NPoTRes<<endl;
-    }
-  }
-  InFile.close();
+  fHS = HistoSvc::GetInstance();
+  fCfgParser = new utl::ConfigParser((const std::string)fCfgFile.Data());
+  fGeneralInfo = GeneralInfo::GetInstance();
+  fisMC=false;
+
+  fNPairs = 0;
+  fPairIndex[0] = -1; // index of first cluster of a good pair 
+  fPairIndex[1] = -1; // index of second cluster
+
+  InitHistos(); 
   return true;
 }
 
 Bool_t ECalCalib::InitHistos(){
   // ECalCalib directory will contain all histograms related to this analysis
   fHS->CreateList("ECalCalib");
-  Double_t hEMax=800;
-  Double_t hEBins=800;
+  const Double_t hEMax=800;
+  const Int_t hEBins=800;
+
   fHS->BookHistoList("ECalCalib","ETot2g"  ,hEBins,0.,hEMax);
   fHS->BookHistoList("ECalCalib","ETot2gCal"  ,hEBins,0.,hEMax);
+
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelBefore" ,100,-200.,700.,hEBins/2,0.,hEMax);
+  fHS->BookHisto2List("ECalCalib","ETot2gVsTrelAfter"  ,100,-200.,700.,hEBins/2,0.,hEMax);
   return true;
 }
 
@@ -77,115 +60,174 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
   fEvent = event;
   if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fisMC=true;
   //  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
-  Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
-  fNRun      = fEvent->RecoEvent->GetRunNumber(); //Occhio che 30000 vale solo per il 2022
-  fNClusters = fEvent->ECalRecoCl->GetNElements();
+  Int_t NEvent = fEvent->RecoEvent->GetEventNumber();
+  if(!fisMC && NEvent%10000==0) cout<<"ECalCalib NEvent "<<NEvent<<endl;
 
-  // Retrieve Run index   
-  if(fNRun!=fCurrentRun){
-    for(Int_t ll=0;ll<vNRun.size();ll++){
-      //      cout<<ll<< "Process NRUN "<<fNRun<<" CurrentRun "<<fCurrentRun<<endl;
-      if(vNRun[ll]==fNRun){ 
-	fCurrentRunIndex=ll; //retrieve the current run index
-	fBeamEnergy = vEBeam[ll];
-	fCOGX       = vCOGX[ll];
-        fCOGY       = vCOGY[ll];
-	cout<<ll<< "Process NRUN "<<fNRun<<" CurrentRun "<<fCurrentRun<<" "<<fCOGX<<" "<<fCOGY<<endl;
-	break;
-      }
-    }
-  }
-  fCurrentRun=fNRun;  
-  //  cout<<"Process NClus "<<fNClusters<<" NRUN "<<fNRun<<" RunIndex "<<fCurrentRunIndex<<endl;
+  fNPairs = NClusterPairSimpleSelection();
+  CorrectETimeSlope(0); //fill plots before and after time-energy slope correction
+  CorrectEScale(1); // fill plots before and after energy scale correction      
+
   return true;
 }
 
-// does this fix what Geometrical of COG postion?
-Double_t ECalCalib::FixPosition(){
-  if(fisMC) return -1;
-  Double_t X,X_CORR;
-  Double_t Y,Y_CORR;
-  
-  if(fCurrentRunIndex!=-1) X_CORR = vCOGX[fCurrentRunIndex];
-  if(fCurrentRunIndex!=-1) Y_CORR = vCOGY[fCurrentRunIndex];
-  if(fCurrentRunIndex==-1) X_CORR = 0;
-  if(fCurrentRunIndex==-1) Y_CORR = 0;
 
-  Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
-  //  cout<<"NClus "<<NClusters<<endl;
-  for(int ical = 0;ical < NClusters; ical++) {
-    TVector3 pos = fEvent->ECalRecoCl->Element(ical)->GetPosition();
-    //    cout<<"COGX Before "<<pos.X()<<" COGY Before "<<pos.Y()<<endl;
-    double X =  pos.X()-X_CORR;
-    double Y =  pos.Y()-Y_CORR;
-    //    cout<<"COGX "<<X<<" COGY "<<Y<<endl;
-    //    fEvent->ECalRecoCl->Element(ical)->SetPosition.X(COGX);
-    //    fEvent->ECalRecoCl->Element(ical)->SetPosition.Y(COGY);
+//
+// Correct energy for a time-dependent energy slope 
+//
+Int_t ECalCalib::CorrectETimeSlope(Int_t corrLevel){
+  if (fisMC) return -1; // At the moment we don't have the information to correct the MC
+
+  // retrieve time-energy slope
+
+  Double_t ESlope; // Mauro was using  5E-5 if no RUN dependent value is found, but here I'm changing parametrisation
+  if (fGeneralInfo->IsCalibTimeEnergyAvailable()){
+    ESlope = fGeneralInfo->GetCalibTimeEnergyFactor(); 
+  } else {
+    ESlope = fGeneralInfo->GetGlobalTimeESlope(); 
   }
-  return 1.;
-}
 
+  // retrieve start time and duration of bunch
 
-//Correct for the energy slope vs time in the bunch
-Double_t ECalCalib::CorrectESlope(){
-  if(fisMC) return -1;
-  Double_t ESlope=0;
-  if(fCurrentRunIndex!=-1) ESlope = vSlopeRun[fCurrentRunIndex];
-  if(fCurrentRunIndex==-1) ESlope = fGlobalESlope; //if nothing available for that run
-  
-  Int_t NClusters =fEvent->ECalRecoCl->GetNElements();
-  //  cout<<"NClus "<<NClusters<<endl;
-  for(int ical = 0;ical < NClusters; ical++) {
-    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    double FracE = ESlope*fEvent->ECalRecoCl->Element(ical)->GetTime();
-    //    cout<<" eECal Before "<<eECal<<" Time "<<fEvent->ECalRecoCl->Element(ical)->GetTime()<<endl;
-    eECal -= FracE*eECal;
-    //    cout<<" eECal after "<<eECal<<" FracE "<<FracE<<endl;
-    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+  Double_t TStart=0;
+  Double_t TWidth=0;
+  if (fGeneralInfo->IsBunchLengthAvailable()){
+    TStart = fGeneralInfo->GetBeamStart(); 
+    TWidth = fGeneralInfo->GetBunchLength(); 
+  } else {
+    TStart = fGeneralInfo->GetGlobalBunchTimeStart();
+    TWidth = fGeneralInfo->GetGlobalBunchTimeLength();
   }
-  return 1;
-}
 
-// SET RUN DEPENDENT ENERGY SCALE FOR ECAL
+  // evaluate average time of cluster pairs, if any, and fill "uncorrected" histogram
 
-Double_t ECalCalib::SetEScale(){
-  if(fisMC) return -1;
-  Int_t NEvent = fEvent->RecoEvent->GetEventNumber(); 
-  Double_t EScale;
-  
-  if(fCurrentRunIndex!=-1) EScale = vEBeam[fCurrentRunIndex]/vEAvgRun[fCurrentRunIndex];
-  if(fCurrentRunIndex==-1) EScale = fGlobalEScale; //if nothing available for that run;
+  double TAvg = 0;
+  if (fNPairs == 1) {
+    TAvg = 0.5*(
+		fEvent->ECalRecoCl->Element(fPairIndex[0])->GetTime()+
+		fEvent->ECalRecoCl->Element(fPairIndex[1])->GetTime());
+    Double_t ETot = 
+      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelBefore",(TAvg-TStart),ETot);
+  }
 
-  if(NEvent==5) {
-    for(int ical = 0;ical < fNClusters; ical++) {
-      cout<<"Non calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<endl;
+  // apply time-energy correction
+
+  for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
+    double eECal =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+    double FracE = ESlope*(fEvent->ECalRecoCl->Element(ical)->GetTime() - TStart);
+
+    if(corrLevel) {
+      eECal -= FracE;    //modified
+      fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
     }
   }
-  if(fNClusters>1 && fNClusters<4 && 
-     fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
-    double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
-    double E1 = fEvent->ECalRecoCl->Element(1)->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2g",E0+E1);
+
+  // Fill Etot vs T AFTER correction
+  if (fNPairs == 1) {
+    Double_t ETot = 
+      fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+      fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy();
+    fHS->FillHistoList("ECalCalib","ETot2gVsTrelAfter",(TAvg-TStart),ETot);
   }
-  
-  for(int ical = 0;ical < fNClusters; ical++) {
-    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
-    eECal*=  EScale;  //Data ECal energy Need the reco to be calibrated
-    fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
-    if(NEvent==5) cout<<"calib Energy "<<fEvent->ECalRecoCl->Element(ical)->GetEnergy()<<" EScale "<<EScale<<" "<<endl;
-  }
-  
-  if(fNClusters>1 && fNClusters<4 &&
-     fabs(fEvent->ECalRecoCl->Element(0)->GetTime()-fEvent->ECalRecoCl->Element(1)->GetTime())<3.){
-    double E0 = fEvent->ECalRecoCl->Element(0)->GetEnergy();
-    double E1 = fEvent->ECalRecoCl->Element(1)->GetEnergy();
-    fHS->FillHistoList("ECalCalib","ETot2gCal",E0+E1);
-  }
+
   return 1;
 }
 
-Bool_t ECalCalib::Finalize()
-{
+// 
+// Correct energy for a run-dependent slope
+//
+Int_t ECalCalib::CorrectEScale(Int_t corrLevel){
+
+  // fill total-energy uncorrected plot
+  if (fNPairs == 1) {
+    fHS->FillHistoList("ECalCalib","ETot2g",
+		       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+		       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
+  }
+
+
+  if(fisMC) return -1; // at the moment, it's unclear what mis-calibration is in the mc
+
+
+  // retrieve energy scale correction
+
+  Double_t EScale; // Mauro was using 1.11398 if no RUN dependent value is found, I'm using 1  
+  if(fGeneralInfo->IsCalibEnergyAvailable()) EScale = fGeneralInfo->GetCalibEnergyFactor();
+  else EScale = fGeneralInfo->GetGlobalESlope();
+  
+  // apply energy scale correction
+
+  for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
+    double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
+    if(corrLevel) {
+      if (EScale > 0) eECal /=  EScale;  //Data ECal energy Need the reco to be calibrated
+      fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+    }
+  }
+
+  // fill histogram with corrected total energy
+  if (fNPairs == 1) {
+    fHS->FillHistoList("ECalCalib","ETot2gCal",      
+		       fEvent->ECalRecoCl->Element(fPairIndex[0])->GetEnergy() +
+		       fEvent->ECalRecoCl->Element(fPairIndex[1])->GetEnergy());
+  }
+
+  return 1;
+}
+
+Bool_t ECalCalib::Finalize(){ // should evaluate the corrections in a simil-histo mode?
   if (fVerbose) printf("---> Finalizing ECalCalib\n");
   return true;
+}
+
+// selection of cluster pairs with simple cuts, not energy-dependent
+Int_t ECalCalib::NClusterPairSimpleSelection(){
+  // should check if these values are OK for every beam momentum
+  const Double_t  MinECluster=80.;  //MeV
+  const Double_t  MaxECluster=250.; //MeV
+  const Double_t ClRadMin= 125.; //mm
+  const Double_t ClRadMax= 270.; //mm
+  const Double_t MinClClDistance = 250.; //mm
+  const Double_t MaxClClDT = 3.; // ns
+  int NClusters = fEvent->ECalRecoCl->GetNElements();
+
+  // loop on cluster pairs, apply radius and energy cuts, apply distance in time and space  
+
+  int nPairs = 0;
+  fPairIndex[0] = -1;
+  fPairIndex[1] = -1;
+  
+  for (Int_t ii=0; ii<NClusters;ii++){
+    double energy_i    =  fEvent->ECalRecoCl->Element(ii)->GetEnergy();
+    if(energy_i < MinECluster || energy_i > MaxECluster) continue; 
+
+    TVector3 pos_i    =  fEvent->ECalRecoCl->Element(ii)->GetPosition();
+    double radius_i = sqrt(pos_i.X()*pos_i.X() + pos_i.Y()*pos_i.Y());
+    if(radius_i < ClRadMin || radius_i > ClRadMax) continue;
+
+    for (Int_t jj=ii+1; jj<NClusters;jj++){
+      double energy_j    =  fEvent->ECalRecoCl->Element(jj)->GetEnergy();
+      if(energy_j < MinECluster || energy_j > MaxECluster) continue; 
+
+      TVector3 pos_j    =  fEvent->ECalRecoCl->Element(jj)->GetPosition();
+      double radius_j = sqrt(pos_j.X()*pos_j.X() + pos_j.Y()*pos_j.Y());
+      if(radius_j < ClRadMin || radius_j > ClRadMax) continue;
+
+      double dist = sqrt(
+			 (pos_i.X()-pos_j.X())*(pos_i.X()-pos_j.X()) + 
+			 (pos_i.Y()-pos_j.Y())*(pos_i.Y()-pos_j.Y()) );
+      if(dist<MinClClDistance) continue;
+
+      double dt = 
+	fEvent->ECalRecoCl->Element(ii)->GetTime() - 
+	fEvent->ECalRecoCl->Element(jj)->GetTime();
+      if (fabs(dt) > MaxClClDT) continue;
+      
+      nPairs++;
+      fPairIndex[0] = ii;
+      fPairIndex[1] = jj;
+    }
+  }
+  return nPairs;
 }

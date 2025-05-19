@@ -248,7 +248,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     G4double phi   = twopi*G4UniformRand();
 
     // Theta is gaussian with sigma from a phi-based combination of emittance along X and Y
-    G4double sigma_theta = bpar->GetBeamEmittanceX()*cos(phi)+bpar->GetBeamEmittanceX()*sin(phi);
+    G4double sigma_theta = bpar->GetBeamEmittanceX()*cos(phi)+bpar->GetBeamEmittanceX()*sin(phi); //bug
     G4double theta = G4RandGauss::shoot(0.,sigma_theta);
 
     // Compute particle direction assuming beam is directed along Z (default direction)
@@ -697,7 +697,7 @@ void BeamGenerator::CreateFinalStateTwoGamma(G4double decayLength)
 void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
 {
 
-  static G4int iline = 0;
+  static G4int iline = 12;
 
   // Get electron/positron mass
   static const G4double me = G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGMass();
@@ -779,14 +779,14 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
         fHistoManager->FillHisto(79,p[2]);
         fHistoManager->FillHisto(80,p[3]);
         fHistoManager->FillHisto(84,(p[2]/p[3])*300);
-        //std::cout<<"Positron radius " << (p[2]/p[3])*300 << std::endl;
+        //std::cout<<"electron radius " << (p[2]/p[3])*300 << std::endl;
       }
       else{
         fHistoManager->FillHisto(81,p[1]);
         fHistoManager->FillHisto(82,p[2]);
         fHistoManager->FillHisto(83,p[3]);
         fHistoManager->FillHisto(85,(p[2]/p[3])*300);
-        //std::cout<<"Electron radius " << (p[2]/p[3])*300 << std::endl;
+        //std::cout<<"positron radius " << (p[2]/p[3])*300 << std::endl;
       }
       p[0] = sqrt(p[1]*p[1]+p[2]*p[2]+p[3]*p[3]+me*me); // Compute total energy of the lepton
      

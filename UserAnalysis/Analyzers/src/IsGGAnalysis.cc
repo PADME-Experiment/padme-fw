@@ -14,7 +14,7 @@ IsGGAnalysis::IsGGAnalysis(TString cfgFile, Int_t verbose)
   }
   NGG=0;
   fHS = HistoSvc::GetInstance();
-  fECalCalib = ECalCalib::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fMCTruth = MCTruth::GetInstance();
   // Standard cuts list
@@ -50,6 +50,9 @@ Bool_t IsGGAnalysis::Init(PadmeAnalysisEvent* event){
 Bool_t IsGGAnalysis::InitHistos(){
   // IsGGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
+  fHS->BookHistoList("GGAnalysis","NClusters_nocut",25,-0.5,24.5);
+  std::cout<<"NClusters_nocut created"<<std::endl;
+
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","ECalClTime",500,-250.,250.);
   fHS->BookHistoList("GGAnalysis","ClusterRadius",200,0.,400.);
@@ -170,7 +173,7 @@ Bool_t IsGGAnalysis::Process(){
       fisMC=true;
     }
     if(fisMC) fBeamE = fMCTruth->GetBeamEnergy(); 
-    if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
+    if(!fisMC) fBeamE = fGeneralInfo->GetBeamEnergy();
     if(fBeamE==0 && !fisMC) fBeamE = 432.5;
   }
 
@@ -188,6 +191,9 @@ Bool_t IsGGAnalysis::Process(){
   //***************************************
   // Cut on at least 2 clusters
   //***************************************
+  fHS->FillHistoList("GGAnalysis","NClusters_nocut",NClusters,1);
+  std::cout<<"NClusters_nocut filled"<<std::endl;
+
   if(NClusters<2) return false;
   ETotECal=0;
   if(NClusters >25) cout<<"Crazy amount of clusters "<<NClusters<<endl;
@@ -265,9 +271,9 @@ Bool_t IsGGAnalysis::Process(){
       vEi.push_back(EGoodCluster[jj]);  vPosX.push_back(PosXGoodCluster[jj]); vPosY.push_back(PosYGoodCluster[jj]);
       Double_t COGX = CompCOG(vEi,vPosX); Double_t COGY = CompCOG(vEi,vPosY);
       //Retrieve COG position for the current RUN
-      Double_t RunCOGX = fECalCalib->GetCOGX(); 
-      Double_t RunCOGY = fECalCalib->GetCOGY();
-      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<fECalCalib->GetCOGY()<<endl;
+      Double_t RunCOGX = fGeneralInfo->GetCOG().X(); 
+      Double_t RunCOGY = fGeneralInfo->GetCOG().Y();
+      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<RunCOGY<<endl;
 
       fHS->FillHistoList("GGAnalysis","COG_X",COGX,1);
       fHS->FillHistoList("GGAnalysis","COG_Y",COGY,1);
@@ -519,6 +525,6 @@ Bool_t IsGGAnalysis::IsMCGG(double VTime,double E1,double E2)
       }
     }
   }
-  std::cout<<"*** "<<std::endl;
+  //std::cout<<"*** "<<std::endl;
   return isGG_IN;
 }

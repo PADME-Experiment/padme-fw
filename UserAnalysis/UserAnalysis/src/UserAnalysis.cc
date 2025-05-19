@@ -2,13 +2,21 @@
 #include <TGraph.h>
 #include <TGraphErrors.h>
 #include "UserAnalysis.hh"
+#include "NPoTAnalysis.hh"
+#include "GeneralInfo.hh" //TS
+#include "ECalSel.hh" //TS
+#include "ETagAn.hh" //TS
+#include "ECalETagMatching.hh" //EDM
 #include "ECalCalib.hh"
+#include "ECalCalib22.hh" //EDM
 #include "NPoTAnalysis.hh" //MR
-#include "IsGGAnalysis.hh" //MR
+//#include "IsGGAnalysis.hh" //MR
 #include "Is22GGAnalysis.hh" //MR
-#include "Is3GAnalysis.hh" //MR
+//#include "Is3GAnalysis.hh" //MR
 #include "ETagAnalysis.hh" //AF
+#include "DataQuality.hh" //EDM TS
 #include "MCTruth.hh"     //MR
+#include "MCTruthECal.hh"     //EDM
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -23,39 +31,68 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
   fECalCalib    = ECalCalib::GetInstance();
+  fECalCalib22    = ECalCalib22::GetInstance();
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
+  fMCTruthECal      = MCTruthECal::GetInstance();
+
 
   //Physics analysis last reviewed by M. Raggi 05/22
-  fNPoTAnalysis = new NPoTAnalysis(cfgFile,fVerbose);
-  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
+  fNPoTAnalysis = NPoTAnalysis::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
+  fECalSel = ECalSel::GetInstance();
+  fECalETagMatching  = ECalETagMatching::GetInstance();
+  fETagAn  = ETagAn::GetInstance();
+  fDataQuality = DataQuality::GetInstance();
+  //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
-  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+//  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
+
+  fETagHitsAvail = kFALSE;
+  fETagClusAvail = kFALSE;
 }
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
   delete fECalCalib;
   delete fNPoTAnalysis;
-  delete fIsGGAnalysis;
+  delete fGeneralInfo;
+  delete fECalSel;
+  delete fETagAn;
+  //  delete fIsGGAnalysis;
   delete fETagAnalysis;
   delete fIs22GGAnalysis;
-  delete fIs3GAnalysis;
+  delete fDataQuality;
+  delete fECalETagMatching;
+//  delete fIs3GAnalysis;
 }
 
-Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event){
+Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString InputHistofile, Int_t DBRunNumber){
+  if (event->ETagRecoEvent) fETagHitsAvail = kTRUE; // ETag hits are available
+  if (event->ETagRecoCl) fETagClusAvail = kTRUE; // ETag hits are available
+  fHistoMode = HistoMode;
+
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
   fECalCalib->Init();
 
-  if(fEvent->MCTruthEvent) fMCTruth->Init(fEvent);
+  if(fEvent->MCTruthEvent){
+     fMCTruth->Init(fEvent);
+     fMCTruthECal->Init(fEvent);
+  }
+  fGeneralInfo->Init(fEvent, DBRunNumber);
   fNPoTAnalysis->Init(fEvent);
-  fIsGGAnalysis->Init(fEvent);
-  fETagAnalysis->Init(fEvent);
-  fIs22GGAnalysis->Init(fEvent);
-  fIs3GAnalysis->Init(fEvent);
+  fECalCalib22->Init(fHistoMode,InputHistofile);
+  fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
+  fECalSel->Init(fEvent,fHistoMode,InputHistofile);
+  if (fETagHitsAvail) fETagAn->Init(fEvent);
+  if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
+  //  fIsGGAnalysis->Init(fEvent);
+  //if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
+  //fIs22GGAnalysis->Init(fEvent);
+//  fIs3GAnalysis->Init(fEvent);
   return true;
 }
 
@@ -88,12 +125,26 @@ Bool_t UserAnalysis::Process(){
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
-
+  fGeneralInfo->Process();
   fNPoTAnalysis->Process();
-  fIsGGAnalysis->Process();
-  fIs22GGAnalysis->Process();
-  fIs3GAnalysis->Process();   
-  fETagAnalysis->Process();
+  if(fEvent->MCTruthEvent) fMCTruthECal->Process();
+  //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
+  fECalCalib->Process(fEvent);
+  if(!(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))){
+    fDataQuality->Process();
+    fECalCalib22->Process(fEvent);
+  }
+  fECalSel->ProcessForCalib();
+
+  fECalSel->Process();
+  if (fETagHitsAvail) {
+    fETagAn->Process();
+    fECalETagMatching->Process();
+  }
+  //  fIsGGAnalysis->Process();
+  //fIs22GGAnalysis->Process();
+//  fIs3GAnalysis->Process();   
+  //if (fETagHitsAvail && fETagClusAvail) fETagAnalysis->Process();
 
   /*
   for(int ipv = 0;ipv <  fEvent->PVetoRecoEvent->GetNHits(); ipv++) {
@@ -142,20 +193,29 @@ Bool_t UserAnalysis::Process(){
       }
     }
   }
-
+  
   return true;
 }
 
 Bool_t UserAnalysis::Finalize()
 {
   if (fVerbose) printf("---> Finalizing UserAnalysis\n");
-  if(fEvent->MCTruthEvent) fMCTruth->Finalize();
+  if(fEvent->MCTruthEvent){
+     fMCTruth->Finalize();
+     fMCTruthECal->Finalize();
+
+  }
   fNPoTAnalysis->Finalize();
-  fIsGGAnalysis->Finalize();
-  fETagAnalysis->Finalize();
-  fIs22GGAnalysis->Finalize();
-  fIs3GAnalysis->Finalize();
-  
+  fECalSel->Finalize();
+  if (fETagHitsAvail) fETagAn->Finalize();
+  if (fETagHitsAvail) fECalETagMatching->Finalize();
+  //  fIsGGAnalysis->Finalize();
+  //if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
+  //fIs22GGAnalysis->Finalize();
+  fECalCalib22->Finalize();
+  fDataQuality->Finalize();
+//  fIs3GAnalysis->Finalize();
+
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

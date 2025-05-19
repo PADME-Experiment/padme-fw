@@ -2,6 +2,8 @@
 #define HistoSvc_h 1
 
 #include <map>
+#include <TH1D.h>
+#include <TH2D.h>
 
 //#include "globals.hh"
        	       	       
@@ -179,6 +181,9 @@ public:
   void BookHisto2(std::string name, Int_t nx, Double_t xlow, Double_t xup, Int_t ny, Double_t ylow, Double_t yup);
   void FillHisto (std::string name, Double_t bin, Double_t weight = 1.0);
   void FillHisto2(std::string name, Double_t xbin, Double_t ybin, Double_t weight = 1.0);
+  TH1D* GetHisto(std::string hname);
+  TH2D* GetHisto2(std::string hname);
+
   void Normalize (std::string name, Double_t fac);    
 
   //  void FillHisto (Int_t id, Double_t bin, Double_t weight = 1.0);
@@ -193,6 +198,7 @@ public:
 
   //  void PrintStatistic();
   void makeFileDir(TString dName);//{fRootOutputFile->mkdir(dName.Data());}
+  void cdFileDir(TString dName);
   
 
 public:

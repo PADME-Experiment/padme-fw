@@ -30,6 +30,7 @@ private:
 
   // Estimate total charge of channel from samples
   void ComputeChannelCharge(UChar_t,UChar_t,Short_t*);
+  void ComputeChannelCumulativeCharge(UChar_t,UChar_t,Double_t*);
 
   // Compute total charge along X and Y
   void ComputeTotalChargeX();
@@ -37,6 +38,7 @@ private:
 
   // Estimate number of positrons on target for this event
   void ComputePoTs();
+  void ComputeCumulativePoTs();
 
   Int_t OutputBeam();
 
@@ -62,6 +64,7 @@ private:
 
   // Array to store waveforms, charge and pedestals for a whole event
   Double_t fCharge[32];
+  Double_t fCumulCharge[32];
   Double_t fPedestal[32];
   Short_t fWaveform[32][1024] = {{0}};
 
@@ -75,17 +78,21 @@ private:
   // Total charge along X and Y
   Double_t fTotalChargeX;
   Double_t fTotalChargeY;
+  Double_t fTotalCumulChargeX;
+  Double_t fTotalCumulChargeY;
 
   // Histograms
   TH1D* fHTargetChargeX;
   TH1D* fHTargetChargeY;
 
+  Double_t fCumulPoTs; // Average event PoTs from cumulative waveforms
   Double_t fEventPoTs; // Number of positrons on target for current event
   Double_t fEventPoTsTotal; // Number of PoTs for last 500 events
   Double_t fRunPoTsTotal; // Total number of PoTs for this run
 
   Double_t fTL_RunPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Total PoTs in this run
   Double_t fTL_EventPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average values of PoTs in last 500 events
+  Double_t fTL_CumulPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average cumulative values of PoTs in last 500 events
   Double_t fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Event time of last event in average
   UInt_t   fTL_Current = 0; // Store current position in timeline (round-robin)
 

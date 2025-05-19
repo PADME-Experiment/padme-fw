@@ -155,9 +155,17 @@ void TargetMonitor::EndOfEvent()
   // If we read enough events, dump PadmeMonitor file
   if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
+    // Compute cumulative total charge for all channels and then estimate nPoTs
+    for (UChar_t channel=0;channel<32;channel++) {
+      for (UInt_t s=0;s<1024;s++) fWF_Cumulative[channel][s] /= (Double_t)fBeamOutputRate;
+      ComputeChannelCumulativeCharge(0,channel,fWF_Cumulative[channel]);
+    }
+    ComputeCumulativePoTs();
+
     // Update timelines
     fTL_RunPoTs[fTL_Current] = fRunPoTsTotal;
     fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fBeamOutputRate;
+    fTL_CumulPoTs[fTL_Current] = fCumulPoTs;
     //fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
     fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().AsDouble();
     fTL_Current++;
@@ -202,7 +210,7 @@ void TargetMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sample
   fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
 
   // Subtract pedestal and add waveform to cumulative array
-  Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= 1.*fPedestalSamples;
+  Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= (Double_t)fPedestalSamples;
   for (UInt_t i=0;i<1024;i++) fWF_Cumulative[channel][i] += samples[i]-ped;
 
   // Save waveforms of last event. Center on pedestal to improve visibility
@@ -235,6 +243,18 @@ void TargetMonitor::ComputeChannelCharge(UChar_t board,UChar_t channel,Short_t* 
   fCharge[channel] *= 1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
 }
 
+void TargetMonitor::ComputeChannelCumulativeCharge(UChar_t board,UChar_t channel,Double_t* samples)
+{
+  Int_t sum_sig = 0;
+  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
+    Short_t ss = samples[s];
+    if (fUseAbsSignal && ss < 2048) ss = 4096-ss; // Make all counts positive
+    sum_sig += ss;
+  }
+  fCumulCharge[channel] = (Double_t)sum_sig*1000.*fVoltageBin*fTimeBin/fImpedance; // Convert to charge in pC
+}
+
+
 void TargetMonitor::ComputeTotalChargeX()
 {
   fTotalChargeX = 0.;
@@ -260,6 +280,18 @@ void TargetMonitor::ComputeTotalChargeY()
 void TargetMonitor::ComputePoTs()
 {
   fEventPoTs = fChargeToPoTs*(fTotalChargeX+fTotalChargeY)/2.;
+}
+
+void TargetMonitor::ComputeCumulativePoTs()
+{
+  fTotalCumulChargeX = 0.;
+  for (UChar_t i= 0;i<16;i++) if (fCumulCharge[i]>0.) fTotalCumulChargeX += fCumulCharge[i];
+
+  fTotalCumulChargeY = 0.;
+  for (UChar_t i=16;i<32;i++) if (fCumulCharge[i]>0.) fTotalCumulChargeY += fCumulCharge[i];
+
+  fCumulPoTs = fChargeToPoTs*(fTotalCumulChargeX+fTotalCumulChargeY)/2.;
+
 }
 
 Int_t TargetMonitor::OutputBeam()
@@ -399,6 +431,28 @@ Int_t TargetMonitor::OutputBeam()
     if (fTL_Time[ii] != 0.) {
       if (first) { first = false; } else { fprintf(outf,",");	}
       fprintf(outf,"[\"%f\",%.1f]",fTL_Time[ii],fTL_EventPoTs[ii]);
+    }
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Cumulative PoTs timeline
+  fprintf(outf,"PLOTID TargetMon_CumulPoTs_TL\n");
+  fprintf(outf,"PLOTNAME Target Cumulative PoTs - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime().GetSec()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  //fprintf(outf,"TIME_FORMAT fine\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Pots (average)\n");
+  //fprintf(outf,"RANGE_Y 0. 100.\n");
+  fprintf(outf,"LEGEND [ \"NPoTs\" ]\n");
+  fprintf(outf,"DATA [ [");
+  first = true;
+  for(UInt_t i = 0; i<TARGETMONITOR_TIMELINE_SIZE; i++) {
+    UInt_t ii = (fTL_Current+i)%TARGETMONITOR_TIMELINE_SIZE;
+    if (fTL_Time[ii] != 0.) {
+      if (first) { first = false; } else { fprintf(outf,",");	}
+      fprintf(outf,"[\"%f\",%.1f]",fTL_Time[ii],fTL_CumulPoTs[ii]);
     }
   }
   fprintf(outf,"] ]\n\n");

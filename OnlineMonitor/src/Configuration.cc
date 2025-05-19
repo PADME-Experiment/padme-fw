@@ -10,6 +10,7 @@ Configuration::Configuration()
   fEventsPerFile = 1000;
   fDataDirectory = "rawdata";
   fChamberDataDirectory = "mmchdata";
+  fNumberOfEventsToSkip = 0;
   fOutputDirectory = "watchdir";
   fTrendDirectory = "trend";
   fTmpDirectory = "tmp";

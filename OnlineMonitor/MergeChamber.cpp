@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
   UInt_t nEventsToProcess = 0;
   Int_t nEventsPerFile = -1;
   Int_t debugScale = -1;
+  Int_t skipEvents = 0;
 
   struct timespec now;
   
@@ -36,7 +37,7 @@ int main(int argc, char* argv[])
   cfg->SetNumberOfStreams(cfg->NumberOfStreamsMax());
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:C:I:D:O:S:N:n:d:vh")) != -1) {
+  while ((c = getopt(argc, argv, "R:C:I:D:s:O:S:N:n:d:vh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -54,6 +55,12 @@ int main(int argc, char* argv[])
       case 'O':
         outputDirectory = optarg;
 	break;
+      case 's':
+        if ( sscanf(optarg,"%d",&skipEvents) != 1 ) {
+          fprintf (stderr, "Error while processing option '-s'. Wrong parameter '%s'.\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        break;
       case 'S':
         if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
           fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
@@ -99,6 +106,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -C: define name of Chamber run to merge\n");
         fprintf(stdout,"  -I: define path to PADME top input directory [default: '%s']\n",cfg->DataDirectory().Data());
         fprintf(stdout,"  -D: define path to Chamber top input directory [default: '%s']\n",cfg->ChamberDataDirectory().Data());
+        fprintf(stdout,"  -s: define number of events to skip at beginning. >0: skip PADME events. <0: skip Chamber events [default: %d]\n",cfg->NumberOfEventsToSkip());
         fprintf(stdout,"  -O: define path to top output directory [default: '%s']\n",cfg->OutputDirectory().Data());
         fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -N: define maximum number of events to write in each output file (0: no limit) [default: %u]\n",cfg->EventsPerFile());
@@ -139,12 +147,14 @@ int main(int argc, char* argv[])
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (nEventsPerFile != -1) cfg->SetEventsPerFile(nEventsPerFile);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
+  if (skipEvents != cfg->NumberOfEventsToSkip()) cfg->SetNumberOfEventsToSkip(skipEvents);
 
   // Show settings for this run
   fprintf(stdout,"- PADME run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- MMChamber run name: '%s'\n",cfg->ChamberRunName().Data());
   fprintf(stdout,"- PADME Input Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Chamber Input Rawdata top directory: '%s'\n",cfg->ChamberDataDirectory().Data());
+  fprintf(stdout,"- Number of events to skip: %d\n",cfg->NumberOfEventsToSkip());
   fprintf(stdout,"- Output Rawfile top directory: '%s'\n",cfg->OutputDirectory().Data());
   fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   fprintf(stdout,"- Number of events per file: %u\n",cfg->EventsPerFile());
@@ -222,11 +232,12 @@ int main(int argc, char* argv[])
   Int_t oldChClk = 0;
   //Int_t chTime,chMSec;
   Int_t chClk,chDiff;
-  Double_t chDiff_us; // PADME trigger clock increment converted to microseconds
-  Double_t chDiff_us_corr; // PADME trigger clock increment converted to microseconds and corrected for clock drift
+  //Double_t chDiff_us; // Chamber trigger clock increment converted to microseconds
+  Double_t chDiff_us_corr; // Chamber trigger clock increment converted to microseconds and corrected for clock drift
   UInt_t chTrig;
 
   //Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
+  Double_t chClockCorrectionFactor = -0.000197;
 
   /*
   // Get first PADME event
@@ -256,16 +267,45 @@ int main(int argc, char* argv[])
 
   UInt_t nMiss = 0;
   UInt_t nMissBTF = 0;
+  UInt_t nMissCh = 0;
 
+  TRawEvent* rawEv;
+
+  /*
   // Skip first PADME event
-  TRawEvent* rawEv = IH->NextEvent();
+  rawEv = IH->NextEvent();
   oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
   pdPatt = rawEv->GetEventTrigMask();
   nMiss++;
   if (pdPatt == 1) nMissBTF++;
+  */
 
+  // Initialize Chamber events counter
   chEntry = 0;
+
+  // Use chamber first event to define trigger number difference between PADME and chamber
+  CH->LoadTree(chEntry);
+  CH->GetEntry(chEntry);
+  Int_t chDeltaEvent = CH->srsTrigger; // PADME first trigger is 0 by defintiton
+
+  // Skip PADME/Chamber events (if needed)
+  if (cfg->NumberOfEventsToSkip() > 0) { // Skipping PADME events
+    for(Int_t i=0; i<cfg->NumberOfEventsToSkip(); i++) {
+      rawEv = IH->NextEvent();
+      //oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      pdPatt = rawEv->GetEventTrigMask();
+      nMiss++;
+      if (pdPatt == 1) nMissBTF++;
+    }
+  } else if (cfg->NumberOfEventsToSkip() < 0) { // Skipping Chamber events
+    chEntry = -cfg->NumberOfEventsToSkip();
+    nMissCh = -cfg->NumberOfEventsToSkip();
+  }
+
+  Bool_t firstEvent = true;
   while(true) {
+
+    // Read next PADME event
     rawEv = IH->NextEvent();
     if (rawEv == 0) {
       printf("- Reached end of PADME streams: exiting\n");
@@ -277,48 +317,81 @@ int main(int argc, char* argv[])
     pdDiff = pdClk-oldPdClk;
     pdDiff_us = pdDiff/80.;
 
-    //iEntry = CH->LoadTree(chEntry);
-    //nBytes = CH->GetEntry(chEntry);
+    // Read next Chamber event
     CH->LoadTree(chEntry);
     CH->GetEntry(chEntry);
     chTrig = CH->srsTrigger;
     chClk = CH->srsTimeStamp;
     chDiff = chClk-oldChClk;
     if (chDiff<0) chDiff += chClockRollover;
-    chDiff_us = chDiff/40.;
-    chDiff_us_corr = chDiff/(40.-0.000197);
+    //chDiff_us = chDiff/40.;
+    chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
 
-    // Check if PADME and chamber are aligned
-    if (chEntry) { // Don't check the first chamber event
-      //while (abs(2*chDiff-pdDiff)>100) {
-      while ( (chDiff_us_corr-pdDiff_us) > 0.1) { // Tolerance is 100ns
-	nMiss++;
-	if (pdPatt == 1) nMissBTF++;
-	rawEv = IH->NextEvent();
-	if (rawEv == 0) {
-	  printf("- Reached end of PADME streams: exiting\n");
-	  break;
-	}
-	pdTrig = rawEv->GetEventNumber();
-	pdPatt = rawEv->GetEventTrigMask();
-	pdClk = rawEv->TriggerInfo()->GetTriggerTime();
-	pdDiff = pdClk-oldPdClk;
-	pdDiff_us = pdDiff/80.;
-      }
+    // Skip first event as delta times cannot be checked
+    if (firstEvent) {
+      firstEvent = false;
+      oldPdClk = pdClk;
+      oldChClk = chClk;
+      chEntry++;
+      continue;
     }
 
+    //printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
+
+    // Check if Chamber skipped a trigger
+    while ( (chDiff_us_corr-pdDiff_us) > 0.1) { // Tolerance is 100ns
+      printf("Reading next PADME event- pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
+      nMiss++;
+      if (pdPatt == 1) nMissBTF++;
+      rawEv = IH->NextEvent();
+      if (rawEv == 0) {
+	printf("- Reached end of PADME streams: exiting\n");
+	break;
+      }
+      pdTrig = rawEv->GetEventNumber();
+      pdPatt = rawEv->GetEventTrigMask();
+      pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      pdDiff = pdClk-oldPdClk;
+      pdDiff_us = pdDiff/80.;
+      //printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
+    }
+
+    // Check if PADME skipped a trigger
+    while ( (pdDiff_us-chDiff_us_corr) > 0.1) { // Tolerance is 100ns
+      printf("Reading next Chamber event- pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
+      nMissCh++;
+      chEntry++;
+      if (chEntry >= chEntries) break;
+      CH->LoadTree(chEntry);
+      CH->GetEntry(chEntry);
+      chTrig = CH->srsTrigger;
+      chClk = CH->srsTimeStamp;
+      chDiff = chClk-oldChClk;
+      if (chDiff<0) chDiff += chClockRollover;
+      //chDiff_us = chDiff/40.;
+      chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
+    }
+    if (chEntry >= chEntries) break;
+
+    // Compute clock correction factor for this run
     eps = 40.*(2.*(Double_t)chDiff/(Double_t)pdDiff-1.);
     if (abs(eps)<0.001) {
       totEps += eps;
       nEps++;
     }
-    printf("PADME %4x %7d %10d Chamber %7lld %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
-    printf("PADME %.3fus Chamber %.3fus Diff %.3fus CorrDiff %.3fus Eps %.6fMHz\n",pdDiff_us,chDiff_us,chDiff_us-pdDiff_us,chDiff_us_corr-pdDiff_us,eps);
+
+    //printf("PADME %2.2x %7d %10d Chamber %7lld %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
+    //printf("PADME %.3fus Chamber %.3fus Diff %.3fus CorrDiff %.3fus Eps %.6fMHz\n",pdDiff_us,chDiff_us,chDiff_us-pdDiff_us,chDiff_us_corr-pdDiff_us,eps);
+    printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig-chDeltaEvent,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
 
     oldPdClk = pdClk;
     oldChClk = chClk;
     chEntry++;
-  }
+    if (chEntry >= chEntries) {
+      printf("- Reached end of Chamber eventss: exiting\n");
+      break;
+    }
+}
 
   /*
   while(true) {
@@ -521,6 +594,7 @@ int main(int argc, char* argv[])
   printf("- Total processed events: %d\n",IH->EventsRead());
   printf("- Total discarded PADME events: %d\n",nMiss);
   printf("- Total discarded PADME BTF events: %d\n",nMissBTF);
+  printf("- Total discarded Chamber events: %d\n",nMissCh);
   printf("- Average frequency correction on 40MHz: %.6f\n",totEps/nEps);
   //printf("- Output files: %d\n",OH->GetTotalOutFiles());
   //printf("- Total output events: %d\n",OH->GetTotalEvents());

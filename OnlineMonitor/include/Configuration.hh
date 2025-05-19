@@ -81,6 +81,9 @@ public:
   void SetChamberDataDirectory(TString f) { fChamberDataDirectory = f; }
   TString ChamberDataDirectory() { return fChamberDataDirectory; }
 
+  void SetNumberOfEventsToSkip(Int_t n) { fNumberOfEventsToSkip = n; }
+  Int_t NumberOfEventsToSkip() { return fNumberOfEventsToSkip; }
+
   void SetRunName(TString f) { fRunName = f; }
   TString RunName() { return fRunName; }
 
@@ -159,6 +162,9 @@ private:
 
   // Chamber run name, e.g. run123
   TString fChamberRunName;
+
+  // Number of events to skip at startup.  >0: skip PADME events. <0: skip Chamber events.
+  Int_t fNumberOfEventsToSkip;
 
   // Follow mode enabled/disabled
   Bool_t fFollowMode;

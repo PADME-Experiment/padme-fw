@@ -248,7 +248,7 @@ Bool_t ECalSel::Process()
   fFillCalibHistograms = false;
   fECalEvents.clear();
   fSigmaCut = 3.;
-  double fDQValue = 0.6;//0.47;
+  double fDQValue = 1.;//0.47;
   int NAvg = 200;
   Bool_t isMC = fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
   Bool_t DQratio = true;
@@ -261,12 +261,15 @@ Bool_t ECalSel::Process()
     
     HitAvgEn+=hitsum;
     NPoTAvg+=fNPoTAnalysis->GetNPoTLG();
+    QLGAvg+=fNPoTAnalysis->GetQLG();
 
     if(NEvent%NAvg==0){  
       //if you want to use HitAvgEn or NPoTAvg remember to divide by NAvg
+      fhSvcVal->FillHistoList("ECalSelTwoClu", "ECal_EHitovQLGEBeam",HitAvgEn/(QLGAvg*fGeneralInfo->GetBeamEnergy()), 1.); //NOT CORRECTED BY MAUROS
       fhSvcVal->FillHistoList("ECalSelTwoClu", "ECal_EHitovPoT",HitAvgEn/NPoTAvg, 1.); //NOT CORRECTED BY MAUROS
       HitAvgEn =0;     
       NPoTAvg =0;
+      QLGAvg =0;
     }
 
    if(HitAvgEn/NPoTAvg > fDQValue) DQratio= false; //NOT CORRECTED BY MAUROS
@@ -1541,7 +1544,7 @@ Int_t ECalSel::TwoClusters_couples(){
     fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt", dt, dr, 1.);
     fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_yvsx"), tempClu[0]->GetPosition().X(), tempClu[0]->GetPosition().Y());
     fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_yvsx"), tempClu[1]->GetPosition().X(), tempClu[1]->GetPosition().Y());
-    fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_E1vsE2"), tempClu[0]->GetEnergy(), tempClu[1]->GetEnergy());
+    //fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_E1vsE2"), tempClu[0]->GetEnergy(), tempClu[1]->GetEnergy());
 
     CutFlow |=  (1<<0);
     
@@ -1802,6 +1805,7 @@ Int_t ECalSel::TwoClusters_couples(){
       fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_Theta1"),labMomentaCM[0].Vect().Theta() , 1.);
       fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_Theta2"), labMomentaCM[1].Vect().Theta(), 1.);
       fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_Phi1"),labMomentaCM[0].Vect().Phi(), 1.);
+      fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_DT"), tempClu[1]->GetTime()- tempClu[0]->GetTime(), 1.);
       fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_Phi2"), labMomentaCM[1].Vect().Phi(), 1.);
       fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_COGYX"), cog.X(), cog.Y(), 1.);
       fhSvcVal->FillHistoList("ECalSelTwoClu", Form("ECal_TC_R1"), xyclu[0].Mod(), 1.);
@@ -2132,7 +2136,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_EMaxAND", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_PhiAND", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
   
-  fhSvcVal->BookHistoList("ECalSelTwoClu", "ECal_EHitovPoT",200, 0, 10.); 
+  fhSvcVal->BookHistoList("ECalSelTwoClu", "ECal_EHitovPoT",300, 0, 3.); 
+  fhSvcVal->BookHistoList("ECalSelTwoClu", "ECal_EHitovQLGEBeam",300, 0, 3.); 
   fhSvcVal->BookHisto2List("ECalSelTwoClu", Form("ECal_TC_InvMassvsESum"), 200, 200, 400, 500, 0, 25);
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_InvMass"), 500, 0, 25);
   fhSvcVal->BookHistoList("ECalSelTwoCluMC", Form("ECal_TC_InvMass_True_Babayaga"), 500, 0, 25);
@@ -2144,6 +2149,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_Theta1"),300, 0, TMath::Pi());
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_Theta2"),300, 0, TMath::Pi());
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_Phi1"),600, -TMath::Pi(), TMath::Pi());
+  fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_DT"),600, -10,10);
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_Phi2"), 600, -TMath::Pi(), TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", Form("ECal_TC_COGYX"), 100, -200, 200, 100, -200, 200);
   fhSvcVal->BookHisto2List("ECalSelTwoClu", Form("ECal_TC_E1vsR1"), 600, 0, 300, 500, 0, 500);
@@ -2295,7 +2301,7 @@ Bool_t ECalSel::InitHistos()
 }
 
 Bool_t ECalSel::TagProbeEff_macro()
-{
+{ //return true;
   fileIn = new TFile(InputHistofile.Data());
   if (fileIn->IsOpen() == false)
   {
@@ -2364,6 +2370,7 @@ Bool_t ECalSel::TagProbeEff_macro()
     EofProbe_cut->Add(notargetbkg_probe);
   }
   // MCTagProbeEff(); //wold be better if this one is called only if the fileIn is a MC prod -->but is tricky
+  std::cout<<" ciao"<<std::endl;
   FitTagProbeEff();
   //FitTagProbeEffvsPhi();
   return true;
@@ -2557,7 +2564,7 @@ Bool_t ECalSel::FitTagProbeEff()
   TGraphErrors *EffGraphE = new TGraphErrors(NSlicesE);
   TGraphErrors *BkgRatioE = new TGraphErrors(NSlicesE);
   Double_t sumDen, sumNum;
-
+  Double_t EffWeight, errEffWeight, OneOverrEffWeightSq;
   for (Int_t iSlice = 0; iSlice < NSlicesE; iSlice++)
   {
 
@@ -2626,7 +2633,10 @@ Bool_t ECalSel::FitTagProbeEff()
       std::cout << "Problem: No data" << std::endl;
       continue;
     }
-    sumDen += DenTemp;
+    sumDen += DenTemp*errDen;
+    // errsumDen +=errDen;
+
+
 
     std::cout << "About to do ratios " << std::endl;
 
@@ -2693,12 +2703,16 @@ Bool_t ECalSel::FitTagProbeEff()
 
     //    break;
     // }
-    sumNum += NumTemp;
-
+    sumNum += NumTemp*errNum;
+    // errsumNum += errNum;
     EffE = NumTemp / DenTemp;
     double c1 = (1 / DenTemp) * (1 / DenTemp) * errDen * errDen;
     double c2 = (NumTemp / (DenTemp * DenTemp)) * (NumTemp / (DenTemp * DenTemp)) * errNum * errNum;
     Double_t errEffE = TMath::Sqrt(c1 + c2);
+    EffWeight += EffE/(errEffE*errEffE);
+    errEffWeight += 1/(errEffE*errEffE);
+    OneOverrEffWeightSq+=1/(errEffE*errEffE);
+
     std::cout << " Slice: " << iSlice << " Emean: " << EnergyVal << " Num: " << NumE << " errNum: " << errNum << " Den: " << DenE << " P2: " << expGaus->GetParameter(2) << " Ratio: " << DenE / expGaus->GetParameter(2) << " Eff: " << EffE << " errEff" << std::endl;
     EffGraphE->SetPoint(iSlice, EnergyVal, EffE);
     EffGraphE->SetPointError(iSlice, 0, errEffE);
@@ -2800,12 +2814,16 @@ Bool_t ECalSel::FitTagProbeEff()
 
   // ofstream IntegratedEfficiency(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_%s_%s", dataType.Data(), fNRun.Data()));
   // IntegratedEfficiency<<fGeneralInfo->GetPeriod()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<fGeneralInfo->GetCOG().X()<<"\t"<<fGeneralInfo->GetCOG().Y()<<"\t"<<NumTempAll<<"\t"<<errNumAll<<"\t"<<DenTempAll<<"\t"<<errDenAll<<"\t"<<EffE<<"\t"<<errEffE<<std::endl;
-  double cc1 = (1 / sumDen) * (1 / sumDen) * sumDen;
-  double cc2 = (sumNum / (sumDen * sumDen)) * (sumNum / (sumDen * sumDen)) * sumNum;
-  Double_t errEffEAll = TMath::Sqrt(cc1 + cc2);
+  // sumNum /= errsumNum;
+  // sumDen /= errsumDen;
+  EffWeight/=errEffWeight;
+  // double cc1 = (1 / sumDen) * (1 / sumDen) * errsumDen*errsumDen;
+  // double cc2 = (sumNum / (sumDen * sumDen)) * (sumNum / (sumDen * sumDen)) * errsumNum*errsumDen;
+  
+  Double_t errEffEAll = TMath::Sqrt(1/OneOverrEffWeightSq);
 
   ofstream IntegratedEfficiency(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_%s_%s", dataType.Data(), fNRun.Data()));
-  IntegratedEfficiency << fGeneralInfo->GetPeriod() << "\t" << fGeneralInfo->GetBeamEnergy() << "\t" << fGeneralInfo->GetCOG().X() << "\t" << fGeneralInfo->GetCOG().Y() << "\t" << sumNum << "\t" << TMath::Sqrt(sumNum) << "\t" << sumDen << "\t" << TMath::Sqrt(sumDen) << "\t" << sumNum / sumDen << "\t" << errEffEAll << std::endl;
+  IntegratedEfficiency << fGeneralInfo->GetPeriod() << "\t" << fGeneralInfo->GetBeamEnergy() << "\t" << fGeneralInfo->GetCOG().X() << "\t" << fGeneralInfo->GetCOG().Y() << "\t" << sumNum << "\t" << TMath::Sqrt(sumNum) << "\t" << sumDen << "\t" << TMath::Sqrt(sumDen) << "\t" << EffWeight << "\t" << errEffEAll <<"\t" <<EffE <<"\t"<<errEffE<<std::endl;
 
   std::cout << " Integrated eff in --> /data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/IntegratedEfficiency_" << dataType.Data() << "_" << fNRun.Data() << ".txt " << std::endl;
 
@@ -2817,6 +2835,7 @@ Bool_t ECalSel::FitTagProbeEff()
 Bool_t ECalSel::Finalize()
 {
   fSigmaCut = 3;
+  return true;
   if (fHistoMode)
     TagProbeEff_macro();
   // if(fHistoMode) EvaluateResolutions_macro();

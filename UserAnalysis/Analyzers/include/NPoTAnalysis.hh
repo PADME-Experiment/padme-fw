@@ -25,6 +25,7 @@ public:
   Double_t GetNPoT() { return fNPoT; }
   Double_t GetNPoTLG() { return fNPoTLG; }
   Double_t GetNPoTLGCorr() { return fNPoTLGCorr; }
+  Double_t GetQLG() { return fLGCharge; }
 
 
 private:
@@ -48,11 +49,13 @@ private:
   Double_t fNPoT;
   Double_t fXPos;
   Double_t fYPos;
+  Double_t fXCharge;
+  Double_t fYCharge;
 
   Double_t fNPoTLG;
   Double_t fNPoTLGCorr;
   Double_t fNPoTBL;
-
+  Double_t fLGCharge;
   std::vector<double> vNRun;
   std::vector<double> vNEvt;
 

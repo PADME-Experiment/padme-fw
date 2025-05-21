@@ -638,12 +638,12 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
     if (j) fprintf(outf,",");
-    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
   }
   fprintf(outf,"],[");
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
     if (j) fprintf(outf,",");
-    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamXSpread[j]);
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP2_BeamXSpread[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -658,12 +658,12 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"DATA [ [");
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
     if (j) fprintf(outf,",");
-    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
   }
   fprintf(outf,"],[");
   for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
     if (j) fprintf(outf,",");
-    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP2_BeamYSpread[j]);
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP2_BeamYSpread[j]);
   }
   fprintf(outf,"] ]\n\n");
 

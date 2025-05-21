@@ -271,6 +271,8 @@ int main(int argc, char* argv[])
 
   TRawEvent* rawEv;
 
+  TTimeStamp pdTime, chTime;
+
   /*
   // Skip first PADME event
   rawEv = IH->NextEvent();
@@ -312,8 +314,10 @@ int main(int argc, char* argv[])
       break;
     }
     pdTrig = rawEv->GetEventNumber();
+    pdTime = rawEv->GetEventAbsTime();
     pdPatt = rawEv->GetEventTrigMask();
-    pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+    //pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+    pdClk = rawEv->GetEventRunTime();
     pdDiff = pdClk-oldPdClk;
     pdDiff_us = pdDiff/80.;
 
@@ -321,6 +325,7 @@ int main(int argc, char* argv[])
     CH->LoadTree(chEntry);
     CH->GetEntry(chEntry);
     chTrig = CH->srsTrigger;
+    chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec);
     chClk = CH->srsTimeStamp;
     chDiff = chClk-oldChClk;
     if (chDiff<0) chDiff += chClockRollover;
@@ -349,8 +354,10 @@ int main(int argc, char* argv[])
 	break;
       }
       pdTrig = rawEv->GetEventNumber();
+      pdTime = rawEv->GetEventAbsTime();
       pdPatt = rawEv->GetEventTrigMask();
-      pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      //pdClk = rawEv->TriggerInfo()->GetTriggerTime();
+      pdClk = rawEv->GetEventRunTime();
       pdDiff = pdClk-oldPdClk;
       pdDiff_us = pdDiff/80.;
       //printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
@@ -365,6 +372,7 @@ int main(int argc, char* argv[])
       CH->LoadTree(chEntry);
       CH->GetEntry(chEntry);
       chTrig = CH->srsTrigger;
+      chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec);
       chClk = CH->srsTimeStamp;
       chDiff = chClk-oldChClk;
       if (chDiff<0) chDiff += chClockRollover;
@@ -382,7 +390,9 @@ int main(int argc, char* argv[])
 
     //printf("PADME %2.2x %7d %10d Chamber %7lld %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
     //printf("PADME %.3fus Chamber %.3fus Diff %.3fus CorrDiff %.3fus Eps %.6fMHz\n",pdDiff_us,chDiff_us,chDiff_us-pdDiff_us,chDiff_us_corr-pdDiff_us,eps);
-    printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig-chDeltaEvent,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
+    Double_t timeDiff = chTime.AsDouble()-pdTime.AsDouble();
+    //if (abs(timeDiff)>0.020)
+    printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f TDiff %6.1fms\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig-chDeltaEvent,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us,1000.*timeDiff);
 
     oldPdClk = pdClk;
     oldChClk = chClk;

@@ -362,27 +362,36 @@ Int_t ChamberMonitor::ComputeBeamSpot()
   // Compute weighted average position for each layer 
   for(Int_t i=0; i<MMCH_N_LAYERS; i++) {
 
-    UInt_t used = 0;
+    Double_t x = 0.;
+    Double_t rms = 0.;
     Double_t sum_q = 0.;
     Double_t sum_qx = 0.;
     Double_t sum_qx2 = 0.;
+    UInt_t used = 0;
+    Double_t expected_spread = 10.; // Expected spread around estimated x in mm
+
     for(UInt_t h=0; h<x_mean[i].size(); h++) {
-      // Only use strips in the low HV zone
-      if (x_mean[i][h]>fLowHV_XMin[i] && x_mean[i][h]<fLowHV_XMax[i]) {
+      if (x_mean[i][h]>fLowHV_XMin[i] && x_mean[i][h]<fLowHV_XMax[i]) { // Only use strips in the low HV zone
+	sum_q += q_mean[i][h];
+	sum_qx += q_mean[i][h]*x_mean[i][h];
+      }
+    }
+    if (sum_q != 0.) x = sum_qx/sum_q; // First estimate of average beam position on this layer. Position of each channel is weighted with the corresponding qmax
+
+    sum_q = 0.;
+    sum_qx = 0.;
+    sum_qx2 = 0.;
+    for(UInt_t h=0; h<x_mean[i].size(); h++) {
+      if (x_mean[i][h]>std::max(fLowHV_XMin[i],x-expected_spread) && x_mean[i][h]<std::min(fLowHV_XMax[i],x+expected_spread)) { // Only use strips close to the estimated average beam position
 	used++;
 	sum_q += q_mean[i][h];
 	sum_qx += q_mean[i][h]*x_mean[i][h];
 	sum_qx2 += q_mean[i][h]*x_mean[i][h]*x_mean[i][h];
       }
     }
-    Double_t x = 0.;
-    Double_t rms = 0.;
     if (sum_q != 0.) {
-      x = sum_qx/sum_q; // Average beam position on this layer. Position of each channel is weighted with the corresponding qmax
-      if (used >= 2) {
-	Double_t variance = sum_qx2/sum_q-x*x; // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
-	rms = sqrt(variance);
-      }
+      x = sum_qx/sum_q; // More precise estimate of average beam position on this layer. Position of each channel is weighted with the corresponding qmax
+      if (used >= 2) rms = sqrt(sum_qx2/sum_q-x*x); // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
     }
 
     // Add computed quantitites to accumulators for corresponding layer

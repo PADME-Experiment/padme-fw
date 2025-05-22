@@ -211,7 +211,6 @@ int main(int argc, char* argv[])
   //Int_t oldSrsTS = 0;
   //Int_t dt,ds,dst,nroll;
   //Float_t chClockFreq = 40.; // Chamber clock frequency in MHz
-  Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
 
   //Int_t oldPSec  = 0;
   //Int_t oldPMSec = 0;
@@ -238,6 +237,9 @@ int main(int argc, char* argv[])
 
   //Float_t ChToPdClockRatio = 1.-1.4458E-5; // dT(padme) = dT(chamber)*2*ChToPdClockRatio
   Double_t chClockCorrectionFactor = -0.000197;
+  Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
+  Double_t chClockRolloverTime = (Double_t)chClockRollover/(40.+chClockCorrectionFactor)/1.E6;
+  printf("- Chamber clock rollover at %d i.e. %8.6fs\n",chClockRollover,chClockRolloverTime);
 
   /*
   // Get first PADME event
@@ -271,7 +273,9 @@ int main(int argc, char* argv[])
 
   TRawEvent* rawEv;
 
-  TTimeStamp pdTime, chTime;
+  //TTimeStamp pdTime, chTime;
+  Double_t pdTime, oldPdTime;
+  Double_t chTime, oldChTime;
 
   /*
   // Skip first PADME event
@@ -292,6 +296,7 @@ int main(int argc, char* argv[])
 
   // Skip PADME/Chamber events (if needed)
   if (cfg->NumberOfEventsToSkip() > 0) { // Skipping PADME events
+    printf("- Skipping first %d PADME events\n",cfg->NumberOfEventsToSkip());
     for(Int_t i=0; i<cfg->NumberOfEventsToSkip(); i++) {
       rawEv = IH->NextEvent();
       //oldPdClk = rawEv->TriggerInfo()->GetTriggerTime();
@@ -300,6 +305,7 @@ int main(int argc, char* argv[])
       if (pdPatt == 1) nMissBTF++;
     }
   } else if (cfg->NumberOfEventsToSkip() < 0) { // Skipping Chamber events
+    printf("- Skipping first %d Chamber events\n",-cfg->NumberOfEventsToSkip());
     chEntry = -cfg->NumberOfEventsToSkip();
     nMissCh = -cfg->NumberOfEventsToSkip();
   }
@@ -314,7 +320,7 @@ int main(int argc, char* argv[])
       break;
     }
     pdTrig = rawEv->GetEventNumber();
-    pdTime = rawEv->GetEventAbsTime();
+    pdTime = rawEv->GetEventAbsTime().AsDouble();
     pdPatt = rawEv->GetEventTrigMask();
     //pdClk = rawEv->TriggerInfo()->GetTriggerTime();
     pdClk = rawEv->GetEventRunTime();
@@ -325,7 +331,7 @@ int main(int argc, char* argv[])
     CH->LoadTree(chEntry);
     CH->GetEntry(chEntry);
     chTrig = CH->srsTrigger;
-    chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec);
+    chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
     chClk = CH->srsTimeStamp;
     chDiff = chClk-oldChClk;
     if (chDiff<0) chDiff += chClockRollover;
@@ -336,7 +342,9 @@ int main(int argc, char* argv[])
     if (firstEvent) {
       firstEvent = false;
       oldPdClk = pdClk;
+      oldPdTime = pdTime;
       oldChClk = chClk;
+      oldChTime = chTime;
       chEntry++;
       continue;
     }
@@ -345,16 +353,16 @@ int main(int argc, char* argv[])
 
     // Check if Chamber skipped a trigger
     while ( (chDiff_us_corr-pdDiff_us) > 0.1) { // Tolerance is 100ns
-      printf("Reading next PADME event- pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
+      printf("- Reading next PADME event - pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
       nMiss++;
       if (pdPatt == 1) nMissBTF++;
       rawEv = IH->NextEvent();
       if (rawEv == 0) {
-	printf("- Reached end of PADME streams: exiting\n");
+	printf("- Reached end of PADME events: exiting\n");
 	break;
       }
       pdTrig = rawEv->GetEventNumber();
-      pdTime = rawEv->GetEventAbsTime();
+      pdTime = rawEv->GetEventAbsTime().AsDouble();
       pdPatt = rawEv->GetEventTrigMask();
       //pdClk = rawEv->TriggerInfo()->GetTriggerTime();
       pdClk = rawEv->GetEventRunTime();
@@ -365,17 +373,26 @@ int main(int argc, char* argv[])
 
     // Check if PADME skipped a trigger
     while ( (pdDiff_us-chDiff_us_corr) > 0.1) { // Tolerance is 100ns
-      printf("Reading next Chamber event- pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
+      printf("- Reading next Chamber event - pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
       nMissCh++;
       chEntry++;
-      if (chEntry >= chEntries) break;
+      if (chEntry >= chEntries) {
+	printf("- Reached end of Chamber events: exiting\n");
+	break;
+      }
       CH->LoadTree(chEntry);
       CH->GetEntry(chEntry);
       chTrig = CH->srsTrigger;
-      chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec);
+      chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
       chClk = CH->srsTimeStamp;
       chDiff = chClk-oldChClk;
       if (chDiff<0) chDiff += chClockRollover;
+      Double_t pdTimeDiff = pdTime-oldPdTime;
+      if (pdTimeDiff>chClockRolloverTime) {
+	UInt_t nRoll = int(pdTimeDiff/chClockRolloverTime);
+	printf("- Long PADME interval %8.6fs: applying %d Chamber rollovers\n",pdTimeDiff,nRoll);
+	chDiff += nRoll*chClockRollover;
+      }
       //chDiff_us = chDiff/40.;
       chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
     }
@@ -390,15 +407,17 @@ int main(int argc, char* argv[])
 
     //printf("PADME %2.2x %7d %10d Chamber %7lld %7d %10d Delta %7d %10d\n",pdPatt,pdTrig,pdDiff,chEntry,chTrig,2*chDiff,chTrig-pdTrig,2*chDiff-pdDiff);
     //printf("PADME %.3fus Chamber %.3fus Diff %.3fus CorrDiff %.3fus Eps %.6fMHz\n",pdDiff_us,chDiff_us,chDiff_us-pdDiff_us,chDiff_us_corr-pdDiff_us,eps);
-    Double_t timeDiff = chTime.AsDouble()-pdTime.AsDouble();
+    Double_t timeDiff = chTime-pdTime;
     //if (abs(timeDiff)>0.020)
     printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f TDiff %6.1fms\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig-chDeltaEvent,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us,1000.*timeDiff);
 
     oldPdClk = pdClk;
+    oldPdTime = pdTime;
     oldChClk = chClk;
+    oldChTime = chTime;
     chEntry++;
     if (chEntry >= chEntries) {
-      printf("- Reached end of Chamber eventss: exiting\n");
+      printf("- Reached end of Chamber events: exiting\n");
       break;
     }
 }

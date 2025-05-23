@@ -5,7 +5,7 @@
 
 #include "Configuration.hh"
 #include "ChamberInputHandler.hh"
-#include "ChamberMonitor.hh"
+#include "SmallChamberMonitor.hh"
 
 #include "utlConfigParser.hh"
 

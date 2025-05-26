@@ -274,8 +274,8 @@ int main(int argc, char* argv[])
   TRawEvent* rawEv;
 
   //TTimeStamp pdTime, chTime;
-  Double_t pdTime, oldPdTime;
-  Double_t chTime, oldChTime;
+  Double_t pdTime, oldPdTime, pdTimeDiff;
+  Double_t chTime, oldChTime, chTimeDiff;
 
   /*
   // Skip first PADME event
@@ -333,10 +333,6 @@ int main(int argc, char* argv[])
     chTrig = CH->srsTrigger;
     chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
     chClk = CH->srsTimeStamp;
-    chDiff = chClk-oldChClk;
-    if (chDiff<0) chDiff += chClockRollover;
-    //chDiff_us = chDiff/40.;
-    chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
 
     // Skip first event as delta times cannot be checked
     if (firstEvent) {
@@ -351,6 +347,20 @@ int main(int argc, char* argv[])
 
     //printf("PADME %2.2x %7d %10d %10.3fus Chamber %7lld %7d %10d %10.3fus Diff %6.3f\n",pdPatt,pdTrig,pdDiff,pdDiff_us,chEntry,chTrig,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us);
 
+    // Compute the Chamber clock counter increment taking into account rollovers (0.42sec)
+    chDiff = chClk-oldChClk;
+    // Check if the Chamber time gap wrt previous event is too large and requires multiple clock rollover corrections
+    chTimeDiff = chTime-oldChTime;
+    if (chTimeDiff > chClockRolloverTime) {
+      // Compute the number of rollovers and apply it to the Chamber clock counter difference wrt last good event
+      Int_t nRollOver = int(chTimeDiff/chClockRolloverTime);
+      chDiff += nRollOver*chClockRollover;
+      printf("- Long delay detected: %.3f #RollOver %d New ChDiff %d\n",chTimeDiff,nRollOver,chDiff);
+    }
+    if (chDiff<0) chDiff += chClockRollover;
+    //chDiff_us = chDiff/40.;
+    chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
+ 
     // Check if Chamber skipped a trigger
     while ( (chDiff_us_corr-pdDiff_us) > 0.1) { // Tolerance is 100ns
       printf("- Reading next PADME event - pdDiff %10.3f chDiff %10.3f\n",pdDiff_us,chDiff_us_corr);
@@ -386,13 +396,13 @@ int main(int argc, char* argv[])
       chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
       chClk = CH->srsTimeStamp;
       chDiff = chClk-oldChClk;
-      if (chDiff<0) chDiff += chClockRollover;
-      Double_t pdTimeDiff = pdTime-oldPdTime;
+      pdTimeDiff = pdTime-oldPdTime;
       if (pdTimeDiff>chClockRolloverTime) {
 	UInt_t nRoll = int(pdTimeDiff/chClockRolloverTime);
 	printf("- Long PADME interval %8.6fs: applying %d Chamber rollovers\n",pdTimeDiff,nRoll);
 	chDiff += nRoll*chClockRollover;
       }
+      if (chDiff<0) chDiff += chClockRollover;
       //chDiff_us = chDiff/40.;
       chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
     }

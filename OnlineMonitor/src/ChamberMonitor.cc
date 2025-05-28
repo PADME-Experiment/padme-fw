@@ -496,7 +496,7 @@ Int_t ChamberMonitor::ComputeBeamSpot()
     }
     */
 
-    // Save totala charge for each layer
+    // Save total charge for each layer
     if (used>=1) {
       switch(i) {
       case 0:          // P1YR

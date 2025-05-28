@@ -30,7 +30,11 @@ om_running=0
 while true; do 
 
     # Get current run
-    current_run=$( ls -rt $inputDir | grep .root | tail -1 | sed -e "s/.root//" )
+    #current_run=$( ls -rt $inputDir | grep .root | tail -1 | sed -e "s/.root//" )
+    current_run=$( ls -rt $inputDir | tail -1 )
+
+    # Look into new directory looking for root files
+    current_ch_run=$( ls -rt ${inputDir}/${current_run} | grep .root | tail -1 | sed -e "s/.root//" | sed -r -e "s/_[0-9]+$//" )
 
     # Check if the run has changed
     if [[ $current_run != $current_run_save ]]; then
@@ -58,8 +62,8 @@ while true; do
 	echo "  Input rawdata directory: $inputDir"
 
 	# Start ChamberMonitor for new run
-	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-	stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
+	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
+	stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
 	om_pid=$!
 
 	# Change status of ChamberMontior process to RUNNING
@@ -76,8 +80,8 @@ while true; do
 	if [ $? -ne 0 ]; then
 	    now=$( date -u )
 	    echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
-	    echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-	    stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
+	    echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
+	    stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
 	    om_pid=$!
 	    sleep 60
 	fi

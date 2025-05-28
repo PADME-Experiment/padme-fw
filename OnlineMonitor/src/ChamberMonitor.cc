@@ -359,41 +359,96 @@ void ChamberMonitor::CoordinateFinder(int iStrip, int iLayer, std::vector<double
 Int_t ChamberMonitor::ComputeBeamSpot()
 {
 
-  // Compute weighted average position for each layer 
+  Double_t expected_spread = 10.; // Expected spread around estimated x in mm
+
+  Double_t sum_x1_q = 0.;
+  Double_t sum_x1_qx = 0.;
+  Double_t sum_x1_qx2 = 0.;
+  UInt_t sum_x1_used = 0;
+  Double_t sum_y1_q = 0.;
+  Double_t sum_y1_qx = 0.;
+  Double_t sum_y1_qx2 = 0.;
+  UInt_t sum_y1_used = 0;
+  Double_t sum_x2_q = 0.;
+  Double_t sum_x2_qx = 0.;
+  Double_t sum_x2_qx2 = 0.;
+  UInt_t sum_x2_used = 0;
+  Double_t sum_y2_q = 0.;
+  Double_t sum_y2_qx = 0.;
+  Double_t sum_y2_qx2 = 0.;
+  UInt_t sum_y2_used = 0;
+
+  Double_t x,rms;
+  Double_t sum_q,sum_qx,sum_qx2;
+  UInt_t used;
+
+  // Compute weighted average position for each layer. Position of each channel is weighted with the corresponding qmax
   for(Int_t i=0; i<MMCH_N_LAYERS; i++) {
 
-    Double_t x = 0.;
-    Double_t rms = 0.;
-    Double_t sum_q = 0.;
-    Double_t sum_qx = 0.;
-    Double_t sum_qx2 = 0.;
-    UInt_t used = 0;
-    Double_t expected_spread = 10.; // Expected spread around estimated x in mm
+    x = 0.;
+    sum_q = 0.;
+    sum_qx = 0.;
+    sum_qx2 = 0.;
+    used = 0;
 
     for(UInt_t h=0; h<x_mean[i].size(); h++) {
       if (x_mean[i][h]>fLowHV_XMin[i] && x_mean[i][h]<fLowHV_XMax[i]) { // Only use strips in the low HV zone
 	sum_q += q_mean[i][h];
 	sum_qx += q_mean[i][h]*x_mean[i][h];
-      }
-    }
-    if (sum_q != 0.) x = sum_qx/sum_q; // First estimate of average beam position on this layer. Position of each channel is weighted with the corresponding qmax
-
-    sum_q = 0.;
-    sum_qx = 0.;
-    sum_qx2 = 0.;
-    for(UInt_t h=0; h<x_mean[i].size(); h++) {
-      if (x_mean[i][h]>std::max(fLowHV_XMin[i],x-expected_spread) && x_mean[i][h]<std::min(fLowHV_XMax[i],x+expected_spread)) { // Only use strips close to the estimated average beam position
 	used++;
-	sum_q += q_mean[i][h];
-	sum_qx += q_mean[i][h]*x_mean[i][h];
-	sum_qx2 += q_mean[i][h]*x_mean[i][h]*x_mean[i][h];
       }
     }
+
+    if (used>=1) {
+
+      x = sum_qx/sum_q; // First estimate of average beam position on this layer
+
+      sum_q = 0.;
+      sum_qx = 0.;
+      sum_qx2 = 0.;
+      used = 0;
+      for(UInt_t h=0; h<x_mean[i].size(); h++) {
+	if (x_mean[i][h]>std::max(fLowHV_XMin[i],x-expected_spread) && x_mean[i][h]<std::min(fLowHV_XMax[i],x+expected_spread)) { // Only use strips close to the estimated average beam position
+	  used++;
+	  sum_q += q_mean[i][h];
+	  sum_qx += q_mean[i][h]*x_mean[i][h];
+	  sum_qx2 += q_mean[i][h]*x_mean[i][h]*x_mean[i][h];
+	}
+      }
+
+    }
+
+    /*
     if (sum_q != 0.) {
       x = sum_qx/sum_q; // More precise estimate of average beam position on this layer. Position of each channel is weighted with the corresponding qmax
       if (used >= 2) rms = sqrt(sum_qx2/sum_q-x*x); // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
     }
+    */
 
+    // Save cumulative values to compute beam position from a full layer
+    if (i == 0 || i == 1) { // P1Y
+      sum_y1_q += sum_q;
+      sum_y1_qx += sum_qx;
+      sum_y1_qx2 += sum_qx2;
+      sum_y1_used += used;
+    } else if (i == 2 || i == 3) { // P1X
+      sum_x1_q += sum_q;
+      sum_x1_qx += sum_qx;
+      sum_x1_qx2 += sum_qx2;
+      sum_x1_used += used;
+    } else if (i == 4 || i == 5) { // P2Y
+      sum_y2_q += sum_q;
+      sum_y2_qx += sum_qx;
+      sum_y2_qx2 += sum_qx2;
+      sum_y2_used += used;
+    } else if (i == 6 || i == 7) { // P2X
+      sum_x2_q += sum_q;
+      sum_x2_qx += sum_qx;
+      sum_x2_qx2 += sum_qx2;
+      sum_x2_used += used;
+    }
+
+    /*
     // Add computed quantitites to accumulators for corresponding layer
     // Here we assume that beam is impacting on the XB-YR sector and is not very large
     // This algorithm should be improved
@@ -417,6 +472,8 @@ Int_t ChamberMonitor::ComputeBeamSpot()
 	break;
       }
     }
+    */
+    /*
     if (rms != 0.) {
       switch(i) {
       case 0:          // P1YR
@@ -437,7 +494,10 @@ Int_t ChamberMonitor::ComputeBeamSpot()
 	break;
       }
     }
-    if (sum_q != 0.) {
+    */
+
+    // Save totala charge for each layer
+    if (used>=1) {
       switch(i) {
       case 0:          // P1YR
 	fP1_BeamYRCharge += sum_q;
@@ -475,6 +535,53 @@ Int_t ChamberMonitor::ComputeBeamSpot()
     }
 
   }
+
+  // Compute X/Y coordinates for each plane
+
+  if (sum_y1_used >= 1) {
+    x = sum_y1_qx/sum_y1_q;
+    fP1_BeamY += x;
+    fP1_BeamY_N++;
+    if (sum_y1_used >= 2) {
+      rms = sqrt(sum_y1_qx2/sum_y1_q-x*x);
+      fP1_BeamYSpread += rms;
+      fP1_BeamYSpread_N++;
+    }
+  }
+
+  if (sum_x1_used >= 1) {
+    x = sum_x1_qx/sum_x1_q;
+    fP1_BeamX += x;
+    fP1_BeamX_N++;
+    if (sum_x1_used >= 2) {
+      rms = sqrt(sum_x1_qx2/sum_x1_q-x*x);
+      fP1_BeamXSpread += rms;
+      fP1_BeamXSpread_N++;
+    }
+  }
+
+  if (sum_y2_used >= 1) {
+    x = sum_y2_qx/sum_y2_q;
+    fP2_BeamY += x;
+    fP2_BeamY_N++;
+    if (sum_y2_used >= 2) {
+      rms = sqrt(sum_y2_qx2/sum_y2_q-x*x);
+      fP2_BeamYSpread += rms;
+      fP2_BeamYSpread_N++;
+    }
+  }
+
+  if (sum_x2_used >= 1) {
+    x = sum_x2_qx/sum_x2_q;
+    fP2_BeamX += x;
+    fP2_BeamX_N++;
+    if (sum_x2_used >= 2) {
+      rms = sqrt(sum_x2_qx2/sum_x2_q-x*x);
+      fP2_BeamXSpread += rms;
+      fP2_BeamXSpread_N++;
+    }
+  }
+
   fNEventsBeam++;
 
   return 0;

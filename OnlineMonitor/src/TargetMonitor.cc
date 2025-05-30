@@ -36,7 +36,7 @@ void TargetMonitor::Initialize()
   // Get Target map from configuration file
   if (fConfigParser->HasConfig("ADC","ADC28")) {
     std::vector<std::string> bMap = fConfigParser->GetConfig("ADC","ADC28");
-    for (unsigned int ic = 0; ic < bMap.size(); ic++) fTarget_map[ic] = std::stoi(bMap[ic]);
+    for (unsigned int ic = 0; ic < bMap.size(); ic++) fTarget_Map[ic] = std::stoi(bMap[ic]);
   } else {
     printf("TargetMonitor::Initialize - WARNING - No channel map provided: using default map\n");
   }
@@ -48,7 +48,8 @@ void TargetMonitor::Initialize()
 
   // Charge to PoTs conversion parameter
   // 1.60217662e-7: electron charge; 12: nominal CCD in um; 36: total number of strips
-  fChargeToPoTs = 1./(1.60217662e-7*12.*36.);
+  // 28.05.25--> MM and KK corrected this constant term: 36 --> 32 (the number of strips) and multiplied denominator by the strip size 1000 um
+  fChargeToPoTs = 1./(1.60217662e-7*12.*32.*1000); // ? Not clear...
 
   // Get beam output rate from config file
   fBeamOutputRate = 500;
@@ -96,7 +97,7 @@ void TargetMonitor::Initialize()
   fBeamEventCount = 0;
   fEventPoTsTotal = 0.;
   fRunPoTsTotal = 0.;
-  for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+  //for (UChar_t i=0;i<32;i++) fStrip_Charge[i] = 0.;
 
   // Reset cumlative waveforms array
   for (UChar_t i=0;i<32;i++) {
@@ -139,7 +140,7 @@ void TargetMonitor::EndOfEvent()
   for (UChar_t c=1;c<=32;c++) {
     if (c==17) printf("\t");
     for (UChar_t i=0;i<=31;i++) {
-      if (fTarget_map[i]==c) printf("%6.1f ",fCharge[i]);
+      if (fTarget_Map[i]==c) printf("%6.1f ",fCharge[i]);
     }
   }
   printf("\n");
@@ -156,9 +157,13 @@ void TargetMonitor::EndOfEvent()
   if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
     // Compute cumulative total charge for all channels and then estimate nPoTs
-    for (UChar_t channel=0;channel<32;channel++) {
-      for (UInt_t s=0;s<1024;s++) fWF_Cumulative[channel][s] /= (Double_t)fBeamOutputRate;
+    for (UChar_t channel = 0; channel < 32; channel++) {
+      for (UInt_t i = 0;i < 1024; i++) fWF_Cumulative[channel][i] /= (Double_t)fBeamOutputRate;
+      Double_t ped = 0;
+      for (UInt_t i = 0; i < fPedestalSamples; i++) ped += fWF_Cumulative[channel][i]; ped /= (Double_t)fPedestalSamples;
+      for (UInt_t i = 0; i < 1024; i++) fWF_Cumulative[channel][i] -= ped;
       ComputeChannelCumulativeCharge(0,channel,fWF_Cumulative[channel]);
+      fStrip_CumulativeCharge[fTarget_Map[channel]-1]  = fCumulCharge[channel];
     }
     ComputeCumulativePoTs();
 
@@ -179,7 +184,7 @@ void TargetMonitor::EndOfEvent()
 
     // Reset counters
     fEventPoTsTotal = 0.;
-    for (UChar_t i=0;i<32;i++) fStrip_charge[i] = 0.;
+    //for (UChar_t i=0;i<32;i++) fStrip_Charge[i] = 0.;
     
     // Reset cumlative waveforms array
     for (UChar_t i=0;i<32;i++) {
@@ -207,14 +212,14 @@ void TargetMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* sample
   if (! fIsBeam) return;
 
   ComputeChannelCharge(board,channel,samples);
-  fStrip_charge[fTarget_map[channel]-1] += fCharge[channel];
+  //fStrip_Charge[fTarget_Map[channel]-1] += fCharge[channel];
 
-  // Subtract pedestal and add waveform to cumulative array
-  Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= (Double_t)fPedestalSamples;
-  for (UInt_t i=0;i<1024;i++) fWF_Cumulative[channel][i] += samples[i]-ped;
+  // Add waveform to cumulative array. Pedestals will be subtracted at the end
+  for (UInt_t i=0;i<1024;i++) fWF_Cumulative[channel][i] += samples[i];
+  // Double_t ped = 0.; for (UInt_t i=0;i<fPedestalSamples;i++) ped += samples[i]; ped /= (Double_t)fPedestalSamples;
+  // for (UInt_t i=0;i<1024;i++) fWF_Cumulative[channel][i] += samples[i]-ped;
 
   // Save waveforms of last event. Center on pedestal to improve visibility
-  //if (fEventCounter == fEventOutputScale) for(UInt_t i=0;i<1024;i++) fWaveform[channel][i] = samples[i]-(Short_t)fPedestal[channel];
   if (fBeamEventCount % fBeamOutputRate == 0) {
     for(UInt_t i=0;i<1024;i++) {
       if (fUseAbsSignal && samples[i] < 2048) {
@@ -259,22 +264,16 @@ void TargetMonitor::ComputeTotalChargeX()
 {
   fTotalChargeX = 0.;
   for (UChar_t i=0;i<16;i++) {
-    //printf("%6.1f ",fCharge[i]);
     if (fCharge[i]>0.) fTotalChargeX += fCharge[i];
-    //fTotalChargeX += fCharge[i];
   }
-  //printf("%7.1f\n",fTotalChargeX);
 }
 
 void TargetMonitor::ComputeTotalChargeY()
 {
   fTotalChargeY = 0.;
   for (UChar_t i=16;i<32;i++) {
-    //printf("%6.1f ",fCharge[i]);
     if (fCharge[i]>0.) fTotalChargeY += fCharge[i];
-    //fTotalChargeY += fCharge[i];
   }
-  //printf("%7.1f\n",fTotalChargeY);
 }
 
 void TargetMonitor::ComputePoTs()
@@ -348,7 +347,8 @@ Int_t TargetMonitor::OutputBeam()
   for(UChar_t i = 0;i<16;i++) {
     if (i>0) fprintf(outf,",");
     // Show average per-event charge for this strip
-    fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
+    fprintf(outf,"%.3f",fStrip_CumulativeCharge[i]);
+    // fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
   }
   fprintf(outf,"]]\n\n");
 
@@ -364,7 +364,8 @@ Int_t TargetMonitor::OutputBeam()
   for(UChar_t i = 16;i<32;i++) {
     if (i>16) fprintf(outf,",");
     // Show average per-event charge for this strip
-    fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
+    fprintf(outf,"%.3f",fStrip_CumulativeCharge[i]);
+    // fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
   }
   fprintf(outf,"]]\n\n");
 

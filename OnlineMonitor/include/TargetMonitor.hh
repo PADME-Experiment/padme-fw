@@ -60,7 +60,7 @@ private:
   UInt_t fBeamOutputRate; // Number of beam events between outputs
 
   // Map from [channel] to position X (1-16) and Y (17-32)
-  Short_t fTarget_map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };
+  Short_t fTarget_Map[32] = { 16,14,12,10,8,6,4,2,1,3,5,7,9,11,13,15,23,21,19,17,18,20,22,24,26,28,30,32,31,29,27,25 };
 
   // Array to store waveforms, charge and pedestals for a whole event
   Double_t fCharge[32];
@@ -73,7 +73,8 @@ private:
 
   // Counters
   UInt_t fBeamEventCount = 0;
-  Double_t fStrip_charge[32]; // Strips 1-32 are mapped to index 0-31
+  //Double_t fStrip_Charge[32]; // Strips 1-32 are mapped to index 0-31
+  Double_t fStrip_CumulativeCharge[32]; // Strips 1-32 are mapped to index 0-31
 
   // Total charge along X and Y
   Double_t fTotalChargeX;

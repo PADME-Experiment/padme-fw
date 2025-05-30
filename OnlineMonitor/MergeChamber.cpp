@@ -287,6 +287,7 @@ int main(int argc, char* argv[])
     oldChClk = chClkList[chEntry];
     oldChTime = chTimeList[chEntry];
     UInt_t i;
+    Int_t toSkip = 0;
     for(i=MERGECHAMBER_ALIGNMENT_EVENTS-5; i>=0; i--) {
 
       chEntry--;
@@ -328,6 +329,7 @@ int main(int argc, char* argv[])
       }
       if (chEntry<0) break;
 
+      toSkip = i-chEntry;
       printf("PADME %2d %10lld Chamber %2lld %10d ClkDiff %6.3fus TimeDiff %6.1fms\n",i,pdClkList[i],chEntry,chClkList[chEntry],chDiff_us_corr-pdDiff_us,1000.*(pdTimeList[i]-chTimeList[chEntry]));
 
       oldPdClk = pdClkList[i];
@@ -337,7 +339,8 @@ int main(int argc, char* argv[])
  
     }
 
-    cfg->SetNumberOfEventsToSkip(i-chEntry);
+    printf("- Computed number of events to skip: %d\n", toSkip);
+    cfg->SetNumberOfEventsToSkip(toSkip);
 
     IH->Finalize();
     delete IH;

@@ -103,7 +103,7 @@ ChamberEvent* ChamberInputHandler::NextEvent()
       if (fCurrentFileIsOpen) {
 	UInt_t rc = WaitForFileToGrow();
 	if (rc == 1) {
-	  if (fConfig->Verbose()) printf("ChamberInputHandler::NextEvent - Events in file now: %d\n",fTotalEventsInFile);
+	  if (fConfig->Verbose()>1) printf("ChamberInputHandler::NextEvent - Events in file now: %d\n",fTotalEventsInFile);
 	  return ReadNextEvent(); // New events have appeared: read the next
 	}
 	if (rc == 2) {
@@ -113,7 +113,7 @@ ChamberEvent* ChamberInputHandler::NextEvent()
 	}
       }
 
-      // File has been finalized and we read all events: close it
+      // WaitForFileToGrow returned 0: file has been finalized and we read all events, time to close it
       delete fTFile;
       //fTFile->Close();
 
@@ -187,6 +187,7 @@ Int_t ChamberInputHandler::WaitForFileToGrow()
       if (! fTFile->IsZombie()) {
 	if (fTFile->TestBit(TFile::kRecovered)) {
 	  fCurrentFileIsOpen = true;
+	  if (fConfig->Verbose()>1) printf("ChamberInputHandler::WaitForFileToGrow - File %s is still being written\n",streamFilename.Data());
 	} else {
 	  fCurrentFileIsOpen = false;
 	}
@@ -194,10 +195,13 @@ Int_t ChamberInputHandler::WaitForFileToGrow()
 	UInt_t totEvents = fTTree->GetEntries();
 	if (totEvents > fTotalEventsInFile) {
 	  fTotalEventsInFile = totEvents;
+	  if (fConfig->Verbose()>1) printf("ChamberInputHandler::WaitForFileToGrow - Events in file now: %d\n",fTotalEventsInFile);
 	  fChamberEvent->Init(fTTree);
 	  return 1; // 1: file has grown
 	}
 	if (! fCurrentFileIsOpen) return 0; // 0: file did not grow but was finalized
+      } else {
+	if (fConfig->Verbose()>1) printf("ChamberInputHandler::WaitForFileToGrow - File %s still a zombie: wait and retry\n",streamFilename.Data());
       }
     } else {
       printf("ChamberInputHandler::WaitForFileToGrow - WARNING - File '%s' could not be reopened.\n",streamFilename.Data());
@@ -247,12 +251,15 @@ Int_t ChamberInputHandler::OpenFileInStream(UInt_t filenr)
       if (fTFile) {
 	if (! fTFile->IsZombie()) break;
 	// File is still a zombie: close it and wait
+	if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - File %s still a zombie: close and wait\n",streamFilename.Data());
 	delete fTFile; fTFile = 0;
 	//fTFile->Close();
 	if (! fConfig->FollowMode()) return -1; // Zombie file in NORMAL mode?
       } else {
 	printf("ChamberInputHandler::OpenFileInStream - WARNING - New file '%s' was created but could not be opened as a TFile.\n",streamFilename.Data());
       }
+    } else {
+      if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - File %s size still small: %d\n",streamFilename.Data(),GetLocalFileSize(streamFilename));
     }
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit
@@ -274,6 +281,7 @@ Int_t ChamberInputHandler::OpenFileInStream(UInt_t filenr)
   // Check if file is currently been written to
   if (fTFile->TestBit(TFile::kRecovered)) {
     fCurrentFileIsOpen = true;
+    if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - File %s is still being written\n",streamFilename.Data());
   } else {
     fCurrentFileIsOpen = false;
   }
@@ -287,7 +295,7 @@ Int_t ChamberInputHandler::OpenFileInStream(UInt_t filenr)
 
   // Get file information
   fTotalEventsInFile = fTTree->GetEntries();
-  if (fConfig->Verbose()) printf("ChamberInputHandler::OpenFileInStream - Events in file: %d\n",fTotalEventsInFile);
+  if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - Events in file: %d\n",fTotalEventsInFile);
 
   // Initialize event counter for this file
   fCurrentEventInFile = 0;
@@ -340,7 +348,7 @@ Bool_t ChamberInputHandler::FileExists(TString fileName)
 
   }
 
-  if (fConfig->Verbose() > 2) {
+  if (fConfig->Verbose() > 1) {
     if (exists) {
       printf("ChamberInputHandler::FileExists - File %s exists\n",fileName.Data());
     } else {
@@ -355,7 +363,7 @@ Bool_t ChamberInputHandler::FileExists(TString fileName)
 Int_t ChamberInputHandler::GetLocalFileSize(TString fileName)
 {
 
-  if (fConfig->Verbose() > 2) printf("ChamberInputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
+  if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
 
   Int_t fileSize = 0;
 
@@ -363,7 +371,7 @@ Int_t ChamberInputHandler::GetLocalFileSize(TString fileName)
   struct stat filestat;
   if ( stat(Form(fileName.Data()),&filestat) == 0 ) fileSize = filestat.st_size;
 
-  if (fConfig->Verbose() > 2) printf("ChamberInputHandler::GetLocalFileSize - File %s has size %d\n",fileName.Data(),fileSize);
+  if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - File %s has size %d\n",fileName.Data(),fileSize);
 
   return fileSize;
 

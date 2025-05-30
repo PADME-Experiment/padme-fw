@@ -16,6 +16,11 @@ int main(int argc, char* argv[])
 {
   
   int c;
+  
+  // Connect to configuration handler
+  Configuration* cfg = Configuration::GetInstance();
+  cfg->SetOutputDirectory("rawfile"); // Change default output directory
+  cfg->SetNumberOfStreams(cfg->NumberOfStreamsMax()); // Make sure we use all PADME streams
 
   TString runName = "";
   TString chamberRunName = "";
@@ -27,17 +32,14 @@ int main(int argc, char* argv[])
   UInt_t nEventsToProcess = 0;
   Int_t nEventsPerFile = -1;
   Int_t debugScale = -1;
-  Int_t skipEvents = 0;
+  Int_t skipEventsDefault = cfg->NumberOfEventsToSkip();
+  Int_t skipEvents = skipEventsDefault;
 
   struct timespec now;
-  
-  // Connect to configuration handler
-  Configuration* cfg = Configuration::GetInstance();
-  cfg->SetOutputDirectory("rawfile"); // Change default output directory
-  cfg->SetNumberOfStreams(cfg->NumberOfStreamsMax());
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:C:I:D:s:O:S:N:n:d:vh")) != -1) {
+  //while ((c = getopt(argc, argv, "R:C:I:D:s:O:S:N:n:d:vh")) != -1) {
+  while ((c = getopt(argc, argv, "R:C:I:D:s:O:N:n:d:vh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -61,16 +63,16 @@ int main(int argc, char* argv[])
           exit(EXIT_FAILURE);
         }
         break;
-      case 'S':
-        if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
-          fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
-          fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
-          exit(EXIT_FAILURE);
-        }
-        break;
+      //case 'S':
+      //  if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
+      //    fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
+      //    exit(EXIT_FAILURE);
+      //  }
+      //  if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
+      //    fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
+      //    exit(EXIT_FAILURE);
+      //  }
+      //  break;
       case 'N':
         if ( sscanf(optarg,"%d",&nEventsPerFile) != 1 ) {
           fprintf (stderr, "Error while processing option '-N'. Wrong parameter '%s'.\n", optarg);
@@ -106,9 +108,9 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -C: define name of Chamber run to merge\n");
         fprintf(stdout,"  -I: define path to PADME top input directory [default: '%s']\n",cfg->DataDirectory().Data());
         fprintf(stdout,"  -D: define path to Chamber top input directory [default: '%s']\n",cfg->ChamberDataDirectory().Data());
-        fprintf(stdout,"  -s: define number of events to skip at beginning. >0: skip PADME events. <0: skip Chamber events [default: %d]\n",cfg->NumberOfEventsToSkip());
+        fprintf(stdout,"  -s: define number of events to skip at beginning. >0: skip PADME events. <0: skip Chamber events [default: from data]\n");
         fprintf(stdout,"  -O: define path to top output directory [default: '%s']\n",cfg->OutputDirectory().Data());
-        fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
+        //fprintf(stdout,"  -S: define number of streams to use [default: %u; max: %u] \n",cfg->NumberOfStreams(),cfg->NumberOfStreamsMax());
         fprintf(stdout,"  -N: define maximum number of events to write in each output file (0: no limit) [default: %u]\n",cfg->EventsPerFile());
         fprintf(stdout,"  -n: define total number of events to process (0: no limit) [default: %u]\n",nEventsToProcess);
         fprintf(stdout,"  -d: define frequency of debug printout (0: no debug) [default: %u]\n",cfg->DebugScale());
@@ -147,16 +149,20 @@ int main(int argc, char* argv[])
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (nEventsPerFile != -1) cfg->SetEventsPerFile(nEventsPerFile);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
-  if (skipEvents != cfg->NumberOfEventsToSkip()) cfg->SetNumberOfEventsToSkip(skipEvents);
+  if (skipEvents != skipEventsDefault) cfg->SetNumberOfEventsToSkip(skipEvents);
 
   // Show settings for this run
   fprintf(stdout,"- PADME run name: '%s'\n",cfg->RunName().Data());
   fprintf(stdout,"- MMChamber run name: '%s'\n",cfg->ChamberRunName().Data());
   fprintf(stdout,"- PADME Input Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Chamber Input Rawdata top directory: '%s'\n",cfg->ChamberDataDirectory().Data());
-  fprintf(stdout,"- Number of events to skip: %d\n",cfg->NumberOfEventsToSkip());
+  if (cfg->NumberOfEventsToSkip() != skipEventsDefault) {
+    fprintf(stdout,"- Number of events to skip: %d\n",cfg->NumberOfEventsToSkip());
+  }else {
+    fprintf(stdout,"- Number of events to skip: computed from data\n");
+  }
   fprintf(stdout,"- Output Rawfile top directory: '%s'\n",cfg->OutputDirectory().Data());
-  fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
+  //fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   fprintf(stdout,"- Number of events per file: %u\n",cfg->EventsPerFile());
   if (cfg->DebugScale() == 0) {
     fprintf(stdout,"- Debug printout is OFF\n");
@@ -184,6 +190,161 @@ int main(int argc, char* argv[])
   //  exit(EXIT_FAILURE);
   //}
 
+  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
+    perror("- ERROR clock_gettime");
+    exit(EXIT_FAILURE);
+  }
+  TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
+  printf("=== MergeChamber starting on %s\n",cfg->FormatTime(now.tv_sec));
+
+  Long64_t chEntry = 0;
+
+  ULong64_t pdClk,oldPdClk = 0;
+  Int_t pdDiff;
+  Double_t pdDiff_us; // PADME trigger clock increment converted to microseconds
+  Double_t pdTime, oldPdTime, pdTimeDiff;
+  UInt_t pdTrig,pdPatt;
+  Int_t chClk,oldChClk,chDiff;
+  //Double_t chDiff_us; // Chamber trigger clock increment converted to microseconds
+  Double_t chDiff_us_corr; // Chamber trigger clock increment converted to microseconds and corrected for clock drift
+  Double_t chTime, oldChTime, chTimeDiff;
+  UInt_t chTrig;
+
+  //Double_t chClockCorrectionFactor = -0.000197;
+  //Double_t chClockCorrectionFactor = -0.000201;
+  Double_t chClockCorrectionFactor = -0.000200; // in MHz
+  Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
+  Double_t chClockRolloverTime = (Double_t)chClockRollover/(40.+chClockCorrectionFactor)/1.E6;
+  printf("- Chamber clock rollover at %d i.e. %8.6fs\n",chClockRollover,chClockRolloverTime);
+
+  Double_t clockDiffTolerance = 0.3; // (in us) Tolerance above which a clock difference is associated to lost events
+
+  Double_t eps = 0.;
+  Double_t totEps = 0.;
+  UInt_t nEps = 0;
+
+  UInt_t nMiss = 0;
+  UInt_t nMissBTF = 0;
+  UInt_t nMissCh = 0;
+
+  TRawEvent* rawEv;
+
+  if (cfg->NumberOfEventsToSkip() == skipEventsDefault) {
+
+#define MERGECHAMBER_ALIGNMENT_EVENTS 50
+
+    // Create input handler
+    InputHandler* IH = new InputHandler();
+    if (IH->Initialize()) {
+      perror("- ERROR while initializing InputHandler");
+      exit(EXIT_FAILURE);
+    }
+
+    // Create chamber reader
+    Chamber* CH = new Chamber(cfg->ChamberDataDirectory()+"/"+cfg->ChamberRunName()+".root");
+    TTree* chTree = CH->fChain;
+    Long64_t chEntries = chTree->GetEntriesFast();
+    printf("Chamber entries = %lld\n",chEntries);
+
+    // Initialize Chamber events counter
+    chEntry = 0;
+
+    // Read first 50 events from both streams
+    Double_t pdTimeList[MERGECHAMBER_ALIGNMENT_EVENTS], chTimeList[MERGECHAMBER_ALIGNMENT_EVENTS];
+    ULong64_t pdClkList[MERGECHAMBER_ALIGNMENT_EVENTS];
+    Int_t chClkList[MERGECHAMBER_ALIGNMENT_EVENTS];
+    while(true) {
+      rawEv = IH->NextEvent();
+      pdTimeList[chEntry] = rawEv->GetEventAbsTime().AsDouble();
+      pdClkList[chEntry] = rawEv->GetEventRunTime();
+      CH->LoadTree(chEntry);
+      CH->GetEntry(chEntry);
+      chTimeList[chEntry] = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
+      chClkList[chEntry] = CH->srsTimeStamp;
+      chEntry++;
+      if (chEntry>MERGECHAMBER_ALIGNMENT_EVENTS) break;
+    }
+
+    // Find best absolute time match for each PADME event
+    UInt_t bestMatchList[MERGECHAMBER_ALIGNMENT_EVENTS];
+    Double_t bestDiffList[MERGECHAMBER_ALIGNMENT_EVENTS];
+    for(UInt_t i=0; i<MERGECHAMBER_ALIGNMENT_EVENTS; i++) { // Check PADME times after the initial slowdown
+      bestMatchList[i] = 0;
+      bestDiffList[i] = 10000.;
+      for(UInt_t j=0; j<MERGECHAMBER_ALIGNMENT_EVENTS; j++) { // Compare with all Chamber events
+	Double_t diff = 1000.*(pdTimeList[i]-chTimeList[j]);
+	if (abs(diff) < abs(bestDiffList[i])) {
+	  bestDiffList[i] = diff;
+	  bestMatchList[i] = j;
+	}
+      }
+      printf("=== PADME event %2d Best match with Chamber event %2d - Skip %2d events - Time diff %7.3fms\n",i,bestMatchList[i],i-bestMatchList[i],bestDiffList[i]);
+    }
+
+    // Now assume that the matches in final events are correct and go back to first event using precise clock counter matching
+    oldPdClk = pdClkList[MERGECHAMBER_ALIGNMENT_EVENTS-4];
+    chEntry = bestMatchList[MERGECHAMBER_ALIGNMENT_EVENTS-4];
+    oldChClk = chClkList[chEntry];
+    oldChTime = chTimeList[chEntry];
+    UInt_t i;
+    for(i=MERGECHAMBER_ALIGNMENT_EVENTS-5; i>=0; i--) {
+
+      chEntry--;
+      if (chEntry<0) break;
+
+      chDiff = oldChClk-chClkList[chEntry];
+      if (chDiff<0) chDiff += chClockRollover; // Add a first rollover if difference is negative
+      chTimeDiff = chTimeList[chEntry]-oldChTime;
+      if (chTimeDiff > chClockRolloverTime) {
+	Int_t nRollOver = int(chTimeDiff/chClockRolloverTime);
+	chDiff += nRollOver*chClockRollover;
+      }
+      chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
+
+      pdDiff = oldPdClk-pdClkList[i];
+      pdDiff_us = pdDiff/80.;
+
+      // Check if Chamber skipped a trigger
+      while ( (chDiff_us_corr-pdDiff_us) > clockDiffTolerance) {
+	i--;
+	if (i<0) break;
+	pdDiff = oldPdClk-pdClkList[i];
+	pdDiff_us = pdDiff/80.;
+      }
+      if (i<0) break;
+
+      // Check if PADME skipped a trigger
+      while ( (pdDiff_us-chDiff_us_corr) > clockDiffTolerance) {
+	chEntry--;
+	if (chEntry<0) break;
+	chDiff = oldChClk-chClkList[chEntry];
+	if (chDiff<0) chDiff += chClockRollover;
+	chTimeDiff = chTimeList[chEntry]-oldChTime;
+	if (chTimeDiff > chClockRolloverTime) {
+	  Int_t nRollOver = int(chTimeDiff/chClockRolloverTime);
+	  chDiff += nRollOver*chClockRollover;
+	}
+	chDiff_us_corr = chDiff/(40.+chClockCorrectionFactor);
+      }
+      if (chEntry<0) break;
+
+      printf("PADME %2d %10lld Chamber %2lld %10d ClkDiff %6.3fus TimeDiff %6.1fms\n",i,pdClkList[i],chEntry,chClkList[chEntry],chDiff_us_corr-pdDiff_us,1000.*(pdTimeList[i]-chTimeList[chEntry]));
+
+      oldPdClk = pdClkList[i];
+      oldPdTime = pdTimeList[i];
+      oldChClk = chClkList[chEntry];
+      oldChTime = chTimeList[chEntry];
+ 
+    }
+
+    cfg->SetNumberOfEventsToSkip(i-chEntry);
+
+    IH->Finalize();
+    delete IH;
+    delete CH;
+
+  }
+
   // Create input handler
   InputHandler* IH = new InputHandler();
   if (IH->Initialize()) {
@@ -197,52 +358,6 @@ int main(int argc, char* argv[])
   Long64_t chEntries = chTree->GetEntriesFast();
   printf("Chamber entries = %lld\n",chEntries);
 
-  if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
-    perror("- ERROR clock_gettime");
-    exit(EXIT_FAILURE);
-  }
-  TTimeStamp t_start = TTimeStamp(now.tv_sec,now.tv_nsec);
-  printf("=== MergeChamber starting on %s\n",cfg->FormatTime(now.tv_sec));
-
-  Long64_t chEntry = 0;
-
-  Int_t oldPdClk = 0;
-  ULong64_t pdClk;
-  Int_t pdDiff;
-  Double_t pdDiff_us; // PADME trigger clock increment converted to microseconds
-  UInt_t pdTrig,pdPatt;
-  Int_t oldChClk = 0;
-  Int_t chClk,chDiff;
-  //Double_t chDiff_us; // Chamber trigger clock increment converted to microseconds
-  Double_t chDiff_us_corr; // Chamber trigger clock increment converted to microseconds and corrected for clock drift
-  UInt_t chTrig;
-
-  //Double_t chClockCorrectionFactor = -0.000197;
-  //Double_t chClockCorrectionFactor = -0.000201;
-  Double_t chClockCorrectionFactor = -0.000200;
-  Int_t chClockRollover = 16777216; // Chamber clock counter has 24 bits -> 2^24=16777216. Rollover every 2^24/(40E6 Hz)=0.42 sec
-  Double_t chClockRolloverTime = (Double_t)chClockRollover/(40.+chClockCorrectionFactor)/1.E6;
-  printf("- Chamber clock rollover at %d i.e. %8.6fs\n",chClockRollover,chClockRolloverTime);
-
-  Double_t clockDiffTolerance = 0.3; // (in us) Tolerance above which a clock difference is associated to lost events
-
-  oldPdClk = 0;
-  oldChClk = 0;
-
-  Double_t eps = 0.;
-  Double_t totEps = 0.;
-  UInt_t nEps = 0;
-
-  UInt_t nMiss = 0;
-  UInt_t nMissBTF = 0;
-  UInt_t nMissCh = 0;
-
-  TRawEvent* rawEv;
-
-  //TTimeStamp pdTime, chTime;
-  Double_t pdTime, oldPdTime, pdTimeDiff;
-  Double_t chTime, oldChTime, chTimeDiff;
-
   // Initialize Chamber events counter
   chEntry = 0;
 
@@ -250,43 +365,6 @@ int main(int argc, char* argv[])
   CH->LoadTree(chEntry);
   CH->GetEntry(chEntry);
   Int_t chDeltaEvent = CH->srsTrigger; // PADME first trigger is 0 by defintiton
-
-  /*
-  // Temporary code to check initial alignment
-  Double_t pdTimeList[30], chTimeList[30];
-  while(true) {
-    rawEv = IH->NextEvent();
-    pdTimeList[chEntry] = rawEv->GetEventAbsTime().AsDouble();
-    //pdTrig = rawEv->GetEventNumber();
-    //pdTime = rawEv->GetEventAbsTime().AsDouble();
-    //pdClk = rawEv->GetEventRunTime();
-    CH->LoadTree(chEntry);
-    CH->GetEntry(chEntry);
-    chTimeList[chEntry] = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
-    //chTrig = CH->srsTrigger;
-    //chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
-    //chClk = CH->srsTimeStamp;
-    //printf("Entry %lld PADME event %u clock %lld time %.6fs Chamber event %d clock %d time %.6fs TimeDiff %.3fms\n",chEntry,pdTrig,pdClk,pdTime,chTrig,chClk,chTime,1000.*(pdTime-chTime));
-    chEntry++;
-    if (chEntry>30) break;
-  }
-
-  for(UInt_t i=0; i<30; i++) { // Check PADME times after the initial slowdown
-    UInt_t bestMatch = 0;
-    Double_t bestDiff = 10000.;
-    for(UInt_t j=0; j<30; j++) { // Compare with all Chamber events
-      Double_t diff = 1000.*(pdTimeList[i]-chTimeList[j]);
-      //printf("PADME %2d %20.6fs Chamber %2d %20.6fs Diff %10.3fms\n",i,pdTimeList[i],j,chTimeList[j],diff);
-      if (abs(diff) < abs(bestDiff)) {
-	bestDiff = diff;
-	bestMatch = j;
-      }
-    }
-    printf("=== PADME event %2d Best match with Chamber event %2d - Skip %2d events - Time diff %7.3fms\n",i,bestMatch,i-bestMatch,bestDiff);
-  }
-
-  exit(0);
-  */
 
   // Skip PADME/Chamber events (if needed)
   if (cfg->NumberOfEventsToSkip() > 0) { // Skipping PADME events

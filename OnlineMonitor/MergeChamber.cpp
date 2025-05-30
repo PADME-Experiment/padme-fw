@@ -251,6 +251,43 @@ int main(int argc, char* argv[])
   CH->GetEntry(chEntry);
   Int_t chDeltaEvent = CH->srsTrigger; // PADME first trigger is 0 by defintiton
 
+  /*
+  // Temporary code to check initial alignment
+  Double_t pdTimeList[30], chTimeList[30];
+  while(true) {
+    rawEv = IH->NextEvent();
+    pdTimeList[chEntry] = rawEv->GetEventAbsTime().AsDouble();
+    //pdTrig = rawEv->GetEventNumber();
+    //pdTime = rawEv->GetEventAbsTime().AsDouble();
+    //pdClk = rawEv->GetEventRunTime();
+    CH->LoadTree(chEntry);
+    CH->GetEntry(chEntry);
+    chTimeList[chEntry] = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
+    //chTrig = CH->srsTrigger;
+    //chTime = TTimeStamp(CH->daqTimeSec,1000*CH->daqTimeMicroSec).AsDouble();
+    //chClk = CH->srsTimeStamp;
+    //printf("Entry %lld PADME event %u clock %lld time %.6fs Chamber event %d clock %d time %.6fs TimeDiff %.3fms\n",chEntry,pdTrig,pdClk,pdTime,chTrig,chClk,chTime,1000.*(pdTime-chTime));
+    chEntry++;
+    if (chEntry>30) break;
+  }
+
+  for(UInt_t i=0; i<30; i++) { // Check PADME times after the initial slowdown
+    UInt_t bestMatch = 0;
+    Double_t bestDiff = 10000.;
+    for(UInt_t j=0; j<30; j++) { // Compare with all Chamber events
+      Double_t diff = 1000.*(pdTimeList[i]-chTimeList[j]);
+      //printf("PADME %2d %20.6fs Chamber %2d %20.6fs Diff %10.3fms\n",i,pdTimeList[i],j,chTimeList[j],diff);
+      if (abs(diff) < abs(bestDiff)) {
+	bestDiff = diff;
+	bestMatch = j;
+      }
+    }
+    printf("=== PADME event %2d Best match with Chamber event %2d - Skip %2d events - Time diff %7.3fms\n",i,bestMatch,i-bestMatch,bestDiff);
+  }
+
+  exit(0);
+  */
+
   // Skip PADME/Chamber events (if needed)
   if (cfg->NumberOfEventsToSkip() > 0) { // Skipping PADME events
     printf("- Skipping first %d PADME events\n",cfg->NumberOfEventsToSkip());

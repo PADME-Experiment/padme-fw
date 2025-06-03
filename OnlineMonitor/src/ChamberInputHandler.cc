@@ -259,7 +259,7 @@ Int_t ChamberInputHandler::OpenFileInStream(UInt_t filenr)
 	printf("ChamberInputHandler::OpenFileInStream - WARNING - New file '%s' was created but could not be opened as a TFile.\n",streamFilename.Data());
       }
     } else {
-      if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - File %s size still small: %d\n",streamFilename.Data(),GetLocalFileSize(streamFilename));
+      if (fConfig->Verbose()>1) printf("ChamberInputHandler::OpenFileInStream - File %s size still small: %lld\n",streamFilename.Data(),GetLocalFileSize(streamFilename));
     }
     if (FileExists(fConfig->StopFile())) {
       // Run has ended: we can gracefully exit
@@ -360,18 +360,18 @@ Bool_t ChamberInputHandler::FileExists(TString fileName)
 
 }
 
-Int_t ChamberInputHandler::GetLocalFileSize(TString fileName)
+Long64_t ChamberInputHandler::GetLocalFileSize(TString fileName)
 {
 
   if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
 
-  Int_t fileSize = 0;
+  Long64_t fileSize = 0;
 
   // Get size of local file if it exists
   struct stat filestat;
   if ( stat(Form(fileName.Data()),&filestat) == 0 ) fileSize = filestat.st_size;
 
-  if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - File %s has size %d\n",fileName.Data(),fileSize);
+  if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - File %s has size %lld\n",fileName.Data(),fileSize);
 
   return fileSize;
 

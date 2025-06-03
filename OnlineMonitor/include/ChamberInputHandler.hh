@@ -38,7 +38,7 @@ private:
   Int_t OpenFileInStream(UInt_t);
   TString FormatFilename(UInt_t);
   Bool_t FileExists(TString);
-  Int_t GetLocalFileSize(TString);
+  Long64_t GetLocalFileSize(TString);
 
   ChamberEvent* fChamberEvent;
 

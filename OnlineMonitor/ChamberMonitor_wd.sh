@@ -33,9 +33,6 @@ while true; do
     #current_run=$( ls -rt $inputDir | grep .root | tail -1 | sed -e "s/.root//" )
     current_run=$( ls -rt $inputDir | tail -1 )
 
-    # Look into new directory looking for root files
-    current_ch_run=$( ls -rt ${inputDir}/${current_run} | grep .root | tail -1 | sed -e "s/.root//" | sed -r -e "s/_[0-9]{1,4}$//" )
-
     # Check if the run has changed
     if [[ $current_run != $current_run_save ]]; then
 
@@ -45,6 +42,13 @@ while true; do
 	    om_running=0
 	fi
 
+	# Look into new directory waiting for root files to appear
+	while true; do
+	    current_ch_run=$( ls -rt ${inputDir}/${current_run} | grep .root | tail -1 | sed -e "s/.root//" | sed -r -e "s/_[0-9]{1,4}$//" )
+	    if [ ! -z "$current_ch_run" ]; then break; fi
+	    sleep $pause
+	done
+
 	# Log and error files for ChamberMonitor of new run
 	logFile="log/MM_${current_run}.log"
 	errFile="log/MM_${current_run}.err"
@@ -52,18 +56,23 @@ while true; do
 	# File used to stop this OnlineMonitor
 	stopFile="run/MM_${current_run}.stop"
 
-	# Add a pause to allow file to really appear (NFS is tricky)
-	sleep $pause
+	# Tag file to create to signal that the run has ended
+	endrunFile="run/MM_${current_run}.endrun"
 
 	now=$( date -u )
 	echo
 	echo "*** $now - Starting ChamberMonitor ***"
 	echo "  Run: $current_run"
-	echo "  Input rawdata directory: $inputDir"
+	echo "  Chamber Run: $current_ch_run"
+	echo "  Input rawdata directory: ${inputDir}/${current_run}"
+	echo "  Log file: $logFile"
+	echo "  Error file: $errFile"
+	echo "  Stop file: $stopFile"
+	echo "  EOR file: $endrunFile"
 
 	# Start ChamberMonitor for new run
-	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
-	stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+	stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
 	om_pid=$!
 
 	# Change status of ChamberMontior process to RUNNING
@@ -79,11 +88,16 @@ while true; do
 	kill -s 0 $om_pid 2>/dev/null
 	if [ $? -ne 0 ]; then
 	    now=$( date -u )
-	    echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
-	    echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
-	    stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
-	    om_pid=$!
-	    sleep 60
+	    if [ -f $endrunFile ]; then
+		echo "$now - ChamberMonitor process $om_pid exited because the run has ended"
+		om_running=0
+	    else
+		echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
+		echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+		stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+		om_pid=$!
+		sleep 60
+	    fi
 	fi
     fi
 

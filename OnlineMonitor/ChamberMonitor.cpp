@@ -1,6 +1,7 @@
 #include "Riostream.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <fstream>
 #include <vector>
 
 #include "Configuration.hh"
@@ -20,6 +21,7 @@ int main(int argc, char* argv[])
   TString outputDirectory = "";
   TString configFileName = "";
   TString stopFileName = "";
+  TString endrunFileName = "";
   UInt_t nStreams = 0;
   UInt_t nEventsToProcess = 0;
   Int_t debugScale = -1;
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:d:c:frvIh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:e:d:c:frvIh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -90,6 +92,9 @@ int main(int argc, char* argv[])
       case 's':
         stopFileName = optarg;
 	break;
+      case 'e':
+        endrunFileName = optarg;
+	break;
       case 'v':
 	cfg->SetVerbose(cfg->Verbose()+1);
         break;
@@ -105,13 +110,14 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
         fprintf(stdout,"  -I: ignore disabled channels in detector boards [default: do not ignore]\n");
         fprintf(stdout,"  -s: define name of control file to stop program [default: '%s']\n",cfg->StopFile().Data());
+        fprintf(stdout,"  -e: define name of tag file to signal end of run [default: '%s']\n",cfg->EndRunFile().Data());
         fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
         fprintf(stdout,"  -d: define frequency of debug printout [default: %u]\n",cfg->DebugScale());
         fprintf(stdout,"  -v: increase verbose level (can be repeated)\n");
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(EXIT_SUCCESS);
       case '?':
-	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
+	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'e' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -137,6 +143,7 @@ int main(int argc, char* argv[])
   if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
   if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
+  if (! endrunFileName.IsNull()) cfg->SetEndRunFile(endrunFileName);
   if (debugScale != -1) cfg->SetDebugScale(debugScale);
 
   // Show settings for this run
@@ -150,6 +157,7 @@ int main(int argc, char* argv[])
     if (cfg->ResumeMode()) fprintf(stdout,"- Resume mode enabled\n");
     fprintf(stdout,"- Stop file: '%s'\n",cfg->StopFile().Data());
   }
+  fprintf(stdout,"- End-of-run file: '%s'\n",cfg->EndRunFile().Data());
   fprintf(stdout,"- Configuration file: '%s'\n",cfg->ConfigFile().Data());
   if (cfg->DebugScale() == 0) {
     fprintf(stdout,"- Debug printout is OFF\n");
@@ -183,6 +191,9 @@ int main(int argc, char* argv[])
   ChamberInputHandler* IH = new ChamberInputHandler();
   if (IH->Initialize()) {
     perror("- ERROR while initializing InputHandler");
+    // Create end-of-run tag file
+    std::ofstream outfile(cfg->EndRunFile().Data());
+    if (not outfile.good()) printf("ChamberInputHandler::NextEvent - WARNING - Cannot create end-of-run tag file %s.\n",cfg->EndRunFile().Data());
     exit(EXIT_FAILURE);
   }
 
@@ -234,6 +245,10 @@ int main(int argc, char* argv[])
 
   // Finalize detector
   if (analyzeChamber) chamber_mon->Finalize();
+
+  // Create end-of-run tag file
+  std::ofstream outfile(cfg->EndRunFile().Data());
+  if (not outfile.good()) printf("ChamberInputHandler::NextEvent - WARNING - Cannot create end-of-run tag file %s.\n",cfg->EndRunFile().Data());
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");

@@ -16,6 +16,7 @@ Configuration::Configuration()
   fTmpDirectory = "tmp";
   fConfigFile = "config/OnlineMonitor.cfg";
   fStopFile = "run/OnlineMonitor.stop";
+  fEndRunFile = "run/OnlineMonitor.endrun";
   fNumberOfStreams = 1;
   fFollowMode = false;
   fResumeMode = false;

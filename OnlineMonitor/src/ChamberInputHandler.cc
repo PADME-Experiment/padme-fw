@@ -72,9 +72,8 @@ Int_t ChamberInputHandler::Initialize()
   }
   if (rc == 1) {
     printf("ChamberInputHandler::Initialize - WARNING - Run ended while initializing file\n");
-    return -1;
+    return 1;
   }
-
   return 0;
 
 }
@@ -120,26 +119,24 @@ ChamberEvent* ChamberInputHandler::NextEvent()
       // Wait for next file to appear
       UInt_t nextFileInStream = fCurrentFileInStream + 1;
       Int_t rc = OpenFileInStream(nextFileInStream);
-      if (rc == -1) {
-	printf("ChamberInputHandler::NextEvent - WARNING - Cannot open next file: exiting.\n");
-	return 0;
-      }
-      if (rc == 1) {
-	if (fConfig->Verbose()) printf("ChamberInputHandler::NextEvent - End of run while reading file: exiting.\n");
+      if (rc == -1 || rc == 1) {
+	if (rc == -1) {
+	  printf("ChamberInputHandler::NextEvent - WARNING - Cannot open next file: run has ended.\n");
+	}
+	if (rc == 1) {
+	  if (fConfig->Verbose()) printf("ChamberInputHandler::NextEvent - End of run while reading file: exiting.\n");
+	}
 	return 0;
       }
 
       // If new file is still empty, wait for events
       if (fTotalEventsInFile == 0) {
 	UInt_t rc = WaitForFileToGrow();
-	if (rc == 0) {
+	if (rc == 0 || rc == 2) {
 	  // File was finalized with 0 events: weird.
-	  printf("ChamberInputHandler::NextEvent - WARNING - File opened and then closed with 0 events: exiting\n");
-	  return 0;
-	}
-	if (rc == 2) {
+	  if (rc == 0) printf("ChamberInputHandler::NextEvent - WARNING - File opened and then closed with 0 events: exiting\n");
 	  // Open file did not grow and was not finalized for a long time: problem!
-	  printf("ChamberInputHandler::NextEvent - WARNING - No new events for a long time: exiting\n");
+	  if (rc == 2) printf("ChamberInputHandler::NextEvent - WARNING - No new events for a long time: exiting\n");
 	  return 0;
 	}
       }
@@ -363,7 +360,7 @@ Bool_t ChamberInputHandler::FileExists(TString fileName)
 Long64_t ChamberInputHandler::GetLocalFileSize(TString fileName)
 {
 
-  if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
+  //if (fConfig->Verbose() > 1) printf("ChamberInputHandler::GetLocalFileSize - Testing size of file %s\n",fileName.Data());
 
   Long64_t fileSize = 0;
 

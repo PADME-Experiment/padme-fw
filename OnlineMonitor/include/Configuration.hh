@@ -105,6 +105,9 @@ public:
   void SetStopFile(TString f) { fStopFile = f; }
   TString StopFile() { return fStopFile; }
 
+  void SetEndRunFile(TString f) { fEndRunFile = f; }
+  TString EndRunFile() { return fEndRunFile; }
+
   void SetConfigFile(TString f) { fConfigFile = f; }
   TString ConfigFile() { return fConfigFile; }
 
@@ -177,6 +180,9 @@ private:
 
   // Name of file to check if program should stop when in follow mode
   TString fStopFile;
+
+  // Name of file to signal that the run has ended
+  TString fEndRunFile;
 
 };
 #endif

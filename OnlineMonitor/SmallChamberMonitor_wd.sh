@@ -7,19 +7,13 @@ pause=10
 year=$( date +%Y )
 
 # Rawdata directory
-inputDir="/mnt/l0padme2/MMchamber"
+inputDir="/mnt/l0padme6/TMMchamber"
 
 # Main configuration file
 configFile="config/OnlineMonitor.cfg"
 
 # Watchdir directory (used by PadmeMonitor)
 watchDir="/home/monitor/PadmeMonitor/watchdir"
-
-# File with name of current run
-#current_run_file="/home/daq/DAQ/run/current_run"
-
-# File with name of last finished run
-#last_run_file="/home/daq/DAQ/run/last_run"
 
 # Variable to save last run started
 current_run_save=""
@@ -30,7 +24,7 @@ om_running=0
 while true; do 
 
     # Get current run
-    current_run=$( ls -rt $inputDir | grep .root | tail -1 | sed -e "s/.root//" )
+    current_run=$( ls -rt $inputDir | tail -1 )
 
     # Check if the run has changed
     if [[ $current_run != $current_run_save ]]; then
@@ -41,28 +35,40 @@ while true; do
 	    om_running=0
 	fi
 
+	# Look into new directory waiting for root files to appear
+	while true; do
+	    current_ch_run=$( ls -rt ${inputDir}/${current_run} | grep .root | tail -1 | sed -e "s/.root//" | sed -r -e "s/_[0-9]{1,4}$//" )
+	    if [ ! -z "$current_ch_run" ]; then break; fi
+	    sleep $pause
+	done
+
 	# Log and error files for SmallChamberMonitor of new run
-	logFile="log/SMM_${current_run}.log"
-	errFile="log/SMM_${current_run}.err"
+	logFile="log/TMM_${current_run}.log"
+	errFile="log/TMM_${current_run}.err"
 
-	# File used to stop this SmallChamberMonitor
-	stopFile="run/SMM_${current_run}.stop"
+	# File used to stop this SmallOnlineMonitor
+	stopFile="run/TMM_${current_run}.stop"
 
-	# Add a pause to allow file to really appear (NFS is tricky)
-	sleep $pause
+	# Tag file to create to signal that the run has ended
+	endrunFile="run/TMM_${current_run}.endrun"
 
 	now=$( date -u )
 	echo
 	echo "*** $now - Starting SmallChamberMonitor ***"
 	echo "  Run: $current_run"
-	echo "  Input rawdata directory: $inputDir"
+	echo "  Chamber Run: $current_ch_run"
+	echo "  Input rawdata directory: ${inputDir}/${current_run}"
+	echo "  Log file: $logFile"
+	echo "  Error file: $errFile"
+	echo "  Stop file: $stopFile"
+	echo "  EOR file: $endrunFile"
 
 	# Start ChamberMonitor for new run
-	echo "> stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-	stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
+	echo "> stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+	stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
 	om_pid=$!
 
-	# Change status of ChamberMontior process to RUNNING
+	# Change status of SmallChamberMontior process to RUNNING
 	om_running=1
 
 	# Save name of current run
@@ -70,16 +76,21 @@ while true; do
 
     fi
 
-    # Check if SmallChamberMonitor process is still running and restart it if it is dead
+    # Check if ChamberMonitor process is still running and restart it if it is dead
     if [ "$om_running" -eq "1" ]; then
 	kill -s 0 $om_pid 2>/dev/null
 	if [ $? -ne 0 ]; then
 	    now=$( date -u )
-	    echo "$now - WARNING - SmallChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
-	    echo "> stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-	    stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
-	    om_pid=$!
-	    sleep 60
+	    if [ -f $endrunFile ]; then
+		echo "$now - SmallChamberMonitor process $om_pid exited because the run has ended"
+		om_running=0
+	    else
+		echo "$now - WARNING - SmallChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
+		echo "> stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+		stdbuf -oL nohup ./SmallChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+		om_pid=$!
+		sleep 60
+	    fi
 	fi
     fi
 

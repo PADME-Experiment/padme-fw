@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
   TString configFileName = "";
   TString stopFileName = "";
   TString endrunFileName = "";
-  UInt_t nStreams = 0;
+  //UInt_t nStreams = 0;
   UInt_t nEventsToProcess = 0;
   Int_t debugScale = -1;
 
@@ -47,16 +47,16 @@ int main(int argc, char* argv[])
       case 't':
         trendDirectory = optarg;
 	break;
-      case 'S':
-        if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
-          fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
-          exit(EXIT_FAILURE);
-        }
-        if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
-          fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
-          exit(EXIT_FAILURE);
-        }
-        break;
+      //case 'S':
+      //  if ( sscanf(optarg,"%u",&nStreams) != 1 ) {
+      //    fprintf (stderr, "Error while processing option '-S'. Wrong parameter '%s'.\n", optarg);
+      //    exit(EXIT_FAILURE);
+      //  }
+      //  if ( nStreams < 1 || nStreams > cfg->NumberOfStreamsMax() ) {
+      //    fprintf (stderr, "Error while processing option '-S'. Required %d streams (must be 1<=S<=%u).\n",nStreams,cfg->NumberOfStreamsMax());
+      //    exit(EXIT_FAILURE);
+      //  }
+      //  break;
       case 'n':
         if ( sscanf(optarg,"%d",&nEventsToProcess) != 1 ) {
           fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
@@ -77,9 +77,9 @@ int main(int argc, char* argv[])
           exit(EXIT_FAILURE);
         }
         break;
-      case 'I':
-	cfg->EnableIgnoreDisabledChannels();
-	break;
+      //case 'I':
+      //  cfg->EnableIgnoreDisabledChannels();
+      //  break;
       case 'f':
 	cfg->EnableFollowMode();
 	break;
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -n: define number of events to process [default: 0 (all events)]\n");
         fprintf(stdout,"  -f: enable FOLLOW mode [default: disabled]\n");
         fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
-        fprintf(stdout,"  -I: ignore disabled channels in detector boards [default: do not ignore]\n");
+        //fprintf(stdout,"  -I: ignore disabled channels in detector boards [default: do not ignore]\n");
         fprintf(stdout,"  -s: define name of control file to stop program [default: '%s']\n",cfg->StopFile().Data());
         fprintf(stdout,"  -e: define name of tag file to signal end of run [default: '%s']\n",cfg->EndRunFile().Data());
         fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
@@ -117,7 +117,8 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -h: show this help message and exit\n\n");
         exit(EXIT_SUCCESS);
       case '?':
-	if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'e' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
+	//if (optopt == 'R' || optopt == 'D' || optopt == 'S' || optopt == 's' || optopt == 'e' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
+	if (optopt == 'R' || optopt == 'D' || optopt == 's' || optopt == 'e' || optopt == 'n' || optopt == 'o' || optopt == 't' || optopt == 'c' || optopt == 'd')
           fprintf (stderr, "Option -%c requires an argument.\n", optopt);
         else if (isprint(optopt))
           fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -140,7 +141,7 @@ int main(int argc, char* argv[])
   if (! dataDirectory.IsNull()) cfg->SetDataDirectory(dataDirectory);
   if (! outputDirectory.IsNull()) cfg->SetOutputDirectory(outputDirectory);
   if (! trendDirectory.IsNull()) cfg->SetTrendDirectory(trendDirectory);
-  if (nStreams) cfg->SetNumberOfStreams(nStreams);
+  //if (nStreams) cfg->SetNumberOfStreams(nStreams);
   if (! configFileName.IsNull()) cfg->SetConfigFile(configFileName);
   if (! stopFileName.IsNull()) cfg->SetStopFile(stopFileName);
   if (! endrunFileName.IsNull()) cfg->SetEndRunFile(endrunFileName);
@@ -151,7 +152,7 @@ int main(int argc, char* argv[])
   fprintf(stdout,"- Rawdata top directory: '%s'\n",cfg->DataDirectory().Data());
   fprintf(stdout,"- Output PadmeMonitor directory: '%s'\n",cfg->OutputDirectory().Data());
   fprintf(stdout,"- Trend directory: '%s'\n",cfg->TrendDirectory().Data());
-  fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
+  //fprintf(stdout,"- Number of streams: %u\n",cfg->NumberOfStreams());
   if (cfg->FollowMode()) {
     fprintf(stdout,"- Follow mode enabled\n");
     if (cfg->ResumeMode()) fprintf(stdout,"- Resume mode enabled\n");
@@ -218,12 +219,10 @@ int main(int argc, char* argv[])
     TTimeStamp tts = TTimeStamp(rawEv->daqTimeSec,1000*rawEv->daqTimeMicroSec);
     cfg->SetEventAbsTime(tts);
     cfg->SetEventRunTime(rawEv->srsTimeStamp);
-    //cfg->SetEventTrigMask(rawEv->GetEventTrigMask());
-    //cfg->SetEventStatus(rawEv->GetEventStatus());
 
     // Show event header once in a while (if required)
     if ( (cfg->DebugScale() != 0) && (IH->EventNumber()%cfg->DebugScale() == 0) ) {
-      printf("%7u Run 0000000 Event %7llu Time %8d-%06d.%09d RunTime %8d Trigger %8u Error %8u\n",
+      printf("%7u Event %7llu Time %8d-%06d.%09d RunTime %8d Trigger %8u Error %8u\n",
 	     IH->EventNumber(),rawEv->evt,tts.GetDate(),tts.GetTime(),tts.GetNanoSec(),
 	     rawEv->srsTimeStamp,rawEv->srsTrigger,rawEv->error);
     }

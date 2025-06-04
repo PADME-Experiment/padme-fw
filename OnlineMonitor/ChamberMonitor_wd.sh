@@ -71,8 +71,8 @@ while true; do
 	echo "  EOR file: $endrunFile"
 
 	# Start ChamberMonitor for new run
-	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
-	stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+	stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
 	om_pid=$!
 
 	# Change status of ChamberMontior process to RUNNING
@@ -93,8 +93,8 @@ while true; do
 		om_running=0
 	    else
 		echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
-		echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
-		stdbuf -oL nohup ./ChamberMonitor -f -r -I -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+		echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+		stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
 		om_pid=$!
 		sleep 60
 	    fi

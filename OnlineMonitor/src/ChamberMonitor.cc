@@ -70,23 +70,37 @@ void ChamberMonitor::Initialize()
   // Define trend support file for this run
   fTFChTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_ChTrendsBM.trend";
 
-  /*
   // If trend file exists, recover the data
   struct stat buffer;
-  if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
-    std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
-      fVLGTimeBM.push_back(abstime);
-      fVLGNPoTsBM.push_back(npots);
-      fVLGNPoTsTotBM.push_back(npotstot);
-      fVLGBunchLengthBM.push_back(bunchlen);
-      fVLGBunchBBQBM.push_back(bunchbbq);
-      fVLGBunchDensityBM.push_back(bunchdens);
+  if (stat(fTFChTrendsBM.Data(),&buffer) == 0) {
+    printf("- Reading trend file %s\n",fTFChTrendsBM.Data());
+    std::ifstream tf(fTFChTrendsBM.Data());
+    Double_t abstime,p1bx,p1by,p2bx,p2by,p1bsx,p1bsy,p2bsx,p2bsy,p1bxtq,p1bxbq,p1bylq,p1byrq,p2bxtq,p2bxbq,p2bylq,p2byrq;
+    while (tf >> abstime >> p1bx >> p1by >> p2bx >> p2by >> p1bsx >> p1bsy >> p2bsx >> p2bsy >> p1bxtq >> p1bxbq >> p1bylq >> p1byrq >> p2bxtq >> p2bxbq >> p2bylq >> p2byrq) {
+
+      fVTime_Beam.push_back(abstime);
+
+      fVP1_BeamX.push_back(p1bx);
+      fVP1_BeamY.push_back(p1by);
+      fVP2_BeamX.push_back(p2bx);
+      fVP2_BeamY.push_back(p2by);
+
+      fVP1_BeamXSpread.push_back(p1bsx);
+      fVP1_BeamYSpread.push_back(p1bsy);
+      fVP2_BeamXSpread.push_back(p2bsx);
+      fVP2_BeamYSpread.push_back(p2bsy);
+
+      fVP1_BeamXTCharge.push_back(p1bxtq);
+      fVP1_BeamXBCharge.push_back(p1bxbq);
+      fVP1_BeamYLCharge.push_back(p1bylq);
+      fVP1_BeamYRCharge.push_back(p1byrq);
+      fVP2_BeamXTCharge.push_back(p2bxtq);
+      fVP2_BeamXBCharge.push_back(p2bxbq);
+      fVP2_BeamYLCharge.push_back(p2bylq);
+      fVP2_BeamYRCharge.push_back(p2byrq);
+
     }
   }
-  */
 
   // Create histograms
   for(int i=0; i<MMCH_N_LAYERS; i++) {
@@ -94,8 +108,6 @@ void ChamberMonitor::Initialize()
     hw_occupancy[i] = new TH1D(TString::Format("hw_occupancy%d",i),TString::Format("Weighted Occupancy Layer %d",i),fNStrips,0,fNStrips);
     hqmax_totevent[i] = new TH1D(TString::Format("hqmax_totevent%d",i),TString::Format("hqmax_totevent%d",i),1000,10,2500);
     htmax_totevent[i] = new TH1D(TString::Format("htmax_totevent%d",i),TString::Format("htmax_totevent%d",i),100,0,700);
-    //hqmax_strip[i] = new TH2D(TString::Format("hqmax_strip%d",i),TString::Format("hqmax_strip%d",i),fNStrips,0,xmax,1000,10,2500);;
-    //htmax_strip[i] = new TH2D(TString::Format("htmax_strip%d",i),TString::Format("htmax_strip%d",i),fNStrips,0,xmax,1000,10,2500);
     hqmax_perevent[i] = new TH1D(TString::Format("hqmax_perevent%d",i),TString::Format("Q_max Layer %d; # strip ; Charge [ADC counts]",i),fNStrips,0,fNStrips);
     htmax_perevent[i] = new TH1D(TString::Format("htmax_perevent%d",i),TString::Format("Time Layer %d; # strip ; Time [ns]",i),fNStrips,0,fNStrips);
   }
@@ -105,27 +117,6 @@ void ChamberMonitor::Initialize()
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
   fRandomEventCount = 0;
-
-  // Define trend support file for this run
-  fTFChTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_ChTrendsBM.trend";
-
-  /*
-  // If trend file exists, recover the data
-  struct stat buffer;
-  if (stat(fTFChTrendsBM.Data(),&buffer) == 0) {
-    std::ifstream tf(fTFChTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
-      fVLGTimeBM.push_back(abstime);
-      fVLGNPoTsBM.push_back(npots);
-      fVLGNPoTsTotBM.push_back(npotstot);
-      fVLGBunchLengthBM.push_back(bunchlen);
-      fVLGBunchBBQBM.push_back(bunchbbq);
-      fVLGBunchDensityBM.push_back(bunchdens);
-    }
-  }
-  */
 
 }
 
@@ -242,12 +233,14 @@ void ChamberMonitor::EndOfEvent()
 	  fVP2_BeamYRCharge.push_back(0.);
 	}
 
-	/*
 	// Update trends file
-	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
+	FILE* tf = fopen(fTFChTrendsBM.Data(),"a");
+	fprintf(tf,"%f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f %f\n",
+		fVTime_Beam.back(),fVP1_BeamX.back(),fVP1_BeamY.back(),fVP2_BeamX.back(),fVP2_BeamY.back(),
+		fVP1_BeamXSpread.back(),fVP1_BeamYSpread.back(),fVP2_BeamXSpread.back(),fVP2_BeamYSpread.back(),
+		fVP1_BeamXTCharge.back(),fVP1_BeamXBCharge.back(),fVP1_BeamYLCharge.back(),fVP1_BeamYRCharge.back(),
+		fVP2_BeamXTCharge.back(),fVP2_BeamXBCharge.back(),fVP2_BeamYLCharge.back(),fVP2_BeamYRCharge.back());
 	fclose(tf);
-	*/
 
 	ClearBeamAccumulators();
 
@@ -262,8 +255,6 @@ void ChamberMonitor::EndOfEvent()
 	//hw_occupancy[i]->Reset();
 	//hqmax_totevent[i]->Reset();
 	//htmax_totevent[i]->Reset();
-	//hqmax_strip[i]->Reset();
-	//htmax_strip[i]->Reset();
 	hqmax_perevent[i]->Reset();
 	htmax_perevent[i]->Reset();
       }
@@ -297,7 +288,6 @@ void ChamberMonitor::AnalyzeEvent(ChamberEvent* rawEv)
     CoordinateFinder(channel, layer, camp, t_strip, x_strip, z_strip, q_strip);
 
     // Fill summary vectors
-    //std::cout <<"Layer "<<layer<<" channel "<<channel<<" : x="<<x_strip<<" z="<<z_strip<<" q_max="<<q_strip<<" time="<<t_strip<<std::endl;
     t_mean[layer].push_back(t_strip);
     x_mean[layer].push_back(x_strip);
     z_mean[layer].push_back(z_strip);
@@ -305,8 +295,6 @@ void ChamberMonitor::AnalyzeEvent(ChamberEvent* rawEv)
     c_mean[layer].push_back(channel);
 
     // Fill event histograms
-    //hqmax_strip[layer]->Fill(channel,q_strip);
-    //htmax_strip[layer]->Fill(channel,t_strip); 
     htmax_totevent[layer]->Fill(t_strip);
     hqmax_totevent[layer]->Fill(q_strip);
     h_occupancy[layer]->Fill(channel);
@@ -430,13 +418,6 @@ Int_t ChamberMonitor::ComputeBeamSpot()
 
     }
 
-    /*
-    if (sum_q != 0.) {
-      x = sum_qx/sum_q; // More precise estimate of average beam position on this layer. Position of each channel is weighted with the corresponding qmax
-      if (used >= 2) rms = sqrt(sum_qx2/sum_q-x*x); // Weighted variance s_w^2 = Sum_i(w_i*(x_i-x_w)^2)/Sum_i(w_i) where x_w is the weighted average
-    }
-    */
-
     // Save cumulative values to compute beam position from a full layer
     if (i == 0 || i == 1) { // P1Y
       sum_y1_q += sum_q;
@@ -459,54 +440,6 @@ Int_t ChamberMonitor::ComputeBeamSpot()
       sum_x2_qx2 += sum_qx2;
       sum_x2_used += used;
     }
-
-    /*
-    // Add computed quantitites to accumulators for corresponding layer
-    // Here we assume that beam is impacting on the XB-YR sector and is not very large
-    // This algorithm should be improved
-    if (x != 0.) {
-      switch(i) {
-      case 0:          // P1YR
-	fP1_BeamY += x;
-	fP1_BeamY_N++;
-	break;
-      case 3:          // P1XB
-	fP1_BeamX += x;
-	fP1_BeamX_N++;
-	break;
-      case 4:          // P2YR
-	fP2_BeamY += x;
-	fP2_BeamY_N++;
-	break;
-      case 7:          // P2XB
-	fP2_BeamX += x;
-	fP2_BeamX_N++;
-	break;
-      }
-    }
-    */
-    /*
-    if (rms != 0.) {
-      switch(i) {
-      case 0:          // P1YR
-	fP1_BeamYSpread += rms;
-	fP1_BeamYSpread_N++;
-	break;
-      case 3:          // P1XB
-	fP1_BeamXSpread += rms;
-	fP1_BeamXSpread_N++;
-	break;
-      case 4:          // P2YR
-	fP2_BeamYSpread += rms;
-	fP2_BeamYSpread_N++;
-	break;
-      case 7:          // P2XB
-	fP2_BeamXSpread += rms;
-	fP2_BeamXSpread_N++;
-	break;
-      }
-    }
-    */
 
     // Save total charge for each layer
     if (used>=1) {
@@ -707,7 +640,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Position - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");
@@ -727,7 +660,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamposy\n");
   fprintf(outf,"PLOTNAME MMCh Beam Y Position - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");
@@ -749,7 +682,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamspreadx\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Spread - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");
@@ -769,7 +702,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamspready\n");
   fprintf(outf,"PLOTNAME MMCh Beam Y Spread - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y [mm]\n");
@@ -791,7 +724,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargex\n");
   fprintf(outf,"PLOTNAME MMCh Beam X Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\", \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Charge\n");
@@ -821,7 +754,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargey\n");
   fprintf(outf,"PLOTNAME MMCh Beam Y Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
-  fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\", \"lines\", \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Charge\n");

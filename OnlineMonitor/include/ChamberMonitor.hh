@@ -116,10 +116,6 @@ private:
   // Trend support file
   TString fTFChTrendsBM;
 
-  // Range for NPoTs and Bunch Length trend plots
-  //Double_t fNPoTsRangeMin;
-  //Double_t fNPoTsRangeMax;
-
   // Time fit objects
   std::vector<Double_t> t_mean[MMCH_N_LAYERS]; // Time
   std::vector<Double_t> z_mean[MMCH_N_LAYERS]; // Z coordinate
@@ -135,8 +131,6 @@ private:
   TH1D* hw_occupancy[MMCH_N_LAYERS];
   TH1D* hqmax_totevent[MMCH_N_LAYERS];
   TH1D* htmax_totevent[MMCH_N_LAYERS];
-  //TH2D* hqmax_strip[MMCH_N_LAYERS];
-  //TH2D* htmax_strip[MMCH_N_LAYERS];
   TH1D* hqmax_perevent[MMCH_N_LAYERS];
   TH1D* htmax_perevent[MMCH_N_LAYERS];
 

@@ -9,6 +9,7 @@
 #include "Configuration.hh"
 
 #include "TMath.h"
+#include "TPRegexp.h"
 
 ChamberMonitor::ChamberMonitor(TString cfgFile)
 {
@@ -40,6 +41,17 @@ ChamberMonitor::~ChamberMonitor()
 
 void ChamberMonitor::Initialize()
 {
+
+  // Parse run name to extract string to use in histograms
+  fRunString = fConfig->RunName();
+  TObjArray* runTags = TPRegexp("^run([0-9]+)_run_0*([0-9]+)_.*$").MatchS(fRunString);
+  const Int_t nrTags = runTags->GetLast()+1;
+  if (nrTags > 2) {
+    const TString chRun = ((TObjString *)runTags->At(1))->GetString();
+    const TString pdRun = ((TObjString *)runTags->At(2))->GetString();
+    fRunString = "Run "+pdRun+" ("+chRun+")";
+  }
+  //printf("Run string is %s\n",fRunString.Data());
 
   // Define derived quantities from fixed parameters
   for(UInt_t i=0; i<MMCH_N_LAYERS; i++) {
@@ -601,7 +613,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer Occupancy
     fprintf(outf,"PLOTID MMCh_occupancy%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s Occupancy - Run %s - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s Occupancy - %s - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",h_occupancy[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",h_occupancy[i]->GetXaxis()->GetXmin(),h_occupancy[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X Channel\n");
@@ -616,7 +628,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer Weighted Occupancy
     fprintf(outf,"PLOTID MMCh_woccupancy%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s Weighted Occupancy - Run %s - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s Weighted Occupancy - %s - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hw_occupancy[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hw_occupancy[i]->GetXaxis()->GetXmin(),hw_occupancy[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X Channel\n");
@@ -631,7 +643,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer QMax Total events
     fprintf(outf,"PLOTID MMCh_qmax_totevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s QMax Total Event - Run %s - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s QMax Total Event - %s - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hqmax_totevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_totevent[i]->GetXaxis()->GetXmin(),hqmax_totevent[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X QMax\n");
@@ -646,7 +658,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer TMax Total events
     fprintf(outf,"PLOTID MMCh_tmax_totevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s TMax Total Event - Run %s - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s TMax Total Event - %s - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",htmax_totevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_totevent[i]->GetXaxis()->GetXmin(),htmax_totevent[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X TMax\n");
@@ -661,7 +673,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer QMax Single event
     fprintf(outf,"PLOTID MMCh_qmax_perevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s QMax Single Event - Run %s Event %d - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s QMax Single Event - %s Event %d - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",hqmax_perevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",hqmax_perevent[i]->GetXaxis()->GetXmin(),hqmax_perevent[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X Channel\n");
@@ -676,7 +688,7 @@ Int_t ChamberMonitor::OutputBeam()
     // Layer TMax Single event
     fprintf(outf,"PLOTID MMCh_tmax_perevent%d\n",i);
     fprintf(outf,"PLOTTYPE histo1d\n");
-    fprintf(outf,"PLOTNAME MMCh %s TMax Single Event - Run %s Event %d - %s\n",mmch_tag[i].Data(),fConfig->RunName().Data(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+    fprintf(outf,"PLOTNAME MMCh %s TMax Single Event - %s Event %d - %s\n",mmch_tag[i].Data(),fRunString.Data(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
     fprintf(outf,"CHANNELS %d\n",htmax_perevent[i]->GetNbinsX());
     fprintf(outf,"RANGE_X %.3f %.3f\n",htmax_perevent[i]->GetXaxis()->GetXmin(),htmax_perevent[i]->GetXaxis()->GetXmax());
     fprintf(outf,"TITLE_X Channel\n");
@@ -693,7 +705,7 @@ Int_t ChamberMonitor::OutputBeam()
   // Beam position trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamposx\n");
-  fprintf(outf,"PLOTNAME MMCh Beam X Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam X Position - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
@@ -713,7 +725,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamposy\n");
-  fprintf(outf,"PLOTNAME MMCh Beam Y Position - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam Y Position - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
@@ -735,7 +747,7 @@ Int_t ChamberMonitor::OutputBeam()
   // Beam spread trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamspreadx\n");
-  fprintf(outf,"PLOTNAME MMCh Beam X Spread - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam X Spread - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
@@ -755,7 +767,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamspready\n");
-  fprintf(outf,"PLOTNAME MMCh Beam Y Spread - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam Y Spread - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
@@ -777,7 +789,7 @@ Int_t ChamberMonitor::OutputBeam()
   // Beam charge trend plots
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargex\n");
-  fprintf(outf,"PLOTNAME MMCh Beam X Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam X Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");
@@ -807,7 +819,7 @@ Int_t ChamberMonitor::OutputBeam()
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID ChamberMon_trendbeamchargey\n");
-  fprintf(outf,"PLOTNAME MMCh Beam Y Charge - Run %s - %s\n",fConfig->RunName().Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME MMCh Beam Y Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines+markers\", \"lines+markers\", \"lines+markers\", \"lines+markers\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\", \"00ff00\", \"ff00ff\" ]\n");

@@ -243,8 +243,11 @@ int main(int argc, char* argv[])
     // Create chamber reader
     Chamber* CH = new Chamber(cfg->ChamberDataDirectory()+"/"+cfg->ChamberRunName()+".root");
     TTree* chTree = CH->fChain;
-    Long64_t chEntries = chTree->GetEntriesFast();
-    printf("Chamber entries = %lld\n",chEntries);
+    Long64_t chEvts = chTree->GetEntriesFast();
+    if (chEvts<50) {
+      printf("WARNING - Only %lld events in Chamber file: cannot compute best first event matching. Please set it with the -s option.\n",chEvts);
+      exit(0);
+    }
 
     // Initialize Chamber events counter
     chEntry = 0;
@@ -264,6 +267,10 @@ int main(int argc, char* argv[])
       chEntry++;
       if (chEntry>MERGECHAMBER_ALIGNMENT_EVENTS) break;
     }
+
+    IH->Finalize();
+    delete IH;
+    delete CH;
 
     // Find best absolute time match for each PADME event
     UInt_t bestMatchList[MERGECHAMBER_ALIGNMENT_EVENTS];
@@ -286,9 +293,8 @@ int main(int argc, char* argv[])
     chEntry = bestMatchList[MERGECHAMBER_ALIGNMENT_EVENTS-4];
     oldChClk = chClkList[chEntry];
     oldChTime = chTimeList[chEntry];
-    UInt_t i;
     Int_t toSkip = 0;
-    for(i=MERGECHAMBER_ALIGNMENT_EVENTS-5; i>=0; i--) {
+    for(Int_t i=MERGECHAMBER_ALIGNMENT_EVENTS-5; i>=0; i--) {
 
       chEntry--;
       if (chEntry<0) break;
@@ -341,10 +347,6 @@ int main(int argc, char* argv[])
 
     printf("- Computed number of events to skip: %d\n", toSkip);
     cfg->SetNumberOfEventsToSkip(toSkip);
-
-    IH->Finalize();
-    delete IH;
-    delete CH;
 
   }
 

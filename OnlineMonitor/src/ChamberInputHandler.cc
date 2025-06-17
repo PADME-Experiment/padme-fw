@@ -177,6 +177,7 @@ Int_t ChamberInputHandler::WaitForFileToGrow()
     if (fTFile) { delete fTFile; fTFile = 0; }
     //fTFile->Close();
     TString streamFilename = FormatFilename(fCurrentFileInStream);
+    if (fConfig->Verbose()>1) printf("ChamberInputHandler::WaitForFileToGrow - Opening file %s\n",streamFilename.Data());
     fTFile = new TFile(streamFilename,"READ");
     //fTFile->Open(streamFilename,"READ");
     //fTFile = TFile::Open(streamFilename.Data(),"READ");

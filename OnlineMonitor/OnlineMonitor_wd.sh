@@ -63,14 +63,17 @@ while true; do
 	    now=$( date )
 
 	    echo
-	    echo "*** $( date ) - Starting OnlineMonitor ***"
+	    echo "*** $now - Starting OnlineMonitor ***"
 	    echo "  Run: $current_run"
 	    echo "  Merger node: $mergernode"
 	    echo "  Input rawdata directory: $inputDir"
+	    echo "  Log file: $logFile"
+	    echo "  Error file: $errFile"
+	    echo "  Stop file: $stopFile"
 
 	    # Start OnlineMonitor for new run
-	    echo "> stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-	    stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
+	    echo "> stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile 1>>$logFile 2>>$errFile </dev/zero &"
+	    stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile 1>>$logFile 2>>$errFile </dev/zero &
 	    om_pid=$!
 
 	    # Change status of OnlineMontior process to RUNNING
@@ -98,8 +101,8 @@ while true; do
 	    else
 		now=$( date )
 		echo "$now - WARNING - OnlineMonitor process $om_pid is dead but run $current_run is still active: restart it"
-		echo "> stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &"
-		stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile >>$logFile 2>$errFile </dev/zero &
+		echo "> stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile 1>>$logFile 2>>$errFile </dev/zero &"
+		stdbuf -oL nohup ./OnlineMonitor -f -r -I -R $current_run -D $inputDir -c $configFile -o $watchDir -s $stopFile 1>>$logFile 2>>$errFile </dev/zero &
 		om_pid=$!
 	    fi
 	fi

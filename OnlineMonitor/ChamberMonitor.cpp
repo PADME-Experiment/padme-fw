@@ -32,7 +32,8 @@ int main(int argc, char* argv[])
   Configuration* cfg = Configuration::GetInstance();
 
   // Parse options
-  while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:e:d:c:frvIh")) != -1) {
+  //while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:e:d:c:frvIh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:o:t:n:s:e:d:c:frvh")) != -1) {
     switch (c)
       {
       case 'R':

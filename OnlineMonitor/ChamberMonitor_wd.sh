@@ -16,10 +16,10 @@ configFile="config/OnlineMonitor.cfg"
 watchDir="/home/monitor/PadmeMonitor/watchdir"
 
 # File with name of current run
-#current_run_file="/home/daq/DAQ/run/current_run"
+current_run_file="/home/daq/DAQ/run/current_run"
 
 # File with name of last finished run
-#last_run_file="/home/daq/DAQ/run/last_run"
+last_run_file="/home/daq/DAQ/run/last_run"
 
 # Variable to save last run started
 current_run_save=""
@@ -30,8 +30,12 @@ om_running=0
 while true; do 
 
     # Get current run
-    #current_run=$( ls -rt $inputDir | grep .root | tail -1 | sed -e "s/.root//" )
-    current_run=$( ls -rt $inputDir | tail -1 )
+    if test -f "$current_run_file"; then
+	current_run=$( cat $current_run_file )
+    else
+	echo "ERROR - File $current_run_file with name of current run is missing! ABORTING"
+	exit 1
+    fi
 
     # Check if the run has changed
     if [[ $current_run != $current_run_save ]]; then
@@ -41,13 +45,6 @@ while true; do
 	    touch $stopFile
 	    om_running=0
 	fi
-
-	# Look into new directory waiting for root files to appear
-	while true; do
-	    current_ch_run=$( ls -rt ${inputDir}/${current_run} | grep .root | tail -1 | sed -e "s/.root//" | sed -r -e "s/_[0-9]{1,4}$//" )
-	    if [ ! -z "$current_ch_run" ]; then break; fi
-	    sleep $pause
-	done
 
 	# Log and error files for ChamberMonitor of new run
 	logFile="log/MM_${current_run}.log"
@@ -59,44 +56,63 @@ while true; do
 	# Tag file to create to signal that the run has ended
 	endrunFile="run/MM_${current_run}.endrun"
 
-	now=$( date -u )
-	echo
-	echo "*** $now - Starting ChamberMonitor ***"
-	echo "  Run: $current_run"
-	echo "  Chamber Run: $current_ch_run"
-	echo "  Input rawdata directory: ${inputDir}/${current_run}"
-	echo "  Log file: $logFile"
-	echo "  Error file: $errFile"
-	echo "  Stop file: $stopFile"
-	echo "  EOR file: $endrunFile"
+	# Check if at least one file has appeared
+	lastfile=$( ls -rt  $inputDir/$current_run | tail -1 )
+	if [[ ! -z "$lastfile" ]]; then
 
-	# Start ChamberMonitor for new run
-	echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
-	stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
-	om_pid=$!
+	    now=$( date -u )
 
-	# Change status of ChamberMontior process to RUNNING
-	om_running=1
+	    # Extract chamber run name from file name
+	    current_ch_run=$( echo $lastfile | sed -e "s/.root//" | sed -r -e "s/_[0-9]{1,4}$//" )
 
-	# Save name of current run
-	current_run_save=$current_run
+	    echo
+	    echo "*** $now - Starting ChamberMonitor ***"
+	    echo "  Run: $current_run"
+	    echo "  Chamber Run: $current_ch_run"
+	    echo "  Input rawdata directory: ${inputDir}/${current_run}"
+	    echo "  Log file: $logFile"
+	    echo "  Error file: $errFile"
+	    echo "  Stop file: $stopFile"
+	    echo "  EOR file: $endrunFile"
+
+	    # Start ChamberMonitor for new run
+	    echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
+	    stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
+	    om_pid=$!
+
+	    # Change status of ChamberMontior process to RUNNING
+	    om_running=1
+
+	    # Save name of current run
+	    current_run_save=$current_run
+
+	fi
 
     fi
 
     # Check if ChamberMonitor process is still running and restart it if it is dead
     if [ "$om_running" -eq "1" ]; then
+	now=$( date -u )
 	kill -s 0 $om_pid 2>/dev/null
 	if [ $? -ne 0 ]; then
-	    now=$( date -u )
-	    if [ -f $endrunFile ]; then
-		echo "$now - ChamberMonitor process $om_pid exited because the run has ended"
+	    # If process is dead because the run was stopped, change status of OnlineMonitor process to NOT RUNNING and do not restart it
+	    if test -f "$last_run_file"; then
+		last_run=$( cat $last_run_file )
+	    else
+		echo "$now - WARNING - File $last_run_file with name of last finished run is missing. Please check DAQ!"
+		last_run=""
+	    fi
+	    if [ "$last_run" = "$current_run" ]; then
+	    	echo "$now - ChamberMonitor process $om_pid exited because the run has officially ended"
 		om_running=0
+	    #elif [ -f $endrunFile ]; then
+	    #	echo "$now - ChamberMonitor process $om_pid exited because the run has ended"
+	    #	om_running=0
 	    else
 		echo "$now - WARNING - ChamberMonitor process $om_pid is dead but run $current_run is still active: restart it"
 		echo "> stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &"
 		stdbuf -oL nohup ./ChamberMonitor -f -r -R $current_ch_run -D ${inputDir}/${current_run} -c $configFile -o $watchDir -s $stopFile -e $endrunFile -v -v 1>>$logFile 2>>$errFile </dev/zero &
 		om_pid=$!
-		sleep 60
 	    fi
 	fi
     fi

@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
   // Parse options
   //while ((c = getopt(argc, argv, "R:D:S:o:t:n:s:d:c:frvIh")) != -1) {
-  while ((c = getopt(argc, argv, "R:D:o:t:n:s:d:c:frvh")) != -1) {
+  while ((c = getopt(argc, argv, "R:D:o:t:n:s:e:d:c:frvh")) != -1) {
     switch (c)
       {
       case 'R':
@@ -93,6 +93,9 @@ int main(int argc, char* argv[])
       case 's':
         stopFileName = optarg;
 	break;
+      case 'e':
+        endrunFileName = optarg;
+	break;
       case 'v':
 	cfg->SetVerbose(cfg->Verbose()+1);
         break;
@@ -108,6 +111,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"  -r: enable RESUME mode [default: disabled]\n");
         //fprintf(stdout,"  -I: ignore disabled channels in detector boards [default: do not ignore]\n");
         fprintf(stdout,"  -s: define name of control file to stop program [default: '%s']\n",cfg->StopFile().Data());
+        fprintf(stdout,"  -e: define name of tag file to signal end of run [default: '%s']\n",cfg->EndRunFile().Data());
         fprintf(stdout,"  -c: define name of configuration file[default: '%s']\n",cfg->ConfigFile().Data());
         fprintf(stdout,"  -d: define frequency of debug printout [default: %u]\n",cfg->DebugScale());
         fprintf(stdout,"  -v: increase verbose level (can be repeated)\n");

@@ -226,6 +226,7 @@ int main(int argc, char* argv[])
   UInt_t nMiss = 0;
   UInt_t nMissBTF = 0;
   UInt_t nMissCh = 0;
+  UInt_t nTotBTF = 0;
 
   TRawEvent* rawEv;
 
@@ -401,6 +402,7 @@ int main(int argc, char* argv[])
     pdClk = rawEv->GetEventRunTime();
     pdDiff = pdClk-oldPdClk;
     pdDiff_us = pdDiff/80.;
+    if (pdPatt == 1) nTotBTF++;
 
     // Read next Chamber event
     CH->LoadTree(chEntry);
@@ -454,6 +456,7 @@ int main(int argc, char* argv[])
       pdClk = rawEv->GetEventRunTime();
       pdDiff = pdClk-oldPdClk;
       pdDiff_us = pdDiff/80.;
+      if (pdPatt == 1) nTotBTF++;
     }
 
     // Check if PADME skipped a trigger
@@ -531,8 +534,9 @@ int main(int argc, char* argv[])
   printf("- Total run time: %.3fs\n",t_run_f);
   printf("- Total processed events: %d\n",IH->EventsRead());
   printf("- Total discarded PADME events: %d\n",nMiss);
-  printf("- Total discarded PADME BTF events: %d\n",nMissBTF);
   printf("- Total discarded Chamber events: %d\n",nMissCh);
+  printf("- Total processed BTF events: %d\n",nTotBTF);
+  printf("- Total discarded BTF events: %d\n",nMissBTF);
   printf("- Average frequency correction on 40MHz: %.6f\n",totEps/nEps);
   //printf("- Output files: %d\n",OH->GetTotalOutFiles());
   //printf("- Total output events: %d\n",OH->GetTotalEvents());

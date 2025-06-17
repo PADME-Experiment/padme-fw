@@ -77,6 +77,7 @@ private:
   std::vector<Double_t> q_mean[MMCH_N_LAYERS]; // Charge
   std::vector<Int_t>    c_mean[MMCH_N_LAYERS]; // Channel
 
+  TString fRunString; // String to hold the run name to show on histograms
   TString mmch_tag[MMCH_N_LAYERS] = { "TMMX","TMMY" };
 
   // Histograms

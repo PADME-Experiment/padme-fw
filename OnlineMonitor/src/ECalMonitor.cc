@@ -457,6 +457,30 @@ Int_t ECalMonitor::OutputBeam()
     fprintf(outf,"]");
   }
   fprintf(outf,"]\n\n");
+            
+  fprintf(outf,"PLOTID ECalMon_beammeanenergy_log\n");
+  fprintf(outf,"PLOTTYPE heatmap\n");
+  fprintf(outf,"PLOTNAME ECal Energy log(eV)- Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS 29 29\n");
+  fprintf(outf,"RANGE_X 0 29\n");
+  fprintf(outf,"RANGE_Y 0 29\n");
+  fprintf(outf,"TITLE_X X\n");
+  fprintf(outf,"TITLE_Y Y\n");
+  fprintf(outf,"DATA [");
+  for(UChar_t y = 0;y<29;y++) {
+    if (y>0) fprintf(outf,",");
+    fprintf(outf,"[");
+    for(UChar_t x = 0;x<29;x++) {
+      if (x>0) fprintf(outf,",");
+      if (fECal_BeamESum[x][y] > 0.) {
+	fprintf(outf,"%.3f",log10(1000000.*(fECal_BeamESum[x][y]/(Double_t)fBeamOutputRate)));
+      } else {
+	fprintf(outf,"%.3f",0.); // Set fake crystals to 0
+      }
+    }
+    fprintf(outf,"]");
+  }
+  fprintf(outf,"]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

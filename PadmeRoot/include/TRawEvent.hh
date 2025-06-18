@@ -7,10 +7,15 @@
 #include "TADCBoard.hh"
 #include "TTriggerInfo.hh"
 
+#include "TMMBoard.hh"
+#include "TMMInfo.hh"
+
 #define TRAWEVENT_MAXADCBOARDS 50
 
 #define TRAWEVENT_STATUSBIT_COMPLETE   0
 #define TRAWEVENT_STATUSBIT_AUTOPASS   1
+
+#define TRAWEVENT_MAXMMBOARDS 16
 
 class TRawEvent : public TObject
 {
@@ -60,6 +65,12 @@ class TRawEvent : public TObject
   TADCBoard* AddADCBoard();
   TADCBoard* ADCBoard(Int_t);
 
+  // MM Information
+  TMMInfo* MMInfo(){ return fMMInfo; } // header information
+  UChar_t GetNMMBoards() { return fNMMBoards; }
+  TMMBoard* AddMMBoard(); 
+  TMMBoard* MMBoard(Int_t);
+  
  private:
 
   Int_t fRunNumber;
@@ -78,6 +89,11 @@ class TRawEvent : public TObject
   UChar_t fNADCBoards;
   TClonesArray* fADCBoards;
 
-  ClassDef(TRawEvent,3);
+  TMMInfo* fMMInfo;
+  UChar_t fNMMBoards;
+  TClonesArray* fMMBoards;
+  
+  
+  ClassDef(TRawEvent,4);
 };
 #endif

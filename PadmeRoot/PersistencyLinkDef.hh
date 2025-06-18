@@ -9,6 +9,10 @@
 #pragma link C++ class TADCBoard+;
 #pragma link C++ class TADCChannel+;
 #pragma link C++ class TADCTrigger+;
+#pragma link C++ class TRawMergedEvent+;
+#pragma link C++ class TMMInfo+;
+#pragma link C++ class TMMBoard+;
+#pragma link C++ class TMMChannel+;
 
 #pragma link C++ class TPadmeRun+;
 #pragma link C++ class TMCEvent+;

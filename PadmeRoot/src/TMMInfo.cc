@@ -4,10 +4,12 @@ ClassImp(TMMInfo)
 
 TMMInfo::TMMInfo()
 {
-  fdaqTimeSec = 0;
-  fdaqTimeMicroSec = 0;
-  fsrsTimeStamp = 0;
-  fsrsTrigger = 0;
+  fDaqTimeSec = 0;
+  fDaqTimeMicroSec = 0;
+  fSrsTimeStamp = 0;
+  fSrsTrigger = 0;
+  fSrsRunTime = 0; // roll over corrected
+  fRunTimeDiff = 0; // roll over corrected
 }
 
 TMMInfo::~TMMInfo()

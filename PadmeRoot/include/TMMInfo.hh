@@ -13,25 +13,32 @@ class TMMInfo : public TObject
 
  public:
 
-  void SetdaqTimeSec(Int_t v) { fdaqTimeSec = v; }
-  Int_t GetdaqTimeSec() { return fdaqTimeSec; }
+  void SetDaqTimeSec(Int_t v) { fDaqTimeSec = v; }
+  Int_t GetDaqTimeSec() { return fDaqTimeSec; }
 
-  void SetdaqTimeMicroSec(Int_t v) { fdaqTimeMicroSec = v; }
-  Int_t GetdaqTimeMicroSec() { return fdaqTimeMicroSec; }
+  void SetDaqTimeMicroSec(Int_t v) { fDaqTimeMicroSec = v; }
+  Int_t GetDaqTimeMicroSec() { return fDaqTimeMicroSec; }
 
-  void SetsrsTimeStamp(Int_t v) { fsrsTimeStamp = v; }
-  Int_t GetsrsTimeStamp() { return fsrsTimeStamp; }
+  void SetSrsTimeStamp(Int_t v) { fSrsTimeStamp = v; }
+  Int_t GetSrsTimeStamp() { return fSrsTimeStamp; }
 
-  void SetsrsTrigger(UInt_t v) { fsrsTrigger = v; }
-  UInt_t GetsrsTrigger() { return fsrsTrigger; }
+  void SetSrsTrigger(UInt_t v) { fSrsTrigger = v; }
+  UInt_t GetSrsTrigger() { return fSrsTrigger; }
 
- private:
+  void SetSrsRunTime(ULong64_t t) { fSrsRunTime = t; }
+  ULong64_t GetSrsRunTime() { return fSrsRunTime; }
 
-  Int_t  fdaqTimeSec;
-  Int_t  fdaqTimeMicroSec;
-  Int_t  fsrsTimeStamp;
-  UInt_t fsrsTrigger;
+  void SetRunTimeDiff(Double_t t) { fRunTimeDiff = t; }
+  Double_t GetRunTimeDiff() { return fRunTimeDiff; }
 
+private:
+
+  Int_t  fDaqTimeSec;
+  Int_t  fDaqTimeMicroSec;
+  Int_t  fSrsTimeStamp;
+  UInt_t fSrsTrigger;
+  ULong64_t fSrsRunTime; // roll over corrected
+  Double_t fRunTimeDiff; // roll over corrected
 
   ClassDef(TMMInfo,1);
 };

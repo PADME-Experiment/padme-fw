@@ -184,11 +184,11 @@ int main(int argc, char* argv[])
   //}
 
   // Create output handler
-  //OutputHandler* OH = new OutputHandler();
-  //if (OH->Initialize()) {
-  //  perror("- ERROR while initializing OutputHandler");
-  //  exit(EXIT_FAILURE);
-  //}
+  OutputHandler* OH = new OutputHandler();
+  if (OH->Initialize()) {
+    perror("- ERROR while initializing OutputHandler");
+    exit(EXIT_FAILURE);
+  }
 
   if( clock_gettime(CLOCK_REALTIME,&now) == -1 ) {
     perror("- ERROR clock_gettime");
@@ -501,6 +501,10 @@ int main(int argc, char* argv[])
     printf("PADME %7d (%2.2x) %9d %12.3fus Chamber %7lld %7d %9d %12.3fus Diff %6.3fus TDiff %6.1fms\n",pdTrig,pdPatt,pdDiff,pdDiff_us,chEntry,chTrig-chDeltaEvent,2*chDiff,chDiff_us_corr,chDiff_us_corr-pdDiff_us,timeDiff);
     //}
 
+    // QUI here fill merged raw event
+    OH->WriteEvent(rawEv,CH,timeDiff);
+
+    //     
     oldPdClk = pdClk;
     oldPdTime = pdTime;
     oldChClk = chClk;
@@ -510,13 +514,15 @@ int main(int argc, char* argv[])
       printf("- Reached end of Chamber events: exiting\n");
       break;
     }
-}
+
+    
+  }
 
   // Finalize event copier
   //EC->Finalize();
 
   // Finalize output handler
-  //OH->Finalize();
+  OH->Finalize();
 
   // Finalize input handler
   IH->Finalize();
@@ -538,20 +544,20 @@ int main(int argc, char* argv[])
   printf("- Total processed BTF events: %d\n",nTotBTF);
   printf("- Total discarded BTF events: %d\n",nMissBTF);
   printf("- Average frequency correction on 40MHz: %.6f\n",totEps/nEps);
-  //printf("- Output files: %d\n",OH->GetTotalOutFiles());
-  //printf("- Total output events: %d\n",OH->GetTotalEvents());
-  //printf("- Total output data: %lld\n",OH->GetTotalSize());
+  printf("- Output files: %d\n",OH->GetTotalOutFiles());
+  printf("- Total output events: %d\n",OH->GetTotalEvents());
+  printf("- Total output data: %lld\n",OH->GetTotalSize());
   if (IH->EventsRead()>0) printf("- Event processing time: %.3f ms/evt\n",1000.*t_run_f/IH->EventsRead());
   if (t_run_f>0.) printf("- Event processing rate: %.2f evt/s\n",IH->EventsRead()/t_run_f);
-  //if (cfg->Verbose()) {
-  //  printf("- List of output files\n");
-  //  for(UInt_t i = 0; i < OH->GetTotalOutFiles(); i++) {
-  //    printf("  %4u %s\n",i,OH->GetOutFile(i).Data());
-  //  }
-  //}
+  if (cfg->Verbose()) {
+    printf("- List of output files\n");
+    for(UInt_t i = 0; i < OH->GetTotalOutFiles(); i++) {
+      printf("  %4u %s\n",i,OH->GetOutFile(i).Data());
+    }
+  }
 
   delete IH;
-  //delete OH;
+  delete OH;
   //delete EC;
   delete CH;
 

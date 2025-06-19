@@ -10,7 +10,6 @@
 #include "TSystem.h"
 
 #include "Configuration.hh"
-#include "TRawEvent.hh"
 
 #include "OutputHandler.hh"
 
@@ -27,13 +26,13 @@ OutputHandler::OutputHandler()
   // Prepare output ROOT structures
   fTFileHandle = 0;
   fTTreeMain = 0;
-  fTRawEvent = new TRawEvent();
+  fTRawMergedEvent = new TRawMergedEvent();
 
 }
 
 OutputHandler::~OutputHandler()
 {
-  delete fTRawEvent;
+  delete fTRawMergedEvent;
 }
 
 Int_t OutputHandler::Initialize()
@@ -106,10 +105,10 @@ Int_t OutputHandler::OpenOutFile()
   fOutFileList.push_back(fOutFileName);
 
   // Create TTree to hold raw events
-  fTTreeMain = new TTree("RawEvents","PADME Raw Events Tree");
+  fTTreeMain = new TTree("RawMergedEvents","PADME Raw Merged Events Tree");
 
   // Attach branch to TRawEvent
-  fTTreeMain->Branch("RawEvent",&fTRawEvent);
+  fTTreeMain->Branch("RawMergedEvent",&fTRawMergedEvent);
 
   // Reset event counter for this file
   fOutFileEvents = 0;
@@ -143,9 +142,75 @@ Int_t OutputHandler::CloseOutFile()
   return 0;
 }
 
-//Int_t OutputHandler::WriteEvent(TRawEvent* rawEv)
-Int_t OutputHandler::WriteEvent()
+Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timediff)//ULong64_t srsRunTime)
+//Int_t OutputHandler::WriteEvent()
 {
+  fTRawMergedEvent->SetTRawEvent(rawEv);
+  fTRawMergedEvent->MMInfo()->SetDaqTimeSec     (chEv->daqTimeSec);
+  fTRawMergedEvent->MMInfo()->SetDaqTimeMicroSec(chEv->daqTimeMicroSec);
+  fTRawMergedEvent->MMInfo()->SetSrsTimeStamp   (chEv->srsTimeStamp);
+  fTRawMergedEvent->MMInfo()->SetSrsTrigger     (chEv->srsTrigger);
+  //  fTRawMergedEvent->MMInfo()->SetSrsRunTime     (srsRunTime);
+  fTRawMergedEvent->MMInfo()->SetRunTimeDiff    (timediff);
+
+  //
+  int nFiredStrips = (chEv->mmLayer)->size();
+  int pointerToChannel[16][256];
+  int nchannelsPerBoard[16];  
+  for (int i=0; i<16; i++){
+    nchannelsPerBoard[i] = 0;  
+    for (int j=0; j<256; j++) pointerToChannel[i][j] = -1;
+  }
+
+  for (uint i=0; i<nFiredStrips; i++){
+    int ilayer = chEv->mmLayer->at(i); // 0--7
+    int istrip = chEv->mmStrip->at(i); // 1--512
+
+    int boardSN = 2*ilayer;    
+    if (istrip > 256) {
+      boardSN += 1;
+    }
+
+    nchannelsPerBoard[boardSN]++;
+
+    
+    int channelid = (istrip-1)%256;
+    if (pointerToChannel[boardSN][channelid] != -1) { // double channel fired
+      std::cerr << "Strange number of samples " << nsamples << " different than 27 " << " row " << i << " board = " << boardSN << " layer " << ilayer << " strip " << istrip << endl;
+      exit 1;
+    }
+      
+    pointerToChannel[boardSN][channelid] = i;
+  }
+
+  for (int i=0; i<16; i++){
+    if (nchannelsPerBoard[i] == 0) continue;
+
+    int ilayer = i/2;   
+    int boardid = ilayer;
+    if (i%2) boardid += 8;
+    
+    TMMBoard* board = fTRawMergedEvent->AddMMBoard();
+    board->SetBoardId(boardid);
+    board->SetBoardSN(i);
+    
+    for (int j=0; j<256; j++){
+      if (pointerToChannel[i][j] == -1) continue;
+      
+      TMMChannel* mmchan = board->AddMMChannel(); // assume that the same strip is NEVER fired twice in the event
+      mmchan->SetChannelNumber(j);
+
+      int ptrToFiredStrip = pointerToChannel[i][j];
+      
+      int nsamples = chEv->raw_q->at(ptrToFiredStrip).size();
+      if (nsamples != TMMCHANNEL_NSAMPLES) {
+	std::cerr << "Strange number of samples " << nsamples << " different than 27 " << " row " << pointerToChannel[i][j] << " board = " << i << " layer " << ilayer << " strip " << j << endl;
+	exit 1;
+      }
+      
+      for (int k = 0; k < nsamples; k++) mmchan->SetSample(k,chEv->raw_q->at(ptrToFiredStrip).at(k));
+    }
+  }
 
   //// Empty output event structure
   //fTRawEvent->Clear("C");

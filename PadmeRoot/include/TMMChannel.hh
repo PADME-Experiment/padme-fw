@@ -26,7 +26,7 @@ class TMMChannel : public TObject
 
  private:
 
-  UChar_t fChannelNumber; // 1-256
+  UChar_t fChannelNumber; // 0-255
   Short_t fSamples[TMMCHANNEL_NSAMPLES];
 
   ClassDef(TMMChannel,1);

@@ -7,9 +7,7 @@ TMMBoard::TMMBoard()
 
   fBoardId             = 0;
   fBoardSN             = 0;
-  fActiveChannelMask   = 0;
-  fAcceptedChannelMask = 0;
-
+  fNumberOfProblematicChannels = 0;
   fMMChannels = new TClonesArray("TMMChannel",TMMBOARD_NCHANNELS);
   fNMMChannels = 0;
 
@@ -27,8 +25,7 @@ void TMMBoard::Clear(Option_t* option)
 
   fBoardId             = 0;
   fBoardSN             = 0;
-  fActiveChannelMask   = 0;
-  fAcceptedChannelMask = 0;
+  fNumberOfProblematicChannels = 0;
 
   fNMMChannels = 0;
   fMMChannels->Clear(option);

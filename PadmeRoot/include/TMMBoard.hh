@@ -26,22 +26,18 @@ class TMMBoard : public TObject
   void     SetBoardSN(UInt_t v)             { fBoardSN = v; }
   UInt_t   GetBoardSN()                     { return fBoardSN; }
 
-  void     SetActiveChannelMask(UInt_t v)   { fActiveChannelMask = v; }
-  UInt_t   GetActiveChannelMask()           { return fActiveChannelMask; }
-
-  void     SetAcceptedChannelMask(UInt_t v) { fAcceptedChannelMask = v; }
-  UInt_t   GetAcceptedChannelMask()         { return fAcceptedChannelMask; }
 
   UChar_t GetNMMChannels() { return fNMMChannels; }
   TMMChannel* AddMMChannel();
   TMMChannel* MMChannel(Int_t);
 
- private:
+  UInt_t GetNumberOfProblematicChannels(){ return fNumberOfProblematicChannels;}
+  void   AddProblematicChannel(){ fNumberOfProblematicChannels++; }
+private:
 
   UChar_t  fBoardId; // only 4 LS bits used: bits 0-2 layer, bit 3: position
   UInt_t   fBoardSN; //  0 --> 15
-  UInt_t   fActiveChannelMask;
-  UInt_t   fAcceptedChannelMask;
+  UInt_t   fNumberOfProblematicChannels;
 
   UChar_t      fNMMChannels;
   TClonesArray* fMMChannels;

@@ -23,9 +23,11 @@ class TMMChannel : public TObject
   Short_t* GetSamplesArray()            { return fSamples; }
 
   UShort_t GetNSamples()                { return TMMCHANNEL_NSAMPLES; }
-
+  Bool_t   IsChannelFailed()            { return fChannelFail; }
+  void     NotifyChannelProblem()       { fChannelFail = kTRUE; }
+  
  private:
-
+  Bool_t  fChannelFail; // true if the samples are not really 27
   UChar_t fChannelNumber; // 0-255
   Short_t fSamples[TMMCHANNEL_NSAMPLES];
 

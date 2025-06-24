@@ -10,7 +10,7 @@ class TMMInfo : public TObject
 
   TMMInfo();
   ~TMMInfo();
-
+  void Clear(Option_t* = "");
  public:
 
   void SetDaqTimeSec(Int_t v) { fDaqTimeSec = v; }
@@ -31,6 +31,10 @@ class TMMInfo : public TObject
   void SetRunTimeDiff(Double_t t) { fRunTimeDiff = t; }
   Double_t GetRunTimeDiff() { return fRunTimeDiff; }
 
+  void            AddProblematicChannel(int isrs, int chipid){ fNumberOfProblematicChannels[isrs][chipid]++; }
+  UInt_t  GetNumberOfProblematicChannels(int isrs, int ichipid){ return fNumberOfProblematicChannels[isrs][ichipid]; }
+  void            AddFiredChannel(int isrs, int chipid){          fNumberOfFiredChannels[isrs][chipid]++; }
+  UInt_t  GetNumberOfFiredChannels(int isrs, int ichipid){ return fNumberOfFiredChannels[isrs][ichipid]; }
 private:
 
   Int_t  fDaqTimeSec;
@@ -39,7 +43,9 @@ private:
   UInt_t fSrsTrigger;
   ULong64_t fSrsRunTime; // roll over corrected
   Double_t fRunTimeDiff; // roll over corrected
-
+  UInt_t fNumberOfProblematicChannels[2][16]; // total number of problematic channels in the event
+  UInt_t fNumberOfFiredChannels[2][16]; // total number of fired channels in the event
+  
   ClassDef(TMMInfo,1);
 };
 #endif

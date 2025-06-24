@@ -145,7 +145,10 @@ Int_t OutputHandler::CloseOutFile()
 Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timediff)//ULong64_t srsRunTime)
 //Int_t OutputHandler::WriteEvent()
 {
-  fTRawMergedEvent->SetTRawEvent(rawEv);
+  //// Copy input event to output event (may apply zero suppression)
+  fTRawMergedEvent->Clear("C");
+  CopyTRawEvent(fTRawMergedEvent->GetTRawEvent(),rawEv);
+  //  fTRawMergedEvent->SetTRawEvent(rawEv);
   fTRawMergedEvent->MMInfo()->SetDaqTimeSec     (chEv->daqTimeSec);
   fTRawMergedEvent->MMInfo()->SetDaqTimeMicroSec(chEv->daqTimeMicroSec);
   fTRawMergedEvent->MMInfo()->SetSrsTimeStamp   (chEv->srsTimeStamp);
@@ -191,6 +194,17 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
     pointerToChannel[boardSN][channelid] = i;
   }
 
+//  int nFiredPerFEC[2][16];
+//  int nProblemPerFEC[2][16];
+//  for (int i=0; i<2; i++){
+//    for (int j=0; j<16; j++){
+//      nFiredPerFEC[i][j] = 0;  
+//      nProblemPerFEC[i][j] = 0;
+//    }
+//  }
+
+  bool bizarre = false;
+  
   for (int i=0; i<16; i++){
     if (nchannelsPerBoard[i] == 0) continue;
 
@@ -212,30 +226,38 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
       
       int nsamples = chEv->raw_q->at(ptrToFiredStrip).size();
       if (ilayer >= 4 && ilayer <=7) {
-	std::cout << "QUI nsamples " << nsamples << " " << boardid << std::endl;
+	//	std::cout << "QUI nsamples " << nsamples << " " << boardid << std::endl;
       }
       if (nsamples != TMMCHANNEL_NSAMPLES) {
 	std::cerr << "Strange number of samples " << nsamples << " different than 27 " << " row " << pointerToChannel[i][j] << " board = " << i << " layer " << ilayer << " strip " << j << std::endl;
 	std::cout << "Bizarre";
 	for (int k = 0; k < nsamples; k++) {std::cout << " " << chEv->raw_q->at(ptrToFiredStrip).at(k);}
 	std::cout << std::endl;
+	bizarre = true;
 	//	exit(1);
+
+	mmchan->NotifyChannelProblem();
+	board->AddProblematicChannel();
+
+	fTRawMergedEvent->MMInfo()->AddProblematicChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
       }
+      fTRawMergedEvent->MMInfo()->AddFiredChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
       
       for (int k = 0; k < TMath::Min(nsamples,TMMCHANNEL_NSAMPLES); k++) mmchan->SetSample(k,chEv->raw_q->at(ptrToFiredStrip).at(k));
     }
   }
 
- 
-
-  //// Copy input event to output event (may apply zero suppression)
-  //CopyTRawEvent(fTRawEvent,rawEv);
-
+  if (bizarre){
+    for (int i=0; i<2; i++){
+      for (int j=0; j<16; j++){    
+	std::cout << "Bizarre event, FEC" << i+1 << " Chip " << j << " " << fTRawMergedEvent->MMInfo()->GetNumberOfProblematicChannels(i,j) << " / " << fTRawMergedEvent->MMInfo()->GetNumberOfFiredChannels(i,j)  << std::endl;
+      }
+    }
+  }
   // Write current event to file
   fTTreeMain->Fill();
 
   //// Empty output event structure
-  fTRawMergedEvent->Clear("C");
 // Count event and see if we have to change file
   fOutEventsTotal++;
   fOutFileEvents++;
@@ -245,7 +267,7 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
 
 }
 
-/*
+
 void OutputHandler::CopyTRawEvent(TRawEvent* outEv, TRawEvent* inEv)
 {
 
@@ -323,7 +345,7 @@ void OutputHandler::CopyTRawEvent(TRawEvent* outEv, TRawEvent* inEv)
   }
 
 }
-*/
+
 
 TString OutputHandler::FormatFilename(UInt_t filenr)
 {

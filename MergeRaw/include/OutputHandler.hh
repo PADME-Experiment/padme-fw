@@ -41,7 +41,7 @@ private:
   Bool_t FileExists(TString);
 
   TString FormatFilename(UInt_t);
-  //void CopyTRawEvent(TRawEvent*, TRawEvent*);
+  void CopyTRawEvent(TRawEvent*, TRawEvent*);
 
   // Connection to configuration class
   Configuration* fConfig;

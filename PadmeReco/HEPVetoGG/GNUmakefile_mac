@@ -1,0 +1,6 @@
+# Makefile
+
+NAME := HEPVeto
+
+#include ../config/global.gmk
+include ../config/subdirs_mac.gmk

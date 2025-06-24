@@ -8,7 +8,6 @@
 #include "Configuration.hh"
 #include "InputHandler.hh"
 #include "OutputHandler.hh"
-#include "EventCopier.hh"
 
 #include "Chamber.hh"
 
@@ -171,6 +170,7 @@ int main(int argc, char* argv[])
   }
   if (nEventsToProcess) {
     fprintf(stdout,"- Process first %u events in stream(s)\n",nEventsToProcess);
+    cfg->SetNumberOfEventsToProcess(nEventsToProcess);
   } else {
     fprintf(stdout,"- Process all events in stream(s)\n");
   }
@@ -502,8 +502,9 @@ int main(int argc, char* argv[])
     //}
 
     // QUI here fill merged raw event
+    std::cout << "WEEEE PROCESSED " << nEventsToProcess << " " << OH->GetTotalEvents() << std::endl;
     OH->WriteEvent(rawEv,CH,timeDiff);
-
+    if (nEventsToProcess != 0 && OH->GetTotalEvents() >= nEventsToProcess) break;
     //     
     oldPdClk = pdClk;
     oldPdTime = pdTime;

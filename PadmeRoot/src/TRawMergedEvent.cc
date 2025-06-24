@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <iostream>
 #include "TRawMergedEvent.hh"
 
 ClassImp(TRawMergedEvent)
@@ -12,10 +15,12 @@ TRawMergedEvent::TRawMergedEvent()
   fMMBoards = new TClonesArray("TMMBoard",TRAWEVENT_MAXMMBOARDS);
   fNMMBoards = 0;
 
+  std::cout << " Allocate TRawMergedEvent " << fTRawEvent << " " << fMMInfo << " " << fNMMBoards << " " << fMMBoards << std::endl;
 }
 
 TRawMergedEvent::~TRawMergedEvent()
 {
+  std::cout << " Delete TRawMergedEvent " << fTRawEvent << " " << fMMInfo << " " << fNMMBoards << " " << fMMBoards << std::endl;
 
   Clear();
 

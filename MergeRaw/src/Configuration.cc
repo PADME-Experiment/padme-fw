@@ -18,6 +18,7 @@ Configuration::Configuration()
   fStopFile = "run/OnlineMonitor.stop";
   fEndRunFile = "run/OnlineMonitor.endrun";
   fNumberOfStreams = 1;
+  fNumberOfEventsToProcess = 0;
   fFollowMode = false;
   fResumeMode = false;
   fDebugScale = 100;

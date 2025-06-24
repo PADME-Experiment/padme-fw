@@ -84,6 +84,9 @@ public:
   void SetNumberOfEventsToSkip(Int_t n) { fNumberOfEventsToSkip = n; }
   Int_t NumberOfEventsToSkip() { return fNumberOfEventsToSkip; }
 
+  void SetNumberOfEventsToProcess(Int_t n) { fNumberOfEventsToProcess = n; }
+  Int_t NumberOfEventsToProcess() { return fNumberOfEventsToProcess; }
+
   void SetRunName(TString f) { fRunName = f; }
   TString RunName() { return fRunName; }
 
@@ -169,6 +172,9 @@ private:
   // Number of events to skip at startup.  >0: skip PADME events. <0: skip Chamber events.
   Int_t fNumberOfEventsToSkip;
 
+  // Number of events to process
+  Int_t fNumberOfEventsToProcess;
+  
   // Follow mode enabled/disabled
   Bool_t fFollowMode;
 

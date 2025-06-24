@@ -6,29 +6,26 @@
 // --------------------------------------------------------------
 #include "Riostream.h"
 
-#include "PVetoCalibration.hh"
+#include "EVetoCalibration.hh"
 #include "RecoVChannelID.hh"
 #include "TRecoVHit.hh"
  
-PVetoCalibration::PVetoCalibration()
+EVetoCalibration::EVetoCalibration()
   : PadmeVCalibration()
 {
-  std::cout<<"PVetoCalibration being created ............"<<std::endl ;
+  std::cout<<"EVetoCalibration being created ............"<<std::endl ;
  
 }
 
-PVetoCalibration::~PVetoCalibration()
+EVetoCalibration::~EVetoCalibration()
 {;}
 
-
-
-
-void PVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
+void EVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 
   PadmeVCalibration::Init(cfg, chIdMgr );
   
   fCalibrationFile  = (int)cfg->GetParOrDefault("EnergyCalibration", "CalibrationFile", 1); 
-  std::cout <<"PVeto Calibration File Chosen "<<fCalibrationFile<<std::endl; 
+  std::cout <<"EVeto Calibration File Chosen "<<fCalibrationFile<<std::endl; 
 
   ReadCalibrationConstants();
 
@@ -38,31 +35,33 @@ void PVetoCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 	{
           int chId = chIds[j];
 	  double channelGain = fCalibCh[chId];
-	  std::cout<<"PVetoCalibration::Init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
+	  //std::cout<<" init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
+  
+         std::cout<<"EVetoCalibration::Init calib consts .... j "<<j<<" ID="<<chIds[j]<<" .... READ FROM FILE ... "<<channelGain<<" "<<std::endl;
 	  
 
 	  if (fEnergyCalibMap->find(chIds[j])!=fEnergyCalibMap->end()) 
 	    {
 	      fEnergyCalibMap->find(chIds[j])->second = (fEnergyCalibMap->find(chIds[j])->second)*channelGain;
 	    }
-	  else std::cout<<"PVetoCalibration::Init - WARNING - no entry found in energy calib map for id="<<chIds[j]<<std::endl;  
+	  else std::cout<<"EVetoCalibration::Init - WARNING - no entry found in energy calib map for id="<<chIds[j]<<std::endl;  
 	}
 
 }
-void PVetoCalibration::ReadCalibrationConstants(){
+void EVetoCalibration::ReadCalibrationConstants(){
 
 
   std::ifstream Calib;
   char fname[50];
   //Int_t Calibration=0;
 
-  sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%d.txt", fCalibrationFile);
+  sprintf(fname,"config/Calibration/EVeto_EnergyCalibration_%d.txt", fCalibrationFile);
   Calib.open(fname);
   if (Calib.is_open()){
   	double temp;
   	for (int i=0;i<96;i++){
           Calib >> temp >> fCalibCh[i];
-          //std::cout <<"FileRow  "<< i<<" PVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
+          //std::cout <<"FileRow  "<< i<<" EVeto Calibration Constant "<<fCalibCh[i]<<std::endl; 
 	}
   Calib.close();
   }
@@ -73,4 +72,7 @@ void PVetoCalibration::ReadCalibrationConstants(){
   return;
 
 }
+
+
+
 

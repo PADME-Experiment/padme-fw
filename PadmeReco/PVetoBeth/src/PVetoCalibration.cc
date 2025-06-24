@@ -53,7 +53,7 @@ void PVetoCalibration::ReadCalibrationConstants(){
 
 
   std::ifstream Calib;
-  char fname[50];
+  char fname[100];
   //Int_t Calibration=0;
 
   sprintf(fname,"config/Calibration/PVeto_EnergyCalibration_%d.txt", fCalibrationFile);

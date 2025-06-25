@@ -39,15 +39,21 @@ SOURCES  := $(wildcard $(SDIR)/*.cc)
 DEPS     := $(addprefix $(DDIR)/,$(notdir $(SOURCES:.cc=.ccd)))
 OBJECTS  := $(addprefix $(ODIR)/,$(notdir $(SOURCES:.cc=.o))) $(ODIR)/PersistencyDict.o
 
-# Define comlete library name
+# Define complete library name
 LIBRARY := $(LDIR)/lib$(LIBNAME).so
 
+# Set name of dictionayr file
+DICTFILE := PersistencyDict_rdict.pcm
+
+# Define complete dictionary name
+DICTIONARY := $(LDIR)/$(DICTFILE)
 #########################################################################
 
 all: $(LIBNAME)
 
 $(LIBNAME) : $(DEPS) $(OBJECTS)
 	$(CXX) -shared -o $(LIBRARY) $(ROOTLDFLAGS) $(CXXFLAGS) $(OBJECTS)
+	mv $(DICTFILE) $(DICTIONARY)
 
 $(ODIR)/%.o : $(SDIR)/%.cc $(DDIR)/%.ccd
 	$(CXX) $(CXXFLAGS) -c $< -o $@

@@ -89,5 +89,11 @@
 #pragma link C++ class TETagClusCollection+;
 #pragma link C++ class THEPVetoClusCollection+;
 
+#pragma link C++ class TMMMCEvent+;
+#pragma link C++ class TMMMCHit+;
+#pragma link C++ class TMMMCDigi+;
+#pragma link C++ class TMMRecoEvent+;
+#pragma link C++ class TMMClusCollection+;
+
 
 #endif

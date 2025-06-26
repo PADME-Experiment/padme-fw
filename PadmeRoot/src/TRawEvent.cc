@@ -63,4 +63,3 @@ TADCBoard* TRawEvent::ADCBoard(Int_t i)
 {
   return (TADCBoard*)(fADCBoards->At(i));
 }
-

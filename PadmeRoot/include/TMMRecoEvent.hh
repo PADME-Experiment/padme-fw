@@ -12,8 +12,7 @@ public:
 
 private:
   
-  
-
+  // add here possible global reco quantities
 
   ClassDef(TMMRecoEvent,1);
 };

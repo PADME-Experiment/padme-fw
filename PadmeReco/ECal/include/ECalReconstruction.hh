@@ -11,7 +11,11 @@
 #include "TRandom2.h"
 
 class TRecoVCluster;
-
+struct TimeChIdx
+{ int digiIndex;
+  double digiTime;
+  double digiChannel;
+};
 
 class ECalReconstruction : public PadmeVReconstruction
 {
@@ -24,7 +28,7 @@ public:
   // void ParseConfFile(TString);
   // virtual void Init(PadmeVReconstruction*);
   // void Init(PadmeVReconstruction* MainReco);
-  //  virtual void ProcessEvent(TMCVEvent*,TMCEvent*);
+  void ProcessEvent(TMCVEvent*,TMCEvent*);
   void ProcessEvent(TRawEvent*);
   void BuildHits(TRawEvent* rawEv);
   Double_t CompensateMissingE(Double_t ECl,Int_t ClSeed); //M. Raggi 21/05/2019
@@ -35,6 +39,7 @@ public:
   //void BuildECalIslandClusters();
   //void BuildECalRadiusClusters();
   // virtual void EndProcessing();
+  
   virtual void ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void ConvertMCDigitsToRecoHitsWave(TMCVEvent* tEvent,TMCEvent* tMCEvent);
   virtual void HistoInit();
@@ -57,9 +62,19 @@ private:
   Int_t NNoHits;
   Int_t fClusterTimeAlgo;
   Int_t fMultihitForMC;
-  //Int_t fDeteriorateEnergyResolution;
+  Int_t fDeteriorateEnergyResolution; // only for MC
+  Double_t fEnergyResolutionSmearA;
+  Double_t fEnergyResolutionSmearB;
+  Double_t fEnergyResolutionSmearC;
+
+  Bool_t fIsMC; // true for MC events
+
   Int_t fDeteriorateHitEnResolution;
+  Double_t fHitEnergyResolutionNPE;
+  Double_t fHitEnergyResolutionPEDSigma;
+
   Int_t fDeteriorateHitTimeResolution;
+  Double_t fHitTimeResolutionSmearC;
 
   Int_t fReproductSACbunchStructure;
 
@@ -73,6 +88,10 @@ private:
   Double_t fComulativeMax;
   Double_t fTimeMin;
   Double_t fTimeMax;
+  void MultiHit1Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHit0Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHit2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
+  void MultiHitminus2Algo(std::vector<TimeChIdx> vsorteddigi, TMCVEvent* tEvent);
 
   //Clusters vectors
   std::vector<double> ClE;

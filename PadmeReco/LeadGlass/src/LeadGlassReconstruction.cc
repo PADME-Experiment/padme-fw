@@ -83,7 +83,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
-    if (TriggerToBeSkipped()) return;
+    //    if (TriggerToBeSkipped()) return;
   }
 
   // Find LeadGlass channel in RawEvent (Board 14 Channel 31)
@@ -185,7 +185,7 @@ void LeadGlassReconstruction::ComputeTotalCharge(Short_t* samples)
   }
 
   fLGPedestal = (Double_t)sum_ped/(Double_t)fPedestalSamples;
-  fLGPedRMS = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal)/((Double_t)fPedestalSamples-1.));
+  fLGPedRMS = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal)/((Double_t)fPedestalSamples-1.)); //CONTROLLARE
   fLGCharge = fLGPedestal*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
   // Convert counts to charge in pC
   //charge = counts/(4096.*50.)*(1.E-9/1.E-12);

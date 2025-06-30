@@ -11,6 +11,7 @@
 #include "TDirectory.h"
 
 #include "TRawEvent.hh"
+#include "TMMRawEvent.hh"
 #include "TMCEvent.hh"
 #include "TMCVEvent.hh"
 #include "TRecoVHit.hh"
@@ -48,6 +49,7 @@ public:
   virtual void ProcessEvent(TMCVEvent* = 0,TMCEvent* = 0);
   virtual void ProcessEvent(TRawEvent* = 0);
   virtual void ProcessEvent(TRecoVObject* =0, TRecoEvent* =0);
+  virtual void ProcessEvent(TRawEvent*, TMMRawEvent*);
   virtual bool TriggerToBeSkipped();
   virtual void ClearHits();
   virtual void ClearClusters();

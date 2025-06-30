@@ -11,6 +11,8 @@
 #include "PadmeVRecoConfig.hh"
 
 class TRawEvent;
+class TMMRawEvent;
+class TRawMergedEvent;
 class TMCEvent;
 class TRecoEvent;
 
@@ -25,6 +27,7 @@ class TECalMCEvent;
 class TSACMCEvent;
 class TETagMCEvent;
 class TTPixMCEvent;
+class TMMMCEvent;
 
 class TTargetRecoEvent;
 class TEVetoRecoEvent;
@@ -35,6 +38,7 @@ class TSACRecoEvent;
 class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
+class TMMRecoEvent;
 
 class TDetectorInfo;
 
@@ -76,6 +80,7 @@ private:
 
   void HistoInit();
   void ProcessEvent(TRawEvent*);
+  void ProcessEvent(TMMRawEvent*);
 
   void ShowSubDetectorInfo(TDetectorInfo*,TString);
 
@@ -86,9 +91,11 @@ private:
   TFile* fHistoFile;
   TChain* fMCChain;
   TChain* fRawChain;
+  TChain* fRawMergedChain;
   TChain* fRecoChain;
 
   TRawEvent* fRawEvent;
+  TRawMergedEvent* fRawMergedEvent;
 
   TMCEvent* fMCEvent;
 
@@ -102,6 +109,7 @@ private:
   TSACMCEvent*     fSACMCEvent;
   TETagMCEvent*    fETagMCEvent;
   TTPixMCEvent*    fTPixMCEvent;
+  TMMMCEvent*    fMMMCEvent;
 
   TRecoEvent*        fRecoEvent;
   TTargetRecoEvent*  fTargetRecoEvent;
@@ -113,6 +121,7 @@ private:
   TETagRecoEvent*    fETagRecoEvent;
   TTPixRecoEvent*    fTPixRecoEvent;
   TLeadGlassRecoEvent* fLeadGlassRecoEvent;
+  TMMRecoEvent* fMMRecoEvent;
  
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;

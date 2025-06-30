@@ -3,6 +3,8 @@
 
 #include "TPadmeRun.hh"
 #include "TRawEvent.hh"
+#include "TRawMergedEvent.hh"
+#include "TMMRawEvent.hh"
 #include "TMCEvent.hh"
 #include "TRecoEvent.hh"
 
@@ -18,6 +20,7 @@
 #include "TSACMCEvent.hh"
 #include "TETagMCEvent.hh"
 #include "TTPixMCEvent.hh"
+#include "TMMMCEvent.hh"
 
 #include "TTargetRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
@@ -28,6 +31,7 @@
 #include "TETagRecoEvent.hh"
 //#include "TTPixRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TMMRecoEvent.hh"
 
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
@@ -38,6 +42,7 @@
 #include "ETagReconstruction.hh"
 #include "TPixReconstruction.hh"
 #include "LeadGlassReconstruction.hh"
+#include "MMReconstruction.hh"
 
 #include "ECalParameters.hh"
 
@@ -60,6 +65,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fSACMCEvent     = 0;
   fETagMCEvent    = 0;
   fTPixMCEvent    = 0;
+  fMMMCEvent    = 0;
 
   fRawEvent       = 0;
   
@@ -73,6 +79,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fETagRecoEvent    = 0;
   fTPixRecoEvent    = 0;
   fLeadGlassRecoEvent = 0;
+  fMMRecoEvent = 0;
 
   fGlobalRecoConfigOptions=NULL;
 
@@ -160,6 +167,12 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling LeadGlass with configuration file "<<configLeadGlass<<std::endl;
     fRecoLibrary.push_back(new LeadGlassReconstruction(fHistoFile,configLeadGlass));
   }
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","MM",1)) {
+    TString configMM = fConfig->GetParOrDefault("RECOCONFIG","MM","config/MM.cfg");
+    std::cout<<"=== Enabling MM with configuration file "<<configMM<<std::endl;
+    fRecoLibrary.push_back(new MMReconstruction(fHistoFile,configMM));
+  }
+  // NEED TO ADD HERE THE CONFIG PART FOR THE MM CHAMBER
   std::cout<<"************************** "<<fRecoLibrary.size()<<" Reco Algorithms built"<<std::endl;
   for (unsigned int j=0; j<fRecoLibrary.size(); ++j)
     std::cout << " **** <" << fRecoLibrary[j]->GetName() << "> is in library at location " << j <<std::endl;
@@ -182,6 +195,7 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("ETag"))    ((ETagReconstruction*)    FindReco("ETag"))   ->Init(this);
   if (FindReco("TPix"))    ((TPixReconstruction*)    FindReco("TPix"))   ->Init(this);
   if (FindReco("LeadGlass")) ((LeadGlassReconstruction*) FindReco("LeadGlass"))->Init(this);
+  if (FindReco("MM")) ((MMReconstruction*) FindReco("MM"))->Init(this);
 
 }
 
@@ -229,6 +243,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"SAC");
 	ShowSubDetectorInfo(detInfo,"ETag");
 	ShowSubDetectorInfo(detInfo,"TPix");
+	ShowSubDetectorInfo(detInfo,"MM");
 	std::cout << "=== MC Run information - End ===" << std::endl << std::endl;
 
 	// Pass detector info to corresponding Parameters class for decoding
@@ -285,6 +300,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="TPix") {
 	fTPixMCEvent = new TTPixMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fTPixMCEvent);
+      } else if (branchName=="MM") {
+	fMMMCEvent = new TMMMCEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fMMMCEvent);
       } else if (branchName=="MCTruth") {
 	printf("PadmeReconstruction - Found MCTruth branch\n");
 	fMCTruthEvent = new TMCTruthEvent();
@@ -343,6 +361,9 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	//      } else if (branchName=="TPix") {
 	//	fTPixRecoEvent = new TTPixRecoEvent();
 	//	fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
+      } else if (branchName=="MM_Hits") {
+	fMMRecoEvent = new TMMRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fMMRecoEvent);
       } else if (branchName=="MCTruth") {
 	printf("PadmeReconstruction - Found MCTruth branch\n");
 	fMCTruthEvent = new TMCTruthEvent();
@@ -368,6 +389,21 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
     fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
   }
   else std::cout << " Tree " << rawTreeName << " not found "<<std::endl;
+
+  nEntries = 0;
+  TString rawMergedTreeName = "RawMergedEvents";
+  fRawMergedChain = NULL;
+  fRawMergedChain = BuildChain(rawMergedTreeName);
+  std::cout<<" Looking for tree named "<<rawMergedTreeName<<std::endl;
+  if(fRawMergedChain) {
+    fRawMergedEvent = new TRawMergedEvent();
+    nEntries = fRawMergedChain->GetEntries();
+    std::cout<<" Tree named "<<rawMergedTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+    TObjArray* branches = fRawMergedChain->GetListOfBranches();
+    std::cout << "Found Tree '" << rawMergedTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    fRawMergedChain->SetBranchAddress("RawMergedEvent",&fRawMergedEvent);
+  }
+  else std::cout << " Tree " << rawMergedTreeName << " not found "<<std::endl;
 
   fNProcessedEventsInTotal = 0;
 
@@ -410,6 +446,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fETagMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fTPixMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "MM" && fMMMCEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fMMMCEvent,fMCEvent);
       }
     }
 
@@ -447,6 +485,8 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fETagRecoEvent,fRecoEvent);
 	//      } else if (fRecoLibrary[iLib]->GetName() == "TPix" && fTPixRecoEvent) {
 	//	fRecoLibrary[iLib]->ProcessEvent(fTPixRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "MM" && fMMRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fMMRecoEvent,fRecoEvent);
       }
     }
 
@@ -472,10 +512,9 @@ Bool_t PadmeReconstruction::NextEvent()
     // Process event to extract global information
     ProcessEvent(fRawEvent);
 
-
 //    // Insert Trigger choice for the monitor MR 18/09/2020
 //    In monitor mode just shows the Physics trigger
-    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawEvent->GetEventTrigMask()==1) ){
+    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawMergedEvent->GetTRawEvent()->GetEventTrigMask()==1) ){
       // Reconstruct individual detectors (but check if they exist, first!)
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
        fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
@@ -487,6 +526,39 @@ Bool_t PadmeReconstruction::NextEvent()
 
   }
 
+  // MERGED Event raw
+  if ( fRawMergedChain && fRawMergedChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+
+    if (fNProcessedEventsInTotal%100==0) {
+      std::cout << "=== Read rawMERGED event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
+      std::cout << "--- PadmeReconstruction --- run/event/time " << fRawMergedEvent->GetTRawEvent()->GetRunNumber()
+		<< " " << fRawMergedEvent->GetTRawEvent()->GetEventNumber() << " " << fRawMergedEvent->GetTRawEvent()->GetEventAbsTime()
+		<< " " << fRawMergedEvent->GetTMMRawEvent()->MMInfo()->GetRunTimeDiff() << std::endl;
+    }
+
+    // Process event to extract global information
+    ProcessEvent(fRawMergedEvent->GetTRawEvent());
+
+
+//    In monitor mode just shows the Physics trigger
+    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawMergedEvent->GetTRawEvent()->GetEventTrigMask()==1) ){
+      // Reconstruct individual detectors (but check if they exist, first!)
+      for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
+	if (fRecoLibrary[iLib]->GetName() == "MM") {
+	  std::cout << "Running the processevent method of the merged event for the chamber" << std::endl;
+	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent(),fRawMergedEvent->GetTMMRawEvent());
+	} else {
+	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent());
+	}
+      }
+    }
+
+    fNProcessedEventsInTotal++;
+    return true;
+
+  }
+
+  
   return false;
 
 }
@@ -499,6 +571,7 @@ void PadmeReconstruction::ProcessEvent(TRawEvent* rawEv)
     if (trigMask & (1 << i)) GetHisto("EventTrigger")->Fill(i);
   }
 }
+
 
 void PadmeReconstruction::EndProcessing(){
 
@@ -590,6 +663,8 @@ Int_t PadmeReconstruction::GetRunNumber()
     return fRawEvent->GetRunNumber();
   } else if (fRecoChain) {
     return fRecoEvent->GetRunNumber();
+  } else if (fRawMergedChain) {
+    return fRawMergedEvent->GetTRawEvent()->GetRunNumber();
   }
   printf("PadmeReconstruction::GetRunNumber() - Unknown input chain");
   return 0;
@@ -604,6 +679,8 @@ Int_t PadmeReconstruction::GetEventNumber()
     return fRawEvent->GetEventNumber();
   } else if (fRecoChain) {
     return fRecoEvent->GetEventNumber();
+  } else if (fRawMergedChain) {
+    return fRawMergedEvent->GetTRawEvent()->GetEventNumber();
   }
   printf("PadmeReconstruction::GetEventNumber() - Unknown input chain");
   return 0;
@@ -619,6 +696,8 @@ TTimeStamp PadmeReconstruction::GetEventTime()
     return fRawEvent->GetEventAbsTime();
   } else if (fRecoChain) {
     return fRecoEvent->GetEventTime();
+  } else if (fRawMergedChain) {
+    return fRawMergedEvent->GetTRawEvent()->GetEventAbsTime();
   }
   printf("PadmeReconstruction::GetEventTime() - Unknown input chain");
   return TTimeStamp(0,0);
@@ -634,6 +713,8 @@ ULong64_t PadmeReconstruction::GetRunClock()
     return fRawEvent->GetEventRunTime();
   } else if (fRecoChain) {
     return fRecoEvent->GetRunClock();
+  } else if (fRawMergedChain) {
+    return fRawMergedEvent->GetTRawEvent()->GetEventRunTime();
   }
   printf("PadmeReconstruction::GetRunClock() - Unknown input chain");
   return 0;
@@ -678,7 +759,28 @@ UInt_t PadmeReconstruction::GetEventStatus()
     // Just copy the event status mask from input event
     return fRecoEvent->GetEventStatus();
 
-  }
+  } else if (fRawMergedChain) {
+
+    // Start with a clean event status mask
+    UInt_t eventstatus = 0;
+
+    // Get Complete bit from rawevent
+    if ( fRawMergedEvent->GetTRawEvent()->EventStatusGetBit(TRAWEVENT_STATUSBIT_COMPLETE) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_COMPLETE);
+
+    // Get autopass bit from rawevent
+    if ( fRawMergedEvent->GetTRawEvent()->EventStatusGetBit(TRAWEVENT_STATUSBIT_AUTOPASS) )
+      eventstatus |= (1U << TRECOEVENT_STATUSBIT_AUTOPASS);
+
+    // Simulated bit is already 0: no need for this
+    //eventstatus &= ~(1U << TRECOEVENT_STATUSBIT_SIMULATED);
+
+    // BeamOn bit is not currently used as it needs info from target: will be added asap
+    //eventstatus |= (1U << TRECOEVENT_STATUSBIT_BEAMON);
+
+    return eventstatus;
+
+  } 
   printf("PadmeReconstruction::GetEventStatus() - Unknown input chain");
   return 0;
 }
@@ -693,7 +795,9 @@ UInt_t PadmeReconstruction::GetTriggerMask()
     return fRawEvent->GetEventTrigMask();
   } else if (fRecoChain) {
     return fRecoEvent->GetTriggerMask();
-  }
+  } else if (fRawMergedChain) {
+    return fRawMergedEvent->GetTRawEvent()->GetEventTrigMask();
+  } 
   printf("PadmeReconstruction::GetTriggerMask() - Unknown input chain");
   return 0;
 }

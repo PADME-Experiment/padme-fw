@@ -1,0 +1,6 @@
+# Makefile
+
+NAME := MM
+
+#include ../config/global.gmk
+include ../mkconfig/subdirs_mac.gmk

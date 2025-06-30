@@ -337,6 +337,40 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv){
   
 }
 
+
+void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
+
+
+  // use trigger info 
+  if(fTriggerProcessor) {
+    //std::cout<<"Reconstruction named <"<<GetName()<<"> processing TriggerInfo .... "<<std::endl;
+    fTriggerProcessor->Clear();
+    fTriggerProcessor->SetTrigMask(rawEv->GetEventTrigMask());
+    if (TriggerToBeSkipped()) return;
+  }
+    
+//  // from waveforms to Hits
+//  BuildHits(rawMMEv);
+//   
+//  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
+//  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());
+//  
+//  // from Hits to Clusters
+//  ClearClusters();
+//  BuildClusters();
+//  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+//
+//
+//  //Processing is over, let's analyze what's here, if foreseen
+//  if(fGlobalRecoConfigOptions->IsMonitorMode()) {
+//    AnalyzeEvent(rawEv);
+//  }
+  
+}
+
+
+
+
 void PadmeVReconstruction::ClearHits(){
 
   //Delete Hits pointed by the vector components; set to zero all components and resize to 0 the vector; 

@@ -2,10 +2,8 @@
 #define TRawMergedEvent_H
 
 #include "TRawEvent.hh"
-#include "TMMBoard.hh"
-#include "TMMInfo.hh"
+#include "TMMRawEvent.hh"
 
-#define TRAWEVENT_MAXMMBOARDS 16
 
 class TRawMergedEvent : public TObject
 {
@@ -21,19 +19,14 @@ class TRawMergedEvent : public TObject
   void SetTRawEvent(TRawEvent* v){fTRawEvent = v;}  
   TRawEvent* GetTRawEvent(){return fTRawEvent;}
     
-  // MM Information
-  TMMInfo* MMInfo(){ return fMMInfo; } // header information
-  UChar_t GetNMMBoards() { return fNMMBoards; }
-
-  TMMBoard* AddMMBoard(); 
-  TMMBoard* MMBoard(Int_t);
+  void SetTMMRawEvent(TMMRawEvent* v){fTMMRawEvent = v;}  
+  TMMRawEvent* GetTMMRawEvent(){return fTMMRawEvent;}
+    
   
  private:
   TRawEvent* fTRawEvent;
+  TMMRawEvent* fTMMRawEvent;
   
-  TMMInfo* fMMInfo;
-  UChar_t fNMMBoards;
-  TClonesArray* fMMBoards;
   
   
   ClassDef(TRawMergedEvent,1);

@@ -149,14 +149,15 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
   fTRawMergedEvent->Clear("C");
   CopyTRawEvent(fTRawMergedEvent->GetTRawEvent(),rawEv);
   //  fTRawMergedEvent->SetTRawEvent(rawEv);
-  fTRawMergedEvent->MMInfo()->SetDaqTimeSec     (chEv->daqTimeSec);
-  fTRawMergedEvent->MMInfo()->SetDaqTimeMicroSec(chEv->daqTimeMicroSec);
-  fTRawMergedEvent->MMInfo()->SetSrsTimeStamp   (chEv->srsTimeStamp);
-  fTRawMergedEvent->MMInfo()->SetSrsTrigger     (chEv->srsTrigger);
-  //  fTRawMergedEvent->MMInfo()->SetSrsRunTime     (srsRunTime);
-  fTRawMergedEvent->MMInfo()->SetRunTimeDiff    (timediff);
+  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetDaqTimeSec     (chEv->daqTimeSec);
+  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetDaqTimeMicroSec(chEv->daqTimeMicroSec);
+  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetSrsTimeStamp   (chEv->srsTimeStamp);
+  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetSrsTrigger     (chEv->srsTrigger);
+  //  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetSrsRunTime     (srsRunTime);
+  fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->SetRunTimeDiff    (timediff);
 
   //
+  
   int pointerToChannel[16][256];
   int nchannelsPerBoard[16];  
   for (int i=0; i<16; i++){
@@ -212,7 +213,7 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
     int boardid = ilayer;
     if (i%2) boardid += 8; // bit 3 first/second 256 strips
     
-    TMMBoard* board = fTRawMergedEvent->AddMMBoard();
+    TMMBoard* board = fTRawMergedEvent->GetTMMRawEvent()->AddMMBoard();
     board->SetBoardId(boardid);
     board->SetBoardSN(i);
     
@@ -239,9 +240,9 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
 	mmchan->NotifyChannelProblem();
 	board->AddProblematicChannel();
 
-	fTRawMergedEvent->MMInfo()->AddProblematicChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
+	fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->AddProblematicChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
       }
-      fTRawMergedEvent->MMInfo()->AddFiredChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
+      fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->AddFiredChannel(chEv->srsFec->at(ptrToFiredStrip)-1,chEv->srsChip->at(ptrToFiredStrip));
       
       for (int k = 0; k < TMath::Min(nsamples,TMMCHANNEL_NSAMPLES); k++) mmchan->SetSample(k,chEv->raw_q->at(ptrToFiredStrip).at(k));
     }
@@ -250,7 +251,7 @@ Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timedi
   if (bizarre){
     for (int i=0; i<2; i++){
       for (int j=0; j<16; j++){    
-	std::cout << "Bizarre event, FEC" << i+1 << " Chip " << j << " " << fTRawMergedEvent->MMInfo()->GetNumberOfProblematicChannels(i,j) << " / " << fTRawMergedEvent->MMInfo()->GetNumberOfFiredChannels(i,j)  << std::endl;
+	std::cout << "Bizarre event, FEC" << i+1 << " Chip " << j << " " << fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->GetNumberOfProblematicChannels(i,j) << " / " << fTRawMergedEvent->GetTMMRawEvent()->MMInfo()->GetNumberOfFiredChannels(i,j)  << std::endl;
       }
     }
   }

@@ -31,10 +31,10 @@ public :
   std::vector<unsigned int> *srsChip;
   std::vector<unsigned int> *srsChan;
   std::vector<std::string>  *mmChamber;
-  std::vector<int>     *mmLayer; // strips fired
+  std::vector<int>     *mmLayer;
   std::vector<char>    *mmReadout; 
-  std::vector<int>     *mmStrip; // strips fired
-  std::vector<std::vector<short> > *raw_q; //external vector: strips fired, 27(number of samplings)
+  std::vector<int>     *mmStrip;
+  std::vector<std::vector<short> > *raw_q;
   std::vector<short>   *max_q;
   std::vector<int>     *t_max_q;
   

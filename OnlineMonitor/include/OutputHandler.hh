@@ -1,8 +1,5 @@
 #ifndef OutputHandler_H
 #define OutputHandler_H
-#include "TRawEvent.hh"
-#include "Chamber.hh"
-#include "TRawMergedEvent.hh"
 
 class Configuration;
 
@@ -23,10 +20,9 @@ public:
   Int_t Initialize();
   Int_t Finalize();
 
-  Int_t WriteEvent(TRawEvent*, Chamber*, Double_t); // 
-  //  Int_t WriteEvent();
-
-  TRawMergedEvent* GetRawMergedEvent() { return fTRawMergedEvent; }
+  //Int_t WriteEvent(TRawEvent*);
+  Int_t WriteEvent();
+  TRawEvent* GetRawEvent() { return fTRawEvent; }
 
   UInt_t GetTotalOutFiles() { return fOutFileIndex+1; }
   TString GetOutFile(UInt_t i) { return fOutFileList[i]; }
@@ -48,7 +44,7 @@ private:
 
   TFile* fTFileHandle;
   TTree* fTTreeMain;
-  TRawMergedEvent* fTRawMergedEvent;
+  TRawEvent* fTRawEvent;
 
   std::vector<TString> fOutFileList;
 

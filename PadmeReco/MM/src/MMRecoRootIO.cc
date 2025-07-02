@@ -12,6 +12,7 @@ MMRecoRootIO::MMRecoRootIO()
   : RecoVRootIO(TString("MM"))
 {
   fEvent = new TMMRecoEvent();
+  //  fClusColl = new TMMClusCollection();
 
   TTree::SetBranchStyle(fBranchStyle);
 

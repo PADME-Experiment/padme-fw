@@ -7,7 +7,9 @@
 #ifndef MMReconstruction_H
 #define MMReconstruction_H
 
+#include "DigitizerChannelMM.hh"
 #include "PadmeVReconstruction.hh"
+#include "MMGeometry.hh"
 
 class MMReconstruction : public PadmeVReconstruction
 {
@@ -42,6 +44,8 @@ private:
 
   // Histograms
   TH1D* fHMMTotCharge;
-
+  //
+  //  DigitizerChannelMM* fChannelReco; // NO: use the object in PadmeVReconstruction
+  //  MMGeometry* fGeometry; // NO: use the object in PadmeVReconstruction
 };
 #endif

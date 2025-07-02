@@ -7,13 +7,15 @@
 #include "Riostream.h"
 
 #include "MMReconstruction.hh"
+#include "MMGeometry.hh"
 
 MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "MM", ConfigFileName)
 {
   fMMCharge = 0;
   printf("MMReconstruction::Initialize - Initializing\n");
-
+  fChannelReco = new DigitizerChannelMM();
+  fGeometry = new MMGeometry();
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
 //  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
@@ -58,6 +60,8 @@ void MMReconstruction::HistoInit()
 
 void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
 
   fMMCharge = 0;
   fMMFound = false;
@@ -67,35 +71,33 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
   
   //UChar_t lg_b,lg_c;
   for(Int_t b = 0; b < MMRawEv->GetNMMBoards(); b++) {
-    for(Int_t c = 0; c < MMRawEv->MMBoard(b)->GetNMMChannels(); c++) {
-      std::cout << "Board " << b << " Channel " << MMRawEv->MMBoard(b)->MMChannel(c)->GetChannelNumber() << " fired, channel " << c << " / " << MMRawEv->MMBoard(b)->GetNMMChannels() << std::endl;
+    TMMBoard* board = MMRawEv->MMBoard(b);
+    for(Int_t c = 0; c < board->GetNMMChannels(); c++) {
+      TMMChannel* channel = board->MMChannel(c);
+      fChannelReco->SetDigis(
+			     channel->GetNSamples(),
+			     channel->GetSamplesArray());
+      
+      ((DigitizerChannelMM*)fChannelReco)->Reconstruct(Hits,board,channel);
+      fMMCharge += Hits.at(Hits.size()-1)->GetEnergy();
+      //      std::cout << "Board " << b << " Channel " << MMRawEv->MMBoard(b)->MMChannel(c)->GetChannelNumber() << " fired, channel " << c << " / " << MMRawEv->MMBoard(b)->GetNMMChannels() << std::endl;
+      fMMFound = true;
     }
   }
 
-  //Processing is over, let's analyze what's here, if requested
-  //  if (fMMFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+//  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
 
-  /*
-  if (rawEv->GetEventNumber() == 110) {
-    printf("Event %d Bunch length %f BBQ %f\n",rawEv->GetEventNumber(),fBunchLength,fBunchBBQ);
-    Short_t* samples = rawEv->ADCBoard(lg_b)->ADCChannel(lg_c)->GetSamplesArray();
-    for(Int_t i=0; i<1024; i++) {
-      fHLGBunchBBQWF2->SetBinContent(i,samples[i]);
-      //printf("%4d ",samples[i]);
-    }
-    printf("\n");
-  }
+// evaluate positions from the channelID 
+  if(fGeometry)  fGeometry->ComputePositions(GetRecoHits());
+//  
+//  // from Hits to Clusters
+//  ClearClusters();
+//  BuildClusters();
+//  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
-  if (fBunchBBQ>300.) {
-    printf("Event %d Bunch length %f BBQ %f\n",rawEv->GetEventNumber(),fBunchLength,fBunchBBQ);
-    Short_t* samples = rawEv->ADCBoard(lg_b)->ADCChannel(lg_c)->GetSamplesArray();
-    for(Int_t i=0; i<1024; i++) {
-      fHLGBunchBBQWF->SetBinContent(i,samples[i]);
-      //printf("%4d ",samples[i]);
-    }
-    printf("\n");
-  }
-  */
+//Processing is over, let's analyze what's here, if requested
+//  if (fMMFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+
 
 }
 

@@ -350,7 +350,7 @@ void PadmeVReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
   }
     
 //  // from waveforms to Hits
-//  BuildHits(rawMMEv);
+//  BuildHits(rawEv);
 //   
 //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetRecoHits());
 //  if(fGeometry)           fGeometry->ComputePositions(GetRecoHits());

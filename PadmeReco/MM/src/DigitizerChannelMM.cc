@@ -47,9 +47,9 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
   }
 
   TRecoVHit *Hit = new TRecoVHit();
-  Hit->SetChannelId(channelid); // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-  Hit->SetTime(sampleMaxId);
-  Hit->SetEnergy(charge);
+  Hit->SetChannelId(channelid);            // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
+  Hit->SetTime(sampleMaxId*fADCTimeBin);   // ns
+  Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
   Hit->setStatus(ch->IsChannelFailed());
   hitArray.push_back(Hit);
 

@@ -11,8 +11,7 @@
 MMGeometry::MMGeometry()
   : PadmeVGeometry()
 {
-  std::cout<<"MMGeometry being created ............"<<std::endl ;
-  
+  std::cout<<"MMGeometry being created ............"<<std::endl ;  
 }
 
 
@@ -33,6 +32,24 @@ void MMGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 }
 
 TVector3  MMGeometry::LocalPosition(Int_t chId)
+// boardSN Layer side plane view hole offset stripid_orig
+// 0       0     0    0     0    6    0      0-255
+// 1       0     1    0     0    6    256    256-511
+// 2       1     0    0     0    6    0      0-255
+// 3       1     1    0     0    6    256    256-511
+// 4       2     0    0     1    1    0      0-255
+// 5       2     1    0     1    1    256    256-511
+// 6       3     0    0     1    1    0      0-255
+// 7       3     1    0     1    1    256    256-511
+// 8       4     0    1     0    1    0      0-255
+// 9       4     1    1     0    1    256    256-511
+// 10      5     0    1     0    1    0      0-255
+// 11      5     1    1     0    1    256    256-511
+// 12      6     0    1     1    6    0      0-255
+// 13      6     1    1     1    6    256    256-511
+// 14      7     0    1     1    6    0      0-255
+// 15      7     1    1     1    6    256    256-511
+  
 // layer 0,1 -> y layer/2 = 0 
 // layer 2,3 -> x layer/2 = 1
 // layer 4,5 -> y layer/2 = 2
@@ -42,7 +59,7 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
 // layer 4,5 little hole
 // layer 6,7 large hole
 {
-  int bdid = (chId & 0xF00 ) >> 8; // board id 0-15
+  int bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
   int layer = bdid/2;  // layer 0-7
   int plane = layer/4;  // plane 0-1
   int side = bdid%2; // left/right (X view), bottom/top (Y view)

@@ -8,6 +8,7 @@
 
 #include "MMReconstruction.hh"
 #include "MMGeometry.hh"
+#include "MMClusterization.hh"
 
 MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "MM", ConfigFileName)
@@ -16,6 +17,7 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   printf("MMReconstruction::Initialize - Initializing\n");
   fChannelReco = new DigitizerChannelMM();
   fGeometry = new MMGeometry();
+  fClusterization = new MMClusterization();
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
 //  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
@@ -92,8 +94,9 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 //  
 //  // from Hits to Clusters
 //  ClearClusters();
-//  BuildClusters();
-//  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
+  if (fClusterization) BuildClusters();
+
+  //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());
 
 //Processing is over, let's analyze what's here, if requested
 //  if (fMMFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);

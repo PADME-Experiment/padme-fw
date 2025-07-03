@@ -4,7 +4,7 @@
 #include "MMReconstruction.hh"
 
 #include "TMMRecoEvent.hh"
-
+#include "TMMClusCollection.hh"
 #include <stdio.h>
 #include "Riostream.h"
 
@@ -12,7 +12,7 @@ MMRecoRootIO::MMRecoRootIO()
   : RecoVRootIO(TString("MM"))
 {
   fEvent = new TMMRecoEvent();
-  //  fClusColl = new TMMClusCollection();
+  fClusColl = new TMMClusCollection();
 
   TTree::SetBranchStyle(fBranchStyle);
 

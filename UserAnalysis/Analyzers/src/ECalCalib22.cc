@@ -1,6 +1,7 @@
 // Written by E. Di Meco 10/11/2022
 #include "ECalCalib22.hh"
 #include "TF1.h"
+#include "TObjString.h"
 #include "TFile.h"
 
 
@@ -37,10 +38,11 @@ ECalCalib22::~ECalCalib22(){
 Bool_t ECalCalib22::Init(Bool_t fHistoModeVal, TString InputHistofileVal){
   if (fVerbose) printf("---> Initializing ECalCalib22\n");
   int iChNum=0;
-  ifstream InFile("../PadmeReco/config/Calibration/ECalEnergyCalibration_7.dat");
+  TString inputfilename = "../PadmeReco/config/Calibration/ECalEnergyCalibration_6.dat";
+  ifstream InFile(inputfilename.Data());
   
   if(!InFile.is_open()) {
-    cout<<"Cannot open ECal Channel list file!!!"<<endl;
+    cout<<"Cannot open ECal Channel list file "<< inputfilename.Data() << " !!!!" << endl;
   }else{
     while(!InFile.eof()){
       InFile>>FCol[iChNum]>>FRow[iChNum]>>FBdId[iChNum]>>FChId[iChNum]>>OldCalib[iChNum];

@@ -284,9 +284,9 @@ Bool_t ECalSel::Process()
     // DataQuality();
     NPoTLGCorr();
     TwoClusSel();
-    TwoClusters_couples();
-    OneClusSel();
-    OneClusTagAndProbeSel();
+//    TwoClusters_couples();
+//TMP    OneClusSel();
+//TMP    OneClusTagAndProbeSel();
   }
   return true;
 }
@@ -1290,43 +1290,51 @@ Int_t ECalSel::TwoClusSel()
 
 
 std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
-  int NClu = fECal_clEvent->GetNElements(), r = 2;
+  int NClu = fECal_clEvent->GetNElements();
+  int r = 2;
 
-    std::pair<Int_t, Int_t> idxs_couple;
+  std::pair<Int_t, Int_t> idxs_couple;
     
-    std::vector<std::pair<Int_t, Int_t>> couples;
-    if(NClu<2) return couples;
-    std::vector<bool> v(NClu);
-    std::fill(v.end() - r, v.end(), true);
+  std::vector<std::pair<Int_t, Int_t>> couples;
+  if(NClu<2) return couples;
+  std::vector<bool> v(NClu);
+  std::fill(v.end() - r, v.end(), true);
 
-    do {
-      idxs_couple.first=-1;
-      idxs_couple.second=-1;
-        for (int i = 0; i < NClu; ++i) {
-            if (v[i]) {
-              
-              if(idxs_couple.first==-1) idxs_couple.first =i;
-              else idxs_couple.second =i;
-
-            }
-        }
-        couples.push_back(idxs_couple);
-    } while (std::next_permutation(v.begin(), v.end()));
-
- return couples; 
+  do {
+    idxs_couple.first=-1;
+    idxs_couple.second=-1;
+    for (int i = 0; i < NClu; ++i) {
+      if (v[i]) {
+	
+	if(idxs_couple.first==-1) idxs_couple.first =i;
+	else idxs_couple.second =i;
+	
+      }
+    }
+    couples.push_back(idxs_couple);
+  } while (std::next_permutation(v.begin(), v.end()));
+  
+  return couples; 
 }
 
 
 Int_t ECalSel::TwoClusters_couples(){
   Int_t CutFlow=0;
   std::vector<std::pair<Int_t, Int_t>> couples = GetCluCouples();
+  std::cout << "UNICA " << couples.size() << std::endl;
+  int icount=0;
+  for (std::vector<std::pair<Int_t, Int_t>>::iterator itero = couples.begin(); itero != couples.end(); ++itero){
+    std::cout << "i = " << icount << " couples = " << itero->first << " , " << itero->second << std::endl;
+    icount++;
+  }
   //fill plot with NCouples available
-  for (auto clupairs = begin (couples); clupairs != end (couples); ++clupairs) {
-    TRecoVCluster *tempClu[2];
-    TVector3 cluPos[2];
-    TVector3 cluPosRel[2];
-    double cluTime[2];
-    
+  icount = -1;
+  TRecoVCluster *tempClu[2];
+  double cluTime[2];
+  for (std::vector<std::pair<Int_t, Int_t>>::iterator clupairs = couples.begin(); clupairs != couples.end(); ++clupairs) {
+    icount++;
+    std::cout << "i = " << icount << " couples = " << clupairs->first << " , " << clupairs->second << std::endl;
+      
     tempClu[0] = fECal_clEvent->Element(clupairs->first);
     tempClu[1] = fECal_clEvent->Element(clupairs->second);
 
@@ -1340,6 +1348,9 @@ Int_t ECalSel::TwoClusters_couples(){
     cluEnergy[0] = tempClu[0]->GetEnergy();
     cluEnergy[1] = tempClu[1]->GetEnergy();
 
+    std::cout << "Position info clu0 " << tempClu[0]->GetPosition().X() << " " <<  tempClu[0]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    std::cout << "Position info clu1 " << tempClu[1]->GetPosition().X() << " " <<  tempClu[1]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    TVector3 cluPos[2];
     cluPos[0].SetXYZ(
         tempClu[0]->GetPosition().X(),
         tempClu[0]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
@@ -1348,6 +1359,7 @@ Int_t ECalSel::TwoClusters_couples(){
         tempClu[1]->GetPosition().X(),
         tempClu[1]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
 
+    TVector3 cluPosRel[2];
     cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
     cluPosRel[1] = cluPos[1]-fGeneralInfo->GetCOG();
     

@@ -3,6 +3,7 @@
 //
 #include "GeneralInfo.hh"
 #include "TMath.h"
+#include "OfflineServer.hh"
 
 GeneralInfo* GeneralInfo::fInstance = 0;
 

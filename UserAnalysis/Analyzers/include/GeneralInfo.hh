@@ -11,7 +11,7 @@
 using namespace std;
 
 class TRecoEvent;
-
+class OfflineServer;
 class GeneralInfo : public TObject
 {
 

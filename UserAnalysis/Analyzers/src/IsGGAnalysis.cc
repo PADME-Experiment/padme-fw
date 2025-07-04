@@ -50,6 +50,9 @@ Bool_t IsGGAnalysis::Init(PadmeAnalysisEvent* event){
 Bool_t IsGGAnalysis::InitHistos(){
   // IsGGAnalysis directory will contain all histograms related to this analysis
   fHS->CreateList("GGAnalysis");
+  fHS->BookHistoList("GGAnalysis","NClusters_nocut",25,-0.5,24.5);
+  std::cout<<"NClusters_nocut created"<<std::endl;
+
   fHS->BookHistoList("GGAnalysis","NClusters",25,-0.5,24.5);
   fHS->BookHistoList("GGAnalysis","ECalClTime",500,-250.,250.);
   fHS->BookHistoList("GGAnalysis","ClusterRadius",200,0.,400.);
@@ -188,6 +191,9 @@ Bool_t IsGGAnalysis::Process(){
   //***************************************
   // Cut on at least 2 clusters
   //***************************************
+  fHS->FillHistoList("GGAnalysis","NClusters_nocut",NClusters,1);
+  std::cout<<"NClusters_nocut filled"<<std::endl;
+
   if(NClusters<2) return false;
   ETotECal=0;
   if(NClusters >25) cout<<"Crazy amount of clusters "<<NClusters<<endl;

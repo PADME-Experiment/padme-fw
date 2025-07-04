@@ -42,7 +42,7 @@ Bool_t NPoTAnalysis::InitHistos(){
   cout<<" Creating Hystograms for Run "<<fNRun<<" "<<endl;  
 
   Int_t Min_POT=-500;
-  Int_t Max_POT=10500;
+  Int_t Max_POT=20500;
   Int_t NBinsPOT= (Max_POT-Min_POT)/10; //every 10 POT 
 
   // Target related quantities 
@@ -52,24 +52,26 @@ Bool_t NPoTAnalysis::InitHistos(){
   fHS->BookHistoList("NPoTAnalysis","NPoTPhys5K",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","NPoTIsa",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","XPos",600,-15.,15.);
+  fHS->BookHistoList("NPoTAnalysis","XCharge",200,-2,2);
   fHS->BookHistoList("NPoTAnalysis","YPos",600,-15.,15.);
+  fHS->BookHistoList("NPoTAnalysis","YCharge",200,-2,2.);
 
   // Lead Glass related quantities 
 
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLG",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTLGCorr",NBinsPOT,Min_POT,Max_POT);
-  fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",20000,0,5e7, NBinsPOT,Min_POT,Max_POT);
+  //fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",1000,0,5e6, NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTNoPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTPhys",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","NPoTGood",NBinsPOT,Min_POT,Max_POT);
   fHS->BookHistoList("NPoTAnalysisLG","PoTDens",200,0.,50.);
   fHS->BookHistoList("NPoTAnalysisLG","LGCharge",2000,0.,2000.);
   fHS->BookHistoList("NPoTAnalysisLG","LGPed",500,3500.,4000);
-  fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsBunchID",20000,0,5e7,500,3500.,4000);
+ // fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsBunchID",1000,0,5e6,500,3500.,4000);
   fHS->BookHisto2List("NPoTAnalysisLG","LGPedvsLGCharge",500,3500.,4000, 2000,0.,2000.);
   fHS->BookHistoList("NPoTAnalysisLG","BunchLenghtLG",500,0.,500.);
-  fHS->BookHisto2List("NPoTAnalysisLG","BunchLenghtLGvsBunchID",20000,0,5e7,500,0.,500.);
-  fHS->BookHisto2List("NPoTAnalysisLG","BBQvsBunchID",20000,0,5e7,500,0.,500.);
+  //fHS->BookHisto2List("NPoTAnalysisLG","BunchLenghtLGvsBunchID",1000,0,5e6,500,0.,500.);
+  //fHS->BookHisto2List("NPoTAnalysisLG","BBQvsBunchID",1000,0,5e6,500,0.,500.);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTTarvsNPoTLG",NBinsPOT,Min_POT,Max_POT,NBinsPOT,Min_POT,Max_POT);
   fHS->BookHisto2List("NPoTAnalysisLG","NPoTLGvsXTar",600,-15.,15.,NBinsPOT,Min_POT,Max_POT);
   return true;
@@ -83,6 +85,9 @@ Bool_t NPoTAnalysis::Process(){
     fNPoT = fEvent->TargetRecoBeam->getnPOT();
     fXPos = fEvent->TargetRecoBeam->getX();
     fYPos = fEvent->TargetRecoBeam->getY();
+    fXCharge = fEvent->TargetRecoBeam->getXCharge();
+    fYCharge = fEvent->TargetRecoBeam->getYCharge();
+    
     fTimeStamp=fEvent->RecoEvent->GetEventTime(); 
     //  cout<<" X tar "<<fXPos<<" "<<fYPos<<endl;
     TotPoT    +=fNPoT;    
@@ -93,11 +98,11 @@ Bool_t NPoTAnalysis::Process(){
    fNPoTLGCorr =0;
    fNPoTBL =0.;
    Double_t fLGPed =0.;
-   Double_t fLGCharge=0.;
+   fLGCharge=0.;
 
   if(fEvent->LeadGlassRecoEvent!=0){
     fNPoTLG   =  402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/fGeneralInfo->GetBeamEnergy();
-    fNPoTLGCorr = 402.5*fNPoTLG/(fGeneralInfo->GetBeamEnergy()*fGeneralInfo->GetLGCorr()); //DA VALUTARE
+    fNPoTLGCorr = 402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/(fGeneralInfo->GetBeamEnergy()*(fGeneralInfo->GetLGCorr()/0.922)); //DA VALUTARE
     fNPoTBL   = fEvent->LeadGlassRecoEvent->GetBunchLength();
     fLGCharge = fEvent->LeadGlassRecoEvent->GetTotalCharge();
     fLGPed    = fEvent->LeadGlassRecoEvent->GetPedestal();
@@ -122,8 +127,8 @@ Bool_t NPoTAnalysis::Process(){
   fHS->FillHistoList("NPoTAnalysis","NPoT",fNPoT);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLG",fNPoTLG);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLGCorr",fNPoTLGCorr);
-  fHS->FillHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTLGCorr);
-  fHS->FillHisto2List("NPoTAnalysisLG","BBQvsBunchID",fEvent->RecoEvent->GetEventNumber(),fEvent->LeadGlassRecoEvent->GetBunchBBQ());
+  //fHS->FillHisto2List("NPoTAnalysisLG","NPoTLGCorrvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTLGCorr);
+  //fHS->FillHisto2List("NPoTAnalysisLG","BBQvsBunchID",fEvent->RecoEvent->GetEventNumber(),fEvent->LeadGlassRecoEvent->GetBunchBBQ());
 
  if(fNPoTLG>250) {
     fHS->FillHistoList("NPoTAnalysisLG","NPoTGood",fNPoTLG);
@@ -131,14 +136,16 @@ Bool_t NPoTAnalysis::Process(){
     fHS->FillHistoList("NPoTAnalysisLG","LGCharge",fLGCharge);
     fHS->FillHistoList("NPoTAnalysisLG","LGPed",fLGPed);
     fHS->FillHistoList("NPoTAnalysisLG","BunchLenghtLG",fNPoTBL);
-    fHS->FillHistoList("NPoTAnalysisLG","BunchLenghtLGvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTBL);
-    fHS->FillHisto2List("NPoTAnalysisLG","LGPedvsBunchID",fEvent->RecoEvent->GetEventNumber(),fLGPed);
+    //fHS->FillHistoList("NPoTAnalysisLG","BunchLenghtLGvsBunchID",fEvent->RecoEvent->GetEventNumber(),fNPoTBL);
+    //fHS->FillHisto2List("NPoTAnalysisLG","LGPedvsBunchID",fEvent->RecoEvent->GetEventNumber(),fLGPed);
     fHS->FillHisto2List("NPoTAnalysisLG","LGPedvsLGCharge",fLGPed, fLGCharge);
   
   }
 
   fHS->FillHistoList("NPoTAnalysisLG","NPoTTarvsNPoTLG",fNPoTLG,fNPoT);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLGvsXTar",fXPos,fNPoTLG);
+  fHS->FillHistoList("NPoTAnalysis","XCharge",fXCharge);
+  fHS->FillHistoList("NPoTAnalysis","YCharge",fYCharge);
   if(fNPoT>5E3) {
     fHS->FillHistoList("NPoTAnalysis","XPos",fXPos);
     fHS->FillHistoList("NPoTAnalysis","YPos",fYPos);

@@ -37,12 +37,21 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
-  }
-  else {
+    fZTarg = -1028;
+   }
+  else if(trueRunNumber < 60000){
     fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
     fBeamMomentum = 268.94;       // MeV, DHSTB01 energy for 50381
-    fZECal = 2508.31 + 175.650; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
-  }
+    //fZECal = 2508.31 + 175.650 ; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
+    fZECal = 2612.4 ; // front face of ECAL (crystal front) from MC Detector setup 40, no shower max, ok for positrons
+    fZTarg = -1028; 
+   }
+  else if(trueRunNumber > 80000){
+	fPeriodStartTime = 174000000;
+	fBeamMomentum = 268.94;
+	fZTarg = -732.47;
+	fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
+   }
 
   // default start and stop time of runs
   fRunStartTime = 0;
@@ -50,7 +59,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
 
   fXTarg = 0.;    // default
   fYTarg = 0.;    // default
-  fZTarg = -1028; // was -1030 originally but set at -1028 after the 2020 survey
+  //fZTarg = -1028; // was -1030 originally but set at -1028 after the 2020 survey
 
   fXCOG = 0.;    // default
   fYCOG = 0.;    // default
@@ -164,8 +173,8 @@ void GeneralInfo::EvalBeamProperties(){
 
   fBoostMom.SetXYZ(fCOGAtECal.X()-fRTarg.X(),fCOGAtECal.Y()-fRTarg.Y(),fCOGAtECal.Z()-fRTarg.Z());
   fBoostMom *= (fBeta/fBoostMom.Mag());
-
-  fRadiusMax = 270.;//304.5; // in the past, we used 300 mm
+  fRadiusMax = 270.0;
+  //fRadiusMax = 270.;//304.5; // in the past, we used 300 mm
 
   // if K = RMax/D is the max tangent in the lab, pi/2 - t < q*/2 < t, where t = atan(gamma RMax/D) must be > pi/4
   // t = pi/4 if gam = 1/K, i.e. at ~ 150 MeV
@@ -187,7 +196,7 @@ void GeneralInfo::EvalBeamProperties(){
 
 void GeneralInfo::PrintBeamProperties(int runID){
   std::cout << "GeneralInfo: run-level info for run " << runID ;
-  std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fPeriodStartTime) << 
+  std::cout << " Pbeam = " << fBeamMomentum << " StartT = " << static_cast<long long int>(fRunStartTime) <<  " StopT = " << static_cast<long long int>(fRunStopTime) <<
     " target = { "<< fRTarg.X()<< " , "<< fRTarg.Y() << " , " << fRTarg.Z() << " }; COG = { " << fCOGAtECal.X() << " , " << fCOGAtECal.Y() << " , "<< fCOGAtECal.Z() << " }" << 
     " sqrt(s) = " << fSqrts << " bg = " << fBG << " beta = " << fBeta <<
     " energyRange = { " << fEnergyMin << " , " << fEnergyMax << " }; radiusRange = { " << fRadiusMin << " , " << fRadiusMax << " }" << 
@@ -209,14 +218,14 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     fIsBunchLengthAvailable = fOfflineServerDB->isBunchLengthAvailable(runID);
     // might interpolate if info not available
     
-    if (runID < 50151) {
-      fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
-      fZECal = 2508.31; // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override reco
-    }
-    else {
-      fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
-      fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
-    }
+    // if (runID < 50151) {
+    //   fPeriodStartTime = 1600256773;// sec, first good run of 2020 run, 30339
+    //   fZECal = 2508.31; // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override reco
+    // }
+    // else {
+    //   fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
+    //   fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
+    // }
 
     fXTarg = fOfflineServerDB->getTargetXAvg(runID);
     fYTarg = fOfflineServerDB->getTargetYAvg(runID);
@@ -229,6 +238,7 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     // might interpolate if info not available
 
     fCalibEnergyFactor = fOfflineServerDB->getCalibEnergyFactor(runID);
+    std::cout<<"Value EScale: "<<fCalibEnergyFactor<<std::endl;
     fIsCalibEnergyAvailable = fOfflineServerDB->isCalibEnergyAvailable(runID);
     // might interpolate if info not available
 

@@ -369,18 +369,65 @@ int main(Int_t argc, char **argv)
   Int_t nSACHits    =0;
   Int_t nETagHits   =0;
   Int_t nLeadGlassHits=0;
-  
+  Bool_t doDataQuality = false;
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
-
+  /*TFile *fMeanDQ = new TFile("config/EHitOvPoTvsRun.root");
+  if(!fMeanDQ) exit(1);
+  TGraphErrors *gMeanDQ =(TGraphErrors*)fMeanDQ->Get("Graph")->Clone();
+  TFile *fSigmaDQ = new TFile("config/EHitOvPoTvsRun_sigma.root");
+  if(!fSigmaDQ) exit(1);
+  TGraphErrors *gSigmaDQ = (TGraphErrors*)fSigmaDQ->Get("Graph")->Clone();
+  TFile *fRunvsEnergy = new TFile("config/EnergyvsRun.root");
+  if(!fRunvsEnergy) exit(1);
+  TGraphErrors *gRunvsEnergy= (TGraphErrors*)fRunvsEnergy->Get("Graph")->Clone();
+  
+  Double_t MeanValDQ =  gMeanDQ->Eval(DBRunNumber);
+  Double_t SigmaValDQ =  gSigmaDQ->Eval(DBRunNumber);
+  Double_t Energy =  gRunvsEnergy->Eval(DBRunNumber);
+  
+  std::cout<<DBRunNumber<< "MeanValDQ "<< MeanValDQ<< " SigmaValDQ " << SigmaValDQ<< "Energy "<< Energy <<std::endl;
+  
+  fRunvsEnergy->Close();
+  fSigmaDQ->Close();
+  fMeanDQ->Close();
+  */
+  TH1D *hMean = new TH1D("hMean", "hMean", 300, 0, 3);
+  Double_t MeanValDQ =  0.;
+  Double_t SigmaValDQ =0.;
+  Double_t Energy =  0.; 
   if (NEvt >0 && NEvt<nevents) nevents=NEvt;
   if(!fHistoMode){
      for (Int_t i=0; i<nevents; ++i) {
     
     jevent = fRecoChain->GetEntry(i);   
-    
+    Double_t HitAvgEn=0;
+    Double_t NPoTAvg=0;
+    if(doDataQuality && i%200==0 ){
+      for(Int_t jDQ =0; jDQ < 200; jDQ++){
+        jevent = fRecoChain->GetEntry(i+jDQ);
+        if(event->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) break;
+        double hitsum =0;
+        for (int hit = 0; hit < event->ECalRecoEvent->GetNHits(); ++hit){
+          TRecoVHit *hiti = (event->ECalRecoEvent)->Hit(hit);
+          hitsum+= hiti->GetEnergy();
+        }
+        HitAvgEn+=hitsum;
+        NPoTAvg+=  402.5*event->LeadGlassRecoEvent->GetNPoTs()/Energy;
+      }
+      if (NPoTAvg && HitAvgEn) hMean->Fill(HitAvgEn/NPoTAvg);
+
+      if((abs((HitAvgEn/NPoTAvg) - MeanValDQ) < 3*SigmaValDQ) ){
+        jevent = fRecoChain->GetEntry(i); //goes back to original event
+      }else{
+        std::cout<<"Skipping event"<<std::endl;
+        i+=200; //skips all 200 
+        continue;
+      }
+    }
+
     // Check if event should be analyzed
     //printf("Event %d trigger mask: 0x%2.2x\n",i,fRecoEvent->GetTriggerMask());
-    if ( !(fRecoEvent->GetEventStatus() & mcEvent) && !(fRecoEvent->GetTriggerMask() & trigMask) ) continue;
+    if (!(fRecoEvent->GetEventStatus() & mcEvent) && !(fRecoEvent->GetTriggerMask() & trigMask) ) continue;
     //printf("Event %d accepted\n",i);
     //printf("DEBUG 0x%02x %d\n",fRecoEvent->GetTriggerMask(),fECalRecoEvent->GetNHits());
     
@@ -451,7 +498,7 @@ int main(Int_t argc, char **argv)
   jevent = fRecoChain->GetEntry(0);
   UserAn->Process(); 
 }
-  
+  //hMean->SaveAs("hMean.root");
   if (fVerbose) printf("---> Finalizing user analysis\n");
   UserAn->Finalize();
   if (fVerbose) printf("---> Finalizing histogram service\n");

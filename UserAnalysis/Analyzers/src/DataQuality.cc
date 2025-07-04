@@ -26,7 +26,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fApplyQualityCheck = true;
   if(fCfgParser->HasConfig("GENERAL", "DataQualityLevel")){
-     fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "fDataQualityLevel")).Atoi();
+     fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "DataQualityLevel")).Atoi();
      } //handling del DataQualityLevel non implementato
   // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
   // e determina la flag per quell'evento in base al tempo  
@@ -35,7 +35,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   cout<<" Creating DataQuality Hystograms for Run Init "<< fNRun<<endl;  
   fHistoMode = fHistoModeVal;
   InputHistofile = InputHistofileVal;
-
+  
 //   if(fHistoMode){
 //   TObjArray *tx = InputHistofile.Tokenize("/");
 //   InputHistofileName = ((TObjString *)(tx->At(tx->GetLast())))->String(); 
@@ -46,7 +46,7 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   
 //  }
   // se e' readmode fa quello che c'e' sotto
-  fSafety = 1000;
+  fSafety = 2000;
   fTimeBin = 5.; // sec
   fTimeBinCoarse = 120.; // sec
 
@@ -100,17 +100,19 @@ Bool_t DataQuality::InitHistos(Int_t nRun){
 
 Bool_t DataQuality::Process(){
 
+  UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
+  if(trigMask & (1 << 0)) {
   // protection: should run on data only
   // riempire i valori delle 5 osservabili
   // prendere il tempo dell'evento e calcolare in che bin temporale cadi x 2 (normale e coarse)
   // incrementare gli array sum, sumsquare, nCounts
   // il codice sotto e' vecchio
-
-  long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime();
+  long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime().GetSec();
   int TimeBinVal =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBin;
+  // if(TMath::Abs(TimeBinVal-28900)<1000) std::cout<<"LOOK HERE"<<std::endl;
   int TimeBinValCoarse =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBinCoarse;
   if(TimeBinVal>=fNTimeBins || TimeBinVal<0){
-    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<std::endl;
+    std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinVal: "<<TimeBinVal<<" NTimeBins: "<<fNTimeBins<<" fTimeStamp: "<<fTimeStamp<<" Delta Start: "<<fTimeStamp-fGeneralInfo->GetRunStartTime()<< " Delta Stop: "<<fTimeStamp-fGeneralInfo->GetRunStopTime()<<std::endl;
     return false;
   }
   if(TimeBinValCoarse>=fNTimeBinsCoarse || TimeBinValCoarse<0){
@@ -160,6 +162,17 @@ Bool_t DataQuality::Process(){
       std::cout<<" DataQuality ** WARNING ** The "<<(iter->name).Data() << " observable is not implemented"<<std::endl;
     }
     
+    // if((iter->name).CompareTo("ECalHitOverPOT")==0 && ((iter->valueSum)[TimeBinVal]+Value)<-4 && (iter->valueSum)[TimeBinVal]>=0){
+    //  std::cout<<"LOOK HERE"<<std::endl;
+    //  std::cout<<"TimeBinVal: "<<TimeBinVal<<" (iter->valueSum)[TimeBinVal]: "<<(iter->valueSum)[TimeBinVal]<<" Value sum: "<<(iter->valueSum)[TimeBinVal]+Value<<std::endl;
+    // std::cout<<"TrigMask:"<<fEvent->RecoEvent->GetTriggerMask()<< "LGCorr: "<<fNPoTAnalysis->GetNPoTLGCorr()<<std::endl;
+    // for(int iHit = 0;iHit <fEvent->ECalRecoEvent->GetNHits() ; iHit++) {
+    //     double HitE = fEvent->ECalRecoEvent->Hit(iHit)->GetEnergy();
+    //     std::cout<<iHit<<"HitE"<<HitE<<std::endl;
+    //   }
+    
+    // }
+    
     (iter->valueSum)[TimeBinVal] += Value;
     (iter->valueSquareSum)[TimeBinVal] += (Value*Value);
     (iter->valueSumCoarse)[TimeBinValCoarse] += (Value);
@@ -168,11 +181,14 @@ Bool_t DataQuality::Process(){
     (iter->nCountsCoarse)[TimeBinValCoarse]++;
 
   }
+  }
 
   return true;
 }
 
 Bool_t DataQuality::Finalize(){
+
+  // return false;
 // 
 // 
 // qui i Double_t* e gli Int_t* devono essere scritti in uscita in forma di TGraph* (histoService gestisce il salvare i TGraph*) 
@@ -189,7 +205,7 @@ if(fGeneralInfo->isMC()){
   std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
   return false;
 } 
-
+return true;
 fNRun = fGeneralInfo->GetRunNumberFromDB();
 if(!fHistoMode){
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
@@ -217,7 +233,7 @@ if(!fHistoMode){
 std::cout<<"Data Quality TH1D plots filled "<<std::endl;
 }
 
-if(fHistoMode){
+if(fHistoMode && !fGeneralInfo->isMC()){
   TGraphErrors *gPoTratio = new TGraphErrors();
   gPoTratio->SetName("PoTRatio");
   TGraphErrors *gPoTLG = new TGraphErrors();
@@ -262,7 +278,7 @@ if(fHistoMode){
       (iter->nCountsCoarse)[i] = hnCountsCoarse->GetBinContent(i+1);
     }
 
-    TGraphErrors *obsplotMean = new TGraphErrors();
+    TGraphErrors* obsplotMean = new TGraphErrors();
     TGraph *obsplotSigma = new TGraph();
     TGraphErrors *obsplotCoarseMean = new TGraphErrors();
     TGraph *obsplotCoarseSigma = new TGraph();
@@ -293,14 +309,49 @@ if(fHistoMode){
           Double_t sigmaVal = TMath::Sqrt((((iter->valueSquareSumCoarse)[i]/(iter->nCountsCoarse)[i])-(meanVal*meanVal))/((iter->nCountsCoarse)[i]-1.));
           obsplotCoarseSigma->SetPoint(NpointSigma, i*fTimeBinCoarse,sigmaVal);
           obsplotCoarseMean->SetPointError(NpointMean, 0.5* fTimeBin,sigmaVal);
-          
+    }
         if((iter->name).CompareTo("ECalHitOverPOT")==0){
-          obsplotMean->Fit(p0fit, "EMQ");
+          Int_t n3sigma = 0;
+          Int_t n5sigma = 0;
+          Int_t nbad = 0;
+          TGraphErrors* obsplotMeanNoBeamDown = new TGraphErrors();
+          std::cout<<obsplotMeanNoBeamDown->GetN()<<std::endl;
+          obsplotMeanNoBeamDown->SetName("obsplotMeanNoBeamDown");
+          std::cout<<obsplotMean->GetN()<<std::endl;
+          for(int iprm =0; iprm<obsplotMean->GetN(); iprm++){
+             //std::cout<<iprm<< std::endl;
+            
+            Double_t yvalrm=0,xvalrm=0,errxrm=0, erryrm=0;
+            obsplotMean->GetPoint(iprm,xvalrm,yvalrm);
+            errxrm= obsplotMean->GetErrorX(iprm);
+            erryrm= obsplotMean->GetErrorY(iprm);
+            if(yvalrm < freject_below || yvalrm > freject_above){
+               std::cout<<"Removing yvalrm:"<<yvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
+               continue;}
+            int Npointnobd= obsplotMeanNoBeamDown->GetN();
+            // std::cout<<iprm<<" "<<Npointnobd<<std::endl;
+            //std::cout<<"N:"<<obsplotMeanNoBeamDown->GetN()<<" yvalrm: "<<yvalrm<< " xvalrm: "<<xvalrm <<" errY: "<<erryrm<<" errX: "<<errxrm<<std::endl;
+            obsplotMeanNoBeamDown->SetPoint(Npointnobd,xvalrm, yvalrm);
+            obsplotMeanNoBeamDown->SetPointError(Npointnobd,errxrm, erryrm);
+            
+          }
+          obsplotMeanNoBeamDown->Fit(p0fit, "EMQ");
+          obsplotMeanNoBeamDown->SaveAs("prova.root");
           Double_t p0Val = p0fit->GetParameter(0);
-          Double_t p0sigma = p0fit->GetParError(0)*p0fit->GetChisquare()/(p0fit->GetNDF()*1.1);
-          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%s.txt",fNRunString.Data())); //could be changed to only one file opening ad adding a new line with the new run number
+          Double_t p0sigma = p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
+          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%d.txt",fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
           fitresults<<fNRunString.Data()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
-        }
+          for(int ip =0; ip<obsplotMean->GetN(); ip++){
+            double yval,xval;
+            obsplotMean->GetPoint(ip,xval,yval);
+            Double_t pointSigma = obsplotMean->GetErrorY(ip);
+            if(TMath::Abs(yval-p0Val)<=3*pointSigma){
+              n3sigma++;
+            }else if(TMath::Abs(yval-p0Val)>3*pointSigma && TMath::Abs(yval-p0Val)<=5*pointSigma){
+              n5sigma++;
+            }else nbad++;
+          }
+          std::cout<<"N points: "<<obsplotMean->GetN()<<" N 3 sigma: "<<n3sigma<<" N 5 sigma: "<<n5sigma<<" N bad: "<<nbad<<std::endl;
       }
     obsplotMean->SetName(Form("gMean_%s", (iter->name).Data()));
     obsplotCoarseMean->SetName(Form("gMeanCoarse_%s", (iter->name).Data()));
@@ -319,7 +370,6 @@ if(fHistoMode){
       gPoTTarget = (TGraphErrors*) obsplotCoarseMean->Clone();
     }else if((iter->name).CompareTo("TargXCharge")==0) {
       gXChargeAll = (TGraphErrors*) obsplotMean->Clone();
-
       gXCharge = (TGraphErrors*) obsplotCoarseMean->Clone();
       }
     }
@@ -330,12 +380,12 @@ if(fHistoMode){
           gPoTLG->GetPoint(i, XLG, YLG);
           gPoTLGAll->GetPoint(i, XLGAll, YLGAll);
           gPoTTarget->GetPoint(i, XTa, YTa);
-          gPoTratio->SetPoint(i,XLG, YTa/YLG);
+          if(YLG!=0) gPoTratio->SetPoint(gPoTratio->GetN(),XLG, YTa/YLG);
           gXCharge->GetPoint(i, XCha, YCha);
           gXChargeAll->GetPoint(i, XChaAll, YChaAll);
-
-          gPoTratioCharge->SetPoint(i,XLG, YCha/YLG);
-          gPoTratioChargeAll->SetPoint(i,XLGAll, YChaAll/YLGAll);
+          //sistemare deno =0
+          if(YLG!=0) gPoTratioCharge->SetPoint(gPoTratioCharge->GetN(),XLG, YCha/YLG);
+          if(YLGAll!=0)gPoTratioChargeAll->SetPoint(gPoTratioChargeAll->GetN(),XLGAll, YChaAll/YLGAll);
 
 
         }
@@ -344,6 +394,7 @@ if(fHistoMode){
     fHS->SaveTGraphList("DataQuality", gPoTratioCharge->GetName(),gPoTratioCharge);
     fHS->SaveTGraphList("DataQuality", gPoTratioChargeAll->GetName(),gPoTratioChargeAll);
     
+    //fare delete dei tgraph
     //fare fittino, salva P0 e errP0 scala con Chi2
   //flag 0 singlolo periodo vicino al p0
   //flag 1 singlolo periodo fuori da 5 sigma
@@ -352,3 +403,6 @@ if(fHistoMode){
   if (fVerbose) printf("---> Finalizing DataQuality\n");
   return true;
 }
+
+
+

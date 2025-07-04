@@ -8,10 +8,12 @@
 
 #include "TObject.h"
 #include "TVector2.h"
+#include "TLorentzVector.h"
 #include "PadmeAnalysisEvent.hh"
 #include "GeneralInfo.hh"
 #include "MCTruthECal.hh"
 #include "NPoTAnalysis.hh"
+#include "ETagAn.hh"
 
 #include "HistoSvc.hh"
 
@@ -22,13 +24,16 @@ using namespace std;
 class TRecoEvent;
 class TRecoVObject;
 class TRecoVClusCollection;
+class ETagAn;
 
 enum eventFlag{
   ev_gg  = 0,
   ev_ee  = 1,
   ev_ggg = 2,
   ev_eeg = 3,
-  ev_single = 4
+  ev_single = 4,
+  ev_eg = 5 ,
+  ev_unknown = 6
 };
 
 enum algoFlag{
@@ -38,13 +43,21 @@ enum algoFlag{
 };
 
 
+struct Point {
+    double x, y;
+};
+
+
 struct ECalSelEvent{
   eventFlag flagEv;
   algoFlag flagAlgo;
   int indexECal[3]; // indices of the ecal clusters selected (could become a std vector)
   double totalE;
   double avgT;
-  TVector2 cog; // cog of the selected clusters
+  double phi, theta;
+  TVector2 cog, xyclu[2]; // cog of the selected clusters
+  TLorentzVector labP[2]; // lab momenta
+  TLorentzVector cmP[2]; // cm momenta
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 
@@ -75,6 +88,7 @@ public:
   Bool_t TagProbeEff();
   Bool_t MCTagProbeEff();
   Bool_t FitTagProbeEff();
+  Bool_t FitTagProbeEffvsPhi();
   //Bool_t FitTagProbeEff_notarg();
   Bool_t TagProbeEff_macro();
   Bool_t EvaluateResolutions();
@@ -85,7 +99,8 @@ public:
   virtual Bool_t Process();
 
   int getNECalEvents(){return (int) fECalEvents.size();}
-  ECalSelEvent getECalEvent(int i){return fECalEvents.at(i);} //to be protected
+  ECalSelEvent* getECalEvent(int i){return fECalEvents.at(i);} //to be protected
+  void setETagAssIndex(int i , int iClu, int iindex ){ (fECalEvents.at(i))->indexETagAss[iClu] = iindex;} //to be protected
 
 protected:
   PadmeAnalysisEvent* fEvent;
@@ -97,16 +112,20 @@ protected:
   Int_t    fVerbose;
 
 private:
+  std::vector<std::pair<Int_t, Int_t>> GetCluCouples();
+  Int_t TwoClusters_couples();
   Int_t TwoClusSel();
   Int_t OneClusSel();
   Int_t OneClusTagAndProbeSel();
   Double_t NPoTLGCorr();
   Bool_t NSignalBhabha();
   utl::ConfigParser* fCfgParser;
-  std::vector<ECalSelEvent> fECalEvents;
+  std::vector<ECalSelEvent*> fECalEvents;
   GeneralInfo* fGeneralInfo;
   MCTruthECal* fMCTruthECal;
   NPoTAnalysis* fNPoTAnalysis;
+  ETagAn* fETagAn;
+  bool isinTCUT(const std::vector<Point>& polygon, const Point& p);
   // general setup
   Bool_t fApplyCorrection;
   bool fFillLocalHistograms;
@@ -114,6 +133,7 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
+  TString fcfgPath;
   TString fNRun;
   // general cuts
 
@@ -142,9 +162,11 @@ private:
   Double_t fMeanDPhi = 3.093; //rad
   Double_t fSigmaDTheta = 0.0932; //rad
   Double_t fSigmaDPhi = 0.1105; //rad
-  Double_t fSigmaE = 12.64;
+  Double_t fSigmaE; //defined with Ebeam
   Double_t fSigmaCut =3;
-
+  Double_t HitAvgEn =0;
+  Double_t NPoTAvg =0;
+  Double_t QLGAvg =0;
   TFile *fileIn;
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            
@@ -152,7 +174,7 @@ private:
   const int nhole = 5; // 5x5 matrix is not instrumented                  
 
   
-
+  TH1D *fCutFlow;
   TH2D *EofTag;
   TH2D *EofeIoni;
   TH2D *EofAnnihil;
@@ -167,6 +189,9 @@ private:
   TH2D *DeltaPhiofProbe_cut;
   TH1D *PhiFullProbe;
   std::vector<TH1D*> PhiFullProbeSlice;
+  std::vector<TH2D*> TagSlicevsPhi;
+  std::vector<TH2D*> ProbeSlicevsPhi;
+  std::vector<TH2D*> DPhiSlicevsPhi;
 
   TH2D *fhDTheta; 
   TH2D *fhDPhi;

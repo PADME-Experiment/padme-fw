@@ -4,7 +4,10 @@
 #ifndef OfflineServer_h
 #define OfflineServer_h 1
 
+#include "utlConfigParser.hh"
 #include <vector>
+#include "TString.h"
+#include <stdio.h>
 #define MAXRUNNR 500000
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 #define kTimeBit 0 // bit to define availability of run start and stop times
@@ -92,6 +95,9 @@ public:
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures
   std::vector<RunInfo> runInfos; // vector of runInfo structures
+  utl::ConfigParser* fCfgParser;
+  TString fcfgDatabase;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

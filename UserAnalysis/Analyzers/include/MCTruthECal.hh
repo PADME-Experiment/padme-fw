@@ -68,7 +68,7 @@ private:
   TRecoVClusCollection* fECal_clEvent;
   TRecoEvent*           fRecoEvent;
 
-
+  const int NPcles = 10;
 
 
 };

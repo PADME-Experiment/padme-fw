@@ -44,7 +44,7 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
-
+  TString fcfgPath;
   HistoSvc* fHS;
   Int_t fNClusters;
   Int_t ECalChNum[NTOTCh]={0};

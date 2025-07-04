@@ -5,6 +5,7 @@
 #include "utlConfigParser.hh"
 #include "PadmeAnalysisEvent.hh"
 #include "HistoSvc.hh"
+#include "GeneralInfo.hh"
 
 class ECalCalib {
 
@@ -18,56 +19,28 @@ public:
 
 
   Bool_t Init();
+  //Bool_t Init(PadmeAnalysisEvent* event,Bool_t fHistoMode,TString InputHistofile);
+
   Bool_t Process(PadmeAnalysisEvent*);
   Bool_t Finalize();
-
-  Double_t SetEScale();
-  Double_t FixPosition();
-  Double_t CorrectESlope();
-
-  Double_t GetBeamEnergy(){return fBeamEnergy;};
-  Double_t GetCOGX(){return fCOGX;};
-  Double_t GetCOGY(){return fCOGY;};
 
 
 private:
   static ECalCalib* fInstance;
   Bool_t InitHistos();
-
-  //  TRandom3* fRndm;
+  Int_t CorrectETimeSlope(Int_t corrLevel);  // input is correction level: 0->no correction, 1->default, 2->enhanced
+  Int_t CorrectEScale(Int_t corrLevel);      // input is correction level: 0->no correction, 1->default, 2->enhanced
+  Int_t NClusterPairSimpleSelection();
 
   Int_t fVerbose;
-
+  TString fCfgFile;
   PadmeAnalysisEvent* fEvent;
-
-  utl::ConfigParser* fCfgParser;
-
   HistoSvc* fHS;
+  utl::ConfigParser* fCfgParser; // should handle the correction level for energy scale and energy-time slope
+  GeneralInfo* fGeneralInfo;
 
-  Int_t fNClusters;
-
-  Int_t fNRun;	     
-  Int_t fCurrentRun;     
-  Int_t fCurrentRunIndex;
-
-  // variable to be returned on request
-  Double_t fBeamEnergy;
-  Double_t fCOGX;
-  Double_t fCOGY;
-
-  Bool_t   fisMC=false;
-  Double_t fGlobalEScale = 1.11398; //used if no RUN dependent value is found
-  Double_t fGlobalESlope = 5E-5;    //used if no RUN dependent value is found
-  //  Double_t fGlobalEScale = 1.; //can be elimiated 
-
-  //Calibration constants Runs
-  std::vector<int> vNRun;
-  std::vector<int> vEBeam;
-  std::vector<double> vEAvgRun;
-  std::vector<double> vE0Run;
-  std::vector<double> vSlopeRun;
-
-  std::vector<double> vCOGX;
-  std::vector<double> vCOGY;
+  Bool_t   fisMC;
+  Int_t fNPairs;
+  Int_t fPairIndex[2]; // index of cluster pairs
 };
 #endif

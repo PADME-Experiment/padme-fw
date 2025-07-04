@@ -14,7 +14,7 @@ Is22GGAnalysis::Is22GGAnalysis(TString cfgFile, Int_t verbose)
   }
   NGG=0;
   fHS = HistoSvc::GetInstance();
-  fECalCalib = ECalCalib::GetInstance();
+  fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fMCTruth = MCTruth::GetInstance();
   // Standard cuts list
@@ -176,7 +176,7 @@ Bool_t Is22GGAnalysis::Process(){
       fisMC=true;
     }
     if(fisMC) fBeamE = fMCTruth->GetBeamEnergy(); 
-    if(!fisMC) fBeamE = fECalCalib->GetBeamEnergy();
+    if(!fisMC) fBeamE = fGeneralInfo->GetBeamEnergy();
     //    if(fBeamE==0 && !fisMC) fBeamE = 432.5;
     if(fBeamE==0 && !fisMC) fBeamE = 290.5; //need to be run dependent
   }
@@ -240,8 +240,12 @@ Bool_t Is22GGAnalysis::Process(){
   Int_t NGoodClusters = (Int_t) EGoodCluster.size();
   //  cut at at least two good clusters
   if(NGoodClusters<2) return false;
-  if(NGoodClusters>10) cout<<"Crazy amount of Good clusters "<<NGoodClusters<<endl;
   fHS->FillHistoList("GGAnalysis","NClusters_AfterPresel",NClusters,1.);
+  if(NGoodClusters>10) {
+     cout<<"Crazy amount of Good clusters "<<NGoodClusters<<endl;
+     return false;
+  }
+
   Int_t NPairs = 0;
   Double_t Zv=0;
   Double_t Dist=0;
@@ -271,9 +275,9 @@ Bool_t Is22GGAnalysis::Process(){
       vEi.push_back(EGoodCluster[jj]);  vPosX.push_back(PosXGoodCluster[jj]); vPosY.push_back(PosYGoodCluster[jj]);
       Double_t COGX = CompCOG(vEi,vPosX); Double_t COGY = CompCOG(vEi,vPosY);
       //Retrieve COG position for the current RUN
-      Double_t RunCOGX = fECalCalib->GetCOGX(); 
-      Double_t RunCOGY = fECalCalib->GetCOGY();
-      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<fECalCalib->GetCOGY()<<endl;
+      Double_t RunCOGX = fGeneralInfo->GetCOG().X(); 
+      Double_t RunCOGY = fGeneralInfo->GetCOG().Y();
+      //      cout<<"GET COG "<<RunCOGX<<" GET COG Y "<<RunCOGY<<endl;
 
       fHS->FillHistoList("GGAnalysis","COG_X",COGX,1);
       fHS->FillHistoList("GGAnalysis","COG_Y",COGY,1);
@@ -340,7 +344,7 @@ Bool_t Is22GGAnalysis::Process(){
       bool G2Check_Displaced = CheckThetaAngle(EGoodCluster[kk],Angle1);
       //      cout<<"Angle "<<Angle<<" Angle1 "<<Angle1<<" ZV "<<Zv<<endl;
       
-      if(G1Check_Displaced && G2Check_Displaced & abs(EGoodCluster[kk]+EGoodCluster[jj]-fBeamE)/14<3){ 
+      if(G1Check_Displaced && G2Check_Displaced && abs(EGoodCluster[kk]+EGoodCluster[jj]-fBeamE)/14<3){ 
       	fHS->FillHistoList("GGAnalysis","ZVertex_EnnvsTheta_displaced",Zv,1);
       }
       NPairs++;      
@@ -525,6 +529,6 @@ Bool_t Is22GGAnalysis::IsMCGG(double VTime,double E1,double E2)
       }
     }
   }
-  std::cout<<"*** "<<std::endl;
+  //std::cout<<"*** "<<std::endl;
   return isGG_IN;
 }

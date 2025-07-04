@@ -371,7 +371,7 @@ int main(Int_t argc, char **argv)
   Int_t nLeadGlassHits=0;
   Bool_t doDataQuality = false;
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
-  TFile *fMeanDQ = new TFile("config/EHitOvPoTvsRun.root");
+  /*TFile *fMeanDQ = new TFile("config/EHitOvPoTvsRun.root");
   if(!fMeanDQ) exit(1);
   TGraphErrors *gMeanDQ =(TGraphErrors*)fMeanDQ->Get("Graph")->Clone();
   TFile *fSigmaDQ = new TFile("config/EHitOvPoTvsRun_sigma.root");
@@ -384,13 +384,17 @@ int main(Int_t argc, char **argv)
   Double_t MeanValDQ =  gMeanDQ->Eval(DBRunNumber);
   Double_t SigmaValDQ =  gSigmaDQ->Eval(DBRunNumber);
   Double_t Energy =  gRunvsEnergy->Eval(DBRunNumber);
-
+  
   std::cout<<DBRunNumber<< "MeanValDQ "<< MeanValDQ<< " SigmaValDQ " << SigmaValDQ<< "Energy "<< Energy <<std::endl;
-
+  
   fRunvsEnergy->Close();
   fSigmaDQ->Close();
   fMeanDQ->Close();
+  */
   TH1D *hMean = new TH1D("hMean", "hMean", 300, 0, 3);
+  Double_t MeanValDQ =  0.;
+  Double_t SigmaValDQ =0.;
+  Double_t Energy =  0.; 
   if (NEvt >0 && NEvt<nevents) nevents=NEvt;
   if(!fHistoMode){
      for (Int_t i=0; i<nevents; ++i) {
@@ -494,7 +498,7 @@ int main(Int_t argc, char **argv)
   jevent = fRecoChain->GetEntry(0);
   UserAn->Process(); 
 }
-  hMean->SaveAs("hMean.root");
+  //hMean->SaveAs("hMean.root");
   if (fVerbose) printf("---> Finalizing user analysis\n");
   UserAn->Finalize();
   if (fVerbose) printf("---> Finalizing histogram service\n");

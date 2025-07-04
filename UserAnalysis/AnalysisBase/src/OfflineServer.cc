@@ -13,13 +13,16 @@ OfflineServer* OfflineServer::GetInstance()
 
 OfflineServer::OfflineServer()
 {
+  TString cfgFile = "config/UserAnalysis.conf";
   std::cout << "Opening input OfflineDB file" << std::endl;
   // open input file
   //std::ifstream inputDBFile("config/run_level_offline_db_2022_witherr_patch_RIGHT_periods_lgcorr.txt");
   //std::cout << "DB version: config/run_level_offline_db_2022_witherr_patch_RIGHT_period_lgcorr.txt" << std::endl;
-  std::ifstream inputDBFile("config/run_level_offline_db_2025.txt");
+  fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+  fcfgDatabase = TString(fCfgParser->GetSingleArg("GENERAL", "Database"));
+  std::ifstream inputDBFile(Form("%s",fcfgDatabase.Data()));
 
-  std::cout << "DB version: config/run_level_offline_db_2025.txt" <<std::endl;  
+  std::cout << "DB version: "<<fcfgDatabase.Data()<<std::endl;
   //std::ifstream inputDBFile("/data9Vd1/padme/dimeco/COGRun/modified_db_COGO.txt");
   if(!inputDBFile) { // file couldn't be opened
     std::cout << "Error: file could not be opened" << std::endl;

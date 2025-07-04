@@ -26,6 +26,7 @@
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TMMRecoEvent.hh"
 #include "TMCTruthEvent.hh"
 
 #include "HistoSvc.hh"
@@ -207,21 +208,23 @@ int main(Int_t argc, char **argv)
   TSACRecoEvent*        fSACRecoEvent     =0;
   TLeadGlassRecoEvent*  fLeadGlassRecoEvent =0;
   TTargetRecoBeam*      fTargetRecoBeam   =0;
+  TMMRecoEvent*         fMMRecoEvent      =0;
   TRecoVClusCollection* fSACRecoCl        =0;
   TRecoVClusCollection* fECalRecoCl       =0;
   TRecoVClusCollection* fETagRecoCl       =0;
   TRecoVClusCollection* fPVetoRecoCl      =0;
   TRecoVClusCollection* fEVetoRecoCl      =0;
   TRecoVClusCollection* fHEPVetoRecoCl    =0;
+  TRecoVClusCollection* fMMRecoCl         =0;
   TMCTruthEvent*        fMCTruthEvent     =0;
 
   TTree::SetMaxTreeSize(190000000000);
 
   TString recoTreeName = "Events";
-  cout<<"Building chain "<<endl;
+  std::cout<<"Building chain "<<std::endl;
   //  if(InputFileNameList.size()>200) cout<<"List too big!!!" <<endl;
   TChain* fRecoChain = BuildChain(recoTreeName,InputFileNameList);
-  cout<<"chain  Built "<<endl;
+  std::cout<<"chain  Built "<<std::endl;
 
   Int_t nevents = 0;
   if (fRecoChain) {
@@ -279,6 +282,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="TargetBeam") {
       fTargetRecoBeam = new TTargetRecoBeam();
       fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoBeam);
+    } else if (branchName=="MM_Hits") {
+      fMMRecoEvent = new TMMRecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fMMRecoEvent);
     } else if (branchName=="SAC_Clusters") {
       fSACRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fSACRecoCl);
@@ -300,6 +306,9 @@ int main(Int_t argc, char **argv)
     } else if (branchName=="HEPVeto_Clusters") {
       fHEPVetoRecoCl = new TRecoVClusCollection();
       fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoCl);
+    } else if (branchName=="MM_Clusters") {
+      fMMRecoCl = new TRecoVClusCollection();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fMMRecoCl);
     } else if (branchName=="MCTruth") {
       fMCTruthEvent = new TMCTruthEvent();
       fRecoChain->SetBranchAddress(branchName.Data(),&fMCTruthEvent);
@@ -348,12 +357,14 @@ int main(Int_t argc, char **argv)
   event->SACRecoEvent     = fSACRecoEvent    ;
   event->LeadGlassRecoEvent = fLeadGlassRecoEvent;
   event->TargetRecoBeam   = fTargetRecoBeam  ;
+  event->MMRecoEvent      = fMMRecoEvent     ;
   event->SACRecoCl        = fSACRecoCl       ;
   event->ECalRecoCl       = fECalRecoCl      ;
   event->PVetoRecoCl      = fPVetoRecoCl     ;
   event->ETagRecoCl       = fETagRecoCl      ;
   event->EVetoRecoCl      = fEVetoRecoCl     ;
   event->HEPVetoRecoCl    = fHEPVetoRecoCl   ;
+  event->MMRecoCl         = fMMRecoCl        ;
   event->MCTruthEvent     = fMCTruthEvent    ;
 
   if (fVerbose) printf("---> Initializing user analysis\n");
@@ -369,6 +380,7 @@ int main(Int_t argc, char **argv)
   Int_t nSACHits    =0;
   Int_t nETagHits   =0;
   Int_t nLeadGlassHits=0;
+  Int_t nMMHits     =0;
   Bool_t doDataQuality = false;
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
   /*TFile *fMeanDQ = new TFile("config/EHitOvPoTvsRun.root");
@@ -449,6 +461,7 @@ int main(Int_t argc, char **argv)
       if (fHEPVetoRecoEvent) nHEPVetoHits= fHEPVetoRecoEvent->GetNHits();
       if (fSACRecoEvent)     nSACHits    = fSACRecoEvent->GetNHits();
       if (fETagRecoEvent)    nETagHits   = fETagRecoEvent->GetNHits();
+      if (fMMRecoEvent)      nMMHits     = fMMRecoEvent->GetNHits();
       if (fLeadGlassRecoEvent) nLeadGlassHits= fLeadGlassRecoEvent->GetNHits();
       std::cout<<"     Hits in Target "<<nTargetHits
 	       <<" ECal "<<nECalHits
@@ -457,7 +470,9 @@ int main(Int_t argc, char **argv)
 	       <<" HEPVeto "<<nHEPVetoHits
 	       <<" ETag "<<nETagHits
 	       <<" LeadGlass "<<nLeadGlassHits
-	       <<" SAC "<<nSACHits<<std::endl;
+	       <<" SAC "<<nSACHits
+	       <<" MM "<<nMMHits
+	       <<std::endl;
       std::cout<<"     TargetBeam X and Y  "<<fTargetRecoBeam->getX()<<" "<<fTargetRecoBeam->getY()<<std::endl;
 
       // Show MCTruth information (example)
@@ -488,6 +503,7 @@ int main(Int_t argc, char **argv)
       if (fHEPVetoRecoEvent) fHEPVetoRecoEvent->Print();
       if (fSACRecoEvent)     fSACRecoEvent->Print();
       if (fLeadGlassRecoEvent) fLeadGlassRecoEvent->Print();
+      if (fMMRecoEvent)      fMMRecoEvent->Print();
     }
     
     if (doNtuple) stdNtuple->Fill(event);

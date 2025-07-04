@@ -17,6 +17,7 @@
 #include "DataQuality.hh" //EDM TS
 #include "MCTruth.hh"     //MR
 #include "MCTruthECal.hh"     //EDM
+#include "MMStudy.hh" //MM study
 #include "HistoSvc.hh"
 #include "TempCorr.hh"
 
@@ -44,6 +45,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fECalETagMatching  = ECalETagMatching::GetInstance();
   fETagAn  = ETagAn::GetInstance();
   fDataQuality = DataQuality::GetInstance();
+  fMMStudy = MMStudy::GetInstance();
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
   fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
   fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
@@ -65,6 +67,7 @@ UserAnalysis::~UserAnalysis(){
   delete fIs22GGAnalysis;
   delete fDataQuality;
   delete fECalETagMatching;
+  delete fMMStudy;
 //  delete fIs3GAnalysis;
 }
 
@@ -89,6 +92,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
   if (fETagHitsAvail) fETagAn->Init(fEvent);
   if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
+  fMMStudy->Init(fEvent,fHistoMode,InputHistofile);
   //  fIsGGAnalysis->Init(fEvent);
   //if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
   //fIs22GGAnalysis->Init(fEvent);
@@ -141,6 +145,7 @@ Bool_t UserAnalysis::Process(){
     fETagAn->Process();
     fECalETagMatching->Process();
   }
+  fMMStudy->Process();
   //  fIsGGAnalysis->Process();
   //fIs22GGAnalysis->Process();
 //  fIs3GAnalysis->Process();   
@@ -215,6 +220,7 @@ Bool_t UserAnalysis::Finalize()
   fECalCalib22->Finalize();
   fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();
+  fMMStudy->Finalize();
 
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};

@@ -11,6 +11,7 @@
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TMMRecoEvent.hh"
 #include "TRecoVHit.hh"
 #include "TMCTruthEvent.hh"
 #include "TRecoVClusCollection.hh"
@@ -31,13 +32,14 @@ public:
   TETagRecoEvent*       ETagRecoEvent   ;//MR 06/22
   TTargetRecoBeam*      TargetRecoBeam  ;
   TLeadGlassRecoEvent*  LeadGlassRecoEvent;
+  TMMRecoEvent*         MMRecoEvent     ; // added 4/7/2025
   TRecoVClusCollection* SACRecoCl       ;
   TRecoVClusCollection* ECalRecoCl      ;
   TRecoVClusCollection* PVetoRecoCl     ;
   TRecoVClusCollection* ETagRecoCl      ;//MR 06/22
   TRecoVClusCollection* EVetoRecoCl     ;
   TRecoVClusCollection* HEPVetoRecoCl   ;
+  TRecoVClusCollection* MMRecoCl        ;// added 4/7/2025
   TMCTruthEvent*        MCTruthEvent    ;
-
 };
 #endif

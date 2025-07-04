@@ -11,6 +11,7 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   SACRecoEvent         =0;
   ETagRecoEvent        =0; //MR 06/22
   LeadGlassRecoEvent   =0;
+  MMRecoEvent          =0; 
   TargetRecoBeam       =0;
   SACRecoCl            =0;
   ECalRecoCl           =0;
@@ -18,6 +19,7 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   EVetoRecoCl          =0;
   ETagRecoCl           =0; //MR 06/22
   HEPVetoRecoCl        =0;
+  MMRecoCl             =0;
   MCTruthEvent         =0;
 
 }

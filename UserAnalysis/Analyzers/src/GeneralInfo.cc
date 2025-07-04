@@ -49,8 +49,8 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   else if(trueRunNumber > 80000){
 	fPeriodStartTime = 174000000;
 	fBeamMomentum = 268.94;
-    	fZTarg = -732.47;
-	fZECal = 2526.5; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
+	fZTarg = -732.47;
+	fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
    }
 
   // default start and stop time of runs

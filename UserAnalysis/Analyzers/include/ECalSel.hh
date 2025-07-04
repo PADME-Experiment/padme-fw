@@ -133,6 +133,7 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
+  TString fcfgPath;
   TString fNRun;
   // general cuts
 

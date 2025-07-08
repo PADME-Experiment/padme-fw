@@ -33,22 +33,26 @@ void MMGeometry::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr)
 
 TVector3  MMGeometry::LocalPosition(Int_t chId)
 // boardSN Layer side plane view hole offset stripid_orig
-// 0       0     0    0     0    6    0      0-255
-// 1       0     1    0     0    6    256    256-511
-// 2       1     0    0     0    6    0      0-255
-// 3       1     1    0     0    6    256    256-511
-// 4       2     0    0     1    1    0      0-255
-// 5       2     1    0     1    1    256    256-511
-// 6       3     0    0     1    1    0      0-255
-// 7       3     1    0     1    1    256    256-511
-// 8       4     0    1     0    1    0      0-255
-// 9       4     1    1     0    1    256    256-511
-// 10      5     0    1     0    1    0      0-255
-// 11      5     1    1     0    1    256    256-511
-// 12      6     0    1     1    6    0      0-255
-// 13      6     1    1     1    6    256    256-511
-// 14      7     0    1     1    6    0      0-255
-// 15      7     1    1     1    6    256    256-511
+// Geometrical afferent positions are defined by the same values of side, view, otherview but different planes
+// 
+  
+// boardSN plane Layer side  view otherview hole offset stripid_orig
+// 0       0     0     0     0    0         6    0      1-256
+// 1       0     0     1     0    0         6    256    257-512
+// 2       0     1     0     0    1         6    0      0-255
+// 3       0     1     1     0    1         6    256    256-511
+// 4       0     2     0     1    0         1    0      0-255
+// 5       0     2     1     1    0         1    256    256-511
+// 6       0     3     0     1    1         1    0      0-255
+// 7       0     3     1     1    1         1    256    256-511
+// 8       1     4     0     0    0         1    0      0-255
+// 9       1     4     1     0    0         1    256    256-511
+// 10      1     5     0     0    1         1    0      0-255
+// 11      1     5     1     0    1         1    256    256-511
+// 12      1     6     0     1    0         6    0      0-255
+// 13      1     6     1     1    0         6    256    256-511
+// 14      1     7     0     1    1         6    0      0-255
+// 15      1     7     1     1    1         6    256    256-511
   
 // layer 0,1 -> y layer/2 = 0 
 // layer 2,3 -> x layer/2 = 1
@@ -65,6 +69,7 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
   int side = bdid%2; // left/right (X view), bottom/top (Y view)
   int strip = (chId & 0x0FF); // strip 0-255
   int view = (layer/2)%2; // 0 means Y view, 1 means X view
+  int otherview = layer%2; // 0 means the half-strip left (bottom) depending on the view
   int hole[8] = {6,6,1,1,1,1,6,6};
   int offs[2] = {0,256};
   
@@ -78,8 +83,10 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
 
   if (view == 0) {
     y += armo - armwidth*0.5;
+    x += (otherview==1? 1: -1)*armwidth*0.25;
   } else {
     x += armo - armwidth*0.5;
+    y += (otherview==1? 1: -1)*armwidth*0.25;
   }
 
   //  0      255  0        255

@@ -18,6 +18,7 @@ void DigitizerChannelMM::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *
   
   fADCUnitToCharge = cfg->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
   fADCTimeBin      = cfg->GetParOrDefault("RECO","ADCTimeBin",25.);       // ns
+  fThresholdTruncatedMean = cfg->GetParOrDefault("RECO","ThresholdTruncatedMean",0.2);       // ns
   //  fClusterDeltaCellMax = cfg->GetParOrDefault("RECOCLUSTER","ClusterDelta1CellMax",2); // 
   
 
@@ -46,9 +47,19 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
     }
   }
 
+  double tmean = 0;
+  double chargeTrunk = 0;
+  for (UShort_t i=0; i<fNSamples; i++){
+    if (fSamples[i] < charge*fThresholdTruncatedMean/fNSamples) continue;
+    chargeTrunk += fSamples[i];
+    tmean += fSamples[i]*i;
+  }
+  tmean /= chargeTrunk;
+
+  
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetChannelId(channelid);            // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-  Hit->SetTime(sampleMaxId*fADCTimeBin);   // ns
+  Hit->SetTime(tmean*fADCTimeBin);   // ns
   Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
   Hit->setStatus(ch->IsChannelFailed());
   hitArray.push_back(Hit);

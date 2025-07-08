@@ -26,6 +26,7 @@ private:
   //Configuration variables
   double fADCUnitToCharge ;
   double fADCTimeBin      ;
+  double fThresholdTruncatedMean;
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;

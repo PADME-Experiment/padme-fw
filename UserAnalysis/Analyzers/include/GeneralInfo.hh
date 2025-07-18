@@ -12,6 +12,19 @@ using namespace std;
 
 class TRecoEvent;
 class OfflineServer;
+
+struct MMchInfo{
+  int bdid;
+  int layer;
+  int plane;
+  int verse;
+  int side;
+  int strip;
+  int view;
+  int otherview;
+  int packed;
+};
+
 class GeneralInfo : public TObject
 {
 
@@ -76,6 +89,15 @@ public:
   
   inline Bool_t isMC() const { return fisMC;} // default bunch time length
 
+  inline double GetMMStripPitch() const {return fMMStripPitch;} // mm
+  inline double GetMMOffsetPlaneX(int val){return fMMOffsetPlaneX[val];} // mm 
+  inline double GetMMOffsetPlaneY(int val){return fMMOffsetPlaneY[val];} // mm
+  inline double GetMMPosPlaneZ(int val){return fMMPosPlaneZ[val];} // mm
+  inline double GetMMOffsetCenterX() const {return fMMOffsetCenterX;}  // mm
+  inline double GetMMOffsetCenterY() const {return fMMOffsetCenterY;}  // mm
+
+  MMchInfo DecodeMMChannel(int);
+  
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -147,5 +169,14 @@ private:
   double fEnergyMax;
   Bool_t fisMC;
 
+
+  double fMMStripPitch  ; // mm
+  double fMMOffsetPlaneX[2]; // mm 
+  double fMMOffsetPlaneY[2]; // mm
+  double fMMPosPlaneZ[2];// mm
+  double fMMOffsetCenterX;  // mm
+  double fMMOffsetCenterY;  // mm
+
+  
 };
 #endif

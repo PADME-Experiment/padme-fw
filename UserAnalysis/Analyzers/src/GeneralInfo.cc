@@ -48,10 +48,10 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fZTarg = -1028; 
    }
   else if(trueRunNumber > 80000){
-	fPeriodStartTime = 174000000;
-	fBeamMomentum = 268.94;
-	fZTarg = -732.47;
-	fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
+    fPeriodStartTime = 174000000;
+    fBeamMomentum = 268.94;
+    fZTarg = -732.47;
+    fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
    }
 
   // default start and stop time of runs
@@ -80,6 +80,18 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fQuadrantTempCorr[3] = 0.0; // correction
 
 
+  fMMStripPitch      = 1.2; // mm
+  fMMOffsetPlaneX[0] = 0; // mm 
+  fMMOffsetPlaneY[0] = 0; // mm
+  fMMPosPlaneZ[0]	   = 2357.32;// mm
+  fMMOffsetPlaneX[1] = 0; // mm
+  fMMOffsetPlaneY[1] = 0;  // mm
+  fMMPosPlaneZ[1]    = 2458.32; // mm
+  fMMOffsetCenterX   = 9.995;  // mm
+  fMMOffsetCenterY   = 20.1975;  // mm
+
+
+  
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
   fIsCOGAvailable = kFALSE;
@@ -262,4 +274,39 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     EvalBeamProperties();
     PrintBeamProperties(runID);
     return;
+}
+
+// boardSN plane Layer side  view otherview hole offset stripid_orig
+// 0       0     0     0     0    0         6    0      1-256
+// 1       0     0     1     0    0         6    256    257-512
+// 2       0     1     0     0    1         6    0      0-255
+// 3       0     1     1     0    1         6    256    256-511
+// 4       0     2     0     1    0         1    0      0-255
+// 5       0     2     1     1    0         1    256    256-511
+// 6       0     3     0     1    1         1    0      0-255
+// 7       0     3     1     1    1         1    256    256-511
+// 8       1     4     0     0    0         1    0      0-255
+// 9       1     4     1     0    0         1    256    256-511
+// 10      1     5     0     0    1         1    0      0-255
+// 11      1     5     1     0    1         1    256    256-511
+// 12      1     6     0     1    0         6    0      0-255
+// 13      1     6     1     1    0         6    256    256-511
+// 14      1     7     0     1    1         6    0      0-255
+// 15      1     7     1     1    1         6    256    256-511
+
+MMchInfo GeneralInfo::DecodeMMChannel(int chId){
+  MMchInfo mmi;
+  mmi.bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
+  mmi.layer = (mmi.bdid)/2;  // layer 0-7
+  mmi.plane = (mmi.layer)/4;  // plane 0-1
+  mmi.verse = ((mmi.plane )== 0)? 1 : -1;
+  mmi.side = mmi.bdid%2; // left/right (X view), bottom/top (Y view)
+  mmi.strip = (chId & 0x0FF); // strip 0-255
+  mmi.view = (mmi.layer/2)%2; // 0 means Y view, 1 means X view    
+  mmi.otherview = mmi.layer%2; // 0 means the half-strip left (bottom) depending on the view
+  int packed = (mmi.side << 2);
+  packed |= (mmi.view<<1);
+  packed |= (mmi.otherview);
+  mmi.packed = packed;
+  return mmi;
 }

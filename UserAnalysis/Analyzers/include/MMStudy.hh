@@ -6,6 +6,7 @@
 #include "HistoSvc.hh"
 #include "GeneralInfo.hh"
 #include "NPoTAnalysis.hh"
+#include "MMTracker.hh"
 
 class MMStudy {
 
@@ -24,6 +25,7 @@ public:
 
 private:
   static MMStudy* fInstance;
+  GeneralInfo* fGeneralInfo;
   Bool_t InitHistos(Int_t);
   NPoTAnalysis *fNPoTAnalysis;
   Int_t fNRun;
@@ -31,10 +33,10 @@ private:
   PadmeAnalysisEvent* fEvent;
   utl::ConfigParser* fCfgParser;
   HistoSvc* fHS;
-  GeneralInfo* fGeneralInfo;
   Int_t fVerbose;
   TString InputHistofile;
   TString InputHistofileName;
-  
+  int fEventCounter;
+  MMTracker* fTracker[3];//y view, x view, 3d view fits
 };
 #endif

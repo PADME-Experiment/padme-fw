@@ -3,6 +3,8 @@
 #include "utlConfigParser.hh"
 #include "TMMChannel.hh"
 #include "TMMBoard.hh"
+#include "TF1.h"
+#include "TGraphErrors.h"
 
 typedef  GlobalRecoConfigOptions LocalRecoConfigOptions;
 
@@ -27,9 +29,16 @@ private:
   double fADCUnitToCharge ;
   double fADCTimeBin      ;
   double fThresholdTruncatedMean;
+  double fTimeTau; // tau value of the signal A t/tau exp(-t/tau)
+  UShort_t fTimeWindowSamples; // extent of the window in which the signal is fit
+  UShort_t fHitChargeThreshold; // minimum charge max in ADC counts for hit reconstruction
+  int fCounters;
   //mode variables
   GlobalRecoConfigOptions* fGlobalMode;
   LocalRecoConfigOptions*  fLocalMode;
-  
+  // private methods
+  bool evaluateSig(UShort_t sampleMaxId, Short_t maxQ, double* sigAmplitude, double* sigTimePeak); // id of the max sample, max sample value
+  TF1* fSignalShape;
+  static Double_t fitSignalShape(Double_t *x, Double_t *par);
 };
 

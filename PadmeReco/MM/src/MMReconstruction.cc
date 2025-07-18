@@ -67,9 +67,10 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 
   fMMCharge = 0;
   fMMFound = false;
+
   PadmeVReconstruction::ProcessEvent(rawEv,MMRawEv);
   
-  std::cout << "This event has " << MMRawEv->GetNMMBoards() << " Boards " << std::endl;
+  std::cout << "Second This event has " << (int) MMRawEv->GetNMMBoards() << " Boards " << std::endl;
   
   //UChar_t lg_b,lg_c;
   for(Int_t b = 0; b < MMRawEv->GetNMMBoards(); b++) {
@@ -81,7 +82,7 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 			     channel->GetSamplesArray());
       
       ((DigitizerChannelMM*)fChannelReco)->Reconstruct(Hits,board,channel);
-      fMMCharge += Hits.at(Hits.size()-1)->GetEnergy();
+      if (Hits.size()) fMMCharge += Hits.at(Hits.size()-1)->GetEnergy();
       //      std::cout << "Board " << b << " Channel " << MMRawEv->MMBoard(b)->MMChannel(c)->GetChannelNumber() << " fired, channel " << c << " / " << MMRawEv->MMBoard(b)->GetNMMChannels() << std::endl;
       fMMFound = true;
     }

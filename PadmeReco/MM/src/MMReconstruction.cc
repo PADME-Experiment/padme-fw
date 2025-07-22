@@ -9,6 +9,7 @@
 #include "MMReconstruction.hh"
 #include "MMGeometry.hh"
 #include "MMClusterization.hh"
+#include "TH2F.h"
 
 MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "MM", ConfigFileName)
@@ -58,6 +59,11 @@ void MMReconstruction::HistoInit()
   // Store histograms for final output
   AddHisto("MM_TotCharge",fHMMTotCharge);
 
+  for (int iev = 0; iev < 30; iev++){
+    TString histoname = Form("MM_NoiseFinder_ev%d",iev);
+    AddHisto(histoname.Data(),new TH2F(histoname.Data(),"BoardSN vs sample",27,0,27,128,0,128));
+  }
+  fEventCounter = 0;
 }
 
 void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
@@ -71,6 +77,8 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
   PadmeVReconstruction::ProcessEvent(rawEv,MMRawEv);
   
   std::cout << "Second This event has " << (int) MMRawEv->GetNMMBoards() << " Boards " << std::endl;
+
+  NoiseFinder(MMRawEv);
   
   //UChar_t lg_b,lg_c;
   for(Int_t b = 0; b < MMRawEv->GetNMMBoards(); b++) {
@@ -103,6 +111,32 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 //  if (fMMFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
 
 
+}
+
+void MMReconstruction::NoiseFinder(TMMRawEvent* MMRawEv){
+  if (fEventCounter == 30) return;
+
+  int summedSampling[TMMCHANNEL_NSAMPLES][8];
+  
+  for(Int_t b = 0; b < MMRawEv->GetNMMBoards(); b++) {
+    TMMBoard* board = MMRawEv->MMBoard(b);
+    for (int i=0; i<TMMCHANNEL_NSAMPLES; i++) {
+      for (int q = 0; q<8; q++) summedSampling[i][q] = 0;
+    }
+    for(Int_t c = 0; c < board->GetNMMChannels(); c++) {
+      TMMChannel* channel = board->MMChannel(c);
+      int iblock = channel->GetChannelNumber()/32;
+      for (int i=0; i<TMMCHANNEL_NSAMPLES; i++) summedSampling[i][iblock] += channel->GetSamplesArray()[i];
+    }
+    if (fEventCounter < 30){
+      TString histoname = Form("MM_NoiseFinder_ev%d",fEventCounter);
+      for (int i=0; i<TMMCHANNEL_NSAMPLES; i++) {
+	for (int q = 0; q<8; q++) ((TH2F*)GetHisto(histoname.Data()))->Fill(i,8*b+q,summedSampling[i][q]);
+      }
+    }
+  }
+
+  fEventCounter++;
 }
 
 Bool_t MMReconstruction::TriggerToBeSkipped()

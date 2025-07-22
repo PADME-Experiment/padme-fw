@@ -284,9 +284,9 @@ Bool_t ECalSel::Process()
     // DataQuality();
     NPoTLGCorr();
     TwoClusSel();
-//    TwoClusters_couples();
+    TwoClusters_couples();
 //TMP    OneClusSel();
-//TMP    OneClusTagAndProbeSel();
+    OneClusTagAndProbeSel();
   }
   return true;
 }
@@ -1321,19 +1321,19 @@ std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
 Int_t ECalSel::TwoClusters_couples(){
   Int_t CutFlow=0;
   std::vector<std::pair<Int_t, Int_t>> couples = GetCluCouples();
-  std::cout << "UNICA " << couples.size() << std::endl;
-  int icount=0;
-  for (std::vector<std::pair<Int_t, Int_t>>::iterator itero = couples.begin(); itero != couples.end(); ++itero){
-    std::cout << "i = " << icount << " couples = " << itero->first << " , " << itero->second << std::endl;
-    icount++;
-  }
+  //  std::cout << "UNICA " << couples.size() << std::endl;
+  //  int icount=0;
+  //  for (std::vector<std::pair<Int_t, Int_t>>::iterator itero = couples.begin(); itero != couples.end(); ++itero){
+  //    std::cout << "i = " << icount << " couples = " << itero->first << " , " << itero->second << std::endl;
+  //    icount++;
+  //  }
   //fill plot with NCouples available
-  icount = -1;
+  //  icount = -1;
   TRecoVCluster *tempClu[2];
   double cluTime[2];
   for (std::vector<std::pair<Int_t, Int_t>>::iterator clupairs = couples.begin(); clupairs != couples.end(); ++clupairs) {
-    icount++;
-    std::cout << "i = " << icount << " couples = " << clupairs->first << " , " << clupairs->second << std::endl;
+    //    icount++;
+    //    std::cout << "i = " << icount << " couples = " << clupairs->first << " , " << clupairs->second << std::endl;
       
     tempClu[0] = fECal_clEvent->Element(clupairs->first);
     tempClu[1] = fECal_clEvent->Element(clupairs->second);
@@ -1348,8 +1348,8 @@ Int_t ECalSel::TwoClusters_couples(){
     cluEnergy[0] = tempClu[0]->GetEnergy();
     cluEnergy[1] = tempClu[1]->GetEnergy();
 
-    std::cout << "Position info clu0 " << tempClu[0]->GetPosition().X() << " " <<  tempClu[0]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
-    std::cout << "Position info clu1 " << tempClu[1]->GetPosition().X() << " " <<  tempClu[1]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    //    std::cout << "Position info clu0 " << tempClu[0]->GetPosition().X() << " " <<  tempClu[0]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    //    std::cout << "Position info clu1 " << tempClu[1]->GetPosition().X() << " " <<  tempClu[1]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
     TVector3 cluPos[2];
     cluPos[0].SetXYZ(
         tempClu[0]->GetPosition().X(),
@@ -1776,6 +1776,7 @@ Int_t ECalSel::TwoClusters_couples(){
       fhSvcVal->FillHistoList("ECalSelTwoClu", "CutFlow_2Cl", b, 1.);
 
   }
+   return 0;
 }
 
 

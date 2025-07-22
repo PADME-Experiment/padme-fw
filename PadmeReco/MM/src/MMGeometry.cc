@@ -41,18 +41,19 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
 // 1       0     0     1     0    0         6    256    257-512
 // 2       0     1     0     0    1         6    0      0-255
 // 3       0     1     1     0    1         6    256    256-511
-// 4       0     2     0     1    0         1    0      0-255
-// 5       0     2     1     1    0         1    256    256-511
-// 6       0     3     0     1    1         1    0      0-255
-// 7       0     3     1     1    1         1    256    256-511
+// 4       0     2     0     1    1         1    0      0-255
+// 5       0     2     1     1    1         1    256    256-511
+// 6       0     3     0     1    0         1    0      0-255
+// 7       0     3     1     1    0         1    256    256-511
+
 // 8       1     4     0     0    0         1    0      0-255
 // 9       1     4     1     0    0         1    256    256-511
 // 10      1     5     0     0    1         1    0      0-255
 // 11      1     5     1     0    1         1    256    256-511
-// 12      1     6     0     1    0         6    0      0-255
-// 13      1     6     1     1    0         6    256    256-511
-// 14      1     7     0     1    1         6    0      0-255
-// 15      1     7     1     1    1         6    256    256-511
+// 12      1     6     0     1    1         6    0      0-255
+// 13      1     6     1     1    1         6    256    256-511
+// 14      1     7     0     1    0         6    0      0-255
+// 15      1     7     1     1    0         6    256    256-511
   
 // layer 0,1 -> y layer/2 = 0 
 // layer 2,3 -> x layer/2 = 1
@@ -64,12 +65,13 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
 // layer 6,7 large hole
 {
   int bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
+  
   int layer = bdid/2;  // layer 0-7
   int plane = layer/4;  // plane 0-1
   int side = bdid%2; // left/right (X view), bottom/top (Y view)
   int strip = (chId & 0x0FF); // strip 0-255
   int view = (layer/2)%2; // 0 means Y view, 1 means X view
-  int otherview = layer%2; // 0 means the half-strip left (bottom) depending on the view
+  int otherview[8] = {0,1,1,0,0,1,1,0}; // 0 means the half-strip left (bottom) depending on the view
   int hole[8] = {6,6,1,1,1,1,6,6};
   int offs[2] = {0,256};
   
@@ -83,10 +85,10 @@ TVector3  MMGeometry::LocalPosition(Int_t chId)
 
   if (view == 0) {
     y += armo - armwidth*0.5;
-    x += (otherview==1? 1: -1)*armwidth*0.25;
+    x += (otherview[layer]==1? 1: -1)*armwidth*0.25;
   } else {
     x += armo - armwidth*0.5;
-    y += (otherview==1? 1: -1)*armwidth*0.25;
+    y += (otherview[layer]==1? 1: -1)*armwidth*0.25;
   }
 
   //  0      255  0        255

@@ -33,7 +33,7 @@ private:
   void AnalyzeChannel(Short_t*);
   void ComputeTotalCharge(Short_t*);
   void ComputeBunchLength(Short_t*);
-
+  void NoiseFinder(TMMRawEvent*);
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
 
@@ -47,5 +47,6 @@ private:
   //
   //  DigitizerChannelMM* fChannelReco; // NO: use the object in PadmeVReconstruction
   //  MMGeometry* fGeometry; // NO: use the object in PadmeVReconstruction
+  int fEventCounter;
 };
 #endif

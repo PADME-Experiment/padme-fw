@@ -545,7 +545,7 @@ Bool_t PadmeReconstruction::NextEvent()
       // Reconstruct individual detectors (but check if they exist, first!)
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
 	if (fRecoLibrary[iLib]->GetName() == "MM") {
-	  std::cout << "Running the processevent method of the merged event for the chamber" << std::endl;
+	  //	  std::cout << "Running the processevent method of the merged event for the chamber" << std::endl;
 	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent(),fRawMergedEvent->GetTMMRawEvent());
 	} else {
 	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent());

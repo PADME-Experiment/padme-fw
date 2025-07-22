@@ -66,6 +66,7 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
 
   if (sampleMaxId == fNSamples-1) return; //  do not produce reco hits when the max is at the edge
   if (sampleMaxId == 0          ) return; //  do not produce reco hits when the max is at the edge
+
   if (chargeMax < fHitChargeThreshold) return;
 
   
@@ -97,12 +98,12 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
   
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetChannelId(channelid);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-  Hit->SetTime(sigTimePeak); // ns
-  Hit->SetEnergy(sigAmplitude); // electrons
+//  Hit->SetTime(sigTimePeak); // ns
+//  Hit->SetEnergy(sigAmplitude); // electrons
   //  Hit->SetTime(tmean*fADCTimeBin);   // ns
-  //  Hit->SetTime(sampleMaxId*fADCTimeBin);   // ns
+  Hit->SetTime(sampleMaxId*fADCTimeBin);   // ns
   //  Hit->SetTime(twindow*fADCTimeBin);   // ns
-  //  Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
+  Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
   Hit->setStatus(ch->IsChannelFailed());
   hitArray.push_back(Hit);
 

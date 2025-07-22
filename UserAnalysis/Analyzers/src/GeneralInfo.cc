@@ -281,20 +281,22 @@ void GeneralInfo::RetrieveDBInfo(int runID){
 // 1       0     0     1     0    0         6    256    257-512
 // 2       0     1     0     0    1         6    0      0-255
 // 3       0     1     1     0    1         6    256    256-511
-// 4       0     2     0     1    0         1    0      0-255
-// 5       0     2     1     1    0         1    256    256-511
-// 6       0     3     0     1    1         1    0      0-255
-// 7       0     3     1     1    1         1    256    256-511
+// 4       0     2     0     1    1         1    0      0-255
+// 5       0     2     1     1    1         1    256    256-511
+// 6       0     3     0     1    0         1    0      0-255
+// 7       0     3     1     1    0         1    256    256-511
 // 8       1     4     0     0    0         1    0      0-255
 // 9       1     4     1     0    0         1    256    256-511
 // 10      1     5     0     0    1         1    0      0-255
 // 11      1     5     1     0    1         1    256    256-511
-// 12      1     6     0     1    0         6    0      0-255
-// 13      1     6     1     1    0         6    256    256-511
-// 14      1     7     0     1    1         6    0      0-255
-// 15      1     7     1     1    1         6    256    256-511
+// 12      1     6     0     1    1         6    0      0-255
+// 13      1     6     1     1    1         6    256    256-511
+// 14      1     7     0     1    0         6    0      0-255
+// 15      1     7     1     1    0         6    256    256-511
 
 MMchInfo GeneralInfo::DecodeMMChannel(int chId){
+  int otherview[8] = {0,1,1,0,0,1,1,0}; // 0 means the half-strip left (bottom) depending on the view
+  
   MMchInfo mmi;
   mmi.bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
   mmi.layer = (mmi.bdid)/2;  // layer 0-7
@@ -303,7 +305,7 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
   mmi.side = mmi.bdid%2; // left/right (X view), bottom/top (Y view)
   mmi.strip = (chId & 0x0FF); // strip 0-255
   mmi.view = (mmi.layer/2)%2; // 0 means Y view, 1 means X view    
-  mmi.otherview = mmi.layer%2; // 0 means the half-strip left (bottom) depending on the view
+  mmi.otherview = otherview[mmi.layer]; // 0 means the half-strip left (bottom) depending on the view
   int packed = (mmi.side << 2);
   packed |= (mmi.view<<1);
   packed |= (mmi.otherview);

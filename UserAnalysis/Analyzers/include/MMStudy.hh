@@ -37,6 +37,7 @@ private:
   TString InputHistofile;
   TString InputHistofileName;
   int fEventCounter;
+  bool fSaveEvent;
   MMTracker* fTracker[3];//y view, x view, 3d view fits
 };
 #endif

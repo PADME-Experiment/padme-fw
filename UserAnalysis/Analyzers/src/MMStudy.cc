@@ -62,7 +62,13 @@ Bool_t MMStudy::InitHistos(Int_t nRun){
   // MMStudy directory will contain all histograms related to this analysis
 
   fHS->CreateList("MMStudy");
-  cout<<" Creating MMStudy Hystograms for Run "<<nRun<<" "<<endl;  
+  cout<<" Creating MMStudy Hystograms for Run "<<nRun<<" "<<endl;
+  for (int j=0; j<16; j++){
+    fHS->BookHisto2List("MMStudy",Form("pairs_vs_track_board%d",j),1000,-1.,1.,1000,-1.,1.);
+    fHS->BookHistoList("MMStudy",Form("diff_pairs_track_board%d",j),1000,-1.,1.);
+    fHS->BookHisto2List("MMStudy",Form("diffslopeinter_pairs_track_board%d",j),10,-0.05,0.05,10,-30.,30.);
+    fHS->BookHisto2List("MMStudy",Form("diffslopeinter_pairs_target_board%d",j),10,-0.05,0.05,10,-30.,30.);      
+  }
   fHS->BookHisto2List("MMStudy",Form("DistanceCluHit_z_vs_v"),200,-20.,20.,200,-20.,20.);
   fHS->BookHisto2List("MMStudy",Form("NCloseHits"),30,0,30,30,0,30);
   fHS->BookHisto2List("MMStudy","FitChi2",100,0,100.,500,0,500); 
@@ -70,7 +76,13 @@ Bool_t MMStudy::InitHistos(Int_t nRun){
   for (int i=0; i<100; i++){
     fHS->BookHisto2List("MMStudy",Form("ECalSelClusters_yvsx_ev%d",i),100,-300.,300.,100,-300,300);
     for (int j=0; j<16; j++){
+      fHS->BookHisto2List("MMStudy",Form("hough_transform_cluster_board%d_ev%d",j,i),1000,-0.2,0.2,1000,-400.,400.);
+      fHS->BookHisto2List("MMStudy",Form("hough_transform_board%d_ev%d",j,i),1000,-0.2,0.2,1000,-400.,400.);
+      fHS->BookHisto2List("MMStudy",Form("hough_transform_tar_board%d_ev%d",j,i),1000,-0.2,0.2,1000,-400.,400.);
       fHS->BookHisto2List("MMStudy",Form("zvsv_board%d_ev%d",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
+      fHS->BookHisto2List("MMStudy",Form("zvsv_selecthit_board%d_ev%d",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
+      fHS->BookHisto2List("MMStudy",Form("zvsv_hitforclus_board%d_ev%d",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
+      fHS->BookHisto2List("MMStudy",Form("zvsv_selecthit_tar_board%d_ev%d",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
       fHS->BookHisto2List("MMStudy",Form("zvsv_board%d_ev%d_clus",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
       fHS->BookHisto2List("MMStudy",Form("zvsv_board%d_ev%d_fit",j,i),1200,-600.,600.,200,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+200);
     }
@@ -195,24 +207,31 @@ Bool_t MMStudy::Process(){
   // hit loop
   TVector2 refpoint[2];// one per view
   double dzclu = (GeneralInfo::GetInstance()->GetCOG().Z()-GeneralInfo::GetInstance()->GetTargetPos().Z()); // distance cluster target in z
-
+  double z_cluster = GeneralInfo::GetInstance()->GetCOG().Z();
+  double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
   for (int i=0; i<2; i++) refpoint[i].Set(GeneralInfo::GetInstance()->GetTargetPos()[1-i], GeneralInfo::GetInstance()->GetTargetPos().Z()); // reference points on the target
 
-  // cluster loop 
+  // calo cluster loop 
   for (uint q = 0; q < cluIndices.size(); q++){
     TRecoVCluster* tempClu = ECal_clEvent->Element((int)cluIndices.at(q));
 
     double dvdzclu[2] = {
       (tempClu->GetPosition()[1]-GeneralInfo::GetInstance()->GetTargetPos()[1])/dzclu, 
       (tempClu->GetPosition()[0]-GeneralInfo::GetInstance()->GetTargetPos()[0])/dzclu}; 
-    
     TVector2 lambda[2];// one vector per view
     for (int i=0; i<2; i++){
       lambda[i].Set(dvdzclu[i],1.);
       lambda[i] *= (1./lambda[i].Mod()); // direction of the track
     }
-
+    TVector2 lambda_pair[2];// one vector per view
+    TVector2 lambda_tar[2];// one vector per view                                                                                                 
     int ncloseHits[16] = {0};
+
+    vector<TRecoVHit*> hit_for_cluster;
+    int next_hit_counter=0.;
+    int hiterator=0.;
+    double slope_good_pair=0., inter_good_pair=0.;
+    
     for (uint i = 0; i < nhits; i++){
       TRecoVHit* hit = fEvent->MMRecoEvent->Hit(i);
       MMchInfo mmi = fGeneralInfo->DecodeMMChannel(hit->GetChannelId());
@@ -225,18 +244,108 @@ Bool_t MMStudy::Process(){
       TVector2 parallelDist = lambda[mmi.view];
       parallelDist *= projection;
       distance -= parallelDist ; // ortogonal distance point to line                  
-      fHS->FillHisto2List("MMStudy",Form("DistanceCluHit_z_vs_v"),distance.X(),distance.Y(),1.);      
+      fHS->FillHisto2List("MMStudy",Form("DistanceCluHit_z_vs_v"),distance.X(),distance.Y(),1.);
+
+      fHS->FillHisto2List("MMStudy",Form("hough_transform_cluster_board%d_ev%d",mmi.bdid,fEventCounter),lambda[1-mmi.view].X(),tempClu->GetPosition()[1-mmi.view],1.);
+
       if (distance.Mod() < 5) ncloseHits[mmi.bdid]++;
-    }
+      //compute slope between pairs
+      if(i<nhits-1 && distance.Mod() < 30){
+	TRecoVHit* hit_1 = fEvent->MMRecoEvent->Hit(i+1);
+	MMchInfo mmi_1 = fGeneralInfo->DecodeMMChannel(hit_1->GetChannelId());
+	double z_1 = mmi_1.verse*hit_1->GetTime()*0.105 + hit_1->GetPosition().Z() ;
+	double v_1 = (mmi_1.view == 0? hit_1->GetPosition().Y() : hit_1->GetPosition().X());
+	double dvdzpair;
+	if(mmi_1.view == mmi.view){
+	  dvdzpair = (v_1-v)/(z_1-z);
+	}
+	else continue;
+	for (int i=0; i<2; i++){
+	  lambda_pair[mmi.view].Set(dvdzpair,1.);
+	  lambda_pair[mmi.view] *= (1./lambda_pair[mmi.view].Mod()); // direction of the track between hits in a pair
+	}
+	double diff_pairs_track = lambda_pair[mmi.view].X()-lambda[mmi.view].X();
+	double q = v-lambda_pair[mmi.view].X()*z; //constant term
+	double v_ref = lambda_pair[mmi.view].X()*(z_cluster)+ q;
+	double diff_clus_point = tempClu->GetPosition()[1-mmi.view] - v_ref;
+
+	///Pointing to the target from the hit
+	double dvdztar = (v-GeneralInfo::GetInstance()->GetTargetPos()[1-mmi.view])/(z-z_target);
+	for (int i=0; i<2; i++){
+	  lambda_tar[mmi.view].Set(dvdztar,1.);
+	  lambda_tar[mmi.view] *= (1./lambda_tar[mmi.view].Mod()); // direction of the track
+	}
+
+	double diff_pairs_target = lambda_pair[mmi.view].X()-lambda_tar[mmi.view].X();//slope pair - slope  point-target
+	double q_tar = v-lambda_tar[mmi.view].X()*z; //constant term point-target
+	double v_ref_tar = lambda_tar[mmi.view].X()*(z_cluster)+ q_tar; // ref point o point-target line @ calo
+	double diff_clus_point_tar = v_ref - v_ref_tar; //intercetta @ calo of pair - point-target
+
+	if(fabs(diff_pairs_track)<0.05 && fabs(diff_clus_point)<30.){
+	  fSaveEvent = true;
+	  //WARNING: the second hit is filled twice if it pass the next step!!!
+	  fHS->FillHisto2List("MMStudy",Form("zvsv_selecthit_board%d_ev%d",mmi.bdid,fEventCounter),v,z,hit->GetEnergy());
+	  fHS->FillHisto2List("MMStudy",Form("zvsv_selecthit_board%d_ev%d",mmi.bdid,fEventCounter),v_1,z_1,hit_1->GetEnergy());
+	  fHS->FillHisto2List("MMStudy",Form("hough_transform_board%d_ev%d",mmi.bdid,fEventCounter),lambda_pair[mmi.view].X(),v_ref,1.);
+	  fHS->FillHisto2List("MMStudy",Form("diffslopeinter_pairs_track_board%d",mmi.bdid),diff_pairs_track,diff_clus_point,1.);
+
+	  ////////ATTEMPT TO ALIGN HITS///////////
+	  // if(hiterator==0){	  
+	  //   slope_good_pair = lambda_pair[mmi.view].X();
+	  //   inter_good_pair = v_ref;
+	  //   hit_for_cluster.push_back(hit);
+	  //   hit_for_cluster.push_back(hit_1);
+	  //   next_hit_counter++;
+	  //   hiterator++; 
+	  //   continue;
+	  // }
+	  // else{
+	  //   if(fabs(lambda_pair[mmi.view].X()-slope_good_pair)<0.05 && fabs(v_ref-inter_good_pair)<30.){
+	  //     if((hiterator-next_hit_counter)<1){
+	  // 	hit_for_cluster.push_back(hit_1);
+	  // 	slope_good_pair = lambda_pair[mmi.view].X();
+	  // 	inter_good_pair = v_ref;
+	  //     }
+	  //     else{
+	  // 	hit_for_cluster.push_back(hit);
+	  // 	hit_for_cluster.push_back(hit_1);
+	  // 	slope_good_pair = lambda_pair[mmi.view].X();
+	  // 	inter_good_pair = v_ref;
+	  //     }
+	  //   }
+	  //}
+	  //hiterator++; 
+	}
+	if(fabs(diff_pairs_target)<0.05 && fabs(diff_clus_point_tar)<30.){
+	  fHS->FillHisto2List("MMStudy",Form("zvsv_selecthit_tar_board%d_ev%d",mmi.bdid,fEventCounter),v,z,hit->GetEnergy());
+	  fHS->FillHisto2List("MMStudy",Form("zvsv_selecthit_tar_board%d_ev%d",mmi.bdid,fEventCounter),v_1,z_1,hit_1->GetEnergy());
+	  fHS->FillHisto2List("MMStudy",Form("hough_transform_tar_board%d_ev%d",mmi.bdid,fEventCounter),lambda_pair[mmi.view].X(),v_ref,1.);
+	  fHS->FillHisto2List("MMStudy",Form("diffslopeinter_pairs_target_board%d",mmi.bdid),diff_pairs_target,diff_clus_point_tar,1.);      
+	}
+	fHS->FillHisto2List("MMStudy",Form("pairs_vs_track_board%d",mmi.bdid),lambda_pair[mmi.view].X(),lambda[mmi.view].X(),1.);
+	fHS->FillHistoList("MMStudy",Form("diff_pairs_track_board%d",mmi.bdid),lambda_pair[mmi.view].X()-lambda[mmi.view].X(),1.);      
+      }
+    }//close hit loop
+    
+    // for (int j=0; j<hit_for_cluster.size(); j++){
+    //   TRecoVHit* hit = hit_for_cluster.at(j);
+    //   MMchInfo mmi = fGeneralInfo->DecodeMMChannel(hit->GetChannelId());
+      
+    //   double z = mmi.verse*hit->GetTime()*0.105 + hit->GetPosition().Z() ;
+    //   double v = (mmi.view == 0? hit->GetPosition().Y() : hit->GetPosition().X());
+    //   if (fEventCounter  < 100 && fSaveEvent) {
+    // 	fHS->FillHisto2List("MMStudy",Form("zvsv_hitforclus_board%d_ev%d",mmi.bdid,fEventCounter),v,z,hit->GetEnergy());
+    //   }	
     for (int i=0; i<8; i++){
       fHS->FillHisto2List("MMStudy",Form("NCloseHits"),ncloseHits[i],ncloseHits[8+i],1.);      
     }    
   }
+  //}
 
   
   //  std::cout << "********      Ev = " << fEvent->RecoEvent->GetEventNumber() << " Nclus " << nclus << "  ********** NHits " << nhits << std::endl;
 
-  
+  // loop micromegas cluster
   for (int i=0; i<nclus; i++){
     TRecoVCluster* clus = fEvent->MMRecoCl->Element(i);
     int nhitsPerClus = clus->GetNHitsInClus();
@@ -256,7 +365,7 @@ Bool_t MMStudy::Process(){
       newpos.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),z);
       hit->SetPosition(newpos);
       fTracker[mmi.view]->AddHit(hit);
-      if (fEventCounter  < 100) {
+      if (fEventCounter  < 100 && fSaveEvent) {
 	fHS->FillHisto2List("MMStudy",Form("zvsv_board%d_ev%d",mmi.bdid,fEventCounter),v,hit->GetPosition().Z(),hit->GetEnergy());
 	for (uint q = 0; q < cluIndices.size(); q++){
 	  TRecoVCluster* tempClu = ECal_clEvent->Element((int)cluIndices.at(q));
@@ -295,7 +404,7 @@ Bool_t MMStudy::Process(){
       lambda *= (1./dist);      
       traco.lambda = lambda; // (P1-P0)/|P1-P0|
       
-      if (fEventCounter  < 100) {
+      if (fEventCounter  < 100 && fSaveEvent) {
 	// r0 + lambda t, r0 = par0,1,2; lambda(theta,phi)=par3,4
 	// z = z0 + dz/dy (y-y0)
 

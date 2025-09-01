@@ -75,7 +75,9 @@ void plotEvent(TFile* filo, TString canvaName, int iev){
   cc->SetWindowSize(w + (w - cc->GetWw()), h + (h - cc->GetWh()));
   cc->Divide(2,2);
   TH2D* zvsv[4][2]; // clusterxview, plane
+  TH2D* zvsvsel[4][2]; // clusterxview, plane, selected
   int colors[2] = {kBlue-4,kGreen+2};// plane colors
+  int colorssel[2] = {kOrange-3,kMagenta+2};// plane colors
   const double vrange = 60;
   for (int i=0; i<2; i++){// cluster
     for (int j=0; j<2; j++){ // view
@@ -91,6 +93,18 @@ void plotEvent(TFile* filo, TString canvaName, int iev){
 	zvsv[idx][ipl]->SetLineColor(colors[ipl]);
 	zvsv[idx][ipl]->Draw("boxsame");
       }
+      for (int ipl = 0; ipl<2; ipl++){
+	zvsvsel[idx][ipl] = (TH2D*) filo->Get(Form("MMStudy/zvsv_selecthit_board%d_ev%d",boardid[i][j]+8*ipl,iev));
+	zvsvsel[idx][ipl]->SetLineColor(colorssel[ipl]);
+	zvsvsel[idx][ipl]->Draw("boxsame");
+      }
+      for (int ipl = 0; ipl<2; ipl++){
+	zvsvsel[idx][ipl] = (TH2D*) filo->Get(Form("MMStudy/zvsv_hitforclus_board%d_ev%d",boardid[i][j]+8*ipl,iev));
+	zvsvsel[idx][ipl]->SetLineColor(colorssel[ipl]);
+	zvsvsel[idx][ipl]->SetLineWidth(3.);
+	zvsvsel[idx][ipl]->Draw("boxsame");
+      }
+
     }
   }
 

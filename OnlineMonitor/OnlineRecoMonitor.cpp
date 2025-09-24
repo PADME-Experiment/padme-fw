@@ -197,9 +197,9 @@ void GetTargetHistograms(TFile* reco,FILE* fout) {
     fprintf(fout,"TITLE_Y Y[mm]\n");
     fprintf(fout,"DATA [");
 
-    for(int ix = 1;ix<= h2d->GetNbinsX ();ix++) {
+    for(int ix = 1; ix<= h2d->GetNbinsX (); ix++) {
       fprintf(fout,"[");
-      for(int iy = 1;iy<= h2d->GetNbinsY ();iy++) {
+      for(int iy = 1; iy <= h2d->GetNbinsY ();iy++) {
 	if(iy <  h2d->GetNbinsY ()) {
 	  fprintf(fout,"%f,",h2d->GetBinContent(iy,ix));
 	} else {
@@ -442,13 +442,13 @@ void GetXYTrend(TFile* tren, FILE* fout) {
   if(tgraY == NULL) return;
 
   fprintf(fout,"PLOTID BeamXY\n");
-  fprintf(fout,"PLOTNAME Beam X and Y average %s\n",cfg->FormatCurrentTime());
+  fprintf(fout,"PLOTNAME Beam pos at Target - %s\n",cfg->FormatCurrentTime());
   fprintf(fout,"PLOTTYPE timeline\n");
-  fprintf(fout,"MODE [ \"lines+markers\", \"lines+markers\"]\n");
+  fprintf(fout,"MODE [ \"lines\", \"lines\"]\n");
   fprintf(fout,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
-  fprintf(fout,"TITLE_X timeline\n");
-  fprintf(fout,"TITLE_Y [mm]\n");
-  fprintf(fout,"LEGEND [\"X beam\",\"Y beam\"]\n");
+  fprintf(fout,"TITLE_X Time\n");
+  fprintf(fout,"TITLE_Y position [mm]\n");
+  fprintf(fout,"LEGEND [\"X\",\"Y\"]\n");
   fprintf(fout,"DATA [[");
 
   Double_t* xve;
@@ -482,13 +482,13 @@ void GetSXYTrend(TFile* tren, FILE* fout) {
   if(tgraY == NULL) return;
 
   fprintf(fout,"PLOTID BeamSXY\n");
-  fprintf(fout,"PLOTNAME Beam X and Y RMS %s\n",cfg->FormatCurrentTime());
+  fprintf(fout,"PLOTNAME Beam RMS at Target - %s\n",cfg->FormatCurrentTime());
   fprintf(fout,"PLOTTYPE timeline\n");
-  fprintf(fout,"MODE [ \"lines+markers\", \"lines+markers\"]\n");
-  fprintf(fout,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
-  fprintf(fout,"TITLE_X timeline\n");
-  fprintf(fout,"TITLE_Y [mm]\n");
-  fprintf(fout,"LEGEND [\"sigma X beam\",\"sigma Y beam\"]\n");
+  fprintf(fout,"MODE [ \"lines\", \"lines\"]\n");
+  fprintf(fout,"COLOR [ \"dc408b\", \"209b8e\" ]\n");
+  fprintf(fout,"TITLE_X Time\n");
+  fprintf(fout,"TITLE_Y RMS [mm]\n");
+  fprintf(fout,"LEGEND [\"RMS X\",\"RMS Y\"]\n");
   fprintf(fout,"DATA [[");
 
   Double_t* xve;

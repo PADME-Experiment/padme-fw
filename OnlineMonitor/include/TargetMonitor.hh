@@ -6,6 +6,7 @@
 #include "TFile.h"
 #include "TString.h"
 #include "TH1D.h"
+#include "TF1.h"
 
 #include "utlConfigParser.hh"
 
@@ -84,7 +85,12 @@ private:
 
   // Histograms
   TH1D* fHTargetChargeX;
-  TH1D* fHTargetChargeY;
+  TH1D* fHTargetChargeY; 
+  TH1D* fHTargetProfileX;
+  TH1D* fHTargetProfileY;
+
+  TF1* fitfunX;
+  TF1* fitfunY;
 
   Double_t fCumulPoTs; // Average event PoTs from cumulative waveforms
   Double_t fEventPoTs; // Number of positrons on target for current event
@@ -95,6 +101,10 @@ private:
   Double_t fTL_EventPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average values of PoTs in last 500 events
   Double_t fTL_CumulPoTs[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Average cumulative values of PoTs in last 500 events
   Double_t fTL_Time[TARGETMONITOR_TIMELINE_SIZE] = {0.}; // Event time of last event in average
+  Double_t fTL_MeanX[TARGETMONITOR_TIMELINE_SIZE] = {0.};
+  Double_t fTL_SigmaX[TARGETMONITOR_TIMELINE_SIZE] = {0.};
+  Double_t fTL_MeanY[TARGETMONITOR_TIMELINE_SIZE] = {0.};
+  Double_t fTL_SigmaY[TARGETMONITOR_TIMELINE_SIZE] = {0.};
   UInt_t   fTL_Current = 0; // Store current position in timeline (round-robin)
 
 };

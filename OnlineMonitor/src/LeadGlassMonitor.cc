@@ -676,9 +676,9 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
   if ( (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] < fNPoTsRangeMin) || (fVLGNPoTsBM[fVLGNPoTsBM.size()-1] > fNPoTsRangeMax) ) {
-    fprintf(outf,"COLOR [ \"ff0000\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\",\"00a90f\",\"00a90f\" ]\n");
   } else {
-    fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"0000ff\",\"00a90f\",\"00a90f\" ]\n");
   }
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y NPoTs/Bunch\n");
@@ -715,9 +715,9 @@ Int_t LeadGlassMonitor::OutputBeam()
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
   if ( (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] < fBunchLengthRangeMin) || (fVLGBunchLengthBM[fVLGBunchLengthBM.size()-1] > fBunchLengthRangeMax) ) {
-    fprintf(outf,"COLOR [ \"ff0000\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\",\"00a90f\",\"00a90f\" ]\n");
   } else {
-    fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"0000ff\",\"00a90f\",\"00a90f\" ]\n");
   }
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y ns\n");

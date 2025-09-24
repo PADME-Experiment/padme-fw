@@ -66,7 +66,7 @@ void CombinedMonitor::Initialize()
   } else {
     printf("CombinedMonitor::Initialize - WARNING: ETotOnNPoTsRangeMin not set in config file. Using %f\n",fETotOnNPoTsMin);
   }
-  fETotOnNPoTsMax = 2.;
+  fETotOnNPoTsMax = 2.0;
   if (fConfigParser->HasConfig("RECO","ETotOnNPoTsRangeMax")) {
     fETotOnNPoTsMax = std::stod(fConfigParser->GetSingleArg("RECO","ETotOnNPoTsRangeMax"));
   } else {
@@ -248,9 +248,9 @@ Int_t CombinedMonitor::OutputBeam()
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
   if ( (fVETotOnNPoTsBM.back() < fETotOnNPoTsMin) || (fVETotOnNPoTsBM.back() > fETotOnNPoTsMax) ) {
-    fprintf(outf,"COLOR [ \"ff0000\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"ff0000\",\"00a90f\",\"00a90f\" ]\n");
   } else {
-    fprintf(outf,"COLOR [ \"0000ff\",\"00ff00\",\"aaaa00\" ]\n");
+    fprintf(outf,"COLOR [ \"0000ff\",\"00a90f\",\"00a90f\" ]\n");
   }
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y MeV/PoT\n");

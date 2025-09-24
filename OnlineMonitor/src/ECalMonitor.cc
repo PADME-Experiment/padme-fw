@@ -82,7 +82,7 @@ void ECalMonitor::Initialize()
 	fECal_Calibration[b][c] = 0.;
     }
   }
-  TString calibFile = "config/ECalCalibration.dat";
+  TString calibFile = "config/ECalCalibration_8.dat";
   if ( fConfigParser->HasConfig("RECO","CalibrationFile") )
     calibFile = fConfigParser->GetSingleArg("RECO","CalibrationFile");
   struct stat buffer;   

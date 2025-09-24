@@ -5,6 +5,7 @@
 #include "TH2D.h"
 #include "TFile.h"
 #include "TString.h"
+#include "TF1.h"
 
 #include "utlConfigParser.hh"
 
@@ -31,8 +32,10 @@ private:
 
   void CoordinateFinder(int, int, std::vector<double>, double &, double &, double &, double &);
   Int_t ComputeBeamSpot();
+  Int_t ComputeBeamSpot_v2();
   Int_t OutputBeam();
   Int_t ClearBeamAccumulators();
+  Int_t Compute2DOccupancy();
 
   Configuration* fConfig;
   utl::ConfigParser* fConfigParser;
@@ -91,6 +94,7 @@ private:
   Double_t fP2_BeamYRCharge;
   UInt_t fP2_BeamYRCharge_N;
 
+
   // Trend vectors
   std::vector<Double_t> fVTime_Beam;
 
@@ -126,23 +130,43 @@ private:
   TString fRunString; // String to hold the run name to show on histograms
   TString mmch_tag[MMCH_N_LAYERS] = { "P1YR","P1YL","P1XT","P1XB","P2YR","P2YL","P2XT","P2XB" };
 
-  // Histograms
+  
+   // Histograms
   TH1D* h_occupancy[MMCH_N_LAYERS];
   TH1D* hw_occupancy[MMCH_N_LAYERS];
   TH1D* hqmax_totevent[MMCH_N_LAYERS];
   TH1D* htmax_totevent[MMCH_N_LAYERS];
   TH1D* hqmax_perevent[MMCH_N_LAYERS];
   TH1D* htmax_perevent[MMCH_N_LAYERS];
+  TH1D* hxq_beam[MMCH_N_LAYERS];
+  
+  TH2D* hxyq_P1;
+  TH2D* hxyq_P2;
 
   // Signal conversion parameters
   Double_t fStripPitch=1.2; //mm - Pitch between two consecutive strips
-
-  Double_t fGeometryHole[MMCH_N_LAYERS] = {8.4,8.4,2.4,2.4,2.4,2.4,8.4,8.4};//mm
-                                                                                
+  
+  Double_t fGeometryHole[MMCH_N_LAYERS] = {7.2,7.2,1.2,1.2,1.2,1.2,7.2,7.2};//mm
+  Double_t fGeometryHoleNStrips[MMCH_N_LAYERS] = {6,6,1,1,1,1,6,6};//mm
+  
   UInt_t fNStrips=512;
+  Int_t fNStripsHalf=256;
   UInt_t fNStripsApv=128;
-
-  //float xmax = fNStrips*fStripPitch;
+  
+  Double_t fxmax = (fNStrips-2)*fStripPitch;
+  Double_t fGlobalShift[MMCH_N_LAYERS];
+  
+  Int_t n_bins6 = 86; //binning 6 strips at once
+  Int_t n_bins_beam = 100; //beam region binning
+  
+  Double_t mean_t_beam0 = 349; //ns
+  Double_t sigma_t_beam0 = 18; //ns
+  Double_t mean_t_beam3 = 328; //ns
+  Double_t sigma_t_beam3 = 36; //ns
+  Double_t mean_t_beam4 = 375; //ns default
+  Double_t sigma_t_beam4 = 25; //ns default
+  Double_t mean_t_beam7 = 400; //ns 
+  Double_t sigma_t_beam7 = 25; //ns
 
   Double_t z0=0, zm=50., z2=100.; //mm          z coord of the chamber starting from bottom to top 
 
@@ -155,7 +179,7 @@ private:
 
   // Position of central "Low HV" square to use for beam studies (mm)
   Double_t fLowHV_MeshRadius = 60.; // Radius of the low HV mesh area
-  Double_t fLowHV_MeshGap[MMCH_N_LAYERS] = {8.4,8.4,0.,0.,0.,0.,8.4,8.4};
+  Double_t fLowHV_MeshGap[MMCH_N_LAYERS] = {7.2,7.2,0.,0.,0.,0.,7.2,7.2};
   Double_t fLowHV_XMin[MMCH_N_LAYERS];
   Double_t fLowHV_XMax[MMCH_N_LAYERS];
 

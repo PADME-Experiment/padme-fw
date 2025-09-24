@@ -92,7 +92,9 @@ void TargetMonitor::Initialize()
   // Create histograms
   fHTargetChargeX = new TH1D("Target_ChargeX","Target_ChargeX",500,0.,5000.);
   fHTargetChargeY = new TH1D("Target_ChargeY","Target_ChargeY",500,0.,5000.);
-
+  fHTargetProfileX = new TH1D("Target_ProfileX","Target_ProfileX",16,-8.,8.);
+  fHTargetProfileY = new TH1D("Target_PrifleY","Target_ProfileY",16,-8.,8.);
+  
   // Reset counters
   fBeamEventCount = 0;
   fEventPoTsTotal = 0.;
@@ -167,10 +169,45 @@ void TargetMonitor::EndOfEvent()
     }
     ComputeCumulativePoTs();
 
+    // Compute mean and sigma of charge distribution for X and Y
+    Double_t meanX = 0.;
+    Double_t meanY = 0.;
+    Double_t sigmaX = 0.;
+    Double_t sigmaY = 0.;
+    for (Int_t i = 0; i < 16; i++) {
+      if (fStrip_CumulativeCharge[i] > 0) fHTargetProfileX->SetBinContent(i+1,fStrip_CumulativeCharge[i]);
+      else fHTargetProfileX->SetBinContent(i+1,0.);
+    }
+    fHTargetProfileX->Fit("gaus");
+    TF1 *fitfunX = fHTargetProfileX->GetFunction("gaus");
+    meanX = fitfunX->GetParameter(1);
+    sigmaX = fitfunX->GetParameter(2);
+
+    printf("TargetMeanX: %f\n",meanX);
+    printf("TargetSigmaX: %f\n",sigmaX);
+    
+    for (Int_t i = 16; i < 32; i++) {
+      if (fStrip_CumulativeCharge[i] > 0) fHTargetProfileY->SetBinContent(i-15,fStrip_CumulativeCharge[i]);
+      else fHTargetProfileY->SetBinContent(i-15,0.);
+    }
+    fHTargetProfileY->Fit("gaus");
+    TF1 *fitfunY = fHTargetProfileY->GetFunction("gaus");
+    meanY = fitfunY->GetParameter(1);
+    sigmaY = fitfunY->GetParameter(2);
+
+    printf("TargetMeanY: %f\n",meanY);
+    printf("TargetSigmaY: %f\n",sigmaY);
+ 
     // Update timelines
     fTL_RunPoTs[fTL_Current] = fRunPoTsTotal;
     fTL_EventPoTs[fTL_Current] = fEventPoTsTotal/(Double_t)fBeamOutputRate;
     fTL_CumulPoTs[fTL_Current] = fCumulPoTs;
+    
+    fTL_MeanX[fTL_Current] = meanX;
+    fTL_SigmaX[fTL_Current] = sigmaX;
+    fTL_MeanY[fTL_Current] = meanY;
+    fTL_SigmaY[fTL_Current] = sigmaY;
+    
     //fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().GetSec();
     fTL_Time[fTL_Current] = fConfig->GetEventAbsTime().AsDouble();
     fTL_Current++;
@@ -181,6 +218,8 @@ void TargetMonitor::EndOfEvent()
     // Reset histograms
     fHTargetChargeX->Reset();
     fHTargetChargeY->Reset();
+    fHTargetProfileX->Reset();
+    fHTargetProfileY->Reset();
 
     // Reset counters
     fEventPoTsTotal = 0.;
@@ -344,8 +383,8 @@ Int_t TargetMonitor::OutputBeam()
   fprintf(outf,"TITLE_X X[mm]\n");
   fprintf(outf,"TITLE_Y pC/strip\n");
   fprintf(outf,"DATA [[");
-  for(UChar_t i = 0;i<16;i++) {
-    if (i>0) fprintf(outf,",");
+  for(UChar_t i = 0; i < 16; i++) {
+    if (i > 0) fprintf(outf,",");
     // Show average per-event charge for this strip
     fprintf(outf,"%.3f",fStrip_CumulativeCharge[i]);
     // fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);
@@ -361,8 +400,8 @@ Int_t TargetMonitor::OutputBeam()
   fprintf(outf,"TITLE_X Y[mm]\n");
   fprintf(outf,"TITLE_Y pC/strip\n");
   fprintf(outf,"DATA [[");
-  for(UChar_t i = 16;i<32;i++) {
-    if (i>16) fprintf(outf,",");
+  for(UChar_t i = 16; i < 32; i++) {
+    if (i > 16) fprintf(outf,",");
     // Show average per-event charge for this strip
     fprintf(outf,"%.3f",fStrip_CumulativeCharge[i]);
     // fprintf(outf,"%.3f",fStrip_charge[i]/fBeamOutputRate);

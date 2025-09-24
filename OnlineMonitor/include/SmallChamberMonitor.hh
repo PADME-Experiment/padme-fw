@@ -130,5 +130,8 @@ private:
   Double_t beamspot_q[MMCH_N_LAYERS];
   Int_t beamspot_q_n[MMCH_N_LAYERS];
 
+  Double_t fTMMNPoTsMin=2000;
+  Double_t fTMMNPoTsMax=4000;
+
 };
 #endif

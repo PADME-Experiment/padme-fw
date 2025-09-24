@@ -59,25 +59,29 @@ void SmallChamberMonitor::Initialize()
   fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):100;
 
   // Define trend support file for this run
-  fTFChTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_ChTrendsBM.trend";
+  fTFChTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_TMMTrendsBM.trend";
 
-  /*
   // If trend file exists, recover the data
   struct stat buffer;
-  if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
-    std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
-      fVLGTimeBM.push_back(abstime);
-      fVLGNPoTsBM.push_back(npots);
-      fVLGNPoTsTotBM.push_back(npotstot);
-      fVLGBunchLengthBM.push_back(bunchlen);
-      fVLGBunchBBQBM.push_back(bunchbbq);
-      fVLGBunchDensityBM.push_back(bunchdens);
+  if (stat(fTFChTrendsBM.Data(),&buffer) == 0) {
+    printf("- Reading trend file %s\n",fTFChTrendsBM.Data());
+    std::ifstream tf(fTFChTrendsBM.Data());
+    Double_t abstime,p1bx,p1by,p1bsx,p1bsy,p1bxq,p1byq;
+    while (tf >> abstime >> p1bx >> p1by >> p1bsx >> p1bsy >> p1bxq >> p1byq) {
+
+      fVTime_Beam.push_back(abstime);
+
+      fVP1_BeamX.push_back(p1bx);
+      fVP1_BeamY.push_back(p1by);
+
+      fVP1_BeamXSpread.push_back(p1bsx);
+      fVP1_BeamYSpread.push_back(p1bsy);
+
+      fVP1_BeamXCharge.push_back(p1bxq);
+      fVP1_BeamYCharge.push_back(p1byq);
+
     }
   }
-  */
 
   // Create histograms
   for(int i=0; i<MMCH_N_LAYERS; i++) {
@@ -92,27 +96,6 @@ void SmallChamberMonitor::Initialize()
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
   fRandomEventCount = 0;
-
-  // Define trend support file for this run
-  fTFChTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_ChTrendsBM.trend";
-
-  /*
-  // If trend file exists, recover the data
-  struct stat buffer;
-  if (stat(fTFChTrendsBM.Data(),&buffer) == 0) {
-    std::ifstream tf(fTFChTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
-      fVLGTimeBM.push_back(abstime);
-      fVLGNPoTsBM.push_back(npots);
-      fVLGNPoTsTotBM.push_back(npotstot);
-      fVLGBunchLengthBM.push_back(bunchlen);
-      fVLGBunchBBQBM.push_back(bunchbbq);
-      fVLGBunchDensityBM.push_back(bunchdens);
-    }
-  }
-  */
 
 }
 
@@ -180,12 +163,13 @@ void SmallChamberMonitor::EndOfEvent()
 	  fVP1_BeamYCharge.push_back(0.);
 	}
 
-	/*
 	// Update trends file
-	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
+	FILE* tf = fopen(fTFChTrendsBM.Data(),"a");
+	fprintf(tf,"%f %f %f %f %f %f %f\n",
+		fVTime_Beam.back(),fVP1_BeamX.back(),fVP1_BeamY.back(),
+		fVP1_BeamXSpread.back(),fVP1_BeamYSpread.back(),
+		fVP1_BeamXCharge.back(),fVP1_BeamYCharge.back());
 	fclose(tf);
-	*/
 
 	ClearBeamAccumulators();
 
@@ -432,6 +416,28 @@ Int_t SmallChamberMonitor::OutputBeam()
   }
   fprintf(outf,"] ]\n\n");
 
+  // Combined XY position trend plots - MM 18.06.25
+  
+  fprintf(outf,"PLOTID TMMCh_trendbeamposxy\n");
+  fprintf(outf,"PLOTNAME Beam pos at TMM - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y position [mm]\n");
+  fprintf(outf,"LEGEND [ \"X\", \"Y\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamX[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamY[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
   // Beam spread trend plots
 
   fprintf(outf,"PLOTID TMMCh_trendbeamspreadx\n");
@@ -464,13 +470,36 @@ Int_t SmallChamberMonitor::OutputBeam()
   }
   fprintf(outf,"] ]\n\n");
 
+// Combined XY position trend plots - MM 18.06.25
+
+  fprintf(outf,"PLOTID TMMCh_trendbeamspreadxy\n");
+  fprintf(outf,"PLOTNAME Beam spread at TMM - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y spread [mm]\n");
+  fprintf(outf,"LEGEND [ \"SX\", \"SY\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamXSpread[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamYSpread[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+
   // Beam charge trend plots
 
   fprintf(outf,"PLOTID TMMCh_trendbeamchargex\n");
-  fprintf(outf,"PLOTNAME TMMCh Beam X Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME TMM Beam X Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
-  fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
   fprintf(outf,"TITLE_X Time\n");
   fprintf(outf,"TITLE_Y Charge\n");
   fprintf(outf,"LEGEND [ \"P1\" ]\n");
@@ -482,7 +511,7 @@ Int_t SmallChamberMonitor::OutputBeam()
   fprintf(outf,"] ]\n\n");
 
   fprintf(outf,"PLOTID TMMCh_trendbeamchargey\n");
-  fprintf(outf,"PLOTNAME TMMCh Beam Y Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTNAME TMM Beam Y Charge - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
   fprintf(outf,"PLOTTYPE timeline\n");
   fprintf(outf,"MODE [ \"lines\" ]\n");
   fprintf(outf,"COLOR [ \"ff0000\" ]\n");
@@ -495,6 +524,48 @@ Int_t SmallChamberMonitor::OutputBeam()
     fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamYCharge[j]);
   }
   fprintf(outf,"] ]\n\n");
+
+  // combined X Y charge TMM - MM 27.06
+  
+  fprintf(outf,"PLOTID TMMCh_trendbeamchargexy\n");
+  fprintf(outf,"PLOTNAME Beam charge at TMM - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\", \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"ff0000\", \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y charge \n");
+  fprintf(outf,"LEGEND [ \"X\", \"Y\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamXCharge[j]);
+  }
+  fprintf(outf,"],[");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.2f]",fVTime_Beam[j],fVP1_BeamYCharge[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  //Normalized NPoT
+  fprintf(outf,"PLOTID TMMCh_trendNPotx\n");
+  fprintf(outf,"PLOTNAME TMM Beam X NPoT - %s - %s\n",fRunString.Data(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\",\"lines\",\"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\",\"00a90f\",\"00a90f\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y NPots/Bunch\n");
+  fprintf(outf,"LEGEND [ \"NPoT\",\"min\",\"max\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVTime_Beam.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVTime_Beam[j],fVP1_BeamXCharge[j]/60000.*2754.4);
+  }
+  fprintf(outf,"]");
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVTime_Beam[0],fTMMNPoTsMin,fVTime_Beam.back(),fTMMNPoTsMin);
+  fprintf(outf,",[[\"%f\",%.1f],[\"%f\",%.1f]]",fVTime_Beam[0],fTMMNPoTsMax,fVTime_Beam.back(),fTMMNPoTsMax);
+
+  fprintf(outf," ]\n\n");
 
   fclose(outf);
   if ( std::rename(ftname.Data(),ffname.Data()) ) {

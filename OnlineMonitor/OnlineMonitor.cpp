@@ -404,7 +404,10 @@ int main(int argc, char* argv[])
 	  if ( analyzeECal && ( (boardId <= 9) || (boardId >= 14 && boardId <= 23) ) )
 	    ecal_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
 	  // LeadGlass
-	  if ( analyzeLeadGlass && (boardId == LEADGLASS_BOARD) && (chNr == LEADGLASS_CHANNEL) )
+	  //if ( analyzeLeadGlass && (boardId == LEADGLASS_BOARD) && (chNr == LEADGLASS_CHANNEL) )
+	  if ( analyzeLeadGlass &&
+	       ( ((boardId == LEADGLASS_BOARD) && (chNr == LEADGLASS_CHANNEL)) ||
+		 ((boardId == LEADGLASS2_BOARD) && (chNr == LEADGLASS2_CHANNEL)) ) )
 	    leadglass_mon->AnalyzeChannel(boardId,chNr,chn->GetSamplesArray());
 	  // ETag
 	  if ( analyzeETag && ( boardId == 10 || boardId == 11 || boardId == 24 || boardId == 25 ) )

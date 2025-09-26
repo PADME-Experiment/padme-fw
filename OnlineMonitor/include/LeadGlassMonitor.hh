@@ -3,6 +3,8 @@
 
 #define LEADGLASS_BOARD   14
 #define LEADGLASS_CHANNEL 31
+#define LEADGLASS2_BOARD   21
+#define LEADGLASS2_CHANNEL 31
 
 #include "TH1D.h"
 #include "TFile.h"
@@ -33,6 +35,7 @@ public:
 private:
 
   void ComputeTotalCharge(Short_t*);
+  void ComputeTotalChargeLED(Short_t*);
 
   void ComputeBunchLength(Short_t*);
 
@@ -40,6 +43,7 @@ private:
   Int_t OutputOffBeam();
   Int_t OutputCosmics();
   Int_t OutputRandom();
+  Int_t OutputLED();
 
   Configuration* fConfig;
   utl::ConfigParser* fConfigParser;
@@ -48,16 +52,19 @@ private:
   Bool_t fIsOffBeam;
   Bool_t fIsCosmics;
   Bool_t fIsRandom;
+  Bool_t fIsLED;
 
   UInt_t fBeamOutputRate;
   UInt_t fOffBeamOutputRate;
   UInt_t fCosmicsOutputRate;
   UInt_t fRandomOutputRate;
+  UInt_t fLEDOutputRate;
 
   UInt_t fBeamEventCount;
   UInt_t fOffBeamEventCount;
   UInt_t fCosmicsEventCount;
   UInt_t fRandomEventCount;
+  UInt_t fLEDEventCount;
 
   // Define parameters for pedestal and total charge evaluation
   UInt_t fPedestalSamples;    // Number of samples to use for pedestals
@@ -74,12 +81,22 @@ private:
   // Results of pedestal and total charge evaluation
   Double_t fChannelPedestal; // Pedestal level from the first fPedestalSamples samples
   Double_t fChannelPedRMS;   // Pedestal RMS
-  Double_t fChannelCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+  Double_t fChannelCharge;   // Total charge for channel
+
+  // Total charge of two blocks and ratio
+  Double_t fLG1TotalChargeBM;
+  Double_t fLG2TotalChargeBM;
+  Double_t fTotalChargeRatioBM;
+  Double_t fLG1TotalChargeLD;
+  Double_t fLG2TotalChargeLD;
+  Double_t fTotalChargeRatioLD;
 
   // Histograms
   TH1D* fHLGPedestalBM;
   TH1D* fHLGPedRMSBM;
   TH1D* fHLGTotChargeBM;
+  TH1D* fHLG2TotChargeBM;
+  TH1D* fHLGTotChargeRatioBM;
   TH1D* fHLGNPoTsBM;
   TH1D* fHLGNPoTsTotBM;
   TH1D* fHLGBunchLengthBM;
@@ -89,9 +106,21 @@ private:
   TH1D* fHLGBunchDensityBM;
   TH1D* fHLGBunchDensityTotBM;
 
+  TH1D* fHLGPedestalLD;
+  TH1D* fHLG2PedestalLD;
+  TH1D* fHLGPedRMSLD;
+  TH1D* fHLG2PedRMSLD;
+  TH1D* fHLGTotChargeLD;
+  TH1D* fHLG2TotChargeLD;
+  TH1D* fHLGTotChargeRatioLD;
+
   // Waveform vectors
   Short_t fLGWaveformBM[1024];
+  Short_t fLGWaveformLD[1024];
+  Short_t fLG2WaveformLD[1024];
   Int_t   fLGWaveSumBM[1024];
+  Int_t   fLGWaveSumLD[1024];
+  Int_t   fLG2WaveSumLD[1024];
 
   // Waveform saturation flag
   Bool_t fWFSaturated;
@@ -109,14 +138,23 @@ private:
 
   // Trend vectors
   std::vector<Double_t> fVLGTimeBM;
+  std::vector<Double_t> fVLGTotChargeBM;
+  std::vector<Double_t> fVLG2TotChargeBM;
+  std::vector<Double_t> fVLGTotChargeRatioBM;
   std::vector<Double_t> fVLGNPoTsBM;
   std::vector<Double_t> fVLGNPoTsTotBM;
   std::vector<Double_t> fVLGBunchLengthBM;
   std::vector<Double_t> fVLGBunchBBQBM;
   std::vector<Double_t> fVLGBunchDensityBM;
 
-  // Trend support file
+  std::vector<Double_t> fVLGTimeLD;
+  std::vector<Double_t> fVLGTotChargeLD;
+  std::vector<Double_t> fVLG2TotChargeLD;
+  std::vector<Double_t> fVLGTotChargeRatioLD;
+
+  // Trend support files
   TString fTFLGTrendsBM;
+  TString fTFLGTrendsLD;
 
   // Range for NPoTs and Bunch Length trend plots
   Double_t fNPoTsRangeMin;

@@ -29,6 +29,8 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGPedestalBM) { delete fHLGPedestalBM; fHLGPedestalBM = 0; }
   if (fHLGPedRMSBM) { delete fHLGPedRMSBM; fHLGPedRMSBM = 0; }
   if (fHLGTotChargeBM) { delete fHLGTotChargeBM; fHLGTotChargeBM = 0; }
+  if (fHLG2TotChargeBM) { delete fHLG2TotChargeBM; fHLG2TotChargeBM = 0; }
+  if (fHLGTotChargeRatioBM) { delete fHLGTotChargeRatioBM; fHLGTotChargeRatioBM = 0; }
   if (fHLGNPoTsBM) { delete fHLGNPoTsBM; fHLGNPoTsBM = 0; }
   if (fHLGNPoTsTotBM) { delete fHLGNPoTsTotBM; fHLGNPoTsTotBM = 0; }
   if (fHLGBunchLengthBM) { delete fHLGBunchLengthBM; fHLGBunchLengthBM = 0; }
@@ -37,6 +39,13 @@ LeadGlassMonitor::~LeadGlassMonitor()
   if (fHLGBunchBBQTotBM) { delete fHLGBunchBBQTotBM; fHLGBunchBBQTotBM = 0; }
   if (fHLGBunchDensityBM) { delete fHLGBunchDensityBM; fHLGBunchDensityBM = 0; }
   if (fHLGBunchDensityTotBM) { delete fHLGBunchDensityTotBM; fHLGBunchDensityTotBM = 0; }
+  if (fHLGPedestalLD) { delete fHLGPedestalLD; fHLGPedestalLD = 0; }
+  if (fHLG2PedestalLD) { delete fHLG2PedestalLD; fHLG2PedestalLD = 0; }
+  if (fHLGPedRMSLD) { delete fHLGPedRMSLD; fHLGPedRMSLD = 0; }
+  if (fHLG2PedRMSLD) { delete fHLG2PedRMSLD; fHLG2PedRMSLD = 0; }
+  if (fHLGTotChargeLD) { delete fHLGTotChargeLD; fHLGTotChargeLD = 0; }
+  if (fHLG2TotChargeLD) { delete fHLG2TotChargeLD; fHLG2TotChargeLD = 0; }
+  if (fHLGTotChargeRatioLD) { delete fHLGTotChargeRatioLD; fHLGTotChargeRatioLD = 0; }
 }
 
 void LeadGlassMonitor::Initialize()
@@ -50,6 +59,7 @@ void LeadGlassMonitor::Initialize()
   fOffBeamOutputRate = fConfigParser->HasConfig("RECO","OffBeamOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","OffBeamOutputRate")):100;
   fCosmicsOutputRate = fConfigParser->HasConfig("RECO","CosmicsOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","CosmicsOutputRate")):0;
   fRandomOutputRate = fConfigParser->HasConfig("RECO","RandomOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","RandomOutputRate")):100;
+  fLEDOutputRate = fConfigParser->HasConfig("RECO","LEDOutputRate")?std::stoi(fConfigParser->GetSingleArg("RECO","LEDOutputRate")):100;
 
   // Get pedestal and charge reconstruction parameters from config file
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
@@ -105,27 +115,44 @@ void LeadGlassMonitor::Initialize()
 
   // Define trend support file for this run
   fTFLGTrendsBM = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_LGTrendsBM.trend";
+  fTFLGTrendsLD = fConfig->TrendDirectory()+"/"+fConfig->RunName()+"_LGTrendsLD.trend";
 
   // If trend file exists, recover the data
   struct stat buffer;
   if (stat(fTFLGTrendsBM.Data(),&buffer) == 0) {
-    std::ifstream tf(fTFLGTrendsBM.Data());
-    Double_t abstime,npots,npotstot,bunchlen,bunchbbq,bunchdens;
-    while (tf >> abstime >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
-      //printf("%f %f %f\n",abstime,npots,npotstot,bunchlen,bunchbbq);
+    std::ifstream tfBM(fTFLGTrendsBM.Data());
+    Double_t abstime,l1totch,l2totch,chratio,npots,npotstot,bunchlen,bunchbbq,bunchdens;
+    while (tfBM >> abstime >> l1totch >> l2totch >> chratio >> npots >> npotstot >> bunchlen >> bunchbbq >> bunchdens) {
       fVLGTimeBM.push_back(abstime);
+      fVLGTotChargeBM.push_back(l1totch);
+      fVLG2TotChargeBM.push_back(l2totch);
+      fVLGTotChargeRatioBM.push_back(chratio);
       fVLGNPoTsBM.push_back(npots);
       fVLGNPoTsTotBM.push_back(npotstot);
       fVLGBunchLengthBM.push_back(bunchlen);
       fVLGBunchBBQBM.push_back(bunchbbq);
       fVLGBunchDensityBM.push_back(bunchdens);
     }
+    tfBM.close();
+  }
+  if (stat(fTFLGTrendsLD.Data(),&buffer) == 0) {
+    std::ifstream tfLD(fTFLGTrendsLD.Data());
+    Double_t abstime,l1totch,l2totch,chratio;
+    while (tfLD >> abstime >> l1totch >> l2totch >> chratio) {
+      fVLGTimeLD.push_back(abstime);
+      fVLGTotChargeLD.push_back(l1totch);
+      fVLG2TotChargeLD.push_back(l2totch);
+      fVLGTotChargeRatioLD.push_back(chratio);
+    }
+    tfLD.close();
   }
 
   // Create histograms
   fHLGPedestalBM = new TH1D("LG_PedestalBM","LG_PedestalBM",120,3500.,4100.);
   fHLGPedRMSBM = new TH1D("LG_PedRMSBM","LG_PedRMSBM",100,0.,50.);
-  fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,5000.);
+  fHLGTotChargeBM = new TH1D("LG_TotChargeBM","LG_TotChargeBM",1000,0.,1000.);
+  fHLG2TotChargeBM = new TH1D("LG2_TotChargeBM","LG2_TotChargeBM",1000,0.,1000.);
+  fHLGTotChargeRatioBM = new TH1D("LG_TotChargeRatioBM","LG_TotChargeRatioBM",100,0.,1.);
   fHLGNPoTsBM = new TH1D("LG_NPoTsBM","LG_NPoTsBM",1000,0.,20000.);
   fHLGNPoTsTotBM = new TH1D("LG_NPoTsTotBM","LG_NPoTsTotBM",1000,0.,20000.);
   fHLGBunchLengthBM = new TH1D("LG_BunchLengthBM","LG_BunchLengthBM",1000,0.,1000.);
@@ -135,8 +162,20 @@ void LeadGlassMonitor::Initialize()
   fHLGBunchDensityBM = new TH1D("LG_BunchDensityBM","LG_BunchBBQBM",1000,0.,100.);
   fHLGBunchDensityTotBM = new TH1D("LG_BunchDensityTotBM","LG_BunchBBQTotBM",1000,0.,100.);
 
-  // Reset cumulative waveform
-  for(UInt_t i = 0; i<1024; i++) fLGWaveSumBM[i] = 0;
+  fHLGPedestalLD = new TH1D("LG_PedestalLD","LG_PedestalLD",120,3500.,4100.);
+  fHLG2PedestalLD = new TH1D("LG2_PedestalLD","LG2_PedestalLD",120,3500.,4100.);
+  fHLGPedRMSLD = new TH1D("LG_PedRMSLD","LG_PedRMSLD",100,0.,50.);
+  fHLG2PedRMSLD = new TH1D("LG2_PedRMSLD","LG2_PedRMSLD",100,0.,50.);
+  fHLGTotChargeLD = new TH1D("LG_TotChargeLD","LG_TotChargeLD",1000,0.,1000.);
+  fHLG2TotChargeLD = new TH1D("LG2_TotChargeLD","LG2_TotChargeLD",1000,0.,1000.);
+  fHLGTotChargeRatioLD = new TH1D("LG_TotChargeRatioLD","LG_TotChargeRatioLD",1000,0.,10.);
+
+  // Reset cumulative waveforms
+  for(UInt_t i = 0; i<1024; i++) {
+    fLGWaveSumBM[i] = 0;
+    fLGWaveSumLD[i] = 0;
+    fLG2WaveSumLD[i] = 0;
+  }
 
   // Reset waveform saturation flag
   fWFSaturated = false;
@@ -146,6 +185,7 @@ void LeadGlassMonitor::Initialize()
   fOffBeamEventCount = 0;
   fCosmicsEventCount = 0;
   fRandomEventCount = 0;
+  fLEDEventCount = 0;
 
 }
 
@@ -154,8 +194,13 @@ void LeadGlassMonitor::StartOfEvent()
 
   // Check if event was triggered by BTF beam
   if (fConfig->GetEventTrigMask() & 0x01) {
+    fLG1TotalChargeBM = 0.;
+    fLG2TotalChargeBM = 0.;
+    fTotalChargeRatioBM = 0.;
     fIsBeam = true;
     fBeamEventCount++;
+    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
+      for(UInt_t i = 0; i<1024; i++) fLGWaveformBM[i] = 0.;
   } else {
     fIsBeam = false;
   }
@@ -168,6 +213,22 @@ void LeadGlassMonitor::StartOfEvent()
     fIsCosmics = false;
   }
  
+  // Check if event was triggered by LED
+  if (fConfig->GetEventTrigMask() & 0x04) {
+    fLG1TotalChargeLD = 0.;
+    fLG2TotalChargeLD = 0.;
+    fTotalChargeRatioLD = 0.;
+    fIsLED = true;
+    fLEDEventCount++;
+    if (fLEDOutputRate && (fLEDEventCount % fLEDOutputRate == 0))
+      for(UInt_t i = 0; i<1024; i++) {
+	fLGWaveformLD[i] = 0.;
+	fLG2WaveformLD[i] = 0.;
+      }
+  } else {
+    fIsLED = false;
+  }
+
   // Check if event was a random trigger
   if (fConfig->GetEventTrigMask() & 0x40) {
     fIsRandom = true;
@@ -191,6 +252,14 @@ void LeadGlassMonitor::EndOfEvent()
 
   if (fIsBeam) {
 
+    // Compute total charge ratio and save it into histogram
+    if (fLG1TotalChargeBM != 0.) {
+      fTotalChargeRatioBM = fLG2TotalChargeBM/fLG1TotalChargeBM;
+    } else {
+      fTotalChargeRatioBM = 0.;
+    }
+    if (fTotalChargeRatioBM > 0.) fHLGTotChargeRatioBM->Fill(fTotalChargeRatioBM);
+
     if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0)) {
 
       // Check if current data is new
@@ -198,6 +267,9 @@ void LeadGlassMonitor::EndOfEvent()
 
 	// Update trend vectors
 	fVLGTimeBM.push_back(fConfig->GetEventAbsTime().AsDouble());
+	fVLGTotChargeBM.push_back(fHLGTotChargeBM->GetMean());
+	fVLG2TotChargeBM.push_back(fHLG2TotChargeBM->GetMean());
+	fVLGTotChargeRatioBM.push_back(fHLGTotChargeRatioBM->GetMean());
 	fVLGNPoTsBM.push_back(fHLGNPoTsBM->GetMean());
 	fVLGBunchLengthBM.push_back(fHLGBunchLengthBM->GetMean());
 	fVLGBunchBBQBM.push_back(fHLGBunchBBQBM->GetMean());
@@ -212,7 +284,7 @@ void LeadGlassMonitor::EndOfEvent()
 
 	// Update trends file
 	FILE* tf = fopen(fTFLGTrendsBM.Data(),"a");
-	fprintf(tf,"%f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
+	fprintf(tf,"%f %f %f %f %f %f %f %f %f\n",fVLGTimeBM.back(),fVLGTotChargeBM.back(),fVLG2TotChargeBM.back(),fVLGTotChargeRatioBM.back(),fVLGNPoTsBM.back(),fVLGNPoTsTotBM.back(),fVLGBunchLengthBM.back(),fVLGBunchBBQBM.back(),fVLGBunchDensityBM.back());
 	fclose(tf);
 
       }
@@ -224,6 +296,8 @@ void LeadGlassMonitor::EndOfEvent()
       fHLGPedestalBM->Reset();
       fHLGPedRMSBM->Reset();
       fHLGTotChargeBM->Reset();
+      fHLG2TotChargeBM->Reset();
+      fHLGTotChargeRatioBM->Reset();
       fHLGNPoTsBM->Reset();
       fHLGBunchLengthBM->Reset();
       fHLGBunchBBQBM->Reset();
@@ -271,6 +345,50 @@ void LeadGlassMonitor::EndOfEvent()
 
   } // End of random output
 
+  if (fIsLED) {
+
+    // Compute total charge ratio and save it into histogram
+    if (fLG1TotalChargeLD != 0.) {
+      fTotalChargeRatioLD = fLG2TotalChargeLD/fLG1TotalChargeLD;
+    } else {
+      fTotalChargeRatioLD = 0.;
+    }
+    if (fTotalChargeRatioLD > 0.) fHLGTotChargeRatioLD->Fill(fTotalChargeRatioLD);
+
+    if (fLEDOutputRate && (fLEDEventCount % fLEDOutputRate == 0)) {
+
+      // Check if current data is new
+      if ( (fVLGTimeLD.size() == 0) || (fConfig->GetEventAbsTime().AsDouble() > fVLGTimeLD.back()) ) {
+
+	// Update trend vectors
+	fVLGTimeLD.push_back(fConfig->GetEventAbsTime().AsDouble());
+	fVLGTotChargeLD.push_back(fHLGTotChargeLD->GetMean());
+	fVLG2TotChargeLD.push_back(fHLG2TotChargeLD->GetMean());
+	fVLGTotChargeRatioLD.push_back(fHLGTotChargeRatioLD->GetMean());
+
+	// Update trends file
+	FILE* tf = fopen(fTFLGTrendsLD.Data(),"a");
+	fprintf(tf,"%f %f %f %f\n",fVLGTimeLD.back(),fVLGTotChargeLD.back(),fVLG2TotChargeLD.back(),fVLGTotChargeRatioLD.back());
+	fclose(tf);
+
+      }
+
+      // Write LED events data to output PadmeMonitor file
+      OutputLED();
+
+      // Reset histograms
+      fHLGPedestalLD->Reset();
+      fHLGPedRMSLD->Reset();
+      fHLG2PedestalLD->Reset();
+      fHLG2PedRMSLD->Reset();
+      fHLGTotChargeLD->Reset();
+      fHLG2TotChargeLD->Reset();
+      fHLGTotChargeRatioLD->Reset();
+
+    }
+
+  } // End of LED output
+
 }
 
 void LeadGlassMonitor::Finalize()
@@ -279,6 +397,7 @@ void LeadGlassMonitor::Finalize()
   printf("LeadGlassMonitor::Finalize - Total number of off-beam events: %d\n",fOffBeamEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of cosmics  events: %d\n",fCosmicsEventCount);
   printf("LeadGlassMonitor::Finalize - Total number of random   events: %d\n",fRandomEventCount);
+  printf("LeadGlassMonitor::Finalize - Total number of LED      events: %d\n",fLEDEventCount);
   if (fVLGNPoTsTotBM.size() == 0) {
     printf("LeadGlassMonitor::Finalize - Total number of PoTs: 0\n");
   } else {
@@ -292,45 +411,82 @@ void LeadGlassMonitor::AnalyzeBoard(UChar_t board)
 void LeadGlassMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 {
 
-  // Compute pedestal and total charge in leadglass and save them to histogram
-  ComputeTotalCharge(samples);
-
   if (fIsBeam) {
 
-    // Compute lenght of bunch (period above a given thershold) and bunch quality (BBQ)
-    ComputeBunchLength(samples);
+    // Compute pedestal and total charge in leadglass using signal position and save them to histogram
+    ComputeTotalCharge(samples);
 
-    // Compute number of positrons on target (NPoTs)
-    fLGNPoTs = fChannelCharge/fChargeToNPoTs;
+    if (board == LEADGLASS_BOARD && channel == LEADGLASS_CHANNEL) {
 
-    // Compute bunch density
-    if (fBunchLength) {
-      fBunchDensity = fLGNPoTs/fBunchLength;
-    } else {
-      fBunchDensity = 0.;
+      fLG1TotalChargeBM = fChannelCharge; // Save to compute ratio with other block
+
+      // Compute lenght of bunch (period above a given thershold) and bunch quality (BBQ)
+      ComputeBunchLength(samples);
+
+      // Compute number of positrons on target (NPoTs)
+      fLGNPoTs = fChannelCharge/fChargeToNPoTs;
+
+      // Compute bunch density
+      if (fBunchLength) {
+	fBunchDensity = fLGNPoTs/fBunchLength;
+      } else {
+	fBunchDensity = 0.;
+      }
+
+      fHLGPedestalBM->Fill(fChannelPedestal);
+      fHLGPedRMSBM->Fill(fChannelPedRMS);
+      fHLGTotChargeBM->Fill(fChannelCharge);
+      fHLGNPoTsBM->Fill(fLGNPoTs);
+      fHLGNPoTsTotBM->Fill(fLGNPoTs);
+      fHLGBunchLengthBM->Fill(fBunchLength);
+      fHLGBunchLengthTotBM->Fill(fBunchLength);
+      fHLGBunchBBQBM->Fill(fBunchBBQ);
+      fHLGBunchBBQTotBM->Fill(fBunchBBQ);
+      fHLGBunchDensityBM->Fill(fBunchDensity);
+      fHLGBunchDensityTotBM->Fill(fBunchDensity);
+
+      // Add waveform to cumulative for bunch shape studies
+      for(UInt_t i = 0; i<1024; i++) {
+	fLGWaveSumBM[i] += samples[i];
+	if (samples[i] < 10) fWFSaturated = true;
+      }
+
+      // Save waveform once every few events
+      if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
+	for(UInt_t i = 0; i<1024; i++) fLGWaveformBM[i] = samples[i];
+
     }
 
-    fHLGPedestalBM->Fill(fChannelPedestal);
-    fHLGPedRMSBM->Fill(fChannelPedRMS);
-    fHLGTotChargeBM->Fill(fChannelCharge);
-    fHLGNPoTsBM->Fill(fLGNPoTs);
-    fHLGNPoTsTotBM->Fill(fLGNPoTs);
-    fHLGBunchLengthBM->Fill(fBunchLength);
-    fHLGBunchLengthTotBM->Fill(fBunchLength);
-    fHLGBunchBBQBM->Fill(fBunchBBQ);
-    fHLGBunchBBQTotBM->Fill(fBunchBBQ);
-    fHLGBunchDensityBM->Fill(fBunchDensity);
-    fHLGBunchDensityTotBM->Fill(fBunchDensity);
+    if (board == LEADGLASS2_BOARD && channel == LEADGLASS2_CHANNEL) {
+ 
+      fLG2TotalChargeBM = fChannelCharge; // Save to compute ratio with other block
 
-    // Add waveform to cumulative for bunch shape studies
-    for(UInt_t i = 0; i<1024; i++) {
-      fLGWaveSumBM[i] += samples[i];
-      if (samples[i] < 10) fWFSaturated = true;
+      fHLG2TotChargeBM->Fill(fChannelCharge);
+
     }
 
-    // Save waveform once every few events
-    if (fBeamOutputRate && (fBeamEventCount % fBeamOutputRate == 0))
-      for(UInt_t i = 0; i<1024; i++) fLGWaveformBM[i] = samples[i];
+  }
+
+  if (fIsLED) {
+
+    // Compute pedestal and total charge in leadglass using LED signal and save them to histogram
+    ComputeTotalChargeLED(samples);
+
+    if (board == LEADGLASS_BOARD && channel == LEADGLASS_CHANNEL) {
+      fLG1TotalChargeLD = fChannelCharge;
+      fHLGPedestalLD->Fill(fChannelPedestal);
+      fHLGPedRMSLD->Fill(fChannelPedRMS);
+      fHLGTotChargeLD->Fill(fChannelCharge);
+      if (fLEDOutputRate && (fLEDEventCount % fLEDOutputRate == 0))
+	for(UInt_t i = 0; i<1024; i++) fLGWaveformLD[i] = samples[i];
+    } else if (board == LEADGLASS2_BOARD && channel == LEADGLASS2_CHANNEL) {
+      fLG2TotalChargeLD = fChannelCharge;
+      fHLG2PedestalLD->Fill(fChannelPedestal);
+      fHLG2PedRMSLD->Fill(fChannelPedRMS);
+      fHLG2TotChargeLD->Fill(fChannelCharge);
+      if (fLEDOutputRate && (fLEDEventCount % fLEDOutputRate == 0))
+	for(UInt_t i = 0; i<1024; i++) fLG2WaveformLD[i] = samples[i];
+    }
 
   }
 
@@ -362,6 +518,54 @@ void LeadGlassMonitor::ComputeTotalCharge(Short_t* samples)
   // Convert counts to charge in pC
   //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
   fChannelCharge *= 4.8828E-3;
+
+}
+
+void LeadGlassMonitor::ComputeTotalChargeLED(Short_t* samples)
+{
+
+  // Compute pedestal
+  Int_t sum_ped = 0;
+  ULong_t sum2_ped = 0;
+  for(UInt_t s = 0; s<fPedestalSamples; s++) {
+    sum_ped += samples[s];
+    sum2_ped += samples[s]*samples[s];
+  }
+  fChannelPedestal = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+  fChannelPedRMS = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fChannelPedestal)/((Double_t)fPedestalSamples-1.));
+
+  Double_t threshold = fChannelPedestal-3.*fChannelPedRMS;
+
+  // Look for a LED signal 3 sigmas above pedestal
+  Int_t sum = 0;
+  Bool_t above = false;
+  Int_t n_above = 0;
+  for(UInt_t s = fPedestalSamples; s<1000; s++) {
+    if (above) {
+      if (samples[s] > threshold) {
+	above = false;
+	if (n_above < 5) { // Signal is too short: not the real thing
+	  sum = 0.;
+	  n_above = 0;
+	} else { // Signal is long enough: we are done
+	  break;
+	}
+      } else {
+	n_above++;
+	sum += fChannelPedestal-samples[s];
+      }
+    } else {
+      if (samples[s] <= threshold) {
+	above = true;
+	n_above++;
+	sum += fChannelPedestal-samples[s];
+      }
+    }
+  }
+
+  // Convert counts to charge in pC
+  //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
+  fChannelCharge = sum*4.8828E-3;
 
 }
 
@@ -443,6 +647,56 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(Int_t b = 1; b <= fHLGPedRMSBM->GetNbinsX(); b++) {
     if (b>1) fprintf(outf,",");
     fprintf(outf,"%.0f",fHLGPedRMSBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total Charge
+  fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM Block 1 Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X pC\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  if (fWFSaturated) {
+    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
+  } else {
+    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  }
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGTotChargeBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total charge block 2
+  fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge2\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM Block 2 Total charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLG2TotChargeBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLG2TotChargeBM->GetXaxis()->GetXmin(),fHLG2TotChargeBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLG2TotChargeBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLG2TotChargeBM->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total charge ratio
+  fprintf(outf,"PLOTID LeadGlassMon_beamtotchargeratio\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG BM Total charge ratio - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeRatioBM->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeRatioBM->GetXaxis()->GetXmin(),fHLGTotChargeRatioBM->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGTotChargeRatioBM->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGTotChargeRatioBM->GetBinContent(b));
   }
   fprintf(outf,"]]\n\n");
 
@@ -566,26 +820,6 @@ Int_t LeadGlassMonitor::OutputBeam()
   }
   fprintf(outf,"]]\n\n");
 
-  // Total Charge
-  fprintf(outf,"PLOTID LeadGlassMon_beamtotcharge\n");
-  fprintf(outf,"PLOTTYPE histo1d\n");
-  fprintf(outf,"PLOTNAME LG BM Total Charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
-  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeBM->GetNbinsX());
-  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeBM->GetXaxis()->GetXmin(),fHLGTotChargeBM->GetXaxis()->GetXmax());
-  fprintf(outf,"TITLE_X pC\n");
-  fprintf(outf,"TITLE_Y Bunches\n");
-  if (fWFSaturated) {
-    fprintf(outf,"COLOR [ \"ff0000\" ]\n");
-  } else {
-    fprintf(outf,"COLOR [ \"0000ff\" ]\n");
-  }
-  fprintf(outf,"DATA [[");
-  for(Int_t b = 1; b <= fHLGTotChargeBM->GetNbinsX(); b++) {
-    if (b>1) fprintf(outf,",");
-    fprintf(outf,"%.0f",fHLGTotChargeBM->GetBinContent(b));
-  }
-  fprintf(outf,"]]\n\n");
-
   // Number of Positrons on Target (NPoTs)
   fprintf(outf,"PLOTID LeadGlassMon_beamnpots\n");
   fprintf(outf,"PLOTTYPE histo1d\n");
@@ -667,6 +901,54 @@ Int_t LeadGlassMonitor::OutputBeam()
   for(UInt_t j = 0; j<1024; j++) {
     if (j) fprintf(outf,",");
     fprintf(outf,"[%d,%.1f]",j,(Double_t)fLGWaveSumBM[j]/(Double_t)fBeamOutputRate);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Total charge block 1 trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendtotch1\n");
+  fprintf(outf,"PLOTNAME LG Total Charge Block 1 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGTotChargeBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Total charge block 2 trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendtotch2\n");
+  fprintf(outf,"PLOTNAME LG Total Charge Block 2 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLG2TotChargeBM[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Charge ratio trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendchratio\n");
+  fprintf(outf,"PLOTNAME LG Total Charge Ratio - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge_Ratio\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge Ratio\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeBM.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeBM[j],fVLGTotChargeRatioBM[j]);
   }
   fprintf(outf,"] ]\n\n");
 
@@ -786,4 +1068,211 @@ Int_t LeadGlassMonitor::OutputCosmics()
 Int_t LeadGlassMonitor::OutputRandom()
 {
   return 0;
+}
+
+Int_t LeadGlassMonitor::OutputLED()
+{
+
+  if (fConfig->Verbose()>0) printf("LeadGlassMonitor::OutputLED - Writing LED output files\n");
+
+  // Write LeadGlass histograms
+  TString ftname = fConfig->TmpDirectory()+"/LeadGlassMon_LED.txt";
+  TString ffname = fConfig->OutputDirectory()+"/LeadGlassMon_LED.txt";
+  FILE* outf = fopen(ftname.Data(),"w");
+
+  // Pedestal block 1
+  fprintf(outf,"PLOTID LeadGlassMon_ledpedestal1\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Pedestal Block 1 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGPedestalLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedestalLD->GetXaxis()->GetXmin(),fHLGPedestalLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGPedestalLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGPedestalLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Pedestal block 2
+  fprintf(outf,"PLOTID LeadGlassMon_ledpedestal2\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Pedestal Block 2 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLG2PedestalLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLG2PedestalLD->GetXaxis()->GetXmin(),fHLG2PedestalLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLG2PedestalLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLG2PedestalLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Pedestal RMS block 1
+  fprintf(outf,"PLOTID LeadGlassMon_ledpedrms1\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Pedestal RMS Block 1 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGPedRMSLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGPedRMSLD->GetXaxis()->GetXmin(),fHLGPedRMSLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGPedRMSLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGPedRMSLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Pedestal RMS block 2
+  fprintf(outf,"PLOTID LeadGlassMon_ledpedrms2\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Pedestal RMS Block 2 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLG2PedRMSLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLG2PedRMSLD->GetXaxis()->GetXmin(),fHLG2PedRMSLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLG2PedRMSLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLG2PedRMSLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total charge block 1
+  fprintf(outf,"PLOTID LeadGlassMon_ledtotcharge1\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Block 1 Total charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeLD->GetXaxis()->GetXmin(),fHLGTotChargeLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGTotChargeLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGTotChargeLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total charge block 2
+  fprintf(outf,"PLOTID LeadGlassMon_ledtotcharge2\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Block 2 Total charge - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLG2TotChargeLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLG2TotChargeLD->GetXaxis()->GetXmin(),fHLG2TotChargeLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLG2TotChargeLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLG2TotChargeLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Total charge ratio
+  fprintf(outf,"PLOTID LeadGlassMon_ledtotchargeratio\n");
+  fprintf(outf,"PLOTTYPE histo1d\n");
+  fprintf(outf,"PLOTNAME LG LED Total charge ratio - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"CHANNELS %d\n",fHLGTotChargeRatioLD->GetNbinsX());
+  fprintf(outf,"RANGE_X %.3f %.3f\n",fHLGTotChargeRatioLD->GetXaxis()->GetXmin(),fHLGTotChargeRatioLD->GetXaxis()->GetXmax());
+  fprintf(outf,"TITLE_X Counts\n");
+  fprintf(outf,"TITLE_Y Bunches\n");
+  fprintf(outf,"DATA [[");
+  for(Int_t b = 1; b <= fHLGTotChargeRatioLD->GetNbinsX(); b++) {
+    if (b>1) fprintf(outf,",");
+    fprintf(outf,"%.0f",fHLGTotChargeRatioLD->GetBinContent(b));
+  }
+  fprintf(outf,"]]\n\n");
+
+  // Single event waveform for main block
+  fprintf(outf,"PLOTID LeadGlassMon_ledwaveform1\n");
+  fprintf(outf,"PLOTTYPE scatter\n");
+  fprintf(outf,"PLOTNAME LG Block 1 LED Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"RANGE_X 0 1024\n");
+  fprintf(outf,"TITLE_X Sample\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<1024; j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[%d,%d]",j,fLGWaveformLD[j]);
+  }
+  fprintf(outf,"] ]\n");
+  fprintf(outf,"\n");
+
+  // Single event waveform for secondary block
+  fprintf(outf,"PLOTID LeadGlassMon_ledwaveform2\n");
+  fprintf(outf,"PLOTTYPE scatter\n");
+  fprintf(outf,"PLOTNAME LG Block 2 LED Waveform - Run %d Event %d - %s\n",fConfig->GetRunNumber(),fConfig->GetEventNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"RANGE_X 0 1024\n");
+  fprintf(outf,"TITLE_X Sample\n");
+  fprintf(outf,"TITLE_Y Counts\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<1024; j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[%d,%d]",j,fLG2WaveformLD[j]);
+  }
+  fprintf(outf,"] ]\n");
+  fprintf(outf,"\n");
+
+  // Total charge block 1 trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendledtotch1\n");
+  fprintf(outf,"PLOTNAME LG LED Total Charge Block 1 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeLD.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeLD[j],fVLGTotChargeLD[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Total charge block 2 trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendledtotch2\n");
+  fprintf(outf,"PLOTNAME LG LED Total Charge Block 2 - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeLD.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeLD[j],fVLG2TotChargeLD[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  // Charge ratio trend plot
+  fprintf(outf,"PLOTID LeadGlassMon_trendledchratio\n");
+  fprintf(outf,"PLOTNAME LG LED Total Charge Ratio - Run %d - %s\n",fConfig->GetRunNumber(),fConfig->FormatTime(fConfig->GetEventAbsTime()));
+  fprintf(outf,"PLOTTYPE timeline\n");
+  fprintf(outf,"MODE [ \"lines\" ]\n");
+  fprintf(outf,"COLOR [ \"0000ff\" ]\n");
+  fprintf(outf,"TITLE_X Time\n");
+  fprintf(outf,"TITLE_Y Tot_Charge_Ratio\n");
+  fprintf(outf,"LEGEND [ \"Tot Charge Ratio\" ]\n");
+  fprintf(outf,"DATA [ [");
+  for(UInt_t j = 0; j<fVLGTimeLD.size(); j++) {
+    if (j) fprintf(outf,",");
+    fprintf(outf,"[\"%f\",%.1f]",fVLGTimeLD[j],fVLGTotChargeRatioLD[j]);
+  }
+  fprintf(outf,"] ]\n\n");
+
+  fclose(outf);
+  if ( std::rename(ftname.Data(),ffname.Data()) ) {
+    printf("LeadGlassMonitor::OutputLED - ERROR - could not rename file from %s to %s\n",ftname.Data(),ffname.Data());
+    return 1;
+  }
+
+  return 0;
+
 }

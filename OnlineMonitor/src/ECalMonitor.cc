@@ -263,6 +263,7 @@ void ECalMonitor::AnalyzeChannel(UChar_t board,UChar_t channel,Short_t* samples)
 
   // Do not analyze the channel assigned to the LeadGlass
   if ((board == LEADGLASS_BOARD) && (channel == LEADGLASS_CHANNEL)) return;
+  if ((board == LEADGLASS2_BOARD) && (channel == LEADGLASS2_CHANNEL)) return;
 
   // Do not analyze channels used for the cosmics pads (last 4 channels of board 23)
   if ((board == 23) && (channel >= 28)) return;

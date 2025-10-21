@@ -12,6 +12,8 @@
 #include "ECalRecoRootIO.hh"
 #include "LeadGlassRecoRootIO.hh"
 #include "ECalMLRecoRootIO.hh"
+#include "PVetoBLRecoRootIO.hh"
+#include "EVetoBLRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
 
@@ -48,6 +50,10 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fRootIOList.push_back(new PVetoRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "EVeto"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVeto"   ,1))
     fRootIOList.push_back(new EVetoRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "PVetoBL"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "PVetoBL"   ,1)) 
+    fRootIOList.push_back(new PVetoBLRecoRootIO);
+  if (fConfig->GetParOrDefault("RECOOutput", "EVetoBL"   ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "EVetoBL"   ,1))
+    fRootIOList.push_back(new EVetoBLRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "HEPVeto" ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "HEPVeto" ,1))
     fRootIOList.push_back(new HEPVetoRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "SAC"     ,1)*fConfig->GetParOrDefault("RECOALGORITHMS", "SAC"     ,1))

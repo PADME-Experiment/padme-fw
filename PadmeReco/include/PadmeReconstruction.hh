@@ -20,6 +20,8 @@ class TRecoEvent;
 class TTargetMCEvent;
 class TEVetoMCEvent;
 class TPVetoMCEvent;
+class TEVetoBLMCEvent;
+class TPVetoBLMCEvent;
 class THEPVetoMCEvent;
 class TECalMCEvent;
 class TSACMCEvent;
@@ -36,6 +38,8 @@ class TETagRecoEvent;
 class TTPixRecoEvent;
 class TLeadGlassRecoEvent;
 class TECalMLRecoEvent;
+class TEVetoBLRecoEvent;
+class TPVetoBLRecoEvent;
 
 class TDetectorInfo;
 
@@ -98,6 +102,8 @@ private:
   TTargetMCEvent*  fTargetMCEvent;
   TEVetoMCEvent*   fEVetoMCEvent;
   TPVetoMCEvent*   fPVetoMCEvent;
+  TEVetoBLMCEvent* fEVetoBLMCEvent;
+  TPVetoBLMCEvent* fPVetoBLMCEvent;
   THEPVetoMCEvent* fHEPVetoMCEvent;
   TECalMCEvent*    fECalMCEvent;
   TSACMCEvent*     fSACMCEvent;
@@ -115,6 +121,8 @@ private:
   TTPixRecoEvent*    fTPixRecoEvent;
   TLeadGlassRecoEvent* fLeadGlassRecoEvent;
   TECalMLRecoEvent*    fECalMLRecoEvent;
+  TEVetoBLRecoEvent*   fEVetoBLRecoEvent;
+  TPVetoBLRecoEvent*   fPVetoBLRecoEvent;
 
   typedef std::vector<PadmeVReconstruction*> RecoVector;
   RecoVector fRecoLibrary;

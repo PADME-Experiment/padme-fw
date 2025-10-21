@@ -13,6 +13,8 @@
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
 #include "TPVetoMCEvent.hh"
+#include "TEVetoBLMCEvent.hh"
+#include "TPVetoBLMCEvent.hh"
 #include "THEPVetoMCEvent.hh"
 #include "TECalMCEvent.hh"
 #include "TSACMCEvent.hh"
@@ -29,6 +31,8 @@
 //#include "TTPixRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
 #include "TECalMLRecoEvent.hh"
+#include "TEVetoBLRecoEvent.hh"
+#include "TPVetoBLRecoEvent.hh"
 
 #include "TargetReconstruction.hh"
 #include "EVetoReconstruction.hh"
@@ -40,6 +44,8 @@
 #include "TPixReconstruction.hh"
 #include "LeadGlassReconstruction.hh"
 #include "ECalMLReconstruction.hh"
+#include "EVetoBLReconstruction.hh"
+#include "PVetoBLReconstruction.hh"
 
 #include "ECalParameters.hh"
 
@@ -57,6 +63,8 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTargetMCEvent  = 0;
   fEVetoMCEvent   = 0;
   fPVetoMCEvent   = 0;
+  fEVetoBLMCEvent = 0;
+  fPVetoBLMCEvent = 0;
   fHEPVetoMCEvent = 0;
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
@@ -69,6 +77,8 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTargetRecoEvent  = 0;
   fEVetoRecoEvent   = 0;
   fPVetoRecoEvent   = 0;
+  fEVetoBLRecoEvent = 0;
+  fPVetoBLRecoEvent = 0;
   fHEPVetoRecoEvent = 0;
   fECalRecoEvent    = 0;
   fECalMLRecoEvent  = 0;
@@ -123,10 +133,20 @@ void PadmeReconstruction::InitLibraries()
     std::cout<<"=== Enabling EVeto with configuration file "<<configEVeto<<std::endl;
     fRecoLibrary.push_back(new EVetoReconstruction(fHistoFile,configEVeto));
   }
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","EVetoBL",1)) {
+    TString configEVetoBL = fConfig->GetParOrDefault("RECOCONFIG","EVetoBL","config/EVetoBL.cfg");
+    std::cout<<"=== Enabling EVetoBL with configuration file "<<configEVetoBL<<std::endl;
+    fRecoLibrary.push_back(new EVetoBLReconstruction(fHistoFile,configEVetoBL));
+  }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","PVeto",1)) {
     TString configPVeto = fConfig->GetParOrDefault("RECOCONFIG","PVeto","config/PVeto.cfg");
     std::cout<<"=== Enabling PVeto with configuration file "<<configPVeto<<std::endl;
     fRecoLibrary.push_back(new PVetoReconstruction(fHistoFile,configPVeto));
+  }
+  if (fConfig->GetParOrDefault("RECOALGORITHMS","PVetoBL",1)) {
+    TString configPVetoBL = fConfig->GetParOrDefault("RECOCONFIG","PVetoBL","config/PVetoBL.cfg");
+    std::cout<<"=== Enabling PVetoBL with configuration file "<<configPVetoBL<<std::endl;
+    fRecoLibrary.push_back(new PVetoBLReconstruction(fHistoFile,configPVetoBL));
   }
   if (fConfig->GetParOrDefault("RECOALGORITHMS","ECal",1)) {
     TString configECal = fConfig->GetParOrDefault("RECOCONFIG","ECal","config/ECal.cfg");
@@ -185,6 +205,8 @@ void PadmeReconstruction::InitDetectorsInfo()
   if (FindReco("Target"))  ((TargetReconstruction*)  FindReco("Target")) ->Init(this);
   if (FindReco("EVeto"))   ((EVetoReconstruction*)   FindReco("EVeto"))  ->Init(this);
   if (FindReco("PVeto"))   ((PVetoReconstruction*)   FindReco("PVeto"))  ->Init(this);
+  if (FindReco("EVetoBL"))   ((EVetoBLReconstruction*)   FindReco("EVetoBL"))  ->Init(this);
+  if (FindReco("PVetoBL"))   ((PVetoBLReconstruction*)   FindReco("PVetoBL"))  ->Init(this);
   if (FindReco("HEPVeto")) ((HEPVetoReconstruction*) FindReco("HEPVeto"))->Init(this);
   if (FindReco("ECal"))    ((ECalReconstruction*)    FindReco("ECal"))   ->Init(this);
   if (FindReco("SAC"))     ((SACReconstruction*)     FindReco("SAC"))    ->Init(this);
@@ -234,6 +256,8 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
 	ShowSubDetectorInfo(detInfo,"Target");
 	ShowSubDetectorInfo(detInfo,"EVeto");
 	ShowSubDetectorInfo(detInfo,"PVeto");
+	ShowSubDetectorInfo(detInfo,"EVetoBL");
+	ShowSubDetectorInfo(detInfo,"PVetoBL");
 	ShowSubDetectorInfo(detInfo,"HEPVeto");
 	ShowSubDetectorInfo(detInfo,"ECal");
 	ShowSubDetectorInfo(detInfo,"SAC");
@@ -281,6 +305,12 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="PVeto") {
 	fPVetoMCEvent = new TPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
+      } else if (branchName=="EVetoBL") {
+	fEVetoBLMCEvent = new TEVetoBLMCEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoBLMCEvent);
+      } else if (branchName=="PVetoBL") {
+	fPVetoBLMCEvent = new TPVetoBLMCEvent();
+	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoBLMCEvent);
       } else if (branchName=="HEPVeto") {
 	fHEPVetoMCEvent = new THEPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
@@ -339,6 +369,12 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="PVeto_Hits") {
 	fPVetoRecoEvent = new TPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
+      } else if (branchName=="EVetoBL_Hits") {
+	fEVetoBLRecoEvent = new TEVetoBLRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoBLRecoEvent);
+      } else if (branchName=="PVetoBL_Hits") {
+	fPVetoBLRecoEvent = new TPVetoBLRecoEvent();
+	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoBLRecoEvent);
       } else if (branchName=="HEPVeto_Hits") {
 	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
@@ -414,6 +450,10 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "EVetoBL" && fEVetoBLMCEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fEVetoBLMCEvent,fMCEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "PVetoBL" && fPVetoBLMCEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fPVetoBLMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalMCEvent) {
@@ -451,6 +491,10 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "EVetoBL" && fEVetoBLRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fEVetoBLRecoEvent,fRecoEvent);
+      } else if (fRecoLibrary[iLib]->GetName() == "PVetoBL" && fPVetoBLRecoEvent) {
+	fRecoLibrary[iLib]->ProcessEvent(fPVetoBLRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoRecoEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoRecoEvent,fRecoEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalRecoEvent) {

@@ -52,7 +52,12 @@ Bool_t NPoTAnalysis::InitHistos(){
   fHS->BookHistoList("NPoTAnalysis","NPoTPhys5K",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","NPoTIsa",600,-1000.,59000.);
   fHS->BookHistoList("NPoTAnalysis","XPos",600,-15.,15.);
+  fHS->BookHistoList("NPoTAnalysis","XCharge",200,-2,2);
   fHS->BookHistoList("NPoTAnalysis","YPos",600,-15.,15.);
+<<<<<<< HEAD
+=======
+  fHS->BookHistoList("NPoTAnalysis","YCharge",200,-2,2.);
+>>>>>>> origin/calibTools
 
   // Lead Glass related quantities 
 
@@ -83,6 +88,12 @@ Bool_t NPoTAnalysis::Process(){
     fNPoT = fEvent->TargetRecoBeam->getnPOT();
     fXPos = fEvent->TargetRecoBeam->getX();
     fYPos = fEvent->TargetRecoBeam->getY();
+<<<<<<< HEAD
+=======
+    fXCharge = fEvent->TargetRecoBeam->getXCharge();
+    fYCharge = fEvent->TargetRecoBeam->getYCharge();
+    
+>>>>>>> origin/calibTools
     fTimeStamp=fEvent->RecoEvent->GetEventTime(); 
     //  cout<<" X tar "<<fXPos<<" "<<fYPos<<endl;
     TotPoT    +=fNPoT;    
@@ -93,7 +104,11 @@ Bool_t NPoTAnalysis::Process(){
    fNPoTLGCorr =0;
    fNPoTBL =0.;
    Double_t fLGPed =0.;
+<<<<<<< HEAD
    Double_t fLGCharge=0.;
+=======
+   fLGCharge=0.;
+>>>>>>> origin/calibTools
 
   if(fEvent->LeadGlassRecoEvent!=0){
     fNPoTLG   =  402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/fGeneralInfo->GetBeamEnergy();
@@ -139,6 +154,11 @@ Bool_t NPoTAnalysis::Process(){
 
   fHS->FillHistoList("NPoTAnalysisLG","NPoTTarvsNPoTLG",fNPoTLG,fNPoT);
   fHS->FillHistoList("NPoTAnalysisLG","NPoTLGvsXTar",fXPos,fNPoTLG);
+<<<<<<< HEAD
+=======
+  fHS->FillHistoList("NPoTAnalysis","XCharge",fXCharge);
+  fHS->FillHistoList("NPoTAnalysis","YCharge",fYCharge);
+>>>>>>> origin/calibTools
   if(fNPoT>5E3) {
     fHS->FillHistoList("NPoTAnalysis","XPos",fXPos);
     fHS->FillHistoList("NPoTAnalysis","YPos",fYPos);

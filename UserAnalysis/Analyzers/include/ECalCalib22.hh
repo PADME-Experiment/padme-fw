@@ -44,7 +44,11 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
+<<<<<<< HEAD
 
+=======
+  TString fcfgPath;
+>>>>>>> origin/calibTools
   HistoSvc* fHS;
   Int_t fNClusters;
   Int_t ECalChNum[NTOTCh]={0};

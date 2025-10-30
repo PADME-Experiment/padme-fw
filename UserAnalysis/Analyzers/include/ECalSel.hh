@@ -133,6 +133,10 @@ private:
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
+<<<<<<< HEAD
+=======
+  TString fcfgPath;
+>>>>>>> origin/calibTools
   TString fNRun;
   // general cuts
 
@@ -165,6 +169,10 @@ private:
   Double_t fSigmaCut =3;
   Double_t HitAvgEn =0;
   Double_t NPoTAvg =0;
+<<<<<<< HEAD
+=======
+  Double_t QLGAvg =0;
+>>>>>>> origin/calibTools
   TFile *fileIn;
   const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
   const int ncells = 29; // per row or column                                                                                                                                                            
@@ -207,4 +215,8 @@ private:
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> origin/calibTools

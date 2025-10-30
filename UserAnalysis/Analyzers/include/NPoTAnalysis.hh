@@ -25,6 +25,10 @@ public:
   Double_t GetNPoT() { return fNPoT; }
   Double_t GetNPoTLG() { return fNPoTLG; }
   Double_t GetNPoTLGCorr() { return fNPoTLGCorr; }
+<<<<<<< HEAD
+=======
+  Double_t GetQLG() { return fLGCharge; }
+>>>>>>> origin/calibTools
 
 
 private:
@@ -48,6 +52,15 @@ private:
   Double_t fNPoT;
   Double_t fXPos;
   Double_t fYPos;
+  Double_t fXCharge;
+  Double_t fYCharge;
+
+  Double_t fNPoTLG;
+  Double_t fNPoTLGCorr;
+  Double_t fNPoTBL;
+  Double_t fLGCharge;
+  std::vector<double> vNRun;
+  std::vector<double> vNEvt;
 
   Double_t fNPoTLG;
   Double_t fNPoTLGCorr;

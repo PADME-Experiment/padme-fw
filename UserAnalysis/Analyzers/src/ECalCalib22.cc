@@ -23,6 +23,10 @@ ECalCalib22::ECalCalib22(TString cfgFile, Int_t verbose)
   fHS = HistoSvc::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
+<<<<<<< HEAD
+=======
+  fcfgPath = TString(fCfgParser->GetSingleArg("ECAL", "CosmicsPath"));
+>>>>>>> origin/calibTools
   fNRun = "";	     
   fCurrentRun=-1.;     
   fCurrentRunIndex=-1.;
@@ -89,11 +93,19 @@ Bool_t ECalCalib22::InitHistos(){
   for(int iCh=0; iCh<NTOTCh; iCh++){
     TString HistoName = Form("CREnCH%d",ECalChNum[iCh]);
     TString HistoNameVert = Form("CREnCH%d_Vert",ECalChNum[iCh]);
+<<<<<<< HEAD
     ECalChHisto[iCh]=fHS->BookHistoList("ECalCalib22",HistoName.Data(),110,-10,100);
     ECalChHistoVert[iCh]=fHS->BookHistoList("ECalCalib22",HistoNameVert.Data(),110,-10,100);
   }
    TH1D *ECalChHisto_1=fHS->BookHistoList("ECalCalib22","CREnCH-1",110,-10,100);
    TH1D *ECalChHistoVert_1=fHS->BookHistoList("ECalCalib22", "CREnCH-1_Vert",110,-10,100);
+=======
+    ECalChHisto[iCh]=fHS->BookHistoList("ECalCalib22",HistoName.Data(),220,-10,100);
+    ECalChHistoVert[iCh]=fHS->BookHistoList("ECalCalib22",HistoNameVert.Data(),220,-10,100);
+  }
+   TH1D *ECalChHisto_1=fHS->BookHistoList("ECalCalib22","CREnCH-1",220,-10,100);
+   TH1D *ECalChHistoVert_1=fHS->BookHistoList("ECalCalib22", "CREnCH-1_Vert",220,-10,100);
+>>>>>>> origin/calibTools
  
 
 
@@ -193,10 +205,17 @@ Bool_t ECalCalib22::Process(PadmeAnalysisEvent* event){
 Bool_t ECalCalib22::Finalize()
 { if (fVerbose) printf("---> Finalizing ECalCalib22\n");
   if(fHistoMode && fGeneralInfo->isMC()==true){
+<<<<<<< HEAD
   std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
   return false;
   } 
  //ChannelLandauFit();
+=======
+  std::cout<<"This run is MC, Cosmics checks do not apply"<<std::endl;
+  return false;
+  } 
+  ChannelLandauFit();
+>>>>>>> origin/calibTools
   
   return true;
 }
@@ -215,6 +234,7 @@ Bool_t ECalCalib22::ChannelLandauFit(){
     ECalChHisto[iCh]= (TH1D*) InFile->Get(Form("ECalCalib22/%s",HistoName.Data()))->Clone();
     ECalChHistoVert[iCh]=(TH1D*)InFile->Get(Form("ECalCalib22/%s",HistoNameVert.Data()))->Clone();
   }
+<<<<<<< HEAD
   TFile *BadCalib = new TFile(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/BadCalib_%s.root", fNRun.Data()),"RECREATE");
   ofstream OutFile;
   if(NewCalib) OutFile.open(Form("/data9Vd1/padme/dimeco/TagAndProbeOut/DATAout/ECalEnergyCalibration_7.dat"));
@@ -222,12 +242,24 @@ Bool_t ECalCalib22::ChannelLandauFit(){
   cout<<"Performing Landau fits"<<endl<<endl;
   TF1 *LandauFun = new TF1("LandauFun", "landau",13., 100.);
   //LandauFun->SetParLimits(1,13.,23.);
+=======
+  
+  TFile *BadCalib = new TFile(Form("%sBadCalib_%s.root", fcfgPath.Data(),fNRun.Data()),"RECREATE");
+  ofstream OutFile;
+  if(NewCalib) OutFile.open(Form("%sECalEnergyCalibration_8.dat", fcfgPath.Data()));
+  ofstream ErrFile(Form("%s_%s.txt",fcfgPath.Data(),fNRun.Data()));
+  cout<<"Performing Landau fits"<<endl<<endl;
+  TF1 *LandauFunNoBkg = new TF1("LandauFun", "landau",13., 100.);
+  //LandauFun->SetParLimits(1,13.,23.);
+  TF1 *LandauFun = new TF1("LandauFunExpoBkg", "landau+expo(3)",13., 100.);
+>>>>>>> origin/calibTools
   int iCh=0;
   if(ErrFile.is_open()){
     
     for(iCh=0; iCh<NTOTCh; iCh++){ //Fitting each histo with a Laundau function
       
       float NonEmpty = ECalChHistoVert[iCh]->Integral();
+<<<<<<< HEAD
       if(NonEmpty>200) {
         ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", 13., 60.); 
         Double_t LandauMPV= LandauFun->GetParameter(1);
@@ -251,6 +283,59 @@ Bool_t ECalCalib22::ChannelLandauFit(){
           ECalChHistoVert[iCh]->Write();
           //ECalChMVP[iCh]=-1;
         }
+=======
+      if(NonEmpty>10) {
+	LandauFunNoBkg->SetParameter(1, ECalChHistoVert[iCh]->GetMean());
+        ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", 7., 60.); 
+        Double_t LandauMPV= LandauFunNoBkg->GetParameter(1);
+        Double_t LandauSigma= LandauFunNoBkg->GetParameter(2);
+        //LandauFun->ReleaseParameter(1);
+        //LandauFun->ReleaseParameter(2);
+        LandauFunNoBkg->SetParameter(1,17);
+        LandauFunNoBkg->SetParLimits(1,2.,50.);
+	LandauFunNoBkg->SetParLimits(2,1.,6.);
+        ECalChHistoVert[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-3*LandauSigma, 60.); 
+	
+	LandauFun->SetParameter(0, LandauFun->GetParameter(0));
+	LandauFun->SetParameter(1, LandauMPV);
+	LandauFun->SetParameter(2, LandauSigma);
+	LandauFun->SetParameter(3, 4.);
+	LandauFun->SetParameter(4, -0.2);
+	
+	LandauFun->SetParLimits(3,1.,20.);
+	LandauFun->SetParLimits(1,2.,50.);
+        LandauFun->SetParLimits(2,1.,6.);
+	LandauFun->SetParLimits(4,-0.001,-2.);
+	ECalChHistoVert[iCh]->Fit("LandauFunExpoBkg","RQ"," ", LandauMPV-3*LandauSigma, LandauMPV+20*LandauSigma); 
+        ECalChMVP[iCh]=LandauFun->GetParameter(1);
+
+        //if(iCh==0) cout<<"First MPV:"<<ECalChMVP[iCh]<<endl;
+        Double_t Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
+        if(Chi2 > 2. || Chi2 < 0.2  ) {
+	  ECalChHistoVert[iCh]->Fit("LandauFunExpoBkg","RQ"," ", LandauMPV-2*LandauSigma,  LandauMPV+20*LandauSigma);
+	  Chi2 = LandauFun->GetChisquare()/LandauFun->GetNDF();
+	  TString nameH = ECalChHistoVert[iCh]->GetName();
+	  TString nameHfail("_fistfitfailed");
+	  BadCalib->cd();
+	  ECalChHistoVert[iCh]->SetName((nameH+nameHfail).Data());
+	  ECalChHistoVert[iCh]->Write();	
+	
+	  if(Cross[iCh]==0) ECalChEff[iCh]=-1;
+	  else ECalChEff[iCh]=(Double_t) MiddleCross[iCh]/(Double_t)Cross[iCh];
+	  
+	  if(Chi2 > 3.5 ) {
+	    ErrFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<" \t"<<Chi2<<endl; 
+	    BadCalib->cd();
+	    TString nameH = ECalChHistoVert[iCh]->GetName();
+	    TString nameHfail("_fitfailed");
+	    ECalChHistoVert[iCh]->SetName((nameH+nameHfail).Data());
+	    ECalChHistoVert[iCh]->Write();
+	    ECalChMVP[iCh]=LandauFun->GetParameter(1);
+	  }else{
+	    ECalChMVP[iCh]=LandauFun->GetParameter(1);
+	  }
+	}
+>>>>>>> origin/calibTools
         
         if(NewCalib && OutFile.is_open()) OutFile<<" "<<ECalChNum[iCh]/100<<" "<<ECalChNum[iCh]%100<<" "<<FBdId[iCh]<<" "<<FChId[iCh]<<" "<<ECalChMVP[iCh]*15.<<endl;
         //OutFile<<ECalChNum[iCh]<<"\t"<< ECalChMVP[iCh]<<"\t"<<ECalChEff[iCh]<<endl;
@@ -284,7 +369,11 @@ Bool_t ECalCalib22::ChannelLandauFit(){
             LandauFun->ReleaseParameter(1);
             LandauFun->ReleaseParameter(2);
             LandauFun->SetParameter(1,17);
+<<<<<<< HEAD
             LandauFun->SetParLimits(1,10,30);
+=======
+            LandauFun->SetParLimits(1,5,60);
+>>>>>>> origin/calibTools
 
             ECalChHisto[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-0.5*LandauSigma, 60.); 
             ECalChHisto[iCh]->Fit("LandauFun","RQ"," ", LandauMPV-0.5*LandauSigma, 60.); 
@@ -313,14 +402,25 @@ Bool_t ECalCalib22::ChannelLandauFit(){
         }
     }
     cout<<endl;
+<<<<<<< HEAD
     if(NewCalib) cout<<"\t\t---> Calibration constants can be found in ECalEnergyCalibration_7.dat"<<endl<<endl;
     cout<<"\t\t---> Calibration Errors log are in BadUnits_"<<fNRun.Data()<<".txt, plots can be found in BadCalib_"<<fNRun.Data()<<".root"<<endl<<endl;
     }else {
       cout<<"****** Cannot open ECalEnergyCalibration_7.dat ******"<<endl;
+=======
+    if(NewCalib) cout<<"\t\t---> Calibration constants can be found in ECalEnergyCalibration_8.dat"<<endl<<endl;
+    cout<<"\t\t---> Calibration Errors log are in BadUnits_"<<fNRun.Data()<<".txt, plots can be found in BadCalib_"<<fNRun.Data()<<".root"<<endl<<endl;
+    }else {
+      cout<<"****** Cannot open ECalEnergyCalibration_8.dat ******"<<endl;
+>>>>>>> origin/calibTools
       cout<<"****** Cannot open BadUnits_"<<fNRun.Data()<<".txt file ******"<<endl;
     }
 
     return true;
 
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/calibTools

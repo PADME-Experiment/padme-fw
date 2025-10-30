@@ -205,7 +205,11 @@ if(fGeneralInfo->isMC()){
   std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
   return false;
 } 
+<<<<<<< HEAD
 
+=======
+return true;
+>>>>>>> origin/calibTools
 fNRun = fGeneralInfo->GetRunNumberFromDB();
 if(!fHistoMode){
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
@@ -328,7 +332,10 @@ if(fHistoMode && !fGeneralInfo->isMC()){
             if(yvalrm < freject_below || yvalrm > freject_above){
                std::cout<<"Removing yvalrm:"<<yvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
                continue;}
+<<<<<<< HEAD
             //if(yvalrm==0) {std::cout<< "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO  obsplotMeanNoBeamDown->GetN():"<<obsplotMeanNoBeamDown->GetN()<<std::endl; continue;}
+=======
+>>>>>>> origin/calibTools
             int Npointnobd= obsplotMeanNoBeamDown->GetN();
             // std::cout<<iprm<<" "<<Npointnobd<<std::endl;
             //std::cout<<"N:"<<obsplotMeanNoBeamDown->GetN()<<" yvalrm: "<<yvalrm<< " xvalrm: "<<xvalrm <<" errY: "<<erryrm<<" errX: "<<errxrm<<std::endl;

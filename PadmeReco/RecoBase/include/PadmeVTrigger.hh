@@ -30,6 +30,7 @@ public:
   bool IsBTFTrigger()    {return (fTrigMask==1);}
   bool IsAutoTrigger()   {return (fTrigMask==128);}
   bool IsCosmicsTrigger(){return (fTrigMask==2);}
+  bool IsLEDTrigger()    {return (fTrigMask==4);}
 
 private:
   int fTriggerNumber;

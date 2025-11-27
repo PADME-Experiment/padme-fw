@@ -32,10 +32,13 @@ void LeadGlassRecoRootIO::SaveEvent()
   if (! fLGReco) fLGReco = (LeadGlassReconstruction*)RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
 
   if (fLGReco->LeadGlassFound()) {
-    ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(fLGReco->GetPedestal());
-    ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMS(fLGReco->GetPedestalRMS());
-    ((TLeadGlassRecoEvent*)fEvent)->SetTotalCharge(fLGReco->GetCharge());
-    ((TLeadGlassRecoEvent*)fEvent)->SetTotalEnergy(fLGReco->GetEnergy());
+    for (UChar_t lgID = 0; lgID < N_LEADGLASS; lgID++){
+    //UChar_t lgID = fLGReco->LeadGlassID();
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(lgID,fLGReco->GetPedestal(lgID));
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMS(lgID,fLGReco->GetPedestalRMS(lgID));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalCharge(lgID,fLGReco->GetCharge(lgID));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalEnergy(lgID,fLGReco->GetEnergy(lgID));
+    }
     ((TLeadGlassRecoEvent*)fEvent)->SetNPoTs(fLGReco->GetNPoTs());
     ((TLeadGlassRecoEvent*)fEvent)->SetBunchLength(fLGReco->GetBunchLength());
     ((TLeadGlassRecoEvent*)fEvent)->SetBunchBBQ(fLGReco->GetBunchBBQ());

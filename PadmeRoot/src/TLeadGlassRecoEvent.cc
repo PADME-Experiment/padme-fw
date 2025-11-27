@@ -12,10 +12,10 @@ TLeadGlassRecoEvent::~TLeadGlassRecoEvent()
 
 void TLeadGlassRecoEvent::Clear()
 {
-  fLGPedestal = 0.;
-  fLGPedestalRMS = 0.;
-  fLGTotalCharge = 0.;
-  fLGTotalEnergy = 0.;
+  fLGPedestal[N_LEADGLASS] = 0.;
+  fLGPedestalRMS[N_LEADGLASS] = 0.;
+  fLGTotalCharge[N_LEADGLASS] = 0.;
+  fLGTotalEnergy[N_LEADGLASS] = 0.;
   fLGNPoTs = 0.;
   fLGBunchLength = 0.;
   fLGBunchBBQ = 0.;

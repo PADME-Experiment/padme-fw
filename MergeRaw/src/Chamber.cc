@@ -9,7 +9,8 @@ Chamber::Chamber(TString fileName, TTree *tree) : fChain(0)
 {
   //TFile* f = new TFile("run30.root");
   printf("Opening file %s\n",fileName.Data());
-  TFile* f = new TFile(fileName);
+  //TFile* f = new TFile(fileName);
+  TFile* f = TFile::Open(fileName.Data(),"READ");
   f->GetObject("apv_raw",tree);
   Init(tree);
 }

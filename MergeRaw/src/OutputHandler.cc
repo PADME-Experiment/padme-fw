@@ -142,7 +142,8 @@ Int_t OutputHandler::CloseOutFile()
   return 0;
 }
 
-Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timediff)//ULong64_t srsRunTime)
+//Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, Chamber* chEv, Double_t timediff)//ULong64_t srsRunTime)
+Int_t OutputHandler::WriteEvent(TRawEvent* rawEv, ChamberHandler* chEv, Double_t timediff)//ULong64_t srsRunTime)
 //Int_t OutputHandler::WriteEvent()
 {
   //// Copy input event to output event (may apply zero suppression)

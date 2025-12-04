@@ -1,7 +1,8 @@
 #ifndef OutputHandler_H
 #define OutputHandler_H
 #include "TRawEvent.hh"
-#include "Chamber.hh"
+//#include "Chamber.hh"
+#include "ChamberHandler.hh"
 #include "TRawMergedEvent.hh"
 
 class Configuration;
@@ -23,7 +24,8 @@ public:
   Int_t Initialize();
   Int_t Finalize();
 
-  Int_t WriteEvent(TRawEvent*, Chamber*, Double_t); // 
+  //Int_t WriteEvent(TRawEvent*, Chamber*, Double_t); // 
+  Int_t WriteEvent(TRawEvent*, ChamberHandler*, Double_t); // 
   //  Int_t WriteEvent();
 
   TRawMergedEvent* GetRawMergedEvent() { return fTRawMergedEvent; }

@@ -27,6 +27,7 @@ public:
 
   Double_t GetPedestal(UChar_t leadglassID)    { return fLGPedestal[leadglassID];  }
   Double_t GetPedestalRMS(UChar_t leadglassID) { return fLGPedRMS[leadglassID];    }
+  Int_t GetStartIndexCell(UChar_t leadglassID) { return fLGStartIndexCell[leadglassID];    }
   Double_t GetCharge(UChar_t leadglassID)      { return fLGCharge[leadglassID];    }
   Double_t GetEnergy(UChar_t leadglassID)      { return fLGEnergy[leadglassID];    }
   Double_t GetNPoTs()       { return fLGNPoTs;     }
@@ -60,6 +61,7 @@ private:
   // Results of pedestal and total charge evaluation
   Double_t fLGPedestal[N_LEADGLASS]; // Pedestal level from the first fPedestalSamples samples
   Double_t fLGPedRMS[N_LEADGLASS];   // Pedestal RMS
+  Int_t fLGStartIndexCell[N_LEADGLASS]; // Index of signal start
   Double_t fLGCharge[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
 
   // Calibration parameter to convert Total Charge to Total Energy

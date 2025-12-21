@@ -12,10 +12,13 @@ TLeadGlassRecoEvent::~TLeadGlassRecoEvent()
 
 void TLeadGlassRecoEvent::Clear()
 {
-  fLGPedestal[N_LEADGLASS] = 0.;
-  fLGPedestalRMS[N_LEADGLASS] = 0.;
-  fLGTotalCharge[N_LEADGLASS] = 0.;
-  fLGTotalEnergy[N_LEADGLASS] = 0.;
+  for (UChar_t lgID = 0; lgID < N_LEADGLASS; lgID++){
+    fLGPedestal[lgID] = 0.;
+    fLGPedestalRMS[lgID] = 0.;
+    fLGStartIndexCell[lgID] = 0;
+    fLGTotalCharge[lgID] = 0.;
+    fLGTotalEnergy[lgID] = 0.;
+  }
   fLGNPoTs = 0.;
   fLGBunchLength = 0.;
   fLGBunchBBQ = 0.;

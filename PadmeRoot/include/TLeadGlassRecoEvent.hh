@@ -20,6 +20,9 @@ public:
   void SetPedestalRMS(UChar_t lg, Double_t c) { fLGPedestalRMS[lg] = c; }
   Double_t GetPedestalRMS(UChar_t lg) { return fLGPedestalRMS[lg]; }
 
+  void SetStartIndexCell(UChar_t lg, Int_t i) { fLGStartIndexCell[lg] = i; }
+  Int_t GetStartIndexCell(UChar_t lg) { return fLGStartIndexCell[lg]; }
+
   void SetTotalCharge(UChar_t lg, Double_t c) { fLGTotalCharge[lg] = c; }
   Double_t GetTotalCharge(UChar_t lg) { return fLGTotalCharge[lg]; }
 
@@ -39,6 +42,7 @@ private:
   
   Double_t fLGPedestal[N_LEADGLASS];
   Double_t fLGPedestalRMS[N_LEADGLASS];
+  Int_t fLGStartIndexCell[N_LEADGLASS];
 
   Double_t fLGTotalCharge[N_LEADGLASS];
   Double_t fLGTotalEnergy[N_LEADGLASS];

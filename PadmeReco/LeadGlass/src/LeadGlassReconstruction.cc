@@ -89,37 +89,77 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
-    if (TriggerToBeSkipped()) return;
+    printf("\nTriggerMask %d\n",rawEv->GetEventTrigMask());
+    if (TriggerToBeSkipped()) {
+      printf("Skip!!!\n");
+      return;
+    }
   }
 
   // Find LeadGlass channel in RawEvent (Board 14 Channel 31 || Board 21 Channel 31)
   //UChar_t lg_b,lg_c;
   // Loop through the boards
   for(UChar_t b = 0; b < rawEv->GetNADCBoards(); b++) {
-    // Leadglass-on-
-    if (rawEv->ADCBoard(b)->GetBoardId() == LEADGLASS_BOARD) {
+    TADCBoard* adcB = rawEv->ADCBoard(b);
+
+    // Leadglass-on-beam
+    if (adcB->GetBoardId() == LEADGLASS_BOARD) {
       leadglassID = 0;
+      printf("Channels = %d\n",adcB->GetNADCChannels());
+
+      printf("BoardID = %d Leadglass = %d Trigger = %d\n",adcB->GetBoardId(),leadglassID,rawEv->GetEventTrigMask());
+      // Get StartIndexCell
+      UChar_t nTrg = adcB->GetNADCTriggers();
+      //printf("Ntrig = %u\n",nTrg);
+      for(UChar_t trig=0; trig<nTrg; trig++){
+        TADCTrigger *adcTrig = adcB->ADCTrigger(trig);
+        UChar_t nGroup = adcTrig->GetGroupNumber();
+        if (nGroup == 3) {
+          fLGStartIndexCell[leadglassID] = adcB->ADCTrigger(trig)->GetStartIndexCell();
+          //printf("trig = %u -- group = %u -- startIndex = %u\n", trig, nGroup, startIndexCell);
+        }
+      }
+
       // Loop through the channels
-      for(UChar_t c = 0; c < rawEv->ADCBoard(b)->GetNADCChannels(); c++) {
-	      if (rawEv->ADCBoard(b)->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
+      for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
+        //printf("channel = %d ",c);
+        RecoVChannelID *chanID = new RecoVChannelID();
+        
+	      if (adcB->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
+        printf(" chanNum = %d", adcB->ADCChannel(c)->GetChannelNumber());
+        printf(" %d\n", chanID->scanChannelID(LEADGLASS_CHANNEL-1));
 	        fLeadGlassFound = true;
 	        //lg_c = c;
 	        // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
-	        AnalyzeChannel(leadglassID,rawEv->ADCBoard(b)->ADCChannel(c)->GetSamplesArray());
+	        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
 	        //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
 	      }
       }
     }
 
-    if (rawEv->ADCBoard(b)->GetBoardId() == SECOND_LEADGLASS_BOARD) {  
+    // reference Leadglass
+    if (adcB->GetBoardId() == SECOND_LEADGLASS_BOARD) {  
       //lg_b = b;
       leadglassID = 1;
-      for(UChar_t c = 0; c < rawEv->ADCBoard(b)->GetNADCChannels(); c++) {
-        if (rawEv->ADCBoard(b)->ADCChannel(c)->GetChannelNumber() == SECOND_LEADGLASS_CHANNEL) {
+
+      // Get StartIndexCell
+      UChar_t nTrg = adcB->GetNADCTriggers();
+      //printf("Ntrig = %u\n",nTrg);
+      for(UChar_t trig=0; trig<nTrg; trig++){
+        TADCTrigger *adcTrig = adcB->ADCTrigger(trig);
+        UChar_t nGroup = adcTrig->GetGroupNumber();
+        if (nGroup == 3) {
+          fLGStartIndexCell[leadglassID] = adcB->ADCTrigger(trig)->GetStartIndexCell();
+          //printf("trig = %u -- group = %u -- startIndex = %u\n", trig, nGroup, startIndexCell);
+        }
+      }
+      
+      for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
+        if (adcB->ADCChannel(c)->GetChannelNumber() == SECOND_LEADGLASS_CHANNEL) {
         fLeadGlassFound = true;
         //lg_c = c;
         // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
-        AnalyzeChannel(leadglassID,rawEv->ADCBoard(b)->ADCChannel(c)->GetSamplesArray());
+        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
         //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
         }
       }
@@ -156,8 +196,18 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 Bool_t LeadGlassReconstruction::TriggerToBeSkipped()
 {
   // Only analyze BTF triggers and LED triggers 
-  if ( !(GetTriggerProcessor()->IsBTFTrigger() || GetTriggerProcessor()->IsLEDTrigger())) return true;
-  return false; 
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    //printf("Found BTF trigger!\n");
+    return false; 
+  }
+  else if(GetTriggerProcessor()->IsLEDTrigger()) {
+    //printf("Found LED trigger!\n");
+    return false;
+  }
+  else {
+    //printf("Skip trigger!\n");
+    return true; 
+  }
 }
 
 void LeadGlassReconstruction::AnalyzeEvent(TRawEvent* rawEv)

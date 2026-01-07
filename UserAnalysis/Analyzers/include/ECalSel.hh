@@ -158,13 +158,18 @@ private:
   Double_t tpLow=-15.;
   Double_t tpHigh=15.;
   Int_t fNYBins;
-  Double_t fMeanDTheta = 3.113; //rad
-  Double_t fMeanDPhi = 3.093; //rad
-  Double_t fSigmaDTheta = 0.0932; //rad
-  Double_t fSigmaDPhi = 0.1105; //rad
+  Double_t fMeanDTheta = 3.184;//3.113 runIII; //rad
+  Double_t fMeanDPhi = 3.138;//3.093 run III; //rad
+  Double_t fSigmaDTheta = 0.0653;//0.0932 run III; //rad
+  Double_t fSigmaDPhi = 0.1188;//0.1105 run III; //rad
   Double_t fSigmaE; //defined with Ebeam
   Double_t fSigmaCut =3;
   Double_t HitAvgEn =0;
+  Double_t HitAvgEnR1 =0;
+  Double_t HitAvgEnR2 =0;
+  Double_t HitAvgEnR3 =0;
+  Double_t R1 = 133;
+  Double_t R2 =216;
   Double_t NPoTAvg =0;
   Double_t QLGAvg =0;
   TFile *fileIn;

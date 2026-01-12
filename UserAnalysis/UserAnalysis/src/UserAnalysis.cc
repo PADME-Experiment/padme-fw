@@ -31,24 +31,24 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fECalCalib    = ECalCalib::GetInstance();
-  fECalCalib22    = ECalCalib22::GetInstance();
+//  fECalCalib    = ECalCalib::GetInstance();
+//  fECalCalib22    = ECalCalib22::GetInstance();
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
   fMCTruthECal      = MCTruthECal::GetInstance();
 
 
   //Physics analysis last reviewed by M. Raggi 05/22
-  fNPoTAnalysis = NPoTAnalysis::GetInstance();
+  //  fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
-  fECalETagMatching  = ECalETagMatching::GetInstance();
-  fETagAn  = ETagAn::GetInstance();
-  fDataQuality = DataQuality::GetInstance();
+  //  fECalETagMatching  = ECalETagMatching::GetInstance();
+  //  fETagAn  = ETagAn::GetInstance();
+  //  fDataQuality = DataQuality::GetInstance();
   fMMStudy = MMStudy::GetInstance();
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
-  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
-  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
+//  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
+//  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
 //  fIs3GAnalysis = new Is3GAnalysis(cfgFile,fVerbose);
 
   fETagHitsAvail = kFALSE;
@@ -57,16 +57,16 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
-  delete fECalCalib;
-  delete fNPoTAnalysis;
+//  delete fECalCalib;
+//  delete fNPoTAnalysis;
   delete fGeneralInfo;
   delete fECalSel;
-  delete fETagAn;
+  //  delete fETagAn;
   //  delete fIsGGAnalysis;
-  delete fETagAnalysis;
-  delete fIs22GGAnalysis;
-  delete fDataQuality;
-  delete fECalETagMatching;
+//  delete fETagAnalysis;
+//  delete fIs22GGAnalysis;
+//  delete fDataQuality;
+//  delete fECalETagMatching;
   delete fMMStudy;
 //  delete fIs3GAnalysis;
 }
@@ -79,19 +79,19 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  fECalCalib->Init();
+  //  fECalCalib->Init();
 
   if(fEvent->MCTruthEvent){
      fMCTruth->Init(fEvent);
      fMCTruthECal->Init(fEvent);
   }
   fGeneralInfo->Init(fEvent, DBRunNumber);
-  fNPoTAnalysis->Init(fEvent);
-  fECalCalib22->Init(fHistoMode,InputHistofile);
-  fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
+  //  fNPoTAnalysis->Init(fEvent);
+  //  fECalCalib22->Init(fHistoMode,InputHistofile);
+  //  fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
-  if (fETagHitsAvail) fETagAn->Init(fEvent);
-  if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
+//  if (fETagHitsAvail) fETagAn->Init(fEvent);
+//  if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
   fMMStudy->Init(fEvent,fHistoMode,InputHistofile);
   //  fIsGGAnalysis->Init(fEvent);
   //if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
@@ -130,21 +130,21 @@ Bool_t UserAnalysis::Process(){
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
   fGeneralInfo->Process();
-  fNPoTAnalysis->Process();
+  //  fNPoTAnalysis->Process();
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  fECalCalib->Process(fEvent);
+  //  fECalCalib->Process(fEvent);
   if(!(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))){
-    fDataQuality->Process();
-    fECalCalib22->Process(fEvent);
+ //   fDataQuality->Process();
+ //   fECalCalib22->Process(fEvent);
   }
   fECalSel->ProcessForCalib();
 
   fECalSel->Process();
-  if (fETagHitsAvail) {
-    fETagAn->Process();
-    fECalETagMatching->Process();
-  }
+//  if (fETagHitsAvail) {
+//    fETagAn->Process();
+//    fECalETagMatching->Process();
+//  }
   fMMStudy->Process();
   //  fIsGGAnalysis->Process();
   //fIs22GGAnalysis->Process();
@@ -210,15 +210,15 @@ Bool_t UserAnalysis::Finalize()
      fMCTruthECal->Finalize();
 
   }
-  fNPoTAnalysis->Finalize();
+  //  fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
-  if (fETagHitsAvail) fETagAn->Finalize();
-  if (fETagHitsAvail) fECalETagMatching->Finalize();
+//  if (fETagHitsAvail) fETagAn->Finalize();
+//  if (fETagHitsAvail) fECalETagMatching->Finalize();
   //  fIsGGAnalysis->Finalize();
   //if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   //fIs22GGAnalysis->Finalize();
-  fECalCalib22->Finalize();
-  fDataQuality->Finalize();
+//  fECalCalib22->Finalize();
+//  fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();
   fMMStudy->Finalize();
 

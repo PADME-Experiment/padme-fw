@@ -4,7 +4,7 @@
 #include "TTree.h"
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
-
+#include "Math/ProbFunc.h"
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
@@ -22,18 +22,26 @@ void DigitizerChannelMM::Init(GlobalRecoConfigOptions *gMode, PadmeVRecoConfig *
   fGlobalMode = gMode;
   
   fADCUnitToCharge = cfg->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
-  fADCTimeBin      = cfg->GetParOrDefault("RECO","ADCTimeBin",25.);       // ns
+  fAPVTimeBin      = cfg->GetParOrDefault("RECO","APVTimeBin",25.);       // ns
   fThresholdTruncatedMean = cfg->GetParOrDefault("RECO","ThresholdTruncatedMean",0.2);       // ns
   fTimeTau = cfg->GetParOrDefault("RECO","TimeTau",50.);       // ns
-  fTimeWindowSamples = cfg->GetParOrDefault("RECO","TimeWindowSamples",4);  // number of samples
-  fHitChargeThreshold = cfg->GetParOrDefault("RECO","HitChargeThreshold",150);  // ADC counts
+  fTimeWindowSamplesLow = cfg->GetParOrDefault("RECO","TimeWindowSamplesLow",7);  // number of samples
+  fTimeWindowSamplesHigh = cfg->GetParOrDefault("RECO","TimeWindowSamplesHigh",9);  // number of samples
+  fHitChargeThreshold = cfg->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
+  fHitChargeSmoothnessThreshold = cfg->GetParOrDefault("RECO","HitChargeSmoothnessThreshold",200);  // ADC counts
+  fHitTimeLow  = cfg->GetParOrDefault("RECO","HitTimeLow",-250); // ns
+  fHitTimeHigh = cfg->GetParOrDefault("RECO","HitTimeHigh",800); // ns
+  fHitTimeMinimum = cfg->GetParOrDefault("RECO","HitTimeMinimum",20); // ns
+  fHitChargeMaxForPChi2Cut = cfg->GetParOrDefault("Reco","HitChargeMaxForPChi2Cut",600); // ADC counts
+  fHitPChi2Cut = cfg->GetParOrDefault("Reco","HitPChi2Cut",0.05); // prob
+  
   //  fClusterDeltaCellMax = cfg->GetParOrDefault("RECOCLUSTER","ClusterDelta1CellMax",2); // 
   
 
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
   PrintConfig();
 
-  fSignalShape = new TF1("SignalShape",DigitizerChannelMM::fitSignalShape,0,28*fADCTimeBin,4);
+  fSignalShape = new TF1("SignalShape",DigitizerChannelMM::fitSignalShape,-200,800,4);
   fSignalShape->SetParName(0,"MMSignalBaseLine") ; 
   //  fSignalShape->FixParameter(0,0.);
   fSignalShape->SetParName(1,"MMSignalAmplitude"); 
@@ -55,8 +63,8 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
 
   Double_t charge = 0;
   Double_t chargeMax = -99999;
-  Int_t sampleMaxId = -1;
-  for (UShort_t i=0; i<fNSamples; i++){
+  Short_t sampleMaxId = 0;
+  for (Short_t i=0; i<fNSamples; i++){
     charge += fSamples[i];
     if (fSamples[i] > chargeMax){
       sampleMaxId = i;
@@ -64,8 +72,8 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
     }
   }
 
-  if (sampleMaxId == fNSamples-1) return; //  do not produce reco hits when the max is at the edge
-  if (sampleMaxId == 0          ) return; //  do not produce reco hits when the max is at the edge
+//  if (sampleMaxId == fNSamples-1) return; //  do not produce reco hits when the max is at the edge
+//  if (sampleMaxId == 0          ) return; //  do not produce reco hits when the max is at the edge
 
   if (chargeMax < fHitChargeThreshold) return;
 
@@ -73,16 +81,27 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
   if (sampleMaxId == -1) {
     std::cout << "DigitizerChannelMM >> wrong sampleMaxId " << std::endl;
   }
+
+  // quality cut for signal smoothness around the maximum
+
+  double deltaq=0;
+  if(sampleMaxId == 0)                deltaq = chargeMax - fSamples[sampleMaxId+1];
+  else if(sampleMaxId == fNSamples-1) deltaq = chargeMax - fSamples[sampleMaxId-1];
+  else deltaq = chargeMax - TMath::Min(fSamples[sampleMaxId-1],fSamples[sampleMaxId+1]);
+  if(deltaq > fHitChargeSmoothnessThreshold) return;
+
   // fit with signal shape
+
   double sigAmplitude = 0;
   double sigTimePeak = 0;
   bool isFitOK = evaluateSig(sampleMaxId,fSamples[sampleMaxId],&sigAmplitude, &sigTimePeak);
+  if (!isFitOK) return;
   
   // truncated
   
   double tmean = 0;
   double chargeTrunk = 0;
-  for (UShort_t i=0; i<fNSamples; i++){
+  for (Short_t i=0; i<fNSamples; i++){
     if (fSamples[i] < charge*fThresholdTruncatedMean/fNSamples) continue;
     chargeTrunk += fSamples[i];
     tmean += fSamples[i]*i;
@@ -98,12 +117,12 @@ void DigitizerChannelMM::Reconstruct(std::vector<TRecoVHit *> &hitArray, TMMBoar
   
   TRecoVHit *Hit = new TRecoVHit();
   Hit->SetChannelId(channelid);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-//  Hit->SetTime(sigTimePeak); // ns
-//  Hit->SetEnergy(sigAmplitude); // electrons
-  //  Hit->SetTime(tmean*fADCTimeBin);   // ns
-  Hit->SetTime(sampleMaxId*fADCTimeBin);   // ns
-  //  Hit->SetTime(twindow*fADCTimeBin);   // ns
-  Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
+  Hit->SetTime(sigTimePeak); // ns
+  Hit->SetEnergy(sigAmplitude); // electrons
+  //  Hit->SetTime(tmean*fAPVTimeBin);   // ns
+  //  Hit->SetTime(sampleMaxId*fAPVTimeBin);   // ns
+  //  Hit->SetTime(twindow*fAPVTimeBin);   // ns
+  //  Hit->SetEnergy(charge*fADCUnitToCharge); // in electrons
   Hit->setStatus(ch->IsChannelFailed());
   hitArray.push_back(Hit);
 
@@ -113,7 +132,7 @@ void DigitizerChannelMM::PrintConfig(){
   ;
 }
 
-bool DigitizerChannelMM::evaluateSig(UShort_t sampleMaxId, Short_t maxQ, double* sigAmplitude, double* sigTimePeak){
+bool DigitizerChannelMM::evaluateSig(Short_t sampleMaxId, Short_t maxQ, double* sigAmplitude, double* sigTimePeak){
 
 //  std::cout << "original points " << std::endl;
 //  for (int i=0; i<fNSamples ; i++){
@@ -126,24 +145,27 @@ bool DigitizerChannelMM::evaluateSig(UShort_t sampleMaxId, Short_t maxQ, double*
   
   Double_t chargewindow = 0; // total charge inside the window considered
   Double_t twindow = 0; // first order estimate of the max  
-  for (Short_t i=TMath::Max(0,sampleMaxId-fTimeWindowSamples); i<TMath::Min(sampleMaxId+fTimeWindowSamples,fNSamples); i++){
+  for (Short_t i=TMath::Max(0,sampleMaxId-fTimeWindowSamplesLow); i<TMath::Min((Short_t)(sampleMaxId+fTimeWindowSamplesHigh),fNSamples); i++){
     int grafopts = grafoSignal->GetN();
-    grafoSignal->SetPoint(grafopts,i*fADCTimeBin,fSamples[i]*fADCUnitToCharge);
-    grafoSignal->SetPointError(grafopts,0,0.2*fSamples[i]*fADCUnitToCharge); // arbitrary error of 1%. The charge is 11 bits -> 0.5 per mil.
+    grafoSignal->SetPoint(grafopts,i*fAPVTimeBin,fSamples[i]);
+    grafoSignal->SetPointError(grafopts,0,40+fSamples[i]*0.05); // euristic error. The charge is 11 bits -> 0.5 per mil.
     chargewindow += fSamples[i];
     twindow += fSamples[i]*i;
   }
   twindow /= chargewindow;
   
+//  fSignalShape->SetParameter(1,maxQ*fADCUnitToCharge); // electrons
+//  fSignalShape->SetParameter(2,twindow*fAPVTimeBin - fTimeTau); // ns
+
   fSignalShape->SetParameter(0,0.); // automatic pedestal suppression [electrons]
-  fSignalShape->SetParameter(1,maxQ*fADCUnitToCharge); // electrons
-  fSignalShape->SetParameter(2,twindow*fADCTimeBin - fTimeTau); // ns
-
-//  std::cout << "selected points " << std::endl;
-//  for (int i=0; i<grafoSignal->GetN(); i++){
-//    std::cout << "point " << i << " x = " << grafoSignal->GetX()[i] << " y = " << grafoSignal->GetY()[i] << " +- " << grafoSignal->GetEY()[i] << " funEval = " << fSignalShape->Eval(grafoSignal->GetX()[i]) << std::endl;
-//  }
-
+  fSignalShape->SetParameter(1,maxQ/4);  // [/4 because it would have been /(27*Exp(-2)) ~ 3.65]
+  //fSignalShape->SetParameter(2,twindow*clock - fTimeTau); // ns
+  fSignalShape->SetParameter(2,sampleMaxId*fAPVTimeBin-3*fTimeTau); // ns [was 170 WHY?! ] 
+  fSignalShape->SetParameter(3,fTimeTau); // ns
+  fSignalShape->SetParLimits(2,fHitTimeLow,fHitTimeHigh); //ns
+  fSignalShape->FixParameter(0,0.);
+  fSignalShape->FixParameter(3,fTimeTau); // ns
+  
   TFitResultPtr fitres = grafoSignal->Fit(fSignalShape,"SQ");
   
 //  if (fCounters < 100) {
@@ -155,8 +177,16 @@ bool DigitizerChannelMM::evaluateSig(UShort_t sampleMaxId, Short_t maxQ, double*
 //  }
   //  if (fCounters < 20) grafoSignal->Write(Form("%s_%d.C",grafoSignal->GetName(),fCounters));
   
-  *sigAmplitude = fSignalShape->GetParameter(1);
-  *sigTimePeak = fSignalShape->GetParameter(2);
+  *sigAmplitude = fSignalShape->GetParameter(1)*27*TMath::Exp(-2);
+  *sigTimePeak = fSignalShape->GetParameter(2) + 3*fTimeTau; // time of the max of the function -> we might use fSignalShape->GetMaximumX() to be independent of the functional form
+  double chi2 = fSignalShape->GetChisquare();
+  double ndf = fSignalShape->GetNDF();
+  double p_chi2 = 1.0 - ROOT::Math::chisquared_cdf(chi2, ndf, 0);
+  //  q_int  = fSignalShape->Integral(-200,800);
+ 
+  if (*sigTimePeak < fHitTimeLow+fHitTimeMinimum) return kFALSE;
+  if (maxQ < fHitChargeMaxForPChi2Cut && p_chi2 < fHitPChi2Cut) return kFALSE;
+  
   delete grafoSignal;  
   fCounters++;
   return kTRUE;
@@ -165,7 +195,9 @@ bool DigitizerChannelMM::evaluateSig(UShort_t sampleMaxId, Short_t maxQ, double*
 
 Double_t DigitizerChannelMM::fitSignalShape(Double_t *x, Double_t *par) {    
   double xprime = (x[0]-par[2])/par[3];
-  double funval = TMath::E()*par[1]*xprime*TMath::Exp(-xprime);
+  double funval = TMath::E()*par[1]*xprime*xprime*xprime*TMath::Exp(-xprime);
+  // dfunval/dxprime = 3x^2 -x^3 = 0 when x = 3 -> t_max = par2 + 50ns x 3, t_flex = par2 + 50ns x 2
+  // max value = par1 x 27 x Exp(-2)
   if (funval < 0) funval = 0;
   return par[0] + funval;
 }

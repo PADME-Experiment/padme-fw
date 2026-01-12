@@ -39,5 +39,6 @@ private:
   int fEventCounter;
   bool fSaveEvent;
   MMTracker* fTracker[3];//y view, x view, 3d view fits
+  MMTracker* fTrackerDZ[3];//y view, x view, 3d view fits + DZ fit
 };
 #endif

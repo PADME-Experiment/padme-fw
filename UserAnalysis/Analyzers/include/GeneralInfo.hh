@@ -16,6 +16,7 @@ class OfflineServer;
 struct MMchInfo{
   int bdid;
   int layer;
+  int quad;
   int plane;
   int verse;
   int side;

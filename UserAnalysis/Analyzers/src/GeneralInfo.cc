@@ -276,23 +276,23 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     return;
 }
 
-// boardSN plane Layer side  view otherview hole offset stripid_orig
-// 0       0     0     0     0    0         6    0      1-256
-// 1       0     0     1     0    0         6    256    257-512
-// 2       0     1     0     0    1         6    0      0-255
-// 3       0     1     1     0    1         6    256    256-511
-// 4       0     2     0     1    1         1    0      0-255
-// 5       0     2     1     1    1         1    256    256-511
-// 6       0     3     0     1    0         1    0      0-255
-// 7       0     3     1     1    0         1    256    256-511
-// 8       1     4     0     0    0         1    0      0-255
-// 9       1     4     1     0    0         1    256    256-511
-// 10      1     5     0     0    1         1    0      0-255
-// 11      1     5     1     0    1         1    256    256-511
-// 12      1     6     0     1    1         6    0      0-255
-// 13      1     6     1     1    1         6    256    256-511
-// 14      1     7     0     1    0         6    0      0-255
-// 15      1     7     1     1    0         6    256    256-511
+// boardSN plane Layer side  view otherview hole offset stripid_orig quad
+// 0       0     0     0     0    0         6    0      1-256        0
+// 1       0     0     1     0    0         6    256    257-512      1
+// 2       0     1     0     0    1         6    0      0-255        3
+// 3       0     1     1     0    1         6    256    256-511      2
+// 4       0     2     0     1    1         1    0      0-255        1
+// 5       0     2     1     1    1         1    256    256-511      2
+// 6       0     3     0     1    0         1    0      0-255        0
+// 7       0     3     1     1    0         1    256    256-511      3
+// 8       1     4     0     0    0         1    0      0-255        0
+// 9       1     4     1     0    0         1    256    256-511      1
+// 10      1     5     0     0    1         1    0      0-255        3
+// 11      1     5     1     0    1         1    256    256-511      2
+// 12      1     6     0     1    1         6    0      0-255        1
+// 13      1     6     1     1    1         6    256    256-511      2
+// 14      1     7     0     1    0         6    0      0-255        0
+// 15      1     7     1     1    0         6    256    256-511      3
 
 MMchInfo GeneralInfo::DecodeMMChannel(int chId){
   int otherview[8] = {0,1,1,0,0,1,1,0}; // 0 means the half-strip left (bottom) depending on the view
@@ -300,6 +300,11 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
   MMchInfo mmi;
   mmi.bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
   mmi.layer = (mmi.bdid)/2;  // layer 0-7
+  if(mmi.bdid == 0 || mmi.bdid == 6 || mmi.bdid == 8 || mmi.bdid == 14) mmi.quad = 0;
+  else if(mmi.bdid == 1 || mmi.bdid == 4 || mmi.bdid == 9 || mmi.bdid == 12) mmi.quad = 1;
+  else if(mmi.bdid == 3 || mmi.bdid == 5 || mmi.bdid == 11 || mmi.bdid == 13) mmi.quad = 2;
+  else if(mmi.bdid == 2 || mmi.bdid == 7 || mmi.bdid == 10 || mmi.bdid == 15) mmi.quad = 3;
+  else mmi.quad = -999;
   mmi.plane = (mmi.layer)/4;  // plane 0-1
   mmi.verse = ((mmi.plane )== 0)? 1 : -1;
   mmi.side = mmi.bdid%2; // left/right (X view), bottom/top (Y view)

@@ -1,0 +1,166 @@
+#include "MMSoftHit.hh"
+
+MMSoftHit::MMSoftHit() {
+  fChannelId = -9999;
+  fPosition.SetXYZ(-9999,-9999,-9999);
+  fEnergy = -9999;
+  fTime = -9999;
+  fIsolLevel = -9999;
+  for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
+    for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
+      fCluPtr[ipmode][clumode] = -9999;
+    }
+  }
+}
+
+MMSoftHit::~MMSoftHit() {
+  delete fGeneralInfo;
+}
+
+void MMSoftHit::CopyHit(TRecoVHit *Hit) {
+  fChannelId = Hit->GetChannelId(); //TODO forse getter bdid, view, quad, plane 
+  fPosition = Hit->GetPosition();
+  fEnergy = Hit->GetEnergy();
+  fTime = Hit->GetTime();
+
+  fmmi = fGeneralInfo->DecodeMMChannel(fChannelId);
+}
+
+void MMSoftHit::Print() const {
+  std::cout<<"hit registred on plane "<<fmmi.plane<<" , quad: "<<fmmi.quad<<" , view: "<<fmmi.view<<std::endl;
+  std::cout<<"hit channel: "<<fmmi.strip<<" [board id "<<fmmi.bdid<<" ]"<<std::endl;
+  std::cout<<"hit coord (x,y,z): ( "<<fPosition.X()<<" ; "<<fPosition.Y()<<" ; "<<fPosition.Z()<<" )"<<std::endl;
+  std::cout<<"hit time: "<<fTime<<std::endl;
+  std::cout<<"hit energy: "<<fEnergy<<std::endl;
+  std::cout<<"hit belonging to clusters:";
+  for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) { 
+    for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
+      if(fCluPtr[ipmode][clumode]!=-9999) std::cout<<"\t [IPmode:"<<ipmode<<" , CLUmoode"<<clumode<< " ] "<<fCluPtr[ipmode][clumode]<<std::endl;
+    }
+  }
+  std::cout<<std::endl;
+  std::cout<<std::endl;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

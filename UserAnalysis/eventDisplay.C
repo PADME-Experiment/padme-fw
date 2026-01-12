@@ -91,7 +91,7 @@ void plotEvent(TFile* filo, TString canvaName, int iev){
       for (int ipl = 0; ipl<2; ipl++){
 	zvsv[idx][ipl] = (TH2D*) filo->Get(Form("MMStudy/zvsv_board%d_ev%d",boardid[i][j]+8*ipl,iev));
 	zvsv[idx][ipl]->SetLineColor(colors[ipl]);
-	zvsv[idx][ipl]->Draw("boxsame");
+	//	zvsv[idx][ipl]->Draw("boxsame");
       }
       for (int ipl = 0; ipl<2; ipl++){
 	zvsvsel[idx][ipl] = (TH2D*) filo->Get(Form("MMStudy/zvsv_selecthit_board%d_ev%d",boardid[i][j]+8*ipl,iev));

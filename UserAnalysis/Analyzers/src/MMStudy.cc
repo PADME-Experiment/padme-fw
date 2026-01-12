@@ -294,7 +294,7 @@ Bool_t MMStudy::Process(){
     }
     // hit loop
     vector<int> preselectedHitsPerClus;
-    
+    // start of the loop of the MM hits -> goes in clustering Init    
     for (uint i = 0; i < nhits; i++){
       TRecoVHit* hit = fEvent->MMRecoEvent->Hit(i);
       MMchInfo mmi = fGeneralInfo->DecodeMMChannel(hit->GetChannelId());
@@ -406,7 +406,7 @@ Bool_t MMStudy::Process(){
       lambdaIP -= refpoint[mmi.view]; // make direction of hit wrt target
       lambdaIP *= (1./lambdaIP.Mod()); // direction of the hit {dvdz/sqrt(1+dvdz^2), 1/sqrt(1+dv/dz^2)}
 
-      
+      // cluster made of doublets
       mmcluster mmclus;
       mmclus.ecalclusindex = cluIndices.at(q);
       mmclus.mmhitsindex.push_back(i);
@@ -419,6 +419,7 @@ Bool_t MMStudy::Process(){
       isUsed[i] = q;
       double zold = z;
       double vold = v;
+      // try to add hits
       for (uint jj = 0; jj < (int) preselectedHits.at(q).size(); jj++){
 	int j = preselectedHits.at(q).at(jj);
 	if (i==j) continue;

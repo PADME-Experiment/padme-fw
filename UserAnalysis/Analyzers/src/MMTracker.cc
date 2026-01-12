@@ -10,7 +10,9 @@
 //}
 
 MMTracker::MMTracker(int fitMode){
-  fFitMode = fitMode; //fitMode = 0,1 -> X/Y view 2-> 3d view
+  //fitMode = 0,1 -> X/Y view 2-> 3d view
+  //fitMode += 10 to also fit a DeltaZ for calibration [10,11,12]
+  fFitMode = fitMode; 
 }
 
 MMTracker::~MMTracker(){
@@ -19,12 +21,12 @@ MMTracker::~MMTracker(){
 
 
 void MMTracker::InitFitter(){  
-  fParRes = new double[4];
-  fFitter.SetFCN(4, fMyFcn); // 4 parameters
-  TString parnames[4] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y"};
-  double parinput[4] = {0.,0.,0.,0.};
-  double parstep[4] = {0.1,0.1,0.1,0.1};
-  for (int ip=0; ip < 4; ip++) {
+  fParRes = new double[5];
+  fFitter.SetFCN(5, fMyFcn); // 5 parameters
+  TString parnames[5] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y","DZOffset"};
+  double parinput[5] = {0.,0.,0.,0.,0.};
+  double parstep[5] = {0.1,0.1,0.1,0.1,0.1};
+  for (int ip=0; ip < 5; ip++) {
     fFitter.Config().ParSettings(ip) = ROOT::Fit::ParameterSettings(parnames[ip].Data(),parinput[ip],parstep[ip]);
   }
   // pass the Z reference setting
@@ -32,22 +34,39 @@ void MMTracker::InitFitter(){
   fMyFcn.setReferenceZPlanes(
 			     GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),
 			     GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)
-			     );  
+			     );
+
+  
   // RELEASE DOESNT WORK
   //  for (int i=0; i<4; i++) fFitter.Config().ParSettings(i).Release(); // for fitMode = 0 -> release par1,3 ; for fitMode = 0, release par1,3
+
+  int fitModeDZ = fFitMode/10; // 0-> do not fit DeltaZ, !0-> fit DeltaZ
+  int fitModeXY = fFitMode-fitModeDZ*10; // 0-> fit y positions, 1-> fit x positions, 2->fit x and y positions
   
-  if (fFitMode == 0){
-    for (int i=0; i<2; i++) fFitter.Config().ParSettings(2*i).Fix(); 
-  } else if (fFitMode == 1){
-    for (int i=0; i<2; i++) fFitter.Config().ParSettings(1+2*i).Fix(); 
-  }	
+  if (fitModeXY == 0){ // fit YZ view
+    for (int i=0; i<2; i++) fFitter.Config().ParSettings(2*i).Fix(); // fix parameters 0,2
+  } else if (fitModeXY == 1){ // fit XZ
+    for (int i=0; i<2; i++) fFitter.Config().ParSettings(1+2*i).Fix(); // fix parameters 1,3
+  }
+  
+  if (fitModeDZ == 0) fFitter.Config().ParSettings(4).Fix(); // do not fit DeltaZ offset 
+  
   fMyFcn.setFitMode(fFitMode);
+}
+
+void MMTracker::InitFit(double x, double y, double z){ // probably will need to pass errors as well
+  InitFit();
+  setAdditionalPoint(x,y,z);
+  fMyFcn.setPositions(fPositions);
+  fMyFcn.setErrors(fErrors);
+  fMyFcn.setBoardIds(fBoardIds);
 }
 
 void MMTracker::InitFit(){
   setPoints(); // evaluate the errors per point
   fMyFcn.setPositions(fPositions);
   fMyFcn.setErrors(fErrors);
+  fMyFcn.setBoardIds(fBoardIds);
 
   // evaluate the reference point as a weighted average
   TVector3 refp(0,0,0);
@@ -75,18 +94,21 @@ void MMTracker::InitFit(){
 }
 
 bool MMTracker::MakeFit(){
-  if (hitArray.size() == 1 || hitArray.size() == 2) {
-    for (int i=0; i<4; i++) fParRes[i] = fFitter.Config().ParamsValues()[i];    
+  if (hitArray.size() == 1) {
+    for (int i=0; i<5; i++) fParRes[i] = fFitter.Config().ParamsValues()[i];    
     fMinFCN = -1;
     return kTRUE;
   }
 
   bool okfit = fFitter.FitFCN();
-  if (!okfit) return kFALSE;
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
-  //  result.Print(std::cout);
+  if (!okfit) {    
+    //    result.Print(std::cout);
+    return kFALSE;
+  }
+  
   fMinFCN = result.MinFcnValue();
-  for (int i=0; i<4; i++) fParRes[i] = result.GetParams()[i];
+  for (int i=0; i<5; i++) fParRes[i] = result.GetParams()[i];
   return kTRUE;
 }
 
@@ -94,6 +116,7 @@ bool MMTracker::MakeFit(){
 void MMTracker::setPoints(){
   fPositions.clear();
   fErrors.clear();
+  fBoardIds.clear();
   for (Int_t i= 0; i<hitArray.size(); i++) {
     TRecoVHit* hit = hitArray.at(i);
     int chId = hit->GetChannelId();
@@ -115,5 +138,16 @@ void MMTracker::setPoints(){
     TVector3 positions;
     positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetPosition().Z());
     fPositions.push_back(positions);
+    fBoardIds.push_back(bdid);
   }
+}
+
+void MMTracker::setAdditionalPoint(double x, double y, double z){ // used to insert the IP as an additional measurement
+  TVector3 positions;
+  positions.SetXYZ(x,y,z);
+  fPositions.push_back(positions);
+  TVector3 errors;
+  errors.SetXYZ(1.,1.,0.1);
+  fErrors.push_back(errors);
+  fBoardIds.push_back(-1); // special point, not in any board
 }

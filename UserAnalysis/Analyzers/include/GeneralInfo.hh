@@ -8,6 +8,9 @@
 #include "OfflineServer.hh"
 #include "TVector3.h"
 
+#define XVIEW 0
+#define YVIEW 1
+
 using namespace std;
 
 class TRecoEvent;
@@ -174,7 +177,7 @@ private:
   double fMMStripPitch  ; // mm
   double fMMOffsetPlaneX[2]; // mm 
   double fMMOffsetPlaneY[2]; // mm
-  double fMMPosPlaneZ[2];// mm
+  double fMMPosPlaneZ[3];// mm
   double fMMOffsetCenterX;  // mm
   double fMMOffsetCenterY;  // mm
 

@@ -1,4 +1,6 @@
 #include "MMSoftHit.hh"
+#include "GeneralInfo.hh"
+
 
 MMSoftHit::MMSoftHit() {
   fChannelId = -9999;
@@ -13,9 +15,7 @@ MMSoftHit::MMSoftHit() {
   }
 }
 
-MMSoftHit::~MMSoftHit() {
-  delete fGeneralInfo;
-}
+MMSoftHit::~MMSoftHit() {};
 
 void MMSoftHit::CopyHit(TRecoVHit *Hit) {
   fChannelId = Hit->GetChannelId(); //TODO forse getter bdid, view, quad, plane 
@@ -23,7 +23,7 @@ void MMSoftHit::CopyHit(TRecoVHit *Hit) {
   fEnergy = Hit->GetEnergy();
   fTime = Hit->GetTime();
 
-  fmmi = fGeneralInfo->DecodeMMChannel(fChannelId);
+  fmmi = GeneralInfo::GetInstance()->DecodeMMChannel(fChannelId);
 }
 
 void MMSoftHit::Print() const {

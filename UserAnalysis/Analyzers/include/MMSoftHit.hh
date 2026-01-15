@@ -1,7 +1,6 @@
 #ifndef MMSoftHit_h
 #define MMSoftHit_h 1
 
-#include "GeneralInfo.hh"
 #include "TRecoVHit.hh"
 
 #define IPMODES 2
@@ -20,8 +19,6 @@ class MMSoftHit {
   MMSoftHit();
   ~MMSoftHit();
 
-  void Init() {fGeneralInfo = GeneralInfo::GetInstance();}
-  
   void Print() const;
   void CopyHit(TRecoVHit *Hit); //TODO forse getter bdid, view, quad, plane
     
@@ -49,7 +46,6 @@ class MMSoftHit {
   Int_t fIsolLevel;   // 0 = the strip before and after are both fired; 1 = the strip before (after) is not (is) fired; 2 = the strip before (after) is (is not) fired
   Int_t fCluPtr[IPMODES][CLUSTERMODES];  // link to the vector of clusters to which it belongs to: first index: IP connection forced/not forced; second index: cluster mode
 
-  GeneralInfo *fGeneralInfo; //general info
   MMchInfo fmmi;
   
   ClassDef(MMSoftHit,1);

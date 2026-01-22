@@ -330,4 +330,3 @@ void HistoSvc::FillNtuple()
   if(ntupl) ntupl->Fill();
 }
 
-

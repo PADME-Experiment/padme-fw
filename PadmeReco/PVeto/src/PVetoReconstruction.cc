@@ -112,8 +112,8 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
     Int_t    digiCh = digi->GetChannelId();
     Double_t digiT  = digi->GetTime();
     Double_t digiE  = digi->GetEnergy();
-    Int_t    digiTrackID = digi->GetTrackID();
-    Double_t digiTrackE  = digi->GetTrackEnergy();
+    //Int_t    digiTrackID = digi->GetTrackID();
+    //Double_t digiTrackE  = digi->GetTrackEnergy();
     //std::cout<<"Digit n. "<<i<<" Ch="<<digiCh<<" time "<<digiT<<" nhits so far = "<<fHits.size()<<std::endl;
 
     Bool_t toBeMerged = false;
@@ -140,8 +140,8 @@ void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* 
 	Hit->SetEnergy   (digiE);
 	Hit->SetTime     (digiT*digiE);
 	Hit->SetPosition (TVector3(0.,0.,0.)); 
-	Hit->SetTrackID(digiTrackID);
-	Hit->SetTrackEnergy   (digiTrackE);
+	//Hit->SetTrackID(digiTrackID);
+	//Hit->SetTrackEnergy   (digiTrackE);
 	fHits.push_back(Hit);
 	//std::cout<<"   New hit Ch "<<Hit->GetChannelId()<<" time "<<Hit->GetTime()/Hit->GetEnergy()<<" so far "<<fHits.size()<<" hits"<<std::endl;
       }

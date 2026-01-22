@@ -13,8 +13,8 @@
 #include "TTargetMCEvent.hh"
 #include "TEVetoMCEvent.hh"
 #include "TPVetoMCEvent.hh"
-#include "TEVetoBLMCEvent.hh"
-#include "TPVetoBLMCEvent.hh"
+//#include "TEVetoBLMCEvent.hh"
+//#include "TPVetoBLMCEvent.hh"
 #include "THEPVetoMCEvent.hh"
 #include "TECalMCEvent.hh"
 #include "TSACMCEvent.hh"
@@ -63,8 +63,8 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fTargetMCEvent  = 0;
   fEVetoMCEvent   = 0;
   fPVetoMCEvent   = 0;
-  fEVetoBLMCEvent = 0;
-  fPVetoBLMCEvent = 0;
+  //fEVetoBLMCEvent = 0;
+  //fPVetoBLMCEvent = 0;
   fHEPVetoMCEvent = 0;
   fECalMCEvent    = 0;
   fSACMCEvent     = 0;
@@ -305,13 +305,14 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
       } else if (branchName=="PVeto") {
 	fPVetoMCEvent = new TPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoMCEvent);
-      } else if (branchName=="EVetoBL") {
-	fEVetoBLMCEvent = new TEVetoBLMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fEVetoBLMCEvent);
-      } else if (branchName=="PVetoBL") {
-	fPVetoBLMCEvent = new TPVetoBLMCEvent();
-	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoBLMCEvent);
-      } else if (branchName=="HEPVeto") {
+      } //else if (branchName=="EVetoBL") {
+	//fEVetoBLMCEvent = new TEVetoBLMCEvent();
+	//fMCChain->SetBranchAddress(branchName.Data(),&fEVetoBLMCEvent);
+      // } else if (branchName=="PVetoBL") {
+      //	fPVetoBLMCEvent = new TPVetoBLMCEvent();
+      //	fMCChain->SetBranchAddress(branchName.Data(),&fPVetoBLMCEvent);
+      // }
+        else if (branchName=="HEPVeto") {
 	fHEPVetoMCEvent = new THEPVetoMCEvent();
 	fMCChain->SetBranchAddress(branchName.Data(),&fHEPVetoMCEvent);
       } else if (branchName=="ECal") {
@@ -450,11 +451,12 @@ Bool_t PadmeReconstruction::NextEvent()
 	fRecoLibrary[iLib]->ProcessEvent(fEVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "PVeto" && fPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fPVetoMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "EVetoBL" && fEVetoBLMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fEVetoBLMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "PVetoBL" && fPVetoBLMCEvent) {
-	fRecoLibrary[iLib]->ProcessEvent(fPVetoBLMCEvent,fMCEvent);
-      } else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoMCEvent) {
+      } // else if (fRecoLibrary[iLib]->GetName() == "EVetoBL" && fEVetoBLMCEvent) {
+      // 	fRecoLibrary[iLib]->ProcessEvent(fEVetoBLMCEvent,fMCEvent);
+      // } else if (fRecoLibrary[iLib]->GetName() == "PVetoBL" && fPVetoBLMCEvent) {
+      // 	fRecoLibrary[iLib]->ProcessEvent(fPVetoBLMCEvent,fMCEvent);
+      // }
+        else if (fRecoLibrary[iLib]->GetName() == "HEPVeto" && fHEPVetoMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fHEPVetoMCEvent,fMCEvent);
       } else if (fRecoLibrary[iLib]->GetName() == "ECal" && fECalMCEvent) {
 	fRecoLibrary[iLib]->ProcessEvent(fECalMCEvent,fMCEvent);

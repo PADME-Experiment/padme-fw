@@ -6,8 +6,6 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   TargetRecoEvent      =0;
   EVetoRecoEvent       =0;
   PVetoRecoEvent       =0;
-  //EVetoBLRecoEvent     =0;
-  //PVetoBLRecoEvent     =0;
   HEPVetoRecoEvent     =0;
   ECalRecoEvent        =0;
   ECalMLRecoEvent      =0;
@@ -17,8 +15,6 @@ PadmeAnalysisEvent::PadmeAnalysisEvent(){
   ECalRecoCl           =0;
   PVetoRecoCl          =0;
   EVetoRecoCl          =0;
-  //PVetoBLRecoCl        =0;
-  //EVetoBLRecoCl        =0;
   HEPVetoRecoCl        =0;
   MCTruthEvent         =0;
 

@@ -32,14 +32,6 @@
 #pragma link C++ class TPVetoMCDigi+;
 #pragma link C++ class TPVetoMCEvent+;
 
-//#pragma link C++ class TEVetoBLMCHit+;
-//#pragma link C++ class TEVetoBLMCDigi+;
-//#pragma link C++ class TEVetoBLMCEvent+;
-
-//#pragma link C++ class TPVetoBLMCHit+;
-//#pragma link C++ class TPVetoBLMCDigi+;
-//#pragma link C++ class TPVetoBLMCEvent+;
-
 #pragma link C++ class TETagMCHit+;
 #pragma link C++ class TETagMCDigi+;
 #pragma link C++ class TETagMCEvent+;
@@ -73,8 +65,6 @@
 
 #pragma link C++ class TPVetoRecoEvent+;
 #pragma link C++ class TEVetoRecoEvent+;
-#pragma link C++ class TPVetoBLRecoEvent+;
-#pragma link C++ class TEVetoBLRecoEvent+;
 #pragma link C++ class THEPVetoRecoEvent+;
 #pragma link C++ class TSACRecoEvent+;
 #pragma link C++ class TECalRecoEvent+;
@@ -90,8 +80,6 @@
 #pragma link C++ class TECalMLClusCollection+;
 #pragma link C++ class TPVetoClusCollection+;
 #pragma link C++ class TEVetoClusCollection+;
-#pragma link C++ class TPVetoBLClusCollection+;
-#pragma link C++ class TEVetoBLClusCollection+;
 #pragma link C++ class TETagClusCollection+;
 #pragma link C++ class THEPVetoClusCollection+;
 

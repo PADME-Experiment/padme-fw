@@ -28,8 +28,6 @@
 #include "TECalMLRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
-#include "TPVetoBLRecoEvent.hh"
-#include "TEVetoBLRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
@@ -246,8 +244,6 @@ int main(Int_t argc, char **argv)
   TTargetRecoEvent*               fTargetRecoEvent      =0;
   TEVetoRecoEvent*                fEVetoRecoEvent       =0;
   TPVetoRecoEvent*                fPVetoRecoEvent       =0;
-  TEVetoBLRecoEvent*                fEVetoBLRecoEvent       =0;
-  TPVetoBLRecoEvent*                fPVetoBLRecoEvent       =0;
   THEPVetoRecoEvent*              fHEPVetoRecoEvent     =0;
   TECalRecoEvent*                 fECalRecoEvent        =0;
   TECalMLRecoEvent*               fECalMLRecoEvent      =0;
@@ -258,8 +254,6 @@ int main(Int_t argc, char **argv)
   TRecoVClusCollection*           fECalMLRecoCl         =0;
   TRecoVClusCollection*           fPVetoRecoCl          =0;
   TRecoVClusCollection*           fEVetoRecoCl          =0;
-  TRecoVClusCollection*           fPVetoBLRecoCl          =0;
-  TRecoVClusCollection*           fEVetoBLRecoCl          =0;
   TRecoVClusCollection*           fHEPVetoRecoCl        =0;
   TMCTruthEvent*                  fMCTruthEvent         =0;
   TLeadGlassRecoEvent*            fLeadGlassRecoEvent   =0;
@@ -314,13 +308,7 @@ int main(Int_t argc, char **argv)
       } else if (branchName=="PVeto_Hits") {
 	fPVetoRecoEvent = new TPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoRecoEvent);
-      } else if (branchName=="PVetoBL_Hits") {
-	fPVetoBLRecoEvent = new TPVetoBLRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoBLRecoEvent);
-      } else if (branchName=="EVetoBL_Hits") {
-	fEVetoBLRecoEvent = new TEVetoBLRecoEvent();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoBLRecoEvent);
-      }	else if (branchName=="HEPVeto_Hits") {
+      } else if (branchName=="HEPVeto_Hits") {
 	fHEPVetoRecoEvent = new THEPVetoRecoEvent();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoEvent);
       } else if (branchName=="ECal_Hits") {
@@ -356,12 +344,6 @@ int main(Int_t argc, char **argv)
       } else if (branchName=="EVeto_Clusters") {
 	fEVetoRecoCl = new TRecoVClusCollection();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoRecoCl);
-      }	else if (branchName=="PVetoBL_Clusters") {
-	fPVetoBLRecoCl = new TRecoVClusCollection();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fPVetoBLRecoCl);
-      } else if (branchName=="EVetoBL_Clusters") {
-	fEVetoBLRecoCl = new TRecoVClusCollection();
-	fRecoChain->SetBranchAddress(branchName.Data(),&fEVetoBLRecoCl);
       }	else if (branchName=="HEPVeto_Clusters") {
 	fHEPVetoRecoCl = new TRecoVClusCollection();
 	fRecoChain->SetBranchAddress(branchName.Data(),&fHEPVetoRecoCl);
@@ -418,8 +400,6 @@ int main(Int_t argc, char **argv)
     event->TargetRecoEvent      =fTargetRecoEvent    ;
     event->EVetoRecoEvent       =fEVetoRecoEvent     ;
     event->PVetoRecoEvent       =fPVetoRecoEvent     ;
-    event->EVetoBLRecoEvent       =fEVetoBLRecoEvent     ;
-    event->PVetoBLRecoEvent       =fPVetoBLRecoEvent     ;
     event->HEPVetoRecoEvent     =fHEPVetoRecoEvent   ;
     event->ECalRecoEvent        =fECalRecoEvent      ;
     event->ECalMLRecoEvent      =fECalMLRecoEvent    ;
@@ -430,8 +410,6 @@ int main(Int_t argc, char **argv)
     event->ECalMLRecoCl         =fECalMLRecoCl       ;
     event->PVetoRecoCl          =fPVetoRecoCl        ;
     event->EVetoRecoCl          =fEVetoRecoCl        ;
-    event->PVetoBLRecoCl          =fPVetoBLRecoCl        ;
-    event->EVetoBLRecoCl          =fEVetoBLRecoCl        ;
     event->HEPVetoRecoCl        =fHEPVetoRecoCl      ;
     event->MCTruthEvent         =fMCTruthEvent       ;
     event->LeadGlassRecoEvent   =fLeadGlassRecoEvent ;
@@ -633,6 +611,9 @@ int main(Int_t argc, char **argv)
    ecalAn   ->Finalize();
    targetAn ->Finalize();
    UserAn ->Finalize();
+    for(std::vector<PadmeVAnalyser *>::iterator it = AnalysersChain.begin(); it!=AnalysersChain.end(); ++it) {
+	 (*it)->Finalize();
+    }
    /*
    sacAn    ->Finalize();
    pvetoAn  ->Finalize();

@@ -8,8 +8,6 @@
 #include "TECalMLRecoEvent.hh"
 #include "TPVetoRecoEvent.hh"
 #include "TEVetoRecoEvent.hh"
-#include "TPVetoBLRecoEvent.hh"
-#include "TEVetoBLRecoEvent.hh"
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TRecoVHit.hh"
@@ -28,8 +26,6 @@ public:
   TTargetRecoEvent*               TargetRecoEvent      ;
   TEVetoRecoEvent*                EVetoRecoEvent       ;
   TPVetoRecoEvent*                PVetoRecoEvent       ;
-  TEVetoBLRecoEvent*                EVetoBLRecoEvent       ;
-  TPVetoBLRecoEvent*                PVetoBLRecoEvent       ;
   THEPVetoRecoEvent*              HEPVetoRecoEvent     ;
   TECalRecoEvent*                 ECalRecoEvent        ;
   TECalMLRecoEvent*               ECalMLRecoEvent      ;
@@ -40,8 +36,6 @@ public:
   TRecoVClusCollection*           ECalMLRecoCl           ;
   TRecoVClusCollection*           PVetoRecoCl          ;
   TRecoVClusCollection*           EVetoRecoCl          ;
-  TRecoVClusCollection*           PVetoBLRecoCl          ;
-  TRecoVClusCollection*           EVetoBLRecoCl          ;
   TRecoVClusCollection*           HEPVetoRecoCl        ;
   TMCTruthEvent*                  MCTruthEvent         ;
   TLeadGlassRecoEvent*            LeadGlassRecoEvent   ;

@@ -182,6 +182,8 @@ private:
   static constexpr Float_t deltaPhiDatalow = 2.90;
   static constexpr Float_t deltaPhiDatahigh = 3.35;
 
+
+  
   // Configuration parameters for veto cuts
   static constexpr Float_t alineECalCh = -0.00035;
   static constexpr Float_t blineECalCh = -0.01;

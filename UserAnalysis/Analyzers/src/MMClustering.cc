@@ -97,7 +97,7 @@ void MMClustering::Clusterize() {
 	  new_clu = new MMCluster(ipmode, 0);
 	  new_clu->AddHit(fMMSoftHits.at(h)); 
 	}
-	else fMMSoftHits.at(h)->SetCluPrt((fMMCluster[ipmode][0].size()-1), ipmode, 0); //non sono sicuro che la prima hit abbia registrato il clu ptr [sono sicuro che non sia cosi] 
+	else fMMSoftHits.at(h)->SetCluPtr((fMMCluster[ipmode][0].size()-1), ipmode, 0); //non sono sicuro che la prima hit abbia registrato il clu ptr [sono sicuro che non sia cosi] 
       }
       else { //out geometric compatibility
 	if(new_clu->GetHitsVectorSize()>1) fMMClusters[ipmode][0].push_back(new_clu);

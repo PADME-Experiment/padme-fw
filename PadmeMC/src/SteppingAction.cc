@@ -35,6 +35,55 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
   if (fMCTruthManager->IsEnabled()) {
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 &&
+	step->GetPostStepPoint()->GetTotalEnergy()/MeV > 1 &&
+	(step->GetPostStepPoint()->GetPosition().x()*step->GetPostStepPoint()->GetPosition().x() + step->GetPostStepPoint()->GetPosition().y()*step->GetPostStepPoint()->GetPosition().y()) > 900){
+      G4Track* track = step->GetTrack();
+      G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
+      if (true){
+//	  (track->GetDefinition()->GetPDGEncoding() == -11 && step->GetPostStepPoint()->GetTotalEnergy() < 200) ||
+//	  track->GetDefinition()->GetPDGEncoding() != -11){
+	if (
+	    step->GetPreStepPoint() && step->GetPreStepPoint()->GetPhysicalVolume()->GetName() == "ChamberECalWindow" &&
+	    step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "world_volume_PV"){
+//	  G4cout << "Step da ecalwindow a vuoto " << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() <<
+//	    " trackPDG = " << track->GetDefinition()->GetPDGEncoding() <<
+//	    " trackPostStepTotalEnergy = " << step->GetPostStepPoint()->GetTotalEnergy()/MeV <<
+//	    " trackPostStepPosX = " << step->GetPostStepPoint()->GetPosition().x() <<
+//	    " trackPostStepPosY = " << step->GetPostStepPoint()->GetPosition().y() <<
+//	    " trackPostStepPosZ = " << step->GetPostStepPoint()->GetPosition().z() <<
+//	    " trackPostStepMomX = " << step->GetPostStepPoint()->GetMomentum().x() <<
+//	    " trackPostStepMomY = " << step->GetPostStepPoint()->GetMomentum().y() <<
+//	    " trackPostStepMomZ = " << step->GetPostStepPoint()->GetMomentum().z() <<
+//	    " process = " << proc << G4endl;
+	  G4cout << "taggone"
+		 << " " <<  ((G4Event*)G4RunManager::GetRunManager()->GetCurrentEvent())->GetEventID()
+		 << " " << track->GetDefinition()->GetPDGEncoding()
+		 << " " << step->GetPostStepPoint()->GetTotalEnergy()/MeV
+		 << " " << step->GetPostStepPoint()->GetPosition().x() 
+		 << " " << step->GetPostStepPoint()->GetPosition().y() 
+		 << " " << step->GetPostStepPoint()->GetPosition().z() 
+		 << " " << step->GetPostStepPoint()->GetMomentum().x() 
+		 << " " << step->GetPostStepPoint()->GetMomentum().y() 
+		 << " " << step->GetPostStepPoint()->GetMomentum().z() 
+		 << G4endl;
+	}
+//	else if (
+//		 step->GetPreStepPoint() && step->GetPreStepPoint()->GetPhysicalVolume()->GetName() == "world_volume_PV" &&
+//		 step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "ChamberECalWindow"){
+//	  G4cout << "Step da vuoto ad ecalwindow " << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() <<
+//	    " trackPDG = " << track->GetDefinition()->GetPDGEncoding() <<
+//	    " trackPostStepTotalEnergy = " << step->GetPostStepPoint()->GetTotalEnergy()/MeV <<
+//	    " trackPostStepPosX = " << step->GetPostStepPoint()->GetPosition().x() <<
+//	    " trackPostStepPosY = " << step->GetPostStepPoint()->GetPosition().y() <<
+//	    " trackPostStepPosZ = " << step->GetPostStepPoint()->GetPosition().z() <<
+//	    " trackPostStepMomX = " << step->GetPostStepPoint()->GetMomentum().x() <<
+//	    " trackPostStepMomY = " << step->GetPostStepPoint()->GetMomentum().y() <<
+//	    " trackPostStepMomZ = " << step->GetPostStepPoint()->GetMomentum().z() <<
+//	    " process = " << proc << G4endl;
+//	}
+      }
+    }
     if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") {
       G4Track* track = step->GetTrack();
       G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();

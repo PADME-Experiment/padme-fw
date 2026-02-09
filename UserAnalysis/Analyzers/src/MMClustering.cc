@@ -81,10 +81,11 @@ void MMClustering::Clusterize() {
 	   aproclu: openclu = kTRUE
   */	   
   //CLUSTERING LEVEL 0  
-  for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
+  for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) { // cluster done with and without ip constraint
     
     MMCluster* new_clu = new MMCluster(ipmode, 0);
-    new_clu->AddHit(0);
+    new_clu->AddHit(fMMSoftHits.at(0));
+    
     for(Int_t h=1; h<fMMSoftHits_size; h++) {
       MMchInfo mmi_pre = fMMSoftHits.at(h-1)->GetMMchInfo();
       MMchInfo mmi_now = fMMSoftHits.at(h)->GetMMchInfo();

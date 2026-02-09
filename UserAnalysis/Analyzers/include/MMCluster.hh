@@ -1,6 +1,7 @@
 #ifndef MMCluster_h
 #define MMCluster_h 1
 #include "MMSoftHit.hh"
+#define IPSINCUT 0.005
 
 class MMCluster {
 public:

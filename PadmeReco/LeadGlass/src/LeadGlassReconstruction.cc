@@ -90,9 +90,9 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
-    printf("\nTriggerMask %d\n",rawEv->GetEventTrigMask());
+    //printf("\nTriggerMask %d\n",rawEv->GetEventTrigMask());
     if (TriggerToBeSkipped()) {
-      printf("LeadGlassReconstruction::ProcessEvent - Skip event because of trigger type\n");
+      //printf("LeadGlassReconstruction::ProcessEvent - Skip event because of trigger type\n");
       return;
     }
   }
@@ -106,9 +106,8 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
     // Leadglass-on-beam
     if (adcB->GetBoardId() == LEADGLASS_BOARD) {
       leadglassID = 0;
-      printf("Channels = %d\n",adcB->GetNADCChannels());
-
-      printf("BoardID = %d Leadglass = %d Trigger = %d\n",adcB->GetBoardId(),leadglassID,rawEv->GetEventTrigMask());
+      //printf("Channels = %d\n",adcB->GetNADCChannels());
+      //printf("BoardID = %d Leadglass = %d Trigger = %d\n",adcB->GetBoardId(),leadglassID,rawEv->GetEventTrigMask());
       // Get StartIndexCell
       UChar_t nTrg = adcB->GetNADCTriggers();
       //printf("Ntrig = %u\n",nTrg);
@@ -124,17 +123,14 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
       // Loop through the channels
       for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
         //printf("channel = %d ",c);
-        RecoVChannelID *chanID = new RecoVChannelID();
-        
-	      if (adcB->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
-        printf(" chanNum = %d", adcB->ADCChannel(c)->GetChannelNumber());
-        printf(" %d\n", chanID->scanChannelID(LEADGLASS_CHANNEL-1));
-	        fLeadGlassFound[0] = true;
-	        //lg_c = c;
-	        // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
-	        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
-	        //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
-	      }
+	if (adcB->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
+	  //printf(" chanNum = %d", adcB->ADCChannel(c)->GetChannelNumber());
+	  fLeadGlassFound[0] = true;
+	  //lg_c = c;
+	  // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
+	  AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
+	  //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
+	}
       }
     }
 

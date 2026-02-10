@@ -7,6 +7,7 @@
 #include "Riostream.h"
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 #include "ECalCalibration.hh"
 #include "TCanvas.h"
 #include "TRecoVHit.hh"
@@ -28,6 +29,7 @@ ECalCalibration::~ECalCalibration()
 {
   fT0Map.clear();
   fCalibMap.clear();
+  fCalibMapRun.clear();
 }
 
 
@@ -42,7 +44,8 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   fGlobHitEnScaleOverrideData = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleOverrideData",1.);
   fGlobHitEnScaleMC   = (double)cfg->GetParOrDefault("EnergyCalibration","HitGlobalScaleMC",1.);
   fCalibList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibIntervalsList","ECalEnergyCalibTimeIntervals.txt");
-  fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","7");
+  fCalibRunList = (std::string)cfg->GetParOrDefault("EnergyCalibration","EnergyCalibRunList","ECalEnergyCalibRunList.txt");
+  fCalibVersion = (std::string)cfg->GetParOrDefault("EnergyCalibration","CalibVersion","8");
   //std::cout<<" ma giarda un po' "<<fCalibVersion<<std::endl;
   fUseCalibT   = (int)cfg->GetParOrDefault("TimeAlignment","UseTimeAlignment",1);
 
@@ -79,7 +82,7 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
       // calibration initialisation
       fCalibHandler->Initialise();
       
-    } else if(fCalibVersion!="0") { // same calib file for all the events
+    } else if(fCalibVersion!="0" &&fCalibVersion!="8") { // same calib file for all the events
       
       char fname[256];
       //      sprintf(fname,"config/Calibration/%s",fCalibVersion.c_str());
@@ -89,12 +92,11 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
 	       <<fname<<std::endl;
       
       if(!ECalib.is_open()){
-	std::cout<<"ERROR: Cannot find ECal  file "<<"**************"<<std::endl;
-	exit(1);
+        std::cout<<"ERROR: Cannot find ECal  file "<<"**************"<<std::endl;
+        exit(1);
       }
     }
   }
-
   // Time offsets calibration 
   if(fUseCalibT==1) TCalib.open("config/Calibration/ECalTimeOffSets.txt");
   if(fUseCalibT==1 && !TCalib.is_open()){ 
@@ -112,7 +114,6 @@ void ECalCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   RunDependentCalib.open("config/Calibration/ECalRunDependent.dat");
   Int_t runid;
   Double_t enScale;
-  
   while(getline(RunDependentCalib,line)){
     std::stringstream(line) >> runid >> enScale; 
     //      std::cout <<" "<<runid <<" "<< enScale << std::endl;
@@ -131,7 +132,7 @@ void ECalCalibration::ReadCalibConstant()
 
 
   //Read Energy calibration constants if a specific file has been selected
-  if(fCalibVersion!="0"){
+  if(fCalibVersion!="0" && fCalibVersion!="8"){
     if(ECalib.is_open()){
       for(int i=0;i<616;i++){
 	ECalib >> row >> col >> NBD >> CID >> MIPCharge; 
@@ -144,6 +145,62 @@ void ECalCalibration::ReadCalibConstant()
     } else{ 
       std::cout << "================ WARNING!!! No ECal energy calibration file available "<<std::endl;
     } 
+  }else if(fCalibVersion=="8"){ //Handling of Run IV partially broken units alog the data-taking EDM
+      char nameList[256];
+      //      sprintf(fname,"config/Calibration/%s",fCalibVersion.c_str());
+      sprintf(nameList,"config/Calibration/%s",fCalibRunList.c_str());
+      ECalibList.open(nameList); 
+      std::string line;
+
+      if(ECalibList.is_open()){
+         while(getline(ECalibList,line)){
+          int run=0;
+          ECalibList >> run;
+          fRunList.push_back(run); 
+
+        }
+        sort(fRunList.begin(), fRunList.end()); //prior sorting of the input runs to be sure it follows the time flow
+        
+        ECalibList.close();
+        for(UInt_t iR =0; iR < fRunList.size(); iR++){
+          char nameiR[256];
+          sprintf(nameiR,"config/Calibration/ECalEnergyCalibration_8_%d.dat",fRunList.at(iR));
+          ECalib.open(nameiR);
+          if(ECalib.is_open()){
+            std::map < std::pair<int,int>,double> CalibMapTemp;
+            for(int i=0;i<616;i++){
+              ECalib >> row >> col >> NBD >> CID >> MIPCharge; 
+              //std::cout <<" "<<row <<" "<< col << " "<< NBD << " "<<CID << " "<<MIPCharge<<" "<<std::endl;;   //reads Piperno informations need cross-check
+              CalibMapTemp[std::make_pair(NBD,CID)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
+              //fCalibMap[std::make_pair(row,col)] = MIPCharge/(fMuonDepositedEnergy*fGlobEnScale);
+              //std::cout<<i<<" channel ID "<<CID<<" NBD "<<NBD<<" "<<fCalibMap[std::make_pair(NBD,CID)]<<std::endl;
+              }
+            fCalibMapRun[fRunList.at(iR)]= CalibMapTemp;
+            ECalib.close(); 
+            
+
+        }else{ 
+          std::cerr<<" ERROR: ECAL Calib version 8 needs a calibration file containing the run number"<< fRunList.at(iR)<< " to work when units broke!!! Exiting..."<<std::endl;
+          exit(1);
+        }
+      }
+      for (const auto& runIt : fCalibMapRun) {
+          std::cout << "Run " << runIt.first << ":\n";
+
+          const auto& calibMap = runIt.second;
+          for (const auto& chIt : calibMap) {
+              std::cout << "  (BD=" << chIt.first.first
+                        << ", ChID=" << chIt.first.second
+                        << ") -> " << chIt.second << '\n';
+          }
+      }
+      }else{
+          std::cerr<<" ERROR: ECAL Calib version 8 needs a file containing the run numbers when units broke!!! Exiting..."<<std::endl;
+          exit(1);
+      }
+
+
+
   }
 
   //Read Time calibration constants
@@ -165,9 +222,9 @@ void ECalCalibration::PerformMCCalibration(std::vector<TRecoVHit *> &Hits){
   for(unsigned int iHit = 0;iHit < Hits.size();++iHit){
     // Energy calibration //
     if (fUseCalibE > 0){
-      int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
-      unsigned int BD   = Hits[iHit]->getBDid(); 
-      unsigned int ChID = Hits[iHit]->getCHid();
+      //int ich = Hits[iHit]->GetChannelId(); //need to convert into BDID e CHID
+      // unsigned int BD   = Hits[iHit]->getBDid(); 
+      // unsigned int ChID = Hits[iHit]->getCHid();
 
       fHitE   = Hits[iHit]->GetEnergy();
       fHitECalibrated = fHitE/fGlobHitEnScaleMC;
@@ -184,7 +241,7 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEve
       fGlobHitEnScaleData = fRunDependentScale->Eval(rawEv->GetRunNumber());
     }
     else {
-      std::cout << "ECalCalibration >> PerformCalibration ERROR! Cannot retrieve run-dependent energy scale " << std::endl;
+      std::cout << "ECalCalibration >> PerformCalibration ERROR! Cannot retrieve run-dependent energy scale" << std::endl;
       exit(1);
     }
   }
@@ -202,32 +259,43 @@ void ECalCalibration::PerformCalibration(std::vector<TRecoVHit *> &Hits, TRawEve
 
       // Correcting for different crystals response
       if(fCalibVersion=="0"){
-	TTimeStamp time = rawEv->GetEventAbsTime();
-	/*
-	std::cout<<"Hit "<<iHit<<", time: "<<time<<" (day "<<time.GetDate()
-		 <<", hour "<<time.GetTime()<<")"<<std::endl;
-	*/
-	fCalibHandler->SetTimeInterval(time);
-	fHitECalibrated = fHitE*(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale/fGlobHitEnScaleData;
-	Hits[iHit]->SetEnergy(fHitECalibrated);
-	//std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale<<std::endl;
-	
-      } else { // fCalibVersion != "0"
-
-	if(fCalibMap[std::make_pair(BD,ChID)]!=0){ 
-	  fHitECalibrated = fHitE/fCalibMap[std::make_pair(BD,ChID)]/fGlobHitEnScaleData;
-	  Hits[iHit]->SetEnergy(fHitECalibrated);
+          TTimeStamp time = rawEv->GetEventAbsTime();
+          /*
+          std::cout<<"Hit "<<iHit<<", time: "<<time<<" (day "<<time.GetDate()
+            <<", hour "<<time.GetTime()<<")"<<std::endl;
+          */
+          fCalibHandler->SetTimeInterval(time);
+          fHitECalibrated = fHitE*(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale/fGlobHitEnScaleData;
+          Hits[iHit]->SetEnergy(fHitECalibrated);
+          //std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<(fCalibHandler->GetCalibVal(BD,ChID))*fMuonDepositedEnergy*fGlobEnScale<<std::endl;
+          
+        } else if(fCalibVersion!="0" && fCalibVersion!="8"){ // fCalibVersion != "0"
+            if(fCalibMap[std::make_pair(BD,ChID)]!=0){ 
+              fHitECalibrated = fHitE/fCalibMap[std::make_pair(BD,ChID)]/fGlobHitEnScaleData;
+              Hits[iHit]->SetEnergy(fHitECalibrated);
+            }else{
+                std::cout<<"Missing ECal energy calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
+                PRINTED++;
+              }
 	  //std::cout<<"channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<1./fCalibMap[std::make_pair(BD,ChID)]<<std::endl;
-	}else{
-	  if(!PRINTED) {
-	    std::cout<<"Missing ECal energy calibration for channel ID "<<ChID<<" BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<std::endl;
-	    PRINTED++;
-	  }
-	}
-      }      
-    }
-
-
+        }else if(fCalibVersion=="8"){
+              int runN = rawEv->GetRunNumber();
+              
+              auto it = fCalibMapRun.upper_bound(runN); //finds the closest run the map above it
+              //std::cout<<"it: "<<it->first<<std::endl;
+              if (it != fCalibMapRun.begin()) { //checks if i'm not already at the map beginning
+                
+                --it; //goes to the run immediately before 
+                std::map < std::pair<int,int>,double> CalibMap = it->second;
+                if(CalibMap[std::make_pair(BD,ChID)]!=0){ 
+                  fHitECalibrated = fHitE/CalibMap[std::make_pair(BD,ChID)]/fGlobHitEnScaleData;
+                  Hits[iHit]->SetEnergy(fHitECalibrated);
+                  //std::cout<<"BD "<<BD<<" ich "<<ich<<" HitE "<<fHitE<<" "<<fHitECalibrated<<" "<<1./CalibMap[std::make_pair(BD,ChID)]<<" runN: "<<runN<<" runCalib: "<<it->first<< std::endl;
+              }
+            }
+        }
+      }
+     
     // Time calibration //    
     if (fUseCalibT == 1){
       // Correcting for time offestets in between channels

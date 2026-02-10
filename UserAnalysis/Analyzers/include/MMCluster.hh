@@ -1,6 +1,11 @@
 #ifndef MMCluster_h
 #define MMCluster_h 1
 #include "MMSoftHit.hh"
+#include <Fit/Fitter.h>
+#include "TFitResultPtr.h"
+#include "TFitResult.h"
+#include "MMTrackFcn.hh"
+
 #define IPSINCUT 0.005
 
 class MMCluster {
@@ -27,12 +32,12 @@ public:
   Int_t GetIsolationFlag() {return fIsolationFlag;};
   MMTracklet GetTracklet(){return fTracos;};
   Int_t GetEcalClusIndex() {return fEcalClusIndex;};
-  
+  Double_t GetIPPhaseAngle(){return fIPPhaseAngle;};
+  Double_t GetDvAtMeshPlane(){return fDvAtMeshPlane;};
   // some set/Get methods to be added.. getIPMode, getCluMode, etc.
   
 private:
-  void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout);
-  void Fit(); // depending on the mode used, the ip mode used, evaluates the track parameters
+  void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double* chi2);
 
   Int_t fIpmode; // 0/1 if the ip connection is enfored/not
   Int_t fClumode; // 0--4: Double_tt of hits, Double_tt+hits in the same {plane,board}, match with other board in the same view [DeltaT fit], match with opposite view [3d fit]
@@ -42,13 +47,23 @@ private:
   Int_t fIsolationFlag; // the cluster is isolated in some sense
   MMTracklet fTracos; // tracklet of the current cluster
   Int_t fEcalClusIndex; // index of the ecal cluster (an object of type TRecoVCluster in a TECalClusCollection object) to which the MMcluster is connected
+  Double_t fIPPhaseAngle; // angle wrt IP: for any ipmode=0, level zero cluster
+  Double_t fDvAtMeshPlane; // available for level one clusters
+
+  vector<TVector3> fPositions;
+  vector<TVector3> fErrors;
+  vector<int> fBoardIds;
+  MMTrackFcn fMMTrackFcn;
+  ROOT::Fit::Fitter fFitter;  
+
+  
 };
 
 struct MMTracklet{
   Double_t slope; // dv/dz
   Double_t inter; // v at mesh plane
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
-  Double_t pars[4];// x0,y0,x1,y1: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
+  Double_t pars[5];// x0,y0,x1,y1,dt: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
   TVector3 lambda; // cosines of track directions
 }; 
 #endif

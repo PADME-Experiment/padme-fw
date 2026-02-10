@@ -151,7 +151,7 @@ void MMClustering::Clusterize() {
     for (int j=i+1; j<fMMClusters[0][0].size(); j++){ 
       if (fMergedMMClusters[0][0].at(j)) continue;
       if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {
-	fMMCluster[0][1].push_back(new_clu);
+	fMMClusters[0][1].push_back(new_clu);
 	fMergedMMClusters[0][0].at(i) = kTRUE; // store the cluster-merged flag
 	fMergedMMClusters[0][0].at(j) = kTRUE; // store the cluster-merged flag
 	

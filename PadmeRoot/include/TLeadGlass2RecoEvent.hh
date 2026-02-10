@@ -1,14 +1,14 @@
-#ifndef TLeadGlassRecoEvent_H
-#define TLeadGlassRecoEvent_H
+#ifndef TLeadGlass2RecoEvent_H
+#define TLeadGlass2RecoEvent_H
 
 #include "TRecoVObject.hh"
 
-class TLeadGlassRecoEvent : public TRecoVObject {
+class TLeadGlass2RecoEvent : public TRecoVObject {
 
 public:
 
-  TLeadGlassRecoEvent(); 
-  ~TLeadGlassRecoEvent();
+  TLeadGlass2RecoEvent(); 
+  ~TLeadGlass2RecoEvent();
 
   void Clear();
 
@@ -48,6 +48,6 @@ private:
   Double_t fLGBunchLength;
   Double_t fLGBunchBBQ;
 
-  ClassDef(TLeadGlassRecoEvent,1);
+  ClassDef(TLeadGlass2RecoEvent,1);
 };
 #endif

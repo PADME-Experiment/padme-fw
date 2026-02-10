@@ -14,6 +14,7 @@ void TLeadGlassRecoEvent::Clear()
 {
   fLGPedestal = 0.;
   fLGPedestalRMS = 0.;
+  fLGStartIndexCell = 0;
   fLGTotalCharge = 0.;
   fLGTotalEnergy = 0.;
   fLGNPoTs = 0.;

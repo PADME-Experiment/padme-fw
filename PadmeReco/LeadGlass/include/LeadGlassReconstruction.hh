@@ -9,6 +9,8 @@
 
 #include "PadmeVReconstruction.hh"
 
+#define N_LEADGLASS 2
+
 class LeadGlassReconstruction : public PadmeVReconstruction
 {
 
@@ -20,12 +22,15 @@ public:
   void ProcessEvent(TRawEvent*);
   virtual void HistoInit();
 
-  Bool_t LeadGlassFound() { return fLeadGlassFound; }
+  Bool_t LeadGlassFound() { return fLeadGlassFound[0]; }
+  Bool_t LeadGlass2Found() { return fLeadGlassFound[1]; }
+  //UChar_t LeadGlassID() { return leadglassID; }
 
-  Double_t GetPedestal()    { return fLGPedestal;  }
-  Double_t GetPedestalRMS() { return fLGPedRMS;    }
-  Double_t GetCharge()      { return fLGCharge;    }
-  Double_t GetEnergy()      { return fLGEnergy;    }
+  Double_t GetPedestal(UChar_t leadglassID)    { return fLGPedestal[leadglassID];  }
+  Double_t GetPedestalRMS(UChar_t leadglassID) { return fLGPedRMS[leadglassID];    }
+  Int_t GetStartIndexCell(UChar_t leadglassID) { return fLGStartIndexCell[leadglassID];    }
+  Double_t GetCharge(UChar_t leadglassID)      { return fLGCharge[leadglassID];    }
+  Double_t GetEnergy(UChar_t leadglassID)      { return fLGEnergy[leadglassID];    }
   Double_t GetNPoTs()       { return fLGNPoTs;     }
   Double_t GetBunchLength() { return fBunchLength; }
   Double_t GetBunchBBQ()    { return fBunchBBQ;    }
@@ -34,28 +39,37 @@ private:
 
   Bool_t TriggerToBeSkipped();
   void AnalyzeEvent(TRawEvent*);
-  void AnalyzeChannel(Short_t*);
-  void ComputeTotalCharge(Short_t*);
+  void AnalyzeChannel(UChar_t leadglassID, Short_t*);
+  void ComputeTotalCharge(UChar_t leadglassID, Short_t*);
+  void ComputeTotalChargeLED(UChar_t leadglassID, Short_t*);
   void ComputeBunchLength(Short_t*);
 
   // Flag to signal if LeadGlass channel was found in this event
-  Bool_t fLeadGlassFound;
+  Bool_t fLeadGlassFound[N_LEADGLASS];
+
+  UChar_t leadglassID;
 
   // Define parameters for pedestal and total charge evaluation
   UInt_t fPedestalSamples;    // Number of samples to use for pedestals
   UInt_t fSignalSamplesStart; // Index of first sample of signal (included)
   UInt_t fSignalSamplesEnd;   // Index of last sample of signal (excluded)
 
+  UInt_t fLEDPedestalSamplesBefore;    // Index of first sample to use for pedestals before signal
+  UInt_t fLEDPedestalSamplesAfter;    // Index of first sample to use for pedestals after signal
+  UInt_t fLEDSamplesStart; // Index of first sample of LED signal (included)
+  UInt_t fLEDSamplesEnd;   // Index of last sample of LED signal (excluded)
+
   // Results of pedestal and total charge evaluation
-  Double_t fLGPedestal; // Pedestal level from the first fPedestalSamples samples
-  Double_t fLGPedRMS;   // Pedestal RMS
-  Double_t fLGCharge;   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+  Double_t fLGPedestal[N_LEADGLASS]; // Pedestal level from the first fPedestalSamples samples
+  Double_t fLGPedRMS[N_LEADGLASS];   // Pedestal RMS
+  Int_t fLGStartIndexCell[N_LEADGLASS]; // Index of signal start
+  Double_t fLGCharge[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
 
   // Calibration parameter to convert Total Charge to Total Energy
   Double_t fChargeToEnergy;
 
   // Total energy released in LeadGlass
-  Double_t fLGEnergy;
+  Double_t fLGEnergy[N_LEADGLASS];
 
   // Parameter to convert Total Charge to NPoTs
   Double_t fChargeToNPoTs;

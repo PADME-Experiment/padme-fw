@@ -28,6 +28,7 @@ public:
   // some set/Get methods to be added.. getIPMode, getCluMode, etc.
   
 private:
+  void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout);
   void Fit(); // depending on the mode used, the ip mode used, evaluates the track parameters
 
   Int_t fIpmode; // 0/1 if the ip connection is enfored/not

@@ -8,8 +8,8 @@
 #include "OfflineServer.hh"
 #include "TVector3.h"
 
-#define XVIEW 0
-#define YVIEW 1
+#define XVIEW 1
+#define YVIEW 0
 
 using namespace std;
 

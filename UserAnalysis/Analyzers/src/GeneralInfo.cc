@@ -301,10 +301,10 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
   MMchInfo mmi;
   mmi.bdid = (chId & 0xF00 ) >> 8; // board SN 0-15
   mmi.layer = (mmi.bdid)/2;  // layer 0-7
-  if(mmi.bdid == 0 || mmi.bdid == 6 || mmi.bdid == 8 || mmi.bdid == 14) mmi.quad = 0;
-  else if(mmi.bdid == 1 || mmi.bdid == 4 || mmi.bdid == 9 || mmi.bdid == 12) mmi.quad = 1;
-  else if(mmi.bdid == 3 || mmi.bdid == 5 || mmi.bdid == 11 || mmi.bdid == 13) mmi.quad = 2;
-  else if(mmi.bdid == 2 || mmi.bdid == 7 || mmi.bdid == 10 || mmi.bdid == 15) mmi.quad = 3;
+  if      (mmi.bdid == 0 || mmi.bdid == 6 || mmi.bdid == 8 || mmi.bdid == 14) mmi.quad = 0;
+  else if (mmi.bdid == 1 || mmi.bdid == 4 || mmi.bdid == 9 || mmi.bdid == 12) mmi.quad = 1;
+  else if (mmi.bdid == 3 || mmi.bdid == 5 || mmi.bdid == 11 || mmi.bdid == 13) mmi.quad = 2;
+  else if (mmi.bdid == 2 || mmi.bdid == 7 || mmi.bdid == 10 || mmi.bdid == 15) mmi.quad = 3;
   else mmi.quad = -999;
   mmi.plane = (mmi.layer)/4;  // plane 0-1
   mmi.verse = ((mmi.plane )== 0)? 1 : -1;

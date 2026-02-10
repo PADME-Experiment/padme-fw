@@ -17,14 +17,14 @@ MMClustering::MMClustering() {
   fMMSoftHits.clear();
 }
 
-MMCluster::~MMCluster() {
+MMClustering::~MMClustering() {
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
       fMMClusters[ipmode][clumode].clear();
     }
   }
   fMMSoftHits.clear();
-};
+}
 
 
 void MMClustering::Init(TMMRecoEvent* mmevent, Bool_t fHistoMode){
@@ -66,7 +66,7 @@ void MMClustering::Clear() {
 void MMClustering::Clusterize() {
 
   Int_t mmSoftHits_size = fMMSoftHits.size();
-  if(fMMSoftHits_size<=1) return;
+  if(mmSoftHits_size<=1) return;
 
   /*for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     bool openclu = kFALSE;
@@ -91,13 +91,13 @@ void MMClustering::Clusterize() {
 
     // hit loop
     
-    for(Int_t h=1; h<fMMSoftHits_size; h++) {
+    for(Int_t h=1; h<mmSoftHits_size; h++) {
 
       bool added = new_clu->AddHit(fMMSoftHits.at(h));
 
       if(!added) { // hit cannot be added
 	if(new_clu->GetHitsVectorSize()>1) { // store the cluster if >1 hits are in it
-	  for (int j=0; j<new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMCluster[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
+	  for (int j=0; j<(int)new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
 	  fMMClusters[ipmode][0].push_back(new_clu); // store the cluster
 	  fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
 	}
@@ -110,7 +110,7 @@ void MMClustering::Clusterize() {
     // treat last temporary open cluster    
 
     if(new_clu->GetHitsVectorSize()>1) {
-      for (int j=0; j<new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMCluster[ipmode][0].size()), ipmode, 0);
+      for (int j=0; j<(int) new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0);
       fMMClusters[ipmode][0].push_back(new_clu);
       fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
     }
@@ -143,12 +143,12 @@ void MMClustering::Clusterize() {
 
   //CLUSTERING LEVEL 1, only done with ipmode = 0 --> using ip
 
-  for (int i=0; i<fMMClusters[0][0].size(); i++){ 
+  for (int i=0; i<(int) fMMClusters[0][0].size(); i++){ 
     if (fMergedMMClusters[0][0].at(i)) continue;
     MMCluster* new_clu = new MMCluster(0, 1); // temporary cluster of type 1
     new_clu->Import(fMMClusters[0][0].at(i)); // copy info from i-th cluster to new temporary cluster
     bool matched = kFALSE;
-    for (int j=i+1; j<fMMClusters[0][0].size(); j++){ 
+    for (int j=i+1; j<(int) fMMClusters[0][0].size(); j++){ 
       if (fMergedMMClusters[0][0].at(j)) continue;
       if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {
 	fMMClusters[0][1].push_back(new_clu);
@@ -161,7 +161,7 @@ void MMClustering::Clusterize() {
     }
     if (!matched) delete new_clu;
   }
-
+}
 
 
 /*
@@ -187,6 +187,7 @@ double v_now=0,v_pre=0;
 
 
   //clustering algorithm
+  /*
   if(vhits_indexes_size>1) {
     Track cluster; //first hit -> open first cluster
     cluster.nhit = 1;
@@ -379,3 +380,4 @@ double v_now=0,v_pre=0;
 
   vhits_indexes.clear();
 }
+  */

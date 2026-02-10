@@ -8,6 +8,14 @@
 
 #define IPSINCUT 0.005
 
+struct MMTracklet{
+  Double_t slope; // dv/dz
+  Double_t inter; // v at mesh plane
+  Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
+  Double_t pars[5];// x0,y0,x1,y1,dt: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
+  TVector3 lambda; // cosines of track directions
+}; 
+
 class MMCluster {
 public:
   MMCluster(Int_t ipmode, Int_t clumode);  // set ipmode, clumode, clear private vectors, set isolation flag default
@@ -26,9 +34,9 @@ public:
   Int_t GetIPmode() {return fIpmode;};
   Int_t GetClumode() {return fClumode;};
   UInt_t GetHitsVectorSize() {return fMMHitsInClu.size();};
-  MMSoftHit* GetHit(Int_t i){if (i >= 0 && i < fMMHitsInClu.size()) return fMMHitsInClu.at(i); return nullptr;};
+  MMSoftHit* GetHit(Int_t i){if (i >= 0 && i < (int) fMMHitsInClu.size()) return fMMHitsInClu.at(i); return nullptr;};
   Double_t GetSeedSlope() {return fSeedSlope;};
-  Int_t GetNHitsPerPlane(Int_t plane) {if(plane>0 && plane<2) return fNHitsPerPlane[plane]; return nullptr;};
+  Int_t GetNHitsPerPlane(Int_t plane) {if(plane>0 && plane<2) return fNHitsPerPlane[plane]; return -1;};
   Int_t GetIsolationFlag() {return fIsolationFlag;};
   MMTracklet GetTracklet(){return fTracos;};
   Int_t GetEcalClusIndex() {return fEcalClusIndex;};
@@ -55,15 +63,10 @@ private:
   vector<int> fBoardIds;
   MMTrackFcn fMMTrackFcn;
   ROOT::Fit::Fitter fFitter;  
-
-  
+  void InitFit(vector<MMSoftHit*> hitArray);
+  void InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z);
+  void setPoints(vector<MMSoftHit*> hitArray);
+  void setAdditionalPoint(double x, double y, double z);
 };
 
-struct MMTracklet{
-  Double_t slope; // dv/dz
-  Double_t inter; // v at mesh plane
-  Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
-  Double_t pars[5];// x0,y0,x1,y1,dt: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
-  TVector3 lambda; // cosines of track directions
-}; 
 #endif

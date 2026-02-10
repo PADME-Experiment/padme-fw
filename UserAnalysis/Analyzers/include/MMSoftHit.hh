@@ -2,6 +2,7 @@
 #define MMSoftHit_h 1
 
 #include "TRecoVHit.hh"
+#include "GeneralInfo.hh"
 
 #define IPMODES 2
 // 0 -> IP enforced
@@ -22,26 +23,26 @@ class MMSoftHit {
   void Print() const;
   void CopyHit(TRecoVHit *Hit); //TODO forse getter bdid, view, quad, plane
     
-  Int_t GetPlane() const {return fmmi.plane;};
-  Int_t GetQuad() const {return fmmi.quad;};
-  Int_t GetView() const {return fmmi.view;};
-  Int_t GetStrip() const {return fmmi.strip;};
-  Int_t GetBoardId() const {return fmmi.bdid;};
+  Int_t GetPlane() const {return fmmi.plane;}
+  Int_t GetQuad() const {return fmmi.quad;}
+  Int_t GetView() const {return fmmi.view;}
+  Int_t GetStrip() const {return fmmi.strip;}
+  Int_t GetBoardId() const {return fmmi.bdid;}
 
-  Int_t GetChannelId() const {return fChannelId;};
-  TVector3 GetPosition() const {return fPosition;};
-  Double_t GetEnergy() const {return fEnergy;};
-  Double_t GetTime() const {return fTime;};
+  Int_t GetChannelId() const {return fChannelId;}
+  TVector3 GetPosition() const {return fPosition;}
+  Double_t GetEnergy() const {return fEnergy;}
+  Double_t GetTime() const {return fTime;}
   Int_t GetIsolLevel() const {return fIsolLevel;}; //bit 0(1) ON if preceding(following) strip is NOT fired 
-  Int_t GetCluPtr(Int_t ipmode, Int_t clumode) const {return fCluPtr[ipmode][clumode];};
-  MMchInfo GetMMchInfo() const {return fmmi;};
+  Int_t GetCluPtr(Int_t ipmode, Int_t clumode) const {return fCluPtr[ipmode][clumode];}
+  MMchInfo GetMMchInfo() const {return fmmi;}
   
-  void SetChannelId(Int_t ChannelId) {fChannelId = ChannelId;};
-  void SetPosition(TVector3 Position) {fPosition = Position;};
-  void SetEnergy(Double_t Energy) {fEnergy = Energy;};
-  void SetTime(Double_t Time) {fTime = Time;};
-  void SetIsolLevel(Int_t IsolLevel) {fIsolLevel = IsolLevel;};
-  void SetCluPtr(Int_t CluPtr, Int_t ipmode, Int_t clumode) {fCluPtr[ipmode][clumode] = CluPtr;};
+  void SetChannelId(Int_t ChannelId) {fChannelId = ChannelId;}
+  void SetPosition(TVector3 Position) {fPosition = Position;}
+  void SetEnergy(Double_t Energy) {fEnergy = Energy;}
+  void SetTime(Double_t Time) {fTime = Time;}
+  void SetIsolLevel(Int_t IsolLevel) {fIsolLevel = IsolLevel;}
+  void SetCluPtr(Int_t CluPtr, Int_t ipmode, Int_t clumode) {fCluPtr[ipmode][clumode] = CluPtr;}
   
  protected:
 

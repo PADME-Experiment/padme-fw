@@ -13,11 +13,14 @@ public:
   ~MMClustering();
   
   Bool_t Init(TMMRecoEvent* mmevent,Bool_t fHistoMode); // pass mm reconstructed event so it can access the TRecoVHit objects of mmevent, copy them to a vector of MMSoftHit objects
-  void Clusterize();    // loop over MMSoftHit objects, build clusters. Build progressively 4 cluster modes, both with IP connection enfored / not.
+  void Clusterize();    // loop over MMSoftHit objects, build clusters. Build progressively 4 cluster modes, both with IP connection enforced / not.
+  // modes: 0 -> within a single board (single view)
+  // modes: 1 -> within the same view and including 2 boards (same quadrant): DeltaT fit
+  // modes: 2 -> eventual xy matching
   void Clear();         // clear cluster list, destroys contents and free memory
   
   Int_t InsertNewMMCluster(Int_t ipmode, Int_t clumode){fMMClusters[ipmode][clumode].push_back(new MMCluster(ipmode,clumode)); return fMMClusters[ipmode][clumode].size()-1;};
-  void ClusterMerger(); // loop over cluster pairs, merge the cluster if needed and create a new cluster of higher mode
+  //  void ClusterMerger(); // loop over cluster pairs, merge the cluster if needed and create a new cluster of higher mode
 
   MMCluster* GetMMCluster(Int_t i, Int_t ipmode, Int_t clumode){if (i >= 0 && i < fMMClusters[ipmode][clumode].size()) return fMMClusters[ipmode][clumode].at(i); return nullptr;};
   UInt_t GetMMClusterLength(Int_t ipmode, Int_t clumode) {return fMMCluster[ipmode][clumode].size();};
@@ -27,6 +30,7 @@ public:
 private:
   static MMClustering* fInstance;
   vector<MMCluster*> fMMClusters[IPMODES][CLUSTERMODES];
+  vector<bool> fMergedMMClusters[IPMODES][CLUSTERMODES]; // keep track of clusters merged to other clusters
   vector<MMSoftHit*> fMMSoftHits;
   
 };

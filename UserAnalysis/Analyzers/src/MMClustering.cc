@@ -57,18 +57,17 @@ void MMClustering::Clear() {
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
       fMMClusters[ipmode][clumode].clear();
+      fMergedMMClusters[ipmode][clumode].clear();
     }
   }
   fMMSoftHits.clear();
 }
 
 void MMClustering::Clusterize() {
-  double IPcostheta_CUT = 0.995;
-  int maxholes=2;
 
   Int_t mmSoftHits_size = fMMSoftHits.size();
-
   if(fMMSoftHits_size<=1) return;
+
   /*for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     bool openclu = kFALSE;
     for(Int_t h=1; h<mmSoftHits_size; h++) {
@@ -80,35 +79,89 @@ void MMClustering::Clusterize() {
          inserisco hit come primo di un doppietto
 	   aproclu: openclu = kTRUE
   */	   
+
   //CLUSTERING LEVEL 0  
+
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) { // cluster done with and without ip constraint
     
+    // open first temporary cluster    
+
     MMCluster* new_clu = new MMCluster(ipmode, 0);
     new_clu->AddHit(fMMSoftHits.at(0));
+
+    // hit loop
     
     for(Int_t h=1; h<fMMSoftHits_size; h++) {
-      MMchInfo mmi_pre = fMMSoftHits.at(h-1)->GetMMchInfo();
-      MMchInfo mmi_now = fMMSoftHits.at(h)->GetMMchInfo();
-      if((mmi_pre.bdid == mmi_now.bdid) && //geometric compatibility (same board)
-	 (abs(mmi_now.strip - mmi_pre.strip)> maxholes+1)) { //hole check  
-	bool added = new_clu->AddHit(fMMSoftHits.at(h));
-	if(!added) {
-	  if(new_clu->GetHitsVectorSize()>1) fMMClusters[ipmode][0].push_back(new_clu);
-	  else delete new_clu; //poi vediamo se mettere un clear :)
-	  new_clu = new MMCluster(ipmode, 0);
-	  new_clu->AddHit(fMMSoftHits.at(h)); 
+
+      bool added = new_clu->AddHit(fMMSoftHits.at(h));
+
+      if(!added) { // hit cannot be added
+	if(new_clu->GetHitsVectorSize()>1) { // store the cluster if >1 hits are in it
+	  for (int j=0; j<new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMCluster[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
+	  fMMClusters[ipmode][0].push_back(new_clu); // store the cluster
+	  fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
 	}
-	else fMMSoftHits.at(h)->SetCluPtr((fMMCluster[ipmode][0].size()-1), ipmode, 0); //non sono sicuro che la prima hit abbia registrato il clu ptr [sono sicuro che non sia cosi] 
-      }
-      else { //out geometric compatibility
-	if(new_clu->GetHitsVectorSize()>1) fMMClusters[ipmode][0].push_back(new_clu);
-	else delete new_clu; //poi vediamo se mettere un clear :)
-	new_clu = new MMCluster(ipmode, 0);
-	new_clu->AddHit(fMMSoftHits.at(h));
+	else delete new_clu; // only 1 hit -> cluster deleted
+	new_clu = new MMCluster(ipmode, 0); // create a new temporary cluster with the present hit
+	new_clu->AddHit(fMMSoftHits.at(h)); 
       }
     }
+
+    // treat last temporary open cluster    
+
+    if(new_clu->GetHitsVectorSize()>1) {
+      for (int j=0; j<new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMCluster[ipmode][0].size()), ipmode, 0);
+      fMMClusters[ipmode][0].push_back(new_clu);
+      fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
+    }
+    else delete new_clu;
+  } // loop over ipmode
+  
+//original code    for(Int_t h=1; h<fMMSoftHits_size; h++) {
+//original code      MMchInfo mmi_pre = fMMSoftHits.at(h-1)->GetMMchInfo();
+//original code      MMchInfo mmi_now = fMMSoftHits.at(h)->GetMMchInfo();
+//original code      if((mmi_pre.bdid == mmi_now.bdid) && //geometric compatibility (same board)
+//original code	 (abs(mmi_now.strip - mmi_pre.strip) < maxholes+1)) { //hole check WAS ">" 
+//original code	bool added = new_clu->AddHit(fMMSoftHits.at(h));
+//original code	if(!added) {
+//original code	  if(new_clu->GetHitsVectorSize()>1) fMMClusters[ipmode][0].push_back(new_clu);
+//original code	  else delete new_clu; //poi vediamo se mettere un clear :)
+//original code	  new_clu = new MMCluster(ipmode, 0);
+//original code	  new_clu->AddHit(fMMSoftHits.at(h)); 
+//original code	}
+//original code	else fMMSoftHits.at(h)->SetCluPtr((fMMCluster[ipmode][0].size()-1), ipmode, 0); //non sono sicuro che la prima hit abbia registrato il clu ptr [sono sicuro che non sia cosi] 
+//original code      }
+//original code      else { //out geometric compatibility
+//original code	if(new_clu->GetHitsVectorSize()>1) fMMClusters[ipmode][0].push_back(new_clu);
+//original code	else delete new_clu; //poi vediamo se mettere un clear :)
+//original code	new_clu = new MMCluster(ipmode, 0);
+//original code	new_clu->AddHit(fMMSoftHits.at(h));
+//original code      }
+//original code    }
+//original code  }
+
+
+  //CLUSTERING LEVEL 1, only done with ipmode = 0 --> using ip
+
+  for (int i=0; i<fMMClusters[0][0].size(); i++){ 
+    if (fMergedMMClusters[0][0].at(i)) continue;
+    MMCluster* new_clu = new MMCluster(0, 1); // temporary cluster of type 1
+    new_clu->Import(fMMClusters[0][0].at(i)); // copy info from i-th cluster to new temporary cluster
+    bool matched = kFALSE;
+    for (int j=i+1; j<fMMClusters[0][0].size(); j++){ 
+      if (fMergedMMClusters[0][0].at(j)) continue;
+      if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {
+	fMMCluster[0][1].push_back(new_clu);
+	fMergedMMClusters[0][0].at(i) = kTRUE; // store the cluster-merged flag
+	fMergedMMClusters[0][0].at(j) = kTRUE; // store the cluster-merged flag
+	
+	matched = kTRUE;
+	break;
+      }
+    }
+    if (!matched) delete new_clu;
   }
-}
+
 
 
 /*

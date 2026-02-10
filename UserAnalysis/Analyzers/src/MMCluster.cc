@@ -12,13 +12,13 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
   for(Int_t h=0; h<2; h++) {
     fNHitPerPlane[h] = 0;
   }
-  fIsolationflag = -999;
+  fIsolationFlag = -999;
 
   fTracos.slope = -9999;
   fTracos.inter = -9999;
   fTracos.chi2 = -9999;
   for(Int_t p=0; p<4; p++) {
-    pars[p] = -9999;
+    fTracos.pars[p] = -9999;
   }
   fTracos.lambda = {-9999,-9999,-9999};
 
@@ -29,21 +29,48 @@ MMCluster::~MMCluster() {
   fMMHitsInClu.clear();
 };
 
+void MMCluster::Import(MMCluster* oldclu){
+  //  copy cluster content from input cluster
+  //  fClumode and fIPmode are kept as in the cluster object constructor
 
-bool MMCluster::AddHit(MMSoftHit* softhit) {
-  // caso 1a hit -> aggiunge e basta [no aggiornare tracklet];
-  // caso 2a hit [senza IP] -> fit scemo [aggiornare tracklet];
-  // caso 2a hit [IP] -> fit vero con IP [aggiornare tracklet se passa controllo];
-  // caso 3a+ hit -> fit vero (con o senza IP) [aggiornare tracklet se passa controllo];
+  fMMHitsInClu.clear();
+  for (int i=0; i < old->GetHitsVectorSize(); i++) fMMHitsInClu.push_back(oldclu->GetHit(i));    
+  
+  fSeedSlope = oldclu->GetSeedSlope();
+  for(Int_t h=0; h<2; h++) fNHitPerPlane[h] = oldclu->GetNHitsPerPlane(h);
+  
+  fIsolationFlag = oldclu->GetIsolationFlag();
+  fTracos = oldclu->GetTracklet();
+  fEcalClusIndex = oldclu->GetEcalClusIndex();
+}
+
+
+bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
+
+
+
+}
+// caso 1a hit -> aggiunge e basta [no aggiornare tracklet];
+// caso 2a hit [senza IP] -> fit scemo [aggiornare tracklet];
+// caso 2a hit [IP] -> fit vero con IP [aggiornare tracklet se passa controllo];
+// caso 3a+ hit -> fit vero (con o senza IP) [aggiornare tracklet se passa controllo];
+
+bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters, with / without ip constraint
+  const int maxholes=2;
   if(fMMHitsInClu.size() == 0) {
     fMMHitsInClu.push_back(softhit);
-    fNHitPerPlane[softhit->GetMMchInfo().plane]++;
+    fNHitsPerPlane[softhit->GetMMchInfo().plane]++;
     return kTRUE;
   }
 
-  // straight line between past hits and present hit
-  vector<double> zhits, vhits;
+
+  if (softhit->GetMMchInfo().bdid != fMMHitsInClu.at(fMMHitsInClu.size()-1)->GetMMchInfo().bdid) return kFALSE;
+  if (TMath::Abs(softhit->GetMMchInfo().strip - fMMHitsInClu.at(fMMHitsInClu.size()-1)->GetMMchInfo().strip) > maxholes) return kFALSE;
+
+  // in principle, we might make cases on the basis of fCluMode here: 3d tracks, etc.
   
+  // straight line between past hits and present hit: to speed up, zhits and vhits might become private and push_backed when needed / expunge the last entry when needed
+  vector<double> zhits, vhits;  
   for (int i=0; i<fMMHitsInClu.size(); i++){
     zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
     vhits.push_back(fMMHitsInClu.at(i)->GetMMchInfo().view == Xview ? fMMHitsInClu.at(i)->GetPosition().X() : fMMHitsInClu.at(i)->GetPosition().Y());
@@ -72,20 +99,15 @@ bool MMCluster::AddHit(MMSoftHit* softhit) {
 
     double ravg_minus_target[2] = {v_avg-v_target, z_avg-z_target};
     double lambda_hits[2] = {cosv,cosz};
-    double ravg_minus_target_norm = 0;
-    for (int q=0; q<2; q++) ravg_minus_target_norm += ravg_minus_target[q]*ravg_minus_target[q];
-    ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target_norm);
-    for (int q=0; q<2; q++){
-      ravg_minus_target[q] /= ravg_minus_target_norm;
-      lambda_hits[q] /= lambda_hits_norm;
-    }
+    double ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target[0]*ravg_minus_target[0]+ravg_minus_target[1]*ravg_minus_target[1]);
+    for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
     double phasen = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];
     if (TMath::Abs(phasen) > IPSINCUT) return kFALSE;
   }
   // add present hit to the cluster    
   fMMHitsInClu.push_back(softhit);
   fSeedSlope = mt_avg;
-  fNHitPerPlane[softhit->GetMMchInfo().plane]++;
+  fNHitsPerPlane[softhit->GetMMchInfo().plane]++;
     
   fTracos.slope = mt_avg;
   fTracos.inter = ct_avg;

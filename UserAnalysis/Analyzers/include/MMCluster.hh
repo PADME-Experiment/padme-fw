@@ -7,22 +7,25 @@ class MMCluster {
 public:
   MMCluster(Int_t ipmode, Int_t clumode);  // set ipmode, clumode, clear private vectors, set isolation flag default
   ~MMCluster();
+
+  void Import(MMCluster* oldclu);
+  bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
+  bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
   
-  bool AddHit(MMSoftHit* softhit); //TODO conditioned
-  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
+  //  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
   void RemoveHit(Int_t i); // remove a hit if necessary
     
   void SetSeedSlope(Double_t slope){fSeedSlope = slope;};
   void SetECalClusIndex(Int_t ecalidx){fEcalClusIndex = ecalidx;};
   
-  MMTracklet GetTracklet(){return fTracos;};
   Int_t GetIPmode() {return fIpmode;};
   Int_t GetClumode() {return fClumode;};
   UInt_t GetHitsVectorSize() {return fMMHitsInClu.size();};
-  Int_t GetHit(Int_t i){if (i >= 0 && i < fMMHitsInClu.size()) return fMMHitsInClu.at(i); return nullptr;};
-  Double_t GetSeedslope() {return fSeedSlope;};
-  Int_t GetNHitsPerPlane(Int_t plane) {if(plane>0 && plane<2) return fNHitPerPlane[plane]; return nullptr;};
+  MMSoftHit* GetHit(Int_t i){if (i >= 0 && i < fMMHitsInClu.size()) return fMMHitsInClu.at(i); return nullptr;};
+  Double_t GetSeedSlope() {return fSeedSlope;};
+  Int_t GetNHitsPerPlane(Int_t plane) {if(plane>0 && plane<2) return fNHitsPerPlane[plane]; return nullptr;};
   Int_t GetIsolationFlag() {return fIsolationFlag;};
+  MMTracklet GetTracklet(){return fTracos;};
   Int_t GetEcalClusIndex() {return fEcalClusIndex;};
   
   // some set/Get methods to be added.. getIPMode, getCluMode, etc.
@@ -35,8 +38,8 @@ private:
   Int_t fClumode; // 0--4: Double_tt of hits, Double_tt+hits in the same {plane,board}, match with other board in the same view [DeltaT fit], match with opposite view [3d fit]
   vector<MMSoftHit*> fMMHitsInClu; // vector of MMSoftHit objects filled in Clustering::Init
   Double_t fSeedSlope;  // slope of the first Double_tt which generated the cluster in mode = 0
-  Int_t fNHitPerPlane[2]; // useful to make cluster categories
-  Int_t fIsolationflag; // the cluster is isolated in some sense
+  Int_t fNHitsPerPlane[2]; // useful to make cluster categories
+  Int_t fIsolationFlag; // the cluster is isolated in some sense
   MMTracklet fTracos; // tracklet of the current cluster
   Int_t fEcalClusIndex; // index of the ecal cluster (an object of type TRecoVCluster in a TECalClusCollection object) to which the MMcluster is connected
 };

@@ -195,6 +195,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     printf("=== Detector Setup 30 = Year 2021 ===\n");
   } else if (fDetectorSetup == 40) {
     printf("=== Detector Setup 40 = Year 2022 ===\n");
+  } else if (fDetectorSetup == 50) {
+    printf("=== Detector Setup 50 = Year 2025 ===\n");
   } else {
     printf("=== WARNING!!! Unknown Detector Setup %d ===\n",fDetectorSetup);
   }
@@ -490,7 +492,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       geoTPix->SetTPixChamberWallAngle(geoChamber->GetVCBackFaceAngle());
       geoTPix->SetTPixChamberWallCorner(geoChamber->GetVCBackFaceCorner());
     }
-    fTPixDetector->CreateGeometry();
+    if(fDetectorSetup !=50){
+      fTPixDetector->CreateGeometry();
+    }
   }
 
   // ECal
@@ -506,21 +510,27 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     if (fEnableECal) {
       geoETag->SetETagFrontFacePosZ(geoECal->GetECalFrontFacePosZ()-geoECal->GetECalPanelThickness()-13.*mm-geoETag->GetETagBarSizeZ());
     }
+    if(fDetectorSetup !=50){
     fETagDetector->CreateGeometry();
+    }
   }
 
   // PVeto
   if (fEnablePVeto) {
     fPVetoDetector->SetMotherVolume(logicMagneticVolumeVC);
     fPVetoDetector->SetPVetoDisplacePosZ(magVolPosZ);
-    fPVetoDetector->CreateGeometry();
+    if(fDetectorSetup !=50){
+      fPVetoDetector->CreateGeometry();
+    }
   }
 
   // EVeto
   if (fEnableEVeto) {
     fEVetoDetector->SetMotherVolume(logicMagneticVolumeVC);
     fEVetoDetector->SetEVetoDisplacePosZ(magVolPosZ);
-    fEVetoDetector->CreateGeometry();
+    if(fDetectorSetup !=50){
+      fEVetoDetector->CreateGeometry();
+    }
   }
 
   // HEPVeto
@@ -577,7 +587,7 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildMaterial("G4_PLEXIGLASS");              // Plexiglass (ECal)
   //man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
   man->FindOrBuildMaterial("G4_POLYSTYRENE");             // Plastic scintillator (Veto)
-
+  man->FindOrBuildMaterial("G4_Li");   
   // Define all elements needed to define materials not in the NIST DB
   man->FindOrBuildElement("H");  // Hydrogen
   man->FindOrBuildElement("O");  // Oxygen

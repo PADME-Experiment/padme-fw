@@ -37,7 +37,7 @@ public:
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int s);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
   // Position of center of Target box
@@ -78,6 +78,9 @@ public:
   // Set position along Z of Target front face
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
   void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
+  // Set rotation angle along z for RunIV configuration
+  G4double GetTargetRotationAngle() { return fTargetFrontFacePosZ; }
+  void     SetTargetRotationAngle(G4double z) { fTargetRotationAngle = z; }
   
   // Set Target Pitch and Strip and Get Gap Size;
   G4double GetTargetPitch() { return fTargetPitch; }
@@ -147,7 +150,7 @@ public:
   void     SetTargetDigiMeV2Q(G4double m) { fTargetDigiMeV2Q = m; }
 
 private:
-
+  void UpdateDerivedMeasures();
   G4int fVerbose; // Verbose level
 
   G4int fDetectorSetup;
@@ -179,7 +182,7 @@ private:
   G4double fTargetDisplacementY; // Target displacement along Y axis wrt beam line
 
   G4double fTargetFrontFacePosZ; // Position along Z axis of Target front face
-
+  G4double fTargetRotationAngle; // Target Rotation angle (RunIV)
   G4bool fTargetFastDigitization; // Enable/disable use of fast digitization
 
   G4bool fTargetSaveWaveformToDigi; // Enable/disable saving of digitized waveforms to persistent digis

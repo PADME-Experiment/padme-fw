@@ -56,7 +56,7 @@ TargetGeometry::TargetGeometry()
   //fTargetFrontFacePosZ = -100.*cm; // Relative to center of magnet
   //fTargetFrontFacePosZ = -103.*cm; // Relative to center of magnet after construction M. Raggi 10/10/2018
   fTargetFrontFacePosZ = -1028.*mm; // Relative to center of magnet. Jan 2020 survey (-1027.68mm, 1mm approximation)
-
+  fTargetRotationAngle=0; //Before run IV
   fTargetFastDigitization = true; // Use fast digitization
 
   fTargetSaveWaveformToDigi = false; // Do not save waveforms to digi
@@ -106,6 +106,22 @@ TargetGeometry::TargetGeometry()
 
 TargetGeometry::~TargetGeometry()
 {}
+
+void TargetGeometry::SetDetectorSetup(G4int s)
+{
+  fDetectorSetup = s;
+  UpdateDerivedMeasures();
+}
+
+void TargetGeometry::UpdateDerivedMeasures()
+{
+  // Move Target into the magnet coils (RunIV), not implemented rotation yet
+  if (fDetectorSetup > 40) {
+    fTargetFrontFacePosZ = -732.47*mm; 
+    fTargetRotationAngle=180.*deg;
+  }
+  
+}
 
 std::vector<G4String> TargetGeometry::GetHashTable()
 {

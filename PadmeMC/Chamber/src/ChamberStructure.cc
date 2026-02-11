@@ -62,10 +62,10 @@ void ChamberStructure::CreateGeometry()
     CreateTargetPipes();
 
     // Create junction pipe between cross and vacuum chamber
-    CreateJunctionPipe();
+    //CreateJunctionPipe();
 
     // Create junction between PADME cross and BTF vacuum M.Raggi 20/03/2019
-    CreateBTFJunction();
+    //CreateBTFJunction();
 
     // Create porthole caps for both section of the chamber
     CreatePortholeCaps();

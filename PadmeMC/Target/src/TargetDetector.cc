@@ -55,6 +55,7 @@ void TargetDetector::CreateGeometry()
   G4double targetSizeX = geo->GetTargetSizeX();
   G4double targetSizeY = geo->GetTargetSizeY();
   G4double targetSizeZ = geo->GetTargetSizeZ();
+  G4double targetRotationAngle = geo->GetTargetRotationAngle();
   printf("Target dimensions are %f %f %f\n",targetSizeX,targetSizeY,targetSizeZ);
 
   // Create main Target box and position it
@@ -62,7 +63,14 @@ void TargetDetector::CreateGeometry()
   G4Box* solidTarget = new G4Box("Target",targetSizeX*0.5,targetSizeY*0.5,targetSizeZ*0.5);
   fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
   fTargetVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
-  new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,true);
+  // Create rotation matrix
+  G4RotationMatrix* rotZ = new G4RotationMatrix();
+  rotZ->rotateZ(targetRotationAngle*deg);
+
+// Place volume with rotation
+  new G4PVPlacement(rotZ, targetPos - G4ThreeVector(0.,0.,fTargetDisplacePosZ), fTargetVolume,"Target",fMotherVolume,false,0,true);
+
+  //new G4PVPlacement(0,targetPos-G4ThreeVector(0.,0.,fTargetDisplacePosZ),fTargetVolume,"Target",fMotherVolume,false,0,true);
 
   // Create Target support structure
   G4double tsL1 = geo->GetTSupportL1();

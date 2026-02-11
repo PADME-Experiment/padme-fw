@@ -32,7 +32,7 @@ protected:
 
 public:
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int s);// { fDetectorSetup = s; }
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
   // Info on the back face of the chamber
@@ -176,7 +176,7 @@ public:
   //G4double GetTPPHStopThick() { return fTPPHStopThick; }
 
 private:
-
+  void UpdateDerivedMeasures();
   G4int fDetectorSetup;
 
   G4double fVCBackFacePosZ; // Z position of the VC flange face towards the thin window

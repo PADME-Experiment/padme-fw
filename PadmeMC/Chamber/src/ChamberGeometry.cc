@@ -60,6 +60,7 @@ ChamberGeometry::ChamberGeometry()
   //fCPZPosZ = -1.*m;
   //fCPZPosZ = -103.*cm; // Adjusted to final position - EL 2019-03-13
   fCPZPosZ = -1028.*mm; // Jan 2020 survey (-1027.68mm, 1mm approximation)
+  //fCPZPosZ = -732.47*mm; // Jan 2020 survey (-1027.68mm, 1mm approximation)
   fCPZFlangeR = 76.*mm;
   fCPZFlangeThick = 20.*mm;
 
@@ -208,6 +209,20 @@ ChamberGeometry::ChamberGeometry()
   //fTPPHStopThick = 12.0*mm;
 
 }
+void ChamberGeometry::UpdateDerivedMeasures()
+{
+
+  //Move the target cross and pipes to Run IV location
+  if(fDetectorSetup>40) fCPZPosZ = -732.47*mm; 
+
+}
+
+void ChamberGeometry::SetDetectorSetup(G4int setup)
+{
+  fDetectorSetup = setup;
+  UpdateDerivedMeasures();
+}
+
 
 ChamberGeometry::~ChamberGeometry()
 {}

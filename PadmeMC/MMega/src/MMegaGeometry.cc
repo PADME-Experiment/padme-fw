@@ -37,6 +37,7 @@ MMegaGeometry::MMegaGeometry()
   fMMegaFaradayPanelSizeX = 880*mm; //11/02/26
   fMMegaFaradayPanelSizeY = 880*mm;
   fMMegaFaradayPanelSizeZ = 0.700*mm;
+  fMMegaFaradayFR4SizeZ = 0.700*mm;
   fMMegaFaradayCopperSizeZ = 0.100*mm;
 
    // size of front and back panels
@@ -55,8 +56,11 @@ MMegaGeometry::MMegaGeometry()
   fMMegaAmpGapSizeZ = 0.150*mm; //active area updated 11/02/26
 
   // size of the detector mother volume
-  fMMegaSizeX = fMMegaPanelSizeX + 5*mm;  // add 5 mm as in other detectors
-  fMMegaSizeY = fMMegaPanelSizeY + 5*mm;
+  // fMMegaSizeX = fMMegaPanelSizeX + 5*mm;  // add 5 mm as in other detectors
+  // fMMegaSizeY = fMMegaPanelSizeY + 5*mm;
+  // fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
+  fMMegaSizeX = fMMegaFaradayPanelSizeX + 5*mm;  // add 5 mm as in other detectors
+  fMMegaSizeY = fMMegaFaradayPanelSizeY + 5*mm;
   fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
 
   //size of strips

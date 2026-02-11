@@ -35,15 +35,15 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
   // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
   if (fMCTruthManager->IsEnabled()) {
-    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 &&
-	step->GetPostStepPoint()->GetTotalEnergy()/MeV > 1 &&
-	(step->GetPostStepPoint()->GetPosition().x()*step->GetPostStepPoint()->GetPosition().x() + step->GetPostStepPoint()->GetPosition().y()*step->GetPostStepPoint()->GetPosition().y()) > 900){
-      G4Track* track = step->GetTrack();
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0){ 
+      //(step->GetPostStepPoint()->GetPosition().x()*step->GetPostStepPoint()->GetPosition().x() + step->GetPostStepPoint()->GetPosition().y()*step->GetPostStepPoint()->GetPosition().y()) > 900){
+       G4Track* track = step->GetTrack();
       G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
-      if (true){
+
+      if ((track->GetDefinition()->GetPDGEncoding() ==22 && step->GetPostStepPoint()->GetTotalEnergy()/MeV >1) || track->GetDefinition()->GetPDGEncoding() != 22){
 //	  (track->GetDefinition()->GetPDGEncoding() == -11 && step->GetPostStepPoint()->GetTotalEnergy() < 200) ||
 //	  track->GetDefinition()->GetPDGEncoding() != -11){
-	if (
+	if ((((step->GetPostStepPoint()->GetPosition().x()*step->GetPostStepPoint()->GetPosition().x() + step->GetPostStepPoint()->GetPosition().y()*step->GetPostStepPoint()->GetPosition().y()) > 900 && track->GetDefinition()->GetPDGEncoding() ==-11) || track->GetDefinition()->GetPDGEncoding() !=-11) &&
 	    step->GetPreStepPoint() && step->GetPreStepPoint()->GetPhysicalVolume()->GetName() == "ChamberECalWindow" &&
 	    step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "world_volume_PV"){
 //	  G4cout << "Step da ecalwindow a vuoto " << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() <<

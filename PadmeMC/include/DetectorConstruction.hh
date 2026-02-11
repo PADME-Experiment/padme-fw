@@ -29,6 +29,7 @@ class HEPVetoDetector;
 class LeadGlassDetector;
 class TDumpDetector;
 class TPixDetector;
+class MMegaDetector; //EDM from D. Quaranta branch
 class TungstenDetector;
 class MagnetStructure;
 class ChamberStructure;
@@ -89,6 +90,7 @@ public:
   //M. Raggi 07/03/2019
   void BeamLineIsVisible();
   void BeamLineIsInvisible();
+  void SetMMegaReadoutType(G4String); //EDM from D.Quaranta
 
   void WorldIsAir();
   void WorldIsVacuum();
@@ -126,7 +128,7 @@ private:
   TDumpDetector*    fTDumpDetector;
   TPixDetector*     fTPixDetector;
   TungstenDetector* fTungstenDetector;
-
+  MMegaDetector*    fMMegaDetector; 
   MagnetStructure*  fMagnetStructure;
   ChamberStructure* fChamberStructure;
   BeamLineStructure* fBeamLineStructure; //M. Raggi 07/03/2019
@@ -145,6 +147,7 @@ private:
   G4int fEnableTDump;
   G4int fEnableTPix;
   G4int fEnableTungsten;
+  G4int fEnableMMega; 
 
   G4int fEnableWall;
   G4int fEnableChamber;
@@ -165,7 +168,7 @@ private:
   G4double fWorldLength;
 
   //G4UserLimits* stepLimit; // pointer to user step limits
-
+  G4String fMMegaReadoutType; 
   DetectorMessenger* fDetectorMessenger;  // pointer to the Messenger
   /*
 private:

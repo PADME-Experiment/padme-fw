@@ -1,0 +1,100 @@
+// MMegaGeometry.cc
+// --------------------------------------------------------------
+// History:
+//
+// Created by Davide Quaranta (quaranta.1895475@studenti.uniroma1.it) 2023-19-12
+// --------------------------------------------------------------
+
+#include "MMegaGeometry.hh"
+
+MMegaGeometry* MMegaGeometry::fInstance = 0;
+
+MMegaGeometry* MMegaGeometry::GetInstance()
+{
+  if ( fInstance == 0 ) { fInstance = new MMegaGeometry(); }
+  return fInstance;
+}
+
+MMegaGeometry::MMegaGeometry()
+{
+
+  fVerbose = 0; // Do not show debug output
+
+  fDetectorSetup = 50; // Default to 2025 setup
+
+
+  //readout plane composition
+  fMMegaCopperSizeZ = 0.018*mm; //strip
+  fMMegaFR4SizeZ = 0.900*mm; //FR4 updated 11/02/26
+  fMMegaNomexSizeZ = 10*mm; //ok 11/02/26
+  fMMegaKaptonSizeZ = 0.050*mm; //ok 11/02/26
+  fMMegaFR4ReadoutSizeZ = 0.050*mm; //ok 11/02/26
+  fMMegaCarbonSizeZ = 0.004*mm; //thickness of carbon resistive layer
+  fMMegaLayerGap = 0*um; //otherwise Geant4 overlaps the layers in a weird way
+
+ 
+  // size of Faraday FR4 panels
+  fMMegaFaradayPanelSizeX = 880*mm; //11/02/26
+  fMMegaFaradayPanelSizeY = 880*mm;
+  fMMegaFaradayPanelSizeZ = 0.700*mm;
+  fMMegaFaradayCopperSizeZ = 0.100*mm;
+
+   // size of front and back panels
+  fMMegaPanelSizeX = 650*mm; //active area updated 11/02/26
+  fMMegaPanelSizeY = 650*mm;
+  fMMegaPanelSizeZ = 3*fMMegaCopperSizeZ + 2*fMMegaFR4SizeZ + fMMegaKaptonSizeZ + fMMegaFR4ReadoutSizeZ+fMMegaNomexSizeZ + fMMegaCarbonSizeZ+2*fMMegaFaradayCopperSizeZ+2*fMMegaFaradayPanelSizeZ; 
+
+  //size of drift region
+  fMMegaDriftSizeX = fMMegaPanelSizeX;
+  fMMegaDriftSizeY = fMMegaPanelSizeY;
+  fMMegaDriftSizeZ = 100*mm; //right value 
+  
+  //size of amplification gap
+  fMMegaAmpGapSizeX = fMMegaPanelSizeX;
+  fMMegaAmpGapSizeY = fMMegaPanelSizeY;
+  fMMegaAmpGapSizeZ = 0.150*mm; //active area updated 11/02/26
+
+  // size of the detector mother volume
+  fMMegaSizeX = fMMegaPanelSizeX + 5*mm;  // add 5 mm as in other detectors
+  fMMegaSizeY = fMMegaPanelSizeY + 5*mm;
+  fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
+
+  //size of strips
+  fMMegaStripPitch = 0.400*mm; //to be updated
+  fMMegaStripWidth = 0.300*mm; //same
+  fXStripStartPos = -fMMegaPanelSizeX/2.; //to be changed when i have readout maps
+  fYStripStartPos = -fMMegaPanelSizeX/2.;
+
+  //size of pads
+  fMMegaXPadArea = 0.49*mm2;
+  fMMegaYPadArea = 0.25*mm2;
+  fMMegaPadDistance = 1.1*mm;
+  fXPadStartPos = -fMMegaPanelSizeX/2.; //to be changed when i have readout maps
+  fYPadStartPos = -fMMegaPanelSizeX/2.;
+  
+  //size of meshes
+  fMMegaAmpMeshSizeZ = (0.018/2)*mm;
+  fMMegaCathodeMeshSizeZ = (0.030/4)*mm;
+  fMMegaPadDistance = 1.1*mm;
+
+  //fMMegaFrontFacePosZ = 2612.41*mm - fMMegaSizeZ - 25*mm; // Relative to center of magnet (using runIII ECal position)
+  fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 55*mm; // USE THE SURVEY !!!!!
+  fMMegaDigitizerName = "MMegaDigitizer";
+  fMMegaSensitiveDetectorName = "MMegaSD";
+}
+
+
+
+std::vector<G4String> MMegaGeometry::GetHashTable()
+{
+  std::vector<G4String> hash;
+  std::ostringstream buffer;
+  return hash;
+}
+
+
+
+
+
+MMegaGeometry::~MMegaGeometry()
+{}

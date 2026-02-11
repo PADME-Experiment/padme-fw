@@ -14,13 +14,15 @@
 #include "MylarWHit.hh"  //M. Raggi 15/03/2021
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
 #include "LeadGlassHit.hh"
-
+#include "MMegaHit.hh" //EDM from D. Quaranta
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "ETagGeometry.hh"
 #include "TargetGeometry.hh"
+#include "MMegaGeometry.hh" //EDM from D. Quaranta
 #include "LeadGlassGeometry.hh"
 #include "BeamParameters.hh"
+#include "MMegaDigi.hh" //EDM from D. Quaranta
 
 class G4Event;
 class RunAction;
@@ -36,7 +38,7 @@ class SACDigitizer;
 class TPixDigitizer;
 class ETagDigitizer;
 class LeadGlassDigitizer; //MR
-
+class MMegaDigitizer; //EDM from D.Quaranta
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class EventAction : public G4UserEventAction
@@ -94,7 +96,7 @@ class EventAction : public G4UserEventAction
   void  AddBeamFlagHits(BeamFlagHitsCollection*); //M. Raggi 30/08/2019
 
   void  AddLeadGlassHits(LeadGlassHitsCollection*); //M. Raggi 02/2025
-
+  //void  AddMMegaHits(G4DCofThisEvent*); //EDM from D. Quaranta
   G4double GetCharge(G4double Energia);
   //G4double GGMass();
 
@@ -121,6 +123,7 @@ class EventAction : public G4UserEventAction
   SACDigitizer*     fSACDigitizer;
   TPixDigitizer*    fTPixDigitizer;
   LeadGlassDigitizer*    fLeadGlassDigitizer; //MR
+  MMegaDigitizer*   fMMegaDigitizer; //EDM from D. Quaranta
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

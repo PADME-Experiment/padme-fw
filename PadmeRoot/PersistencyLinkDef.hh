@@ -56,6 +56,10 @@
 #pragma link C++ class TLeadGlassMCDigi+;
 #pragma link C++ class TLeadGlassMCEvent+;
 
+#pragma link C++ class TMMegaMCHit+;
+#pragma link C++ class TMMegaMCDigi+;
+#pragma link C++ class TMMegaMCEvent+;
+
 #pragma link C++ class TMCTruthEvent+;
 #pragma link C++ class TMCParticle+;
 #pragma link C++ class TMCVertex+;

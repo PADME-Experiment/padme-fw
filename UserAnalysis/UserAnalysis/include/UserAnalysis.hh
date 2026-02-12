@@ -19,8 +19,6 @@ class ETagAnalysis;
 class MCTruth;
 class MCTruthECal;
 class DataQuality;
-class MMSoftHit;
-class MMClustering;
 class MMTrackDevel;
 
 class UserAnalysis {

@@ -54,7 +54,5 @@ class MMSoftHit {
   Int_t fCluPtr[IPMODES][CLUSTERMODES];  // link to the vector of clusters to which it belongs to: first index: IP connection forced/not forced; second index: cluster mode
 
   MMchInfo fmmi;
-  
-  ClassDef(MMSoftHit,1);
 };
 #endif

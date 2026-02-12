@@ -63,9 +63,10 @@ void TargetDetector::CreateGeometry()
   G4Box* solidTarget = new G4Box("Target",targetSizeX*0.5,targetSizeY*0.5,targetSizeZ*0.5);
   fTargetVolume = new G4LogicalVolume(solidTarget,G4Material::GetMaterial("Diamond"),"Target",0,0,0);
   fTargetVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
-  // Create rotation matrix
+  //Create rotation matrix
   G4RotationMatrix* rotZ = new G4RotationMatrix();
-  rotZ->rotateZ(targetRotationAngle*deg);
+  rotZ->rotateZ(targetRotationAngle);
+  //std::cout<<"******************* targetRotationAngle: "<<targetRotationAngle*deg<<std::endl;
 
 // Place volume with rotation
   new G4PVPlacement(rotZ, targetPos - G4ThreeVector(0.,0.,fTargetDisplacePosZ), fTargetVolume,"Target",fMotherVolume,false,0,true);
@@ -92,7 +93,8 @@ void TargetDetector::CreateGeometry()
   G4LogicalVolume* logicTargetSupport = new G4LogicalVolume(solidTargetSupport,G4Material::GetMaterial("PCB"),"TargetSupport",0,0,0);
   logicTargetSupport->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   G4ThreeVector tsPosition = G4ThreeVector(geo->GetTSupportPosX(),geo->GetTSupportPosY(),geo->GetTSupportPosZ());
-  new G4PVPlacement(0,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
+  //new G4PVPlacement(0,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
+  new G4PVPlacement(rotZ,tsPosition-G4ThreeVector(0.,0.,fTargetDisplacePosZ),logicTargetSupport,"TargetSupport",fMotherVolume,false,0,true);
 
   // Create digitizer for Target
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();

@@ -79,7 +79,7 @@ public:
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
   void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
   // Set rotation angle along z for RunIV configuration
-  G4double GetTargetRotationAngle() { return fTargetFrontFacePosZ; }
+  G4double GetTargetRotationAngle() { return fTargetRotationAngle; }
   void     SetTargetRotationAngle(G4double z) { fTargetRotationAngle = z; }
   
   // Set Target Pitch and Strip and Get Gap Size;

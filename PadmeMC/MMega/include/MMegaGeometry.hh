@@ -93,6 +93,10 @@ public:
 
   // Set position along Z of MMega front face
   void SetMMegaFrontFacePosZ(G4double z) { fMMegaFrontFacePosZ = z; }
+  G4double GetMMegaFrontFacePosZ() { return fMMegaFrontFacePosZ; }
+  G4double GetMMegaDisplacementX() { return fMMegaDisplacementX; }
+  G4double GetMMegaDisplacementY() { return fMMegaDisplacementY; }
+  G4double GetMMegaRotationAngle() { return fMMegaRotationAngle; }
   
   // Get name of MMega digitizer
   G4String GetMMegaDigitizerName() { return fMMegaDigitizerName; }
@@ -158,6 +162,9 @@ private:
   G4double fMMegaCathodeMeshSizeZ;
 
   G4double fMMegaFrontFacePosZ; // Position along Z axis of MMega front face
+  G4double fMMegaRotationAngle; // Rotation angle of the whole MMega system (surveys)
+  G4double fMMegaDisplacementX; // Displacement wrt 0 in X (surveys)
+  G4double fMMegaDisplacementY; // Displacement wrt 0 in Y (surveys)
   G4String fMMegaSensitiveDetectorName;
   G4String fMMegaDigitizerName;
 

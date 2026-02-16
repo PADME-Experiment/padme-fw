@@ -18,9 +18,9 @@
 #include <numeric>
 #include "G4SystemOfUnits.hh"
 #include "G4Poisson.hh"
-
 //#include "G4RunManager.hh"
 #include "G4DigiManager.hh"
+#include "G4TDigiCollection.hh"
 
 #include "TargetDigitizer.hh"
 #include "PVetoDigitizer.hh"
@@ -31,6 +31,7 @@
 #include "TPixDigitizer.hh"
 #include "ETagDigitizer.hh"
 #include "LeadGlassDigitizer.hh" 
+#include "MMegaDigitizer.hh" 
 
 #include "TargetGeometry.hh"
 #include "PVetoGeometry.hh"
@@ -40,6 +41,7 @@
 #include "SACGeometry.hh"
 #include "TPixGeometry.hh"
 #include "LeadGlassGeometry.hh"
+#include "MMegaGeometry.hh"
 
 //PRINTOUT VERTICES#include "MCTruthManager.hh"
 //PRINTOUT VERTICES#include "MCTruthVertex.hh"
@@ -65,6 +67,7 @@ EventAction::EventAction(RunAction* run)
   fSACDigitizer     = NULL;
   fTPixDigitizer    = NULL;
   fLeadGlassDigitizer = NULL; //MR 6/12/2023
+  fMMegaDigitizer = NULL; //EDM
 
 
   fHistoManager = HistoManager::GetInstance();
@@ -170,6 +173,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
     fSACDigitizer     = (SACDigitizer*)theDM->FindDigitizerModule(SACGeometry::GetInstance()->GetSACDigitizerName());
     fTPixDigitizer    = (TPixDigitizer*)theDM->FindDigitizerModule(TPixGeometry::GetInstance()->GetTPixDigitizerName());
     fLeadGlassDigitizer = (LeadGlassDigitizer*)theDM->FindDigitizerModule(LeadGlassGeometry::GetInstance()->GetLeadGlassDigitizerName()); //MR 
+    fMMegaDigitizer   = (MMegaDigitizer*)theDM->FindDigitizerModule(MMegaGeometry::GetInstance()->GetMMegaDigitizerName()); //EDM
     fFirstEvent = false;
   }
 
@@ -183,7 +187,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   if (fETagDigitizer)    fETagDigitizer->Digitize();
   if (fTPixDigitizer)    fTPixDigitizer->Digitize();
   if (fLeadGlassDigitizer) fLeadGlassDigitizer->Digitize();
-
+  if (fMMegaDigitizer)   fMMegaDigitizer->Digitize(); //EDM
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
 

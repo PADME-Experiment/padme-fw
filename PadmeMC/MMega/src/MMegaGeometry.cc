@@ -25,7 +25,7 @@ MMegaGeometry::MMegaGeometry()
 
   //readout plane composition
   fMMegaCopperSizeZ = 0.018*mm; //strip
-  fMMegaFR4SizeZ = 0.900*mm; //FR4 updated 11/02/26
+  fMMegaFR4SizeZ = 0.900*mm; //FR4 layers updated 11/02/26 ?
   fMMegaNomexSizeZ = 10*mm; //ok 11/02/26
   fMMegaKaptonSizeZ = 0.050*mm; //ok 11/02/26
   fMMegaFR4ReadoutSizeZ = 0.050*mm; //ok 11/02/26
@@ -77,11 +77,14 @@ MMegaGeometry::MMegaGeometry()
   
   //size of meshes
   fMMegaAmpMeshSizeZ = (0.018/2)*mm;
-  fMMegaCathodeMeshSizeZ = (0.030/4)*mm;
+  fMMegaCathodeMeshSizeZ = (0.018/2)*mm;//(0.030/4)*mm; //updated 16/02/26
   fMMegaPadDistance = 1.1*mm;
 
   //fMMegaFrontFacePosZ = 2612.41*mm - fMMegaSizeZ - 25*mm; // Relative to center of magnet (using runIII ECal position)
   fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 45*mm; // USE THE SURVEY !!!!!
+  fMMegaDisplacementX=0;
+  fMMegaDisplacementY=0;
+  fMMegaRotationAngle=0*deg;
   fMMegaDigitizerName = "MMegaDigitizer";
   fMMegaSensitiveDetectorName = "MMegaSD";
 }

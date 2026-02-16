@@ -62,7 +62,6 @@ MMegaGeometry::MMegaGeometry()
   fMMegaSizeX = fMMegaFaradayPanelSizeX + 5*mm;  // add 5 mm as in other detectors
   fMMegaSizeY = fMMegaFaradayPanelSizeY + 5*mm;
   fMMegaSizeZ = fMMegaDriftSizeZ + 2*fMMegaAmpGapSizeZ + 2*fMMegaPanelSizeZ + 5*mm; 
-
   //size of strips
   fMMegaStripPitch = 0.400*mm; //to be updated
   fMMegaStripWidth = 0.300*mm; //same
@@ -82,7 +81,7 @@ MMegaGeometry::MMegaGeometry()
   fMMegaPadDistance = 1.1*mm;
 
   //fMMegaFrontFacePosZ = 2612.41*mm - fMMegaSizeZ - 25*mm; // Relative to center of magnet (using runIII ECal position)
-  fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 55*mm; // USE THE SURVEY !!!!!
+  fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 45*mm; // USE THE SURVEY !!!!!
   fMMegaDigitizerName = "MMegaDigitizer";
   fMMegaSensitiveDetectorName = "MMegaSD";
 }

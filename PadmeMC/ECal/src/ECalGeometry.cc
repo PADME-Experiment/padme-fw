@@ -123,9 +123,9 @@ void ECalGeometry::SetDetectorSetup(G4int setup)
     fECalDisplacementY = 3.86*mm;      // +0.00mm
     fECalPanelEnable = false; // AluStep panel was removed
   }else{
-    fECalFrontFacePosZ = 2525.5*mm; // to be checked 
+    fECalFrontFacePosZ = 2608*mm;//2525.5*mm; // to be checked 
     fECalDisplacementX = 3.41*mm;      // +0.28mm removed to be checked
-    fECalDisplacementY = 3.86*mm;      // +0.00mm removed to be checked
+    fECalDisplacementY = -5.35*mm; // From 23/5/2025 survey
     fECalPanelEnable = true; // AluStep panel was removed to be checked
   }
 

@@ -284,7 +284,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   vector<double> zhits, vhits;  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
     //    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
-        zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime());
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime());
     vhits.push_back(fMMHitsInClu.at(i)->GetMMchInfo().view == XVIEW ? fMMHitsInClu.at(i)->GetPosition().X() : fMMHitsInClu.at(i)->GetPosition().Y());
     //std::cout<<"pippo"<<std::endl;
   }
@@ -325,9 +325,12 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     fTracos.pars[2*pl] = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ?  v_pl : fMMHitsInClu.at(0)->GetPosition().X();
     fTracos.pars[2*pl+1] = fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  v_pl : fMMHitsInClu.at(0)->GetPosition().Y();
   }
-  fTracos.lambda.SetX(fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ?  cosv : 0.);
-  fTracos.lambda.SetY(fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  cosv : 0.);
-  fTracos.lambda.SetZ(cosz);
+  // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
+  int reverseTrack = 1;
+  if (cosz < 0) reverseTrack = -1;
+  fTracos.lambda.SetX(fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ?  reverseTrack*cosv : 0.);
+  fTracos.lambda.SetY(fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  reverseTrack*cosv : 0.);
+  fTracos.lambda.SetZ(reverseTrack*cosz);
   fTracos.chi2 = chi2;
   
   //std::cout<<"New Hit Added!\n\t";

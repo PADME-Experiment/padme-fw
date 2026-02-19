@@ -16,8 +16,10 @@
 #include "G4SDManager.hh"
 #include "G4Material.hh"
 #include "G4Element.hh"
+#include "G4Region.hh"
 #include "G4VisAttributes.hh"
 #include "G4DigiManager.hh"
+#include "G4ProductionCuts.hh"
 #include "G4SubtractionSolid.hh"
 #include "G4NistManager.hh"
 #include "G4UnitsTable.hh"
@@ -60,6 +62,13 @@ void MMegaDetector::CreateGeometry()
   printf("MMega size is %f %f %f\n",MMegaSizeX,MMegaSizeY,MMegaSizeZ);
   G4Box* solidMMegaFull = new G4Box("solidMMegaFull",0.5*MMegaSizeX,0.5*MMegaSizeY,0.5*MMegaSizeZ);
   fMMegaVolume = new G4LogicalVolume(solidMMegaFull,G4Material::GetMaterial("Vacuum"),"MMegaLogic",0,0,0);
+  G4Region* MMregion = new G4Region("MM-Region");
+  MMregion->AddRootLogicalVolume(fMMegaVolume);
+
+  // G4ProductionCuts* cuts = new G4ProductionCuts();
+  // cuts->SetProductionCut(10*um, G4ProductionCuts::GetIndex("e-"));
+  // MMregion->SetProductionCuts(cuts);
+
   fMMegaVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   fMMegaVolume->SetVisAttributes(G4VisAttributes::GetInvisible);
   G4RotationMatrix* rotationMatrix = new G4RotationMatrix(); 

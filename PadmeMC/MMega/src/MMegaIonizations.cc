@@ -23,20 +23,21 @@ MMegaIonizations::MMegaIonizations(G4ThreeVector start, G4ThreeVector end, G4dou
 {
 
     geo = MMegaGeometry::GetInstance();
-    
-    // r = new TRandom3();
-    // r->SetSeed(0);
+    r = new TRandom3();
+    r->SetSeed(0);
     
     InitializeChargeDistribution();
     InitializeTimeSpread();
 
     fstepLength = (end-start).mag();
     fdE = dE;
-    // fNionizations = r.Poisson(fdE/fWI);
-    fNionizations = G4Poisson(fNPrimary*fstepLength);
-    
+    fNionizations = r->Poisson(fdE/fWI);
+    //G4cout << "r.Poisson ---- MMegaIonizations.cc : fNionizations = " << fNionizations<<" fdE "<<fdE<< "fWI "<<fWI << G4endl;
+    //fNionizations = G4Poisson(fNPrimary*fstepLength);
+    //G4cout << "G4Poisson -- MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
+
     // G4cout << "MMegaIonizations.cc : dE = " << fdE << G4endl;
-    // G4cout << "MMegaIonizations.cc : steplength = " << fstepLength << G4endl;
+    //G4cout << "MMegaIonizations.cc : steplength = " << fstepLength << G4endl;
     // G4cout << "MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
     
 
@@ -67,6 +68,7 @@ MMegaIonizations::MMegaIonizations(G4ThreeVector start, G4ThreeVector end, G4dou
 }
 
 MMegaIonizations::~MMegaIonizations(){
+    delete r;
 }
 
 

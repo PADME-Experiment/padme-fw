@@ -171,6 +171,7 @@ void ChamberStructure::CreateECalCarbonThinWindow()
   G4ThreeVector spherePos = G4ThreeVector(0.,0.,0.5*ewFThick+ewr1-ewC);
   G4SubtractionSolid* solidEWindow = new G4SubtractionSolid("ChamberECalWindow",solidEWSphere,solidEWFlange,0,G4ThreeVector(0.,0.,-0.5*ewFThick-ewr1+ewC));
   G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("CarbonFiber"), "ChamberECalWindow",0,0,0);
+  //G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_AIR"), "ChamberECalWindow",0,0,0);
   logicalEWindow->SetVisAttributes(cVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);
   //new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);

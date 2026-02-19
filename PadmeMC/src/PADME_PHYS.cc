@@ -179,5 +179,5 @@ void PADME_PHYS::SetCuts()
   this->SetCutsWithDefault();   
   
 //  if (this->verboseLevel >0)
-//    G4VUserPhysicsList::DumpCutValuesTable();  
+  G4VUserPhysicsList::DumpCutValuesTable();  
 }

@@ -99,7 +99,8 @@ public:
   inline double GetMMPosPlaneZ(int val){return fMMPosPlaneZ[val];} // mm
   inline double GetMMOffsetCenterX() const {return fMMOffsetCenterX;}  // mm
   inline double GetMMOffsetCenterY() const {return fMMOffsetCenterY;}  // mm
-
+  inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
+  
   MMchInfo DecodeMMChannel(int);
   
 protected:
@@ -181,6 +182,7 @@ private:
   double fMMOffsetCenterX;  // mm
   double fMMOffsetCenterY;  // mm
 
+  double fMMDriftVelocity; //mm/ns
   
 };
 #endif

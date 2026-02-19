@@ -28,7 +28,34 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
 
 MMCluster::~MMCluster() {
   fMMHitsInClu.clear();
-};
+}
+
+void MMCluster::Print() {
+  std::cout<<"\t Cluster of IPmode: "<<fIpmode<<" Clumode: "<<fClumode<<std::endl;
+  std::cout<<"\t Number of hits -> Plane 0: "<<fNHitsPerPlane[0]<<" | Plane 1: "<<fNHitsPerPlane[1]<<std::endl;
+  std::cout<<"\t Hits belonging to cluster: "<<std::endl;
+  for(Int_t h=0; h<(int) fMMHitsInClu.size(); h++) {
+    std::cout<<"\t\t";
+    fMMHitsInClu.at(h)->Print();
+  }
+  std::cout<<"\t Slope of the first doublet (cluster seed): "<<fSeedSlope<<std::endl; 
+  std::cout<<"\t IP phase angle: "<<fIPPhaseAngle<<std::endl;
+
+  std::cout<<"\t Cluster parameters: "<<std::endl;
+  std::cout<<"\t\t [m,c] = ["<<fTracos.slope<<" , "<<fTracos.inter<<"]"<<std::endl;
+  std::cout<<"\t\t chi2: "<<fTracos.chi2<<std::endl;
+  std::cout<<"\t\t [x0,y0] = ["<<fTracos.pars[0]<<" , "<<fTracos.pars[1]<<"]"<<std::endl;
+  std::cout<<"\t\t [x1,y1] = ["<<fTracos.pars[2]<<" , "<<fTracos.pars[3]<<"]"<<std::endl;
+  std::cout<<"\t\t dt: "<<fTracos.pars[4]<<std::endl;
+  std::cout<<"\t\t lambda = ["<<fTracos.lambda.X()<<" , "<<fTracos.lambda.Y()<<" , "<<fTracos.lambda.Z()<<"]"<<std::endl; 
+  
+  std::cout<<"\t Dv at mesh plane: "<<fDvAtMeshPlane<<" (Clumode >=1 only)"<<std::endl;
+  std::cout<<"\t Cluster connected to ECAL clu: "<<fEcalClusIndex<<std::endl;
+  std::cout<<"\t Isolation flag "<<fIsolationFlag<<std::endl;
+
+  std::cout<<std::endl;
+  std::cout<<std::endl;
+}
 
 void MMCluster::Import(MMCluster* oldclu){
   //  copy cluster content from input cluster
@@ -59,11 +86,34 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
 
   const double dvAtMeshMax = 5; // mm
   // check the dv at the mesh between the two clusters
-  if (TMath::Abs(fTracos.inter - inputclus->GetTracklet().inter) > dvAtMeshMax) return kFALSE;
+  double dv = fTracos.inter - inputclus->GetTracklet().inter;
+  
+  if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
 
+  double x_init_P0=0., y_init_P0=0., x_init_P1=0., y_init_P1=0.;
+  if(chinfoThis.plane == 0) {
+    x_init_P0 = fMMHitsInClu.at(0)->GetPosition().X();
+    y_init_P0 = fMMHitsInClu.at(0)->GetPosition().Y();
+
+    x_init_P1 = inputclus->GetHit(0)->GetPosition().X();
+    y_init_P1 = inputclus->GetHit(0)->GetPosition().Y();
+  }
+  else if(chinfoThis.plane == 1) {
+    x_init_P1 = fMMHitsInClu.at(0)->GetPosition().X();
+    y_init_P1 = fMMHitsInClu.at(0)->GetPosition().Y();
+
+    x_init_P0 = inputclus->GetHit(0)->GetPosition().X();
+    y_init_P0 = inputclus->GetHit(0)->GetPosition().Y();
+  }
+  else {
+    std::cerr<<"[MergeAcrossPlanes] Planes in MMchInfo NOT RECOGNIZED!!!"<<std::endl;
+    return kFALSE;
+  }
+
+  
   fFitter.SetFCN(5, fMMTrackFcn); // 5 parameters
   TString parnames[5] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y","DZOffset"};
-  double parinput[5] = {0.,0.,0.,0.,0.};
+  double parinput[5] = {x_init_P0,y_init_P0,x_init_P1,y_init_P1,0.};
   double parstep[5] = {0.1,0.1,0.1,0.1,0.1};
   for (int ip=0; ip < 5; ip++) {
     fFitter.Config().ParSettings(ip) = ROOT::Fit::ParameterSettings(parnames[ip].Data(),parinput[ip],parstep[ip]);
@@ -83,11 +133,18 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   vector<MMSoftHit*> hitArray;
   for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
   for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) hitArray.push_back(inputclus->GetHit(i));
-  if (fIpmode) InitFit(hitArray); // if IP is not used
-  else         InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
 
+  bool calibration = kTRUE; //TO BE DEFINED IN GENERAL SETTING
+  if (fIpmode) InitFit(hitArray); // if IP is not used
+  else {
+    if(!calibration) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
+    else InitFit(hitArray);
+  }
+  
   bool okfit = fFitter.FitFCN();
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
+
+  std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
   if (!okfit) {    
     //    result.Print(std::cout);
     return kFALSE;
@@ -116,6 +173,17 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fTracos.lambda.SetY(chinfoThis.view == YVIEW ? cosv : 0.);
   fTracos.lambda.SetZ(cosz);
 
+  //IP phase angle in Clu Mode 1
+  double v_target = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ? GeneralInfo::GetInstance()->GetTargetPos().X() : GeneralInfo::GetInstance()->GetTargetPos().Y();
+  double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
+  
+  double ravg_minus_target[2] = {fTracos.inter-v_target, GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-z_target};
+  double lambda_hits[2] = {cosv,cosz};
+  double ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target[0]*ravg_minus_target[0]+ravg_minus_target[1]*ravg_minus_target[1]);
+  for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
+  fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];
+  
+  
   return kTRUE;
 }
 
@@ -125,6 +193,7 @@ void MMCluster::InitFit(vector<MMSoftHit*> hitArray, double x, double y, double 
   fMMTrackFcn.setPositions(fPositions);
   fMMTrackFcn.setErrors(fErrors);
   fMMTrackFcn.setBoardIds(fBoardIds);
+  fMMTrackFcn.setReferenceZPlanes(GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),GeneralInfo::GetInstance()->GetMMPosPlaneZ(1));
 }
 
 void MMCluster::InitFit(vector<MMSoftHit*> hitArray){
@@ -132,7 +201,7 @@ void MMCluster::InitFit(vector<MMSoftHit*> hitArray){
   fMMTrackFcn.setPositions(fPositions);
   fMMTrackFcn.setErrors(fErrors);
   fMMTrackFcn.setBoardIds(fBoardIds);
-
+  fMMTrackFcn.setReferenceZPlanes(GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),GeneralInfo::GetInstance()->GetMMPosPlaneZ(1));
   // evaluate the reference point as a weighted average
   TVector3 refp(0,0,0);
   TVector3 refe(0,0,0);
@@ -173,7 +242,8 @@ void MMCluster::setPoints(vector<MMSoftHit*> hitArray){
     errors.SetXYZ(ers[0],ers[1],ers[2]);
     fErrors.push_back(errors);
     TVector3 positions;
-    positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetPosition().Z());
+    //positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetPosition().Z());
+    positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetZfromTime());
     fPositions.push_back(positions);
     fBoardIds.push_back(hit->GetMMchInfo().bdid);
   }
@@ -200,6 +270,8 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   if(fMMHitsInClu.size() == 0) {
     fMMHitsInClu.push_back(softhit);
     fNHitsPerPlane[softhit->GetMMchInfo().plane]++;
+    // std::cout<<"First Hit Added!\n\t";
+    //softhit->Print();
     return kTRUE;
   }
 
@@ -211,14 +283,17 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   // straight line between past hits and present hit: to speed up, zhits and vhits might become private and push_backed when needed / expunge the last entry when needed
   vector<double> zhits, vhits;  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
-    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
+    //    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
+        zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime());
     vhits.push_back(fMMHitsInClu.at(i)->GetMMchInfo().view == XVIEW ? fMMHitsInClu.at(i)->GetPosition().X() : fMMHitsInClu.at(i)->GetPosition().Y());
+    //std::cout<<"pippo"<<std::endl;
   }
-  zhits.push_back(softhit->GetPosition().Z());
+  //zhits.push_back(softhit->GetPosition().Z());
+  zhits.push_back(softhit->GetZfromTime());
   vhits.push_back(softhit->GetMMchInfo().view == XVIEW ? softhit->GetPosition().X() : softhit->GetPosition().Y());
   double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
   evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
-    
+
   // if ip is to be used, evaluate sin of angle between target position wrt magnet center and average position of the two chamber hits wrt magnet center      
   if(fIpmode == 0) {
     double v_target = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ? GeneralInfo::GetInstance()->GetTargetPos().X() : GeneralInfo::GetInstance()->GetTargetPos().Y();
@@ -230,7 +305,12 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
     fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];
     
-    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) return kFALSE;
+
+    std::cout<<"\t\t\t\t IP sin: "<<fIPPhaseAngle<<std::endl;
+    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
+    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
+    
+    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT*4) return kFALSE;
   }
   // add present hit to the cluster    
   fMMHitsInClu.push_back(softhit);
@@ -249,14 +329,30 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   fTracos.lambda.SetY(fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  cosv : 0.);
   fTracos.lambda.SetZ(cosz);
   fTracos.chi2 = chi2;
+  
+  //std::cout<<"New Hit Added!\n\t";
+  //softhit->Print();
+
   return kTRUE;
   
 }
 
 
 void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double*chi2out){
-  double z_avg, v_avg, zv_avg, z2_avg = 0;
+  double very_small = 1e-15;
+  double very_wrong = -99999;
+  double z_avg = 0, v_avg = 0, zv_avg = 0, z2_avg = 0;
   int npts = vhits.size();
+  if(npts<1) {
+    *v_avgout  = very_wrong;
+    *z_avgout  = very_wrong;
+    *mt_avgout = very_wrong;
+    *ct_avgout = very_wrong;
+    *cosvout   = very_wrong;
+    *coszout   = very_wrong;
+    *chi2out   = very_wrong;
+  }
+  
   for (int i=0; i<npts; i++){
     z_avg  += zhits.at(i);
     v_avg  += vhits.at(i);
@@ -268,15 +364,22 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
   zv_avg /= npts;
   z2_avg /= npts;
 
-  double mt_avg = (zv_avg - z_avg*v_avg)/(z2_avg-z_avg*z_avg);
-  double ct_tmp = v_avg - mt_avg*z_avg;
+  double z_rms2 = z2_avg-z_avg*z_avg;
+  
+  if(fabs(z_rms2)<1e-15) {
+    std::cout<<"z_rms2 = "<<z_rms2<<std::endl;
+    z_rms2 = very_small;
+  }
+  
+  double mt_avg = (zv_avg - z_avg*v_avg)/(z_rms2);
+  double ct_tmp = v_avg - mt_avg*z_avg; // intercept at 0 PADME reference frame
   double chi2 = 0;
   for (int i=0; i<npts; i++){
     double residual = (vhits.at(i)-(mt_avg*zhits.at(i) + ct_tmp));
     chi2 += residual*residual;
   }
 
-  double ct_avg = v_avg - mt_avg*(z_avg - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2));
+  double ct_avg = v_avg - mt_avg*(z_avg - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)); //intercept at central MM mesh (local frame)
   double normo = 1./TMath::Sqrt(1+mt_avg*mt_avg);
 
   *v_avgout = v_avg;

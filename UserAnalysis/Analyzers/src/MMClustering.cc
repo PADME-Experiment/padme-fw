@@ -12,22 +12,26 @@ MMClustering::MMClustering() {
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
       fMMClusters[ipmode][clumode].clear();
+      fMergedMMClusters[ipmode][clumode].clear();
     }
   }
   fMMSoftHits.clear();
+  fHS = HistoSvc::GetInstance();
+  InitHistos();
 }
 
 MMClustering::~MMClustering() {
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
       fMMClusters[ipmode][clumode].clear();
+      fMergedMMClusters[ipmode][clumode].clear();
     }
   }
   fMMSoftHits.clear();
 }
 
 
-void MMClustering::Init(TMMRecoEvent* mmevent, Bool_t fHistoMode){
+void MMClustering::Init(TMMRecoEvent* mmevent){
   Int_t nhits = mmevent->GetNHits();
   for(Int_t h=0; h<nhits; h++) {
     MMSoftHit *softhit = new MMSoftHit();
@@ -50,7 +54,18 @@ void MMClustering::Init(TMMRecoEvent* mmevent, Bool_t fHistoMode){
 
     fMMSoftHits.push_back(softhit);
   }
-  
+}
+
+Bool_t MMClustering::InitHistos(){
+  // MMClustering directory will contain all histograms related to this analysis
+
+  fHS->CreateList("MMClustering");
+  cout<<" Creating MMClustering Hystograms"<<endl;
+ 
+  fHS->BookHisto2List("MMClustering","MM_dv_c_before_cut_X",1200,-600,600,1000,-500,500);
+  fHS->BookHisto2List("MMClustering","MM_dv_c_before_cut_Y",1200,-600,600,1000,-500,500);
+    
+  return true;
 }
 
 void MMClustering::Clear() {
@@ -61,6 +76,16 @@ void MMClustering::Clear() {
     }
   }
   fMMSoftHits.clear();
+}
+
+void MMClustering::Print() {
+  for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
+    for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
+      for(Int_t i=0; i<(int) fMMClusters[ipmode][clumode].size(); i++) {
+	fMMClusters[ipmode][clumode].at(i)->Print();
+      }
+    }
+  }
 }
 
 void MMClustering::Clusterize() {
@@ -150,6 +175,14 @@ void MMClustering::Clusterize() {
     bool matched = kFALSE;
     for (int j=i+1; j<(int) fMMClusters[0][0].size(); j++){ 
       if (fMergedMMClusters[0][0].at(j)) continue;
+      double dv_before_cut = fMMClusters[0][0].at(i)->GetTracklet().inter - fMMClusters[0][0].at(j)->GetTracklet().inter;
+      int view_seed = fMMClusters[0][0].at(i)->GetHit(0)->GetMMchInfo().view;
+      int view_match = fMMClusters[0][0].at(j)->GetHit(0)->GetMMchInfo().view;
+      if(view_seed == view_match) {
+	if(view_seed == XVIEW) fHS->FillHisto2List("MMClustering","MM_dv_vs_c_before_cut_X",fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
+	if(view_seed == YVIEW) fHS->FillHisto2List("MMClustering","MM_dv_vs_c_before_cut_Y",fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
+      }
+      
       if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {
 	fMMClusters[0][1].push_back(new_clu);
 	fMergedMMClusters[0][0].at(i) = kTRUE; // store the cluster-merged flag

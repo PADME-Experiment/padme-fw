@@ -5,6 +5,7 @@
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
 #include "MMTrackFcn.hh"
+#include "GeneralInfo.hh"
 
 #define IPSINCUT 0.005
 
@@ -12,8 +13,18 @@ struct MMTracklet{
   Double_t slope; // dv/dz
   Double_t inter; // v at mesh plane
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
-  Double_t pars[5];// x0,y0,x1,y1,dt: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
+  Double_t pars[5];// x0,y0,x1,y1,dz: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
   TVector3 lambda; // cosines of track directions
+
+  TVector3 ExtrapolationAtZ(double z_in) {
+    TVector3 ext_pos;
+
+    ext_pos.SetX(pars[0]+lambda.X()/lambda.Z()*(z_in-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0)));
+    ext_pos.SetY(pars[1]+lambda.Y()/lambda.Z()*(z_in-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0)));
+    ext_pos.SetZ(z_in);
+    
+    return ext_pos;
+  }
 }; 
 
 class MMCluster {
@@ -43,6 +54,8 @@ public:
   Double_t GetIPPhaseAngle(){return fIPPhaseAngle;};
   Double_t GetDvAtMeshPlane(){return fDvAtMeshPlane;};
   // some set/Get methods to be added.. getIPMode, getCluMode, etc.
+
+  void Print();
   
 private:
   void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double* chi2);
@@ -62,6 +75,7 @@ private:
   vector<TVector3> fErrors;
   vector<int> fBoardIds;
   MMTrackFcn fMMTrackFcn;
+
   ROOT::Fit::Fitter fFitter;  
   void InitFit(vector<MMSoftHit*> hitArray);
   void InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z);

@@ -91,7 +91,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fMMOffsetCenterY   = 20.1975;  // mm
   fMMPosPlaneZ[2]    = 0.5*(fMMPosPlaneZ[0]+fMMPosPlaneZ[1]); //mm
 
-
+  fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE 
   
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;

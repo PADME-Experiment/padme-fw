@@ -36,6 +36,8 @@ class MMSoftHit {
   Int_t GetIsolLevel() const {return fIsolLevel;}; //bit 0(1) ON if preceding(following) strip is NOT fired 
   Int_t GetCluPtr(Int_t ipmode, Int_t clumode) const {return fCluPtr[ipmode][clumode];}
   MMchInfo GetMMchInfo() const {return fmmi;}
+
+  Double_t GetZfromTime() const {if(fmmi.plane == 0) return GeneralInfo::GetInstance()->GetMMPosPlaneZ(0) + fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity(); else return GeneralInfo::GetInstance()->GetMMPosPlaneZ(1) - fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity();}
   
   void SetChannelId(Int_t ChannelId) {fChannelId = ChannelId;}
   void SetPosition(TVector3 Position) {fPosition = Position;}

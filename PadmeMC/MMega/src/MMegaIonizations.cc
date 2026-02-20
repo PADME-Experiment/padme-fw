@@ -31,20 +31,20 @@ MMegaIonizations::MMegaIonizations(G4ThreeVector start, G4ThreeVector end, G4dou
 
     fstepLength = (end-start).mag();
     fdE = dE;
-    fNionizations = r->Poisson(fdE/fWI);
-    //G4cout << "r.Poisson ---- MMegaIonizations.cc : fNionizations = " << fNionizations<<" fdE "<<fdE<< "fWI "<<fWI << G4endl;
+    fNionizations = fdE/fWI;
+    ////G4cout << "r.Poisson ---- MMegaIonizations.cc : fNionizations = " << fNionizations<<" fdE "<<fdE<< "fWI "<<fWI << G4endl;
     //fNionizations = G4Poisson(fNPrimary*fstepLength);
-    //G4cout << "G4Poisson -- MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
+    ////G4cout << "G4Poisson -- MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
 
-    // G4cout << "MMegaIonizations.cc : dE = " << fdE << G4endl;
-    //G4cout << "MMegaIonizations.cc : steplength = " << fstepLength << G4endl;
-    // G4cout << "MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
+    // //G4cout << "MMegaIonizations.cc : dE = " << fdE << G4endl;
+    ////G4cout << "MMegaIonizations.cc : steplength = " << fstepLength << G4endl;
+    //G4cout << "MMegaIonizations.cc : fNionizations = " << fNionizations << G4endl;
     
 
     for(short i = 0; i < fNionizations; i++){ // generate drift electrons in the step
         
         double randomPos = G4UniformRand()*fstepLength;
-        // G4cout << "MMegaIonizations.cc : randomPos = " << randomPos << G4endl;
+        // //G4cout << "MMegaIonizations.cc : randomPos = " << randomPos << G4endl;
         
         G4ThreeVector fionPos = start + ((end-start)/fstepLength)*randomPos;
 
@@ -76,20 +76,6 @@ MMegaIonizations::~MMegaIonizations(){
 TF1* MMegaIonizations::charge_dist = nullptr;
 TF1* MMegaIonizations::time_spread = nullptr;
 
-void MMegaIonizations::InitializeChargeDistribution(){
-    
-    if (!charge_dist) {
-        
-        // Initialize function according to parameters fitted from real data
-        // coming from may 2024 Test Beam at LNF 
-        charge_dist = new TF1("charge distribution", "landau", 0.01, 2500);  // [0, 2500] Charge in ADC Counts
-        charge_dist->SetParameter(0, 0.0134);
-        charge_dist->SetParameter(1, 249.3);
-        charge_dist->SetParameter(2, 70.92);
-
-    }
-}
-
 void MMegaIonizations::InitializeTimeSpread(){
     
     if (!time_spread) {
@@ -103,77 +89,194 @@ void MMegaIonizations::InitializeTimeSpread(){
 
     }
 }
+void MMegaIonizations::InitializeChargeDistribution(){
+    
+    if (!charge_dist) {
+        
+        // Initialize function according to parameters fitted from real data
+        // coming from may 2024 Test Beam at LNF 
+        charge_dist = new TF1("ChargeFluctuation", "landau", 0.0001, 100);  // [0, 2500] Charge in ADC Counts
+        charge_dist->SetParameter(0, 0.0134);
+        charge_dist->SetParameter(1, 10000.);
+        charge_dist->SetParameter(2, 2600.);
 
+    }
+}
 G4double MMegaIonizations::GetChargeFromDistribution(){
     return charge_dist->GetRandom();
 }
 
+
+
+
 G4double MMegaIonizations::GetTimeSpread(G4double charge){
-    // G4cout << "MMegaIonizations TimeSpread : " << time_spread->Eval(charge) << G4endl;
-    // G4cout << "MMegaIonizations TimeSpread : " << time_spread->Eval(charge) * ns<< G4endl;
+    // //G4cout << "MMegaIonizations TimeSpread : " << time_spread->Eval(charge) << G4endl;
+    // //G4cout << "MMegaIonizations TimeSpread : " << time_spread->Eval(charge) * ns<< G4endl;
     return G4RandGauss::shoot(0, time_spread->Eval(charge))*ns;
 }
 
+// void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
+
+//     G4double x0 = geo->GetXStripStartPos();
+//     G4double y0 = geo->GetYStripStartPos();
+//     G4double w = geo->GetMMegaStripWidth();
+//     G4double pitch = geo->GetMMegaStripPitch();
+        
+//     G4double x = ionipos.x();
+//     G4double y = ionipos.y();
+//     G4double z = ionipos.z();
+
+//     G4int ix = (x-(x0-0.5*w))/pitch;
+//     G4int iy = (y-(y0-0.5*w))/pitch;
+
+//     if (ix >= 0 && ix < 2000){
+//         if((x-(x0-0.5*w)) - ix * pitch < w){ // if electron hits the strip
+//             if(z<=0){
+//                 fid = ix + 10000;
+//                 G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
+//                 // //G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
+//                 ftime = s/fvdrift;
+//             }
+//             else if(z>0){
+//                 fid = ix + 40000;
+//                 G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
+//                 // //G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
+//                 ftime = s/fvdrift;
+//             }
+        
+//             fIDs.push_back(fid);
+//             fTimes.push_back(ftime);
+//             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
+//             // //G4cout << "MMegaIonizations::ComputeStripID : time = " << ftime << G4endl;
+//         }
+//     }
+
+//     if (iy >= 0 && iy < 2000){
+//         if((y-(y0-0.5*w)) - iy * pitch < w){ // if electron hits the strip
+//             if(z<=0){
+//                 fid = iy+20000;
+//                 G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
+//                 // //G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
+//                 ftime = s/fvdrift;
+//             }
+//             else if(z>0){
+//                 fid = iy+30000;
+//                 G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
+//                 // //G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
+//                 ftime = s/fvdrift;
+//             }
+
+//             fIDs.push_back(fid);
+//             fTimes.push_back(ftime);
+//             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
+//             // //G4cout << "MMegaIonizations::ComputeStripID : time = " << ftime/ns << G4endl;
+            
+//         }
+//     }
+// }
+
 void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
 
-    G4double x0 = geo->GetXStripStartPos();
-    G4double y0 = geo->GetYStripStartPos();
+    G4double xP0 = geo->GetV1StripStartPos(); //plane 0 X readout
+    G4double xP1 = geo->GetV2StripStartPos(); //plane 1 X readout
+    G4double yP0 = geo->GetV2StripStartPos(); //plane 0 Y readout
+    G4double yP1 = geo->GetV1StripStartPos(); //plane 1 Y readout
     G4double w = geo->GetMMegaStripWidth();
     G4double pitch = geo->GetMMegaStripPitch();
-        
+    G4double V1Panel= geo->GetMMegaPanelSizeV1(); 
+    G4double V2Panel= geo->GetMMegaPanelSizeV2(); 
     G4double x = ionipos.x();
     G4double y = ionipos.y();
     G4double z = ionipos.z();
 
-    G4int ix = (x-(x0-0.5*w))/pitch;
-    G4int iy = (y-(y0-0.5*w))/pitch;
 
-    if (ix >= 0 && ix < 2000){
-        if((x-(x0-0.5*w)) - ix * pitch < w){ // if electron hits the strip
-            if(z<=0){
-                fid = ix + 10000;
-                G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
-                // G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
-                ftime = s/fvdrift;
+    G4int iChx; 
+    G4int iChy;
+    G4double radii = sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y());
+    //G4cout<<"x: "<<x<<" y: "<<y<<" z: "<<z<<G4endl;
+    //G4cout<<"xP0: "<<xP0<<" xP0+V1Panel "<<xP0+V1Panel<<"yP0: "<<yP0<<" yP0+V2Panel "<<yP0+V2Panel<<G4endl;
+    //G4cout<<"xP1: "<<xP1<<" xP1+V2Panel "<<xP1+V2Panel<<"yP1: "<<yP1<<" yP1+V1Panel "<<yP1+V1Panel<<G4endl;
+    
+    if(z<0){ //if the particle has not crossed half of the volume the readout is made at P0
+        iChx = (x-(xP0-0.5*w))/pitch;
+        iChy = (y-(yP0-0.5*w))/pitch;
+        //G4cout<<" P0 iChx: "<<iChx<<" iChy: "<<iChy<<G4endl;
+        if((x<xP0 && x>xP0+V1Panel) && (y<yP0 && y>yP0+V2Panel)) return;
+        ftime = ((0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z)/fvdrift;
+
+        if(!(x<xP0 && x>xP0+V1Panel)){
+            //G4cout<<"passed P0 x geo check "<<G4endl;
+            if(geo->GetisChV1Active(iChx)){  //mask non active strips
+                if(y<yP0+(0.5*V2Panel)){
+                    fid = iChx + 10000; //to be replaced with bit version
+                }else{
+                fid = iChx + 13000; 
+                }
+
+                fIDs.push_back(fid);
+                fTimes.push_back(ftime);
+                fRadii.push_back(radii);
             }
-            else if(z>0){
-                fid = ix + 40000;
-                G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
-                // G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
-                ftime = s/fvdrift;
-            }
+        }
+
         
-            fIDs.push_back(fid);
-            fTimes.push_back(ftime);
-            fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
-            // G4cout << "MMegaIonizations::ComputeStripID : time = " << ftime << G4endl;
-        }
-    }
-
-    if (iy >= 0 && iy < 2000){
-        if((y-(y0-0.5*w)) - iy * pitch < w){ // if electron hits the strip
-            if(z<=0){
-                fid = iy+20000;
-                G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())+z;
-                // G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
-                ftime = s/fvdrift;
+        if(!(y<yP0 && y>yP0+V2Panel)){ //P0 PCB junction along Y
+            //G4cout<<"passed P0 y geo check "<<G4endl;
+            if(geo->GetisChV2Active(iChy)){ //mask non active strips
+                //G4cout<<"passed P0 y ch mask "<<G4endl;
+                if(x<xP0+(0.5*V1Panel)){
+                    fid = iChy + 30000; //to be replaced with bit version
+                }else{
+                fid = iChy + 33000; 
+                }
+                fIDs.push_back(fid);
+                fTimes.push_back(ftime);
+                fRadii.push_back(radii);
             }
-            else if(z>0){
-                fid = iy+30000;
-                G4double s = (0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z;
-                // G4cout << "MMegaIonizations::ComputeStripID : s = " << s << G4endl;
-                ftime = s/fvdrift;
-            }
+        }  
+       
+        
+        
+    }else{ //if the particle has crossed half of the volume the readout is made at P1 
+        iChx = (x-(xP1-0.5*w))/pitch;
+        iChy = (y-(yP1-0.5*w))/pitch;
+        //X readout
+        //G4cout<<" P1 iChx: "<<iChx<<" iChy: "<<iChy<<G4endl;
+        if((x<xP1 && x>xP1+V2Panel) && (y<yP1 && y>yP1+V1Panel)) return;
+        ftime = ((0.5*geo->GetMMegaDriftSizeZ()+geo->GetMMegaAmpGapSizeZ())-z)/fvdrift;
 
-            fIDs.push_back(fid);
-            fTimes.push_back(ftime);
-            fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
-            // G4cout << "MMegaIonizations::ComputeStripID : time = " << ftime/ns << G4endl;
-            
+        if(!(x<xP1 && x>xP1+V2Panel)){//P1 PCB junction along X
+            //G4cout<<"passed P1 x geo check "<<G4endl;
+            if(geo->GetisChV2Active(iChx)){  //mask non active strips
+                //G4cout<<"passed P1 x ch mask "<<G4endl;
+                if(y<yP1+(0.5*V1Panel)){
+                    fid = iChx + 20000; //to be replaced with bit version
+                }else{
+                fid = iChx + 23000; 
+                }
+                fIDs.push_back(fid);
+                fTimes.push_back(ftime);
+                fRadii.push_back(radii);
+            }
         }
+
+        
+        if(!(y<yP1 && y>yP1+V1Panel)){ 
+            //G4cout<<"passed P1 y geo check "<<G4endl;
+            if(geo->GetisChV1Active(iChy)){ //mask non active strips
+                //G4cout<<"passed P1 y ch mask "<<G4endl;
+                if(x<xP1+(0.5*V2Panel)){
+                    fid = iChy + 40000; //to be replaced with bit version
+                }else{
+                fid = iChy + 43000; 
+                }
+                fIDs.push_back(fid);
+                fTimes.push_back(ftime);
+                fRadii.push_back(radii);
+            }
+        }  
     }
 }
-
 void MMegaIonizations::ComputePadID(G4ThreeVector ionipos){
 
     G4double x0 = geo->GetXPadStartPos();

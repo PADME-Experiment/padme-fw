@@ -67,6 +67,7 @@ void MMegaDetector::CreateGeometry()
 
   // G4ProductionCuts* cuts = new G4ProductionCuts();
   // cuts->SetProductionCut(10*um, G4ProductionCuts::GetIndex("e-"));
+  // cuts->SetProductionCut(10*eV, G4ProductionCuts::GetIndex("e-"));
   // MMregion->SetProductionCuts(cuts);
 
   fMMegaVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));

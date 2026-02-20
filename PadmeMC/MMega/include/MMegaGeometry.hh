@@ -42,8 +42,8 @@ public:
   G4String GetReadoutType() {return fReadoutType;}
 
    // Position of MMega Volume
-  G4double GetMMegaPosX() { return 0.; }
-  G4double GetMMegaPosY() { return 0.; }
+  G4double GetMMegaPosX() { return fMMegaDisplacementX; }
+  G4double GetMMegaPosY() { return fMMegaDisplacementY; }
   G4double GetMMegaPosZ() { return fMMegaFrontFacePosZ+fMMegaSizeZ*0.5; }
 
   // Size of MMega
@@ -79,8 +79,18 @@ public:
 
   G4double GetMMegaStripPitch() { return fMMegaStripPitch;}
   G4double GetMMegaStripWidth() { return fMMegaStripWidth;}
-  G4double GetXStripStartPos()  { return fXStripStartPos;}
-  G4double GetYStripStartPos()  { return fYStripStartPos;} 
+  
+  G4double GetMMegaPanelSizeV1()  { return fMMegaPanelSizeV1;}
+  G4double GetMMegaPanelSizeV2()  { return fMMegaPanelSizeV2;}
+  
+  G4double GetV1StripStartPos()  { return fV1StripStartPos;}
+  G4double GetV2StripStartPos()  { return fV2StripStartPos;} 
+  G4bool   GetisChV1Active(G4int iCh)  { 
+    if(iCh<0 && iCh>512) return false;
+    else return isChV1Active[iCh];} 
+  G4bool   GetisChV2Active(G4int iCh)  { 
+    if(iCh<0 && iCh>512+5) return false;
+    else return isChV2Active[iCh];} 
 
   G4double GetXPadArea()    { return fMMegaXPadArea;   }
   G4double GetYPadArea()    { return fMMegaYPadArea;   }
@@ -147,9 +157,14 @@ private:
   //geometry of strips readout design (same for x and y)
   G4double fMMegaStripPitch;
   G4double fMMegaStripWidth;
-  G4double fXStripStartPos;
-  G4double fYStripStartPos;
-
+  G4double fMMegaPanelSizeV1;
+  G4double fMMegaPanelSizeV2;
+  G4double fV1StripStartPos;
+  G4double fV2StripStartPos;
+  G4bool isChV1Active[512+1];
+  
+  G4bool isChV2Active[512+6];
+  
   //geometry of pads readout design
   G4double fMMegaXPadArea;
   G4double fMMegaYPadArea;
@@ -167,6 +182,7 @@ private:
   G4double fMMegaDisplacementY; // Displacement wrt 0 in Y (surveys)
   G4String fMMegaSensitiveDetectorName;
   G4String fMMegaDigitizerName;
+ 
 
 };
 

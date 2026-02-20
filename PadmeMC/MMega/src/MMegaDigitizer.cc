@@ -14,13 +14,14 @@
 #include "G4DCofThisEvent.hh"
 #include "G4ThreeVector.hh"
 #include "G4ios.hh"
+#include "TRandom3.h"
 #include <vector>
 #include <map>
 
 
 MMegaDigitizer::MMegaDigitizer(G4String name)
 :G4VDigitizerModule(name)
-{
+{ InitializeAmplificationFluctuation();
   G4String colName = "MMegaDigiCollection";
   collectionName.push_back(colName);
 }
@@ -28,6 +29,24 @@ MMegaDigitizer::MMegaDigitizer(G4String name)
 MMegaDigitizer::~MMegaDigitizer()
 {}
 
+TF1* MMegaDigitizer::ampl_dist = nullptr;
+
+void MMegaDigitizer::InitializeAmplificationFluctuation(){
+    
+    if (!ampl_dist) {
+        
+        // Initialize function according to parameters fitted from real data
+        // coming from may 2024 Test Beam at LNF 
+        ampl_dist = new TF1("AmplificationFluctuation", "landau", 1, 2600*300);  // [0, 2500] Charge in ADC Counts
+        ampl_dist->SetParameter(0, 0.0134);
+        ampl_dist->SetParameter(1, 10000.);
+        ampl_dist->SetParameter(2, 800.);
+
+    }
+}
+G4double MMegaDigitizer::GetAmplificationFluctuation(){
+    return ampl_dist->GetRandom();
+}
 void MMegaDigitizer::Digitize()
 {
   // const G4double MMegaDigiTimeWindow = 700*us; 
@@ -47,6 +66,7 @@ void MMegaDigitizer::Digitize()
     
     std::map<G4int, G4double> dTime;
     std::map<G4int, G4double> dCharge;
+    std::map<G4int, G4int> dNHitxCh;
 
     // Loop over all hits
     G4int n_hit = MMegaHC->entries();
@@ -68,72 +88,68 @@ void MMegaDigitizer::Digitize()
           
         // Generate ionizations for current hit
         MMegaIonizations* ioni = new MMegaIonizations(hLocalPositionStart, hLocalPositionEnd, hEnergy);
-        G4int NHits = ioni->GetNHits();
         
         if(hEnergy>=ioni->GetIonizationEnergy()) {
           // fill digi quantities
-          for(G4int j = 0; j < NHits; j++){
+          G4int NPrimary = ioni->GetNHits();
+
+          for(G4int j = 0; j < NPrimary; j++){
 
             // This line was used to compute charge just by multiplying
             // the charge of one drift electron times the charge
             // G4double charge = ioni->GetElectronCharge()*ioni->GetGain();
             G4int id = ioni->GetID(j);
+            //G4cout<<"id: "<<id<<" NHits:"<<NHits<<G4endl;
             G4double r = ioni->GetRadius(j);
 
             // G4cout << "MMegaDigitier StripID : " << id << G4endl;
             // G4cout << "MMegaDigitier Charge : " << charge << G4endl;
             // G4cout << "MMegaDigitier Time : " << t << G4endl;
             // G4cout << "MMegaDigitier z : " << t*0.105 << G4endl;
-            
-
-            if (dCharge[id] == 0.) {
-              // Now instead we extract it from a data driven distribution
-              G4double charge = ioni->GetChargeFromDistribution();
+             G4double charge = 1; // number of primary electron!
               if (r <= ioni->GetFirstZoneRadius()){
-                charge *= ioni->GetFirstGain();
+                charge *= ioni->GetFirstGain(); //weighted for the gain
               }
               else if(r <=ioni->GetSecondZoneRadius()){
-                charge *= ioni->GetSecondGain();
+                charge *= ioni->GetSecondGain(); //weighted for the gain
+              }else{
+                charge *=ioni->GetExternalGain();
               }
+            if (dCharge[id] == 0.) {
+              // Now instead we extract it from a data driven distribution
               dCharge[id] = charge;
+            } else{
+              dCharge[id] += charge;
             }
-
-            // first version without time smearing
-            // G4double t = ioni->GetTime(i) + hTime;
-            // G4cout << "MMegaDigitizer GetTime = " << ioni->GetTime(j) << G4endl;
+            // if(charge>0){
+            if (dNHitxCh[id] == 0.) {
+              // Now instead we extract it from a data driven distribution
+              dNHitxCh[id] = 1;
+            } else{
+              dNHitxCh[id]++;
+            }
+            //}
+            //Collects how many primaries reach each strip
+            
             // Time resolution depends on charge so we smear the drift time
             // at some point remember to sum in hTime to!
-            G4double t = ioni->GetTime(j) + ioni->GetTimeSpread(dCharge[id]); // ns
+            G4double t = ioni->GetTime(j);// + ioni->GetTimeSpread(dCharge[id]); // ns
             
-
-            // // For now the charge is the sum of deposited charges
-            // if (dCharge.find(id) != dCharge.end()) {
-            //   // If the key exists, increment the existing value by the new value
-            //   dCharge[id] += charge;
-            // } else {
-            //   // If the key doesn't exist, insert the new key-value pair
-            //   dCharge.insert({id, charge});
-            // }
-
-            // // For now the time is the earliest hit time
-            // if (dTime.find(id) != dTime.end()) {
-            //   // If the key exists, check if the new value is lower than the existing one
-            //   if (t < dTime[id]) {
-            //     // If yes, substitute the existing value with the new one
-            //     dTime[id] = t;
-            //   }
-            // } else {
-            //   // If the key doesn't exist, insert the new key-value pair
-            //   dTime.insert({id, t});
-            // }
             
+            //save a digi for every hit
+            // MMegaDigi* digi = new MMegaDigi();
+            // digi->SetID(id);
+            
+            // digi->SetTime(t);
+            // digi->SetCharge(dCharge[id]);
+            // mMegaDigiCollection->insert(digi);
             if (dTime[id] == 0.) {
               // If yes, substitute the existing value with the new one
-              dTime[id] = t;
+              dTime[id] = t*charge;
             }
 
-            else if(t < dTime[id]){
-              dTime[id] = t;
+            else{
+              dTime[id] += t*charge;
             }
         
 
@@ -148,9 +164,22 @@ void MMegaDigitizer::Digitize()
     for (auto it = dTime.begin(); it != dTime.end(); ++it) {
       MMegaDigi* digi = new MMegaDigi();
       digi->SetID(it->first);
+      //G4cout<<"id saved: "<<it->first<<G4endl;
+      G4double ampl = GetAmplificationFluctuation();
       //digi->SetNHits(it->second.size());
-      digi->SetTime(it->second);
-      digi->SetCharge(dCharge[it->first]);
+      digi->SetTime((it->second)/dCharge[it->first]);
+      G4double stripcharge = (dCharge[it->first]);
+      // if(stripcharge > 160){ 
+      //   stripcharge-=160;
+      // }
+      // if(stripcharge > 160){
+      //   stripcharge-=160;
+      // }
+      // if(stripcharge > 160){
+      //   stripcharge-=160;
+      // }
+      digi->SetCharge(stripcharge*ampl/4);
+      digi->SetNHitxCh(dNHitxCh[it->first]);
       mMegaDigiCollection->insert(digi);
       // digi->Print();
     } // end of storing digis

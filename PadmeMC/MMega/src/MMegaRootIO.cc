@@ -157,10 +157,12 @@ void MMegaRootIO::SaveEvent(const G4Event* eventG4)
                         for(G4int i=0;i<n_digi;i++) {
                             TMMegaMCDigi* digi = (TMMegaMCDigi*)fEvent->AddDigi();
                             digi->SetChannelId((*mMegaDC)[i]->GetID()); 
+                            digi->SetNHitxCh((*mMegaDC)[i]->GetNHitxCh());
                             // DQ: for now i save earliest time and total charge
                             // NB: WE FILL THE ENERGY FIELD WITH CHARGE!
                             digi->SetEnergy((*mMegaDC)[i]->GetCharge()); 
                             digi->SetTime((*mMegaDC)[i]->GetTime());
+                            
                             // e_tot += (*mMegaDC)[i]->GetCharge();
                         }
                         // if (fVerbose>=2)

@@ -38,6 +38,8 @@ class MMegaIonizations
     void SetFirstGain(G4double g){fFirstGain = g;}
     G4double GetSecondGain(){return fSecondGain;}
     void SetSecondGain(G4double g){fSecondGain = g;}
+    G4double GetExternalGain(){return fExternalGain;}
+    void SetExternalGain(G4double g){fExternalGain = g;}
     G4double GetFirstZoneRadius(){return fFirstZone;}
     void SetFirstZoneRadius(G4double r){fFirstZone = r;}
     G4double GetSecondZoneRadius(){return fSecondZone;}
@@ -69,9 +71,10 @@ class MMegaIonizations
     
     G4double fGain = 10000.;
     G4double fFirstZone = 60*mm;
-    G4double fFirstGain = 0.001;
+    G4double fFirstGain = 0.001; //to be checked
     G4double fSecondZone = 100*mm;
-    G4double fSecondGain = 0.01;
+    G4double fSecondGain = 0.001; //to be checked
+    G4double fExternalGain = 1.; //to be checked
 
     G4double fstepLength;
     G4double fdE;

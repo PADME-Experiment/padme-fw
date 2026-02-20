@@ -46,6 +46,8 @@ class MMegaDigi : public G4VDigi
   // G4int GetNHits(){return fNHits;};
   // void SetNHits(int nh){fNHits = nh;};
 
+  G4int GetNHitxCh(){return fNHitxCh;};
+  void SetNHitxCh(int nh){fNHitxCh = nh;};
   G4int GetID(){return fID;};
   void SetID(int id){fID = id;};
 
@@ -54,6 +56,7 @@ private:
   G4double fTime;    //drift electrons arrival time (for now we will store the earliest time)
   G4double fCharge;  //collected charge (for now we store the total charge)
   G4int    fID;                    //strip (pad) ID
+  G4int fNHitxCh;
   // G4int    fNHits;              //number of collected electrons
   // G4double fCenter;             //strip(pad) center (ID accounts for which plane we are referring to)
 };

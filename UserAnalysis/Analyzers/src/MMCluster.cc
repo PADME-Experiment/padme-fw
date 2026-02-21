@@ -118,17 +118,11 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   for (int ip=0; ip < 5; ip++) {
     fFitter.Config().ParSettings(ip) = ROOT::Fit::ParameterSettings(parnames[ip].Data(),parinput[ip],parstep[ip]);
   }
-  int fitmode = 0; 
   // now decide if fit is XZ view, YZ view or 3d: 0-> fit y positions, 1-> fit x positions, 2->fit x and y positions
   // need to add 10 if dZ to be fitted
-  if (chinfoThis.view == XVIEW){
-    for (int i=0; i<2; i++) fFitter.Config().ParSettings(1+2*i).Fix(); // fix parameters 1,3
-    fitmode = 11; // fit XZ view and DZ
-  } else if (chinfoThis.view == YVIEW){
-    for (int i=0; i<2; i++) fFitter.Config().ParSettings(2*i).Fix(); // fix parameters 0,2    
-    fitmode = 10; // fit YZ view and DZ
-  }
-
+  int fitmode = 10 + chinfoThis.view; // 11 for fitting XZ view and DZ; 10 for fitting YZ and DZ 
+  for (int i=0; i<2; i++) fFitter.Config().ParSettings(chinfoThis.view+2*i).Fix(); // for Y view, fix parameters 0,2; for X view fix 1,3
+  
   fMMTrackFcn.setFitMode(fitmode);
   vector<MMSoftHit*> hitArray;
   for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
@@ -159,22 +153,19 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
 
   fTracos.chi2 = result.MinFcnValue();
   for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
-  if (chinfoThis.view == XVIEW){
-    fTracos.slope = (fTracos.pars[2]-fTracos.pars[0])/(GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-    fTracos.inter = fTracos.pars[0] + fTracos.slope*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-  } else {
-    fTracos.slope = (fTracos.pars[3]-fTracos.pars[1])/(GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-    fTracos.inter = fTracos.pars[1] + fTracos.slope*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-  }
+
+  fTracos.slope = (fTracos.pars[3-chinfoThis.view]- fTracos.pars[1-chinfoThis.view])/(GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
+  fTracos.inter = fTracos.pars[1-chinfoThis.view] + fTracos.slope*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
+
   double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
   double cosz = 1./TMath::Sqrt(1+fTracos.slope*fTracos.slope);
   
-  fTracos.lambda.SetX(chinfoThis.view == XVIEW ? cosv : 0.);
-  fTracos.lambda.SetY(chinfoThis.view == YVIEW ? cosv : 0.);
+  fTracos.lambda[1-chinfoThis.view] = cosv; 
+  fTracos.lambda[chinfoThis.view] = 0.;     
   fTracos.lambda.SetZ(cosz);
 
   //IP phase angle in Clu Mode 1
-  double v_target = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ? GeneralInfo::GetInstance()->GetTargetPos().X() : GeneralInfo::GetInstance()->GetTargetPos().Y();
+  double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
   double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
   
   double ravg_minus_target[2] = {fTracos.inter-v_target, GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-z_target};
@@ -285,18 +276,18 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
     //    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
     zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime());
-    vhits.push_back(fMMHitsInClu.at(i)->GetMMchInfo().view == XVIEW ? fMMHitsInClu.at(i)->GetPosition().X() : fMMHitsInClu.at(i)->GetPosition().Y());
+    vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
     //std::cout<<"pippo"<<std::endl;
   }
   //zhits.push_back(softhit->GetPosition().Z());
   zhits.push_back(softhit->GetZfromTime());
-  vhits.push_back(softhit->GetMMchInfo().view == XVIEW ? softhit->GetPosition().X() : softhit->GetPosition().Y());
+  vhits.push_back(softhit->GetPosition()[1-softhit->GetMMchInfo().view]); // view == 1 corresponds to Xview
   double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
   evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
 
   // if ip is to be used, evaluate sin of angle between target position wrt magnet center and average position of the two chamber hits wrt magnet center      
   if(fIpmode == 0) {
-    double v_target = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ? GeneralInfo::GetInstance()->GetTargetPos().X() : GeneralInfo::GetInstance()->GetTargetPos().Y();
+    double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
     double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
 
     double ravg_minus_target[2] = {v_avg-v_target, z_avg-z_target};
@@ -321,15 +312,15 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   fTracos.inter = ct_avg;
   // evaluate intercepts at the two planes
   for(Int_t pl = 0; pl<2; pl++) {
-    double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;       
-    fTracos.pars[2*pl] = fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ?  v_pl : fMMHitsInClu.at(0)->GetPosition().X();
-    fTracos.pars[2*pl+1] = fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  v_pl : fMMHitsInClu.at(0)->GetPosition().Y();
+    double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;
+    fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
+    fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
   }
   // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
   int reverseTrack = 1;
   if (cosz < 0) reverseTrack = -1;
-  fTracos.lambda.SetX(fMMHitsInClu.at(0)->GetMMchInfo().view == XVIEW ?  reverseTrack*cosv : 0.);
-  fTracos.lambda.SetY(fMMHitsInClu.at(0)->GetMMchInfo().view == YVIEW ?  reverseTrack*cosv : 0.);
+  fTracos.lambda[1-fMMHitsInClu.at(0)->GetMMchInfo().view] = reverseTrack*cosv;
+  fTracos.lambda[fMMHitsInClu.at(0)->GetMMchInfo().view] = 0; 
   fTracos.lambda.SetZ(reverseTrack*cosz);
   fTracos.chi2 = chi2;
   

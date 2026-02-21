@@ -18,6 +18,8 @@ GeneralInfo::GeneralInfo(){
   fRecoEvent   = NULL;
   fDBRunNumber =0;
   fMe = 0.511;
+  fMMViewLabel[0] = "Y"; // labels vs view
+  fMMViewLabel[1] = "X"; // labels vs view
 }
 
 GeneralInfo::~GeneralInfo(){}

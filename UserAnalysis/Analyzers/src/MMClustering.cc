@@ -61,10 +61,9 @@ Bool_t MMClustering::InitHistos(){
 
   fHS->CreateList("MMClustering");
   cout<<" Creating MMClustering Hystograms"<<endl;
- 
-  fHS->BookHisto2List("MMClustering","MM_dv_c_before_cut_X",1200,-600,600,1000,-500,500);
-  fHS->BookHisto2List("MMClustering","MM_dv_c_before_cut_Y",1200,-600,600,1000,-500,500);
-    
+  for (int view = 0; view<2; view++){
+    fHS->BookHisto2List("MMClustering",Form("MM_dv_vs_c_before_cut_%s",GeneralInfo::GetInstance()->GetMMViewLabel(view).Data()),1200,-600,600,1000,-500,500);
+  }    
   return true;
 }
 
@@ -179,8 +178,7 @@ void MMClustering::Clusterize() {
       int view_seed = fMMClusters[0][0].at(i)->GetHit(0)->GetMMchInfo().view;
       int view_match = fMMClusters[0][0].at(j)->GetHit(0)->GetMMchInfo().view;
       if(view_seed == view_match) {
-	if(view_seed == XVIEW) fHS->FillHisto2List("MMClustering","MM_dv_vs_c_before_cut_X",fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
-	if(view_seed == YVIEW) fHS->FillHisto2List("MMClustering","MM_dv_vs_c_before_cut_Y",fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
+	fHS->FillHisto2List("MMClustering",Form("MM_dv_vs_c_before_cut_%s",GeneralInfo::GetInstance()->GetMMViewLabel(view_seed).Data()),fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
       }
       
       if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {

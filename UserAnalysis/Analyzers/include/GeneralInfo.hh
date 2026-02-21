@@ -8,9 +8,6 @@
 #include "OfflineServer.hh"
 #include "TVector3.h"
 
-#define XVIEW 1
-#define YVIEW 0
-
 using namespace std;
 
 class TRecoEvent;
@@ -102,7 +99,7 @@ public:
   inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
   
   MMchInfo DecodeMMChannel(int);
-  
+  TString GetMMViewLabel(int view){TString retstr(Form("%s",fMMViewLabel[view].Data())); return retstr;} // for view = 0, return "Y"; for view = 1 returns "X"
 protected:
   TRecoEvent* fRecoEvent;
 
@@ -183,6 +180,6 @@ private:
   double fMMOffsetCenterY;  // mm
 
   double fMMDriftVelocity; //mm/ns
-  
+  TString fMMViewLabel[2]; // labels vs view
 };
 #endif

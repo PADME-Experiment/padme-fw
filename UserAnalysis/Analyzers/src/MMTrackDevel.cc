@@ -177,7 +177,7 @@ Bool_t MMTrackDevel::Process(){
 
     for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
       TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
-      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(tempClu->GetPosition().Z());
+      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(tempClu->GetPosition().Z()+90);
       TVector3 MMposAtTarg = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(GeneralInfo::GetInstance()->GetTargetPos().Z());
 
       double y_Ecal = tempClu->GetPosition().Y();

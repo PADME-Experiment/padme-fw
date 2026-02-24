@@ -96,6 +96,9 @@ public:
   inline double GetMMPosPlaneZ(int val){return fMMPosPlaneZ[val];} // mm
   inline double GetMMOffsetCenterX() const {return fMMOffsetCenterX;}  // mm
   inline double GetMMOffsetCenterY() const {return fMMOffsetCenterY;}  // mm
+  inline double GetMMXYRotationAngle() const {return fMMXYRotationAngle;}
+  inline double GetMMXZRotationAngle() const {return fMMXZRotationAngle;}
+  inline double GetMMYZRotationAngle() const {return fMMYZRotationAngle;}
   inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
   
   MMchInfo DecodeMMChannel(int);
@@ -179,6 +182,10 @@ private:
   double fMMOffsetCenterX;  // mm
   double fMMOffsetCenterY;  // mm
 
+  double fMMXYRotationAngle;
+  double fMMXZRotationAngle;
+  double fMMYZRotationAngle;
+  
   double fMMDriftVelocity; //mm/ns
   TString fMMViewLabel[2]; // labels vs view
 };

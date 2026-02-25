@@ -37,7 +37,7 @@ class MMSoftHit {
   Int_t GetCluPtr(Int_t ipmode, Int_t clumode) const {return fCluPtr[ipmode][clumode];}
   MMchInfo GetMMchInfo() const {return fmmi;}
 
-  Double_t GetZfromTime() const {if(fmmi.plane == 0) return GeneralInfo::GetInstance()->GetMMPosPlaneZ(0) + fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity(); else return GeneralInfo::GetInstance()->GetMMPosPlaneZ(1) - fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity();}
+  Double_t GetZfromTime(Double_t scale) const {if(fmmi.plane == 0) return GeneralInfo::GetInstance()->GetMMPosPlaneZ(0) + fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity(); else return GeneralInfo::GetInstance()->GetMMPosPlaneZ(1) - fTime*GeneralInfo::GetInstance()->GetMMDriftVelocity()*scale;}
   
   void SetChannelId(Int_t ChannelId) {fChannelId = ChannelId;}
   void SetPosition(TVector3 Position) {fPosition = Position;}

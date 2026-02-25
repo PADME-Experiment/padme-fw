@@ -67,7 +67,10 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),100,-300,300,100,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsXEcal",viewlabel.Data()),100,-300,300,100,-200,200);
   }
-  for (int bdid = 0; bdid < 16; bdid++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),256,-0.5,255.5,900,-150,750);
+  for (int bdid = 0; bdid < 16; bdid++) {
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),256,-0.5,255.5,900,-150,750);
+  }
+  for(int quad=0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),100,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+50);
   return true;
 }
 
@@ -163,6 +166,7 @@ Bool_t MMTrackDevel::Process(){
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,1); iclu++) {
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().quad;
     int view = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().view;
+   
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
     double dz = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().pars[4];
     double chi2 = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().chi2;
@@ -204,6 +208,18 @@ Bool_t MMTrackDevel::Process(){
 	  fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsXEcal",viewlabel.Data()),x_Ecal,dv_MMEcal,1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),y_Ecal,dv_MMEcal,1.);
+
+	  int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
+	  double z_min=100000000,z_max=-10000000;
+	  for(int h=0; h<Nhit; h++) {
+	    double z_hit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(h)->GetZfromTime(1.);
+	    if(z_hit > z_max) z_max = z_hit;
+	    if(z_hit < z_min) z_min = z_hit;
+	  }
+	  z_max += dz;
+	  z_min -= dz;
+	  fHS->FillHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),z_max,1.);
+	  fHS->FillHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),z_min,1.);
 	}
       }
 //      if(view == YVIEW) {

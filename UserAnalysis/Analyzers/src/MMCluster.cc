@@ -138,7 +138,7 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   bool okfit = fFitter.FitFCN();
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
 
-  std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
+  //std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
   if (!okfit) {    
     //    result.Print(std::cout);
     return kFALSE;
@@ -164,6 +164,10 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fTracos.lambda[chinfoThis.view] = 0.;     
   fTracos.lambda.SetZ(cosz);
 
+
+  std::cout<<"[MERGE PLANES] cosv: "<<cosv<<" cosz: "<<cosz<<" dz: "<<fTracos.pars[4]<<std::endl;
+  
+  
   //IP phase angle in Clu Mode 1
   double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
   double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
@@ -234,7 +238,7 @@ void MMCluster::setPoints(vector<MMSoftHit*> hitArray){
     fErrors.push_back(errors);
     TVector3 positions;
     //positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetPosition().Z());
-    positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetZfromTime());
+    positions.SetXYZ(hit->GetPosition().X(),hit->GetPosition().Y(),hit->GetZfromTime(1.));
     fPositions.push_back(positions);
     fBoardIds.push_back(hit->GetMMchInfo().bdid);
   }
@@ -275,12 +279,12 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   vector<double> zhits, vhits;  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
     //    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
-    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime());
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
     vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
     //std::cout<<"pippo"<<std::endl;
   }
   //zhits.push_back(softhit->GetPosition().Z());
-  zhits.push_back(softhit->GetZfromTime());
+  zhits.push_back(softhit->GetZfromTime(1.));
   vhits.push_back(softhit->GetPosition()[1-softhit->GetMMchInfo().view]); // view == 1 corresponds to Xview
   double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
   evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
@@ -361,7 +365,7 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
   double z_rms2 = z2_avg-z_avg*z_avg;
   
   if(fabs(z_rms2)<1e-15) {
-    std::cout<<"z_rms2 = "<<z_rms2<<std::endl;
+    //std::cout<<"z_rms2 = "<<z_rms2<<std::endl;
     z_rms2 = very_small;
   }
   

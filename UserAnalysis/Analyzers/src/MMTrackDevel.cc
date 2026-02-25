@@ -177,7 +177,9 @@ Bool_t MMTrackDevel::Process(){
 
     for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
       TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
-      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(tempClu->GetPosition().Z());
+      double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
+      //      std::cout << "QUItest ZEcal = " << tempClu->GetPosition().Z() << " " << GeneralInfo::GetInstance()->GetCOG().Z() << std::endl;
+      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
       TVector3 MMposAtTarg = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(GeneralInfo::GetInstance()->GetTargetPos().Z());
 
       double y_Ecal = tempClu->GetPosition().Y();
@@ -241,7 +243,9 @@ Bool_t MMTrackDevel::Process(){
 
     for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
       TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
-      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().ExtrapolationAtZ(tempClu->GetPosition().Z());
+      double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
+
+      TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
 
       double y_Ecal = tempClu->GetPosition().Y();
       double x_Ecal = tempClu->GetPosition().X();

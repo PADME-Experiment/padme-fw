@@ -81,18 +81,22 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fQuadrantTempCorr[2] = 0.0; // correction
   fQuadrantTempCorr[3] = 0.0; // correction
 
-
+  
   fMMStripPitch      = 1.2; // mm
   fMMOffsetPlaneX[0] = 0; // mm 
   fMMOffsetPlaneY[0] = 0; // mm
-  fMMPosPlaneZ[0]	   = 2357.32;// mm
+  fMMPosPlaneZ[0]	   = 2357.32 + 6.35; // mm accounting for the measurement sphere
   fMMOffsetPlaneX[1] = 0; // mm
   fMMOffsetPlaneY[1] = 0;  // mm
-  fMMPosPlaneZ[1]    = 2458.32; // mm
-  fMMOffsetCenterX   = 9.995;  // mm
-  fMMOffsetCenterY   = 20.1975;  // mm
+  fMMPosPlaneZ[1]    = 2458.32 - 6.35; // mm accounting for the measurement sphere
+  fMMOffsetCenterX   = 12.10;  // mm fitted from report 02/16
+  fMMOffsetCenterY   = 18.54;  // mm fitted from report 02/16
   fMMPosPlaneZ[2]    = 0.5*(fMMPosPlaneZ[0]+fMMPosPlaneZ[1]); //mm
 
+  fMMXYRotationAngle = -0.27/180*TMath::Pi(); //fitted from report 02/16
+  fMMXZRotationAngle = 0.5/180*TMath::Pi(); //from report 02/16
+  fMMYZRotationAngle = 0.1/180*TMath::Pi(); //from report 02/16
+  
   fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE 
   
   fIsEnergyAvailable = kFALSE;

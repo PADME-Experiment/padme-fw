@@ -297,9 +297,9 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];
     
 
-    std::cout<<"\t\t\t\t IP sin: "<<fIPPhaseAngle<<std::endl;
-    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
-    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
+//    std::cout<<"\t\t\t\t IP sin: "<<fIPPhaseAngle<<std::endl;
+//    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
+//    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
     
     if (TMath::Abs(fIPPhaseAngle) > IPSINCUT*4) return kFALSE;
   }

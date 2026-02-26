@@ -79,9 +79,9 @@ public:
       lambda -= refp[0];
       lambda *= (1./lambda.Mod()); // direction of the track
 
-      std::cout<<"[FITTER] initial refp P0: ["<<refp[0].X()<<" , "<<refp[0].Y()<<"]"<<std::endl;
-      std::cout<<"[FITTER] initial refp P1: ["<<refp[1].X()<<" , "<<refp[1].Y()<<"]"<<std::endl;
-      std::cout<<"[FITTER] initial lambda: ["<<lambda.X()<<" , "<<lambda.Y()<<std::endl;
+//      std::cout<<"[FITTER] initial refp P0: ["<<refp[0].X()<<" , "<<refp[0].Y()<<"]"<<std::endl;
+//      std::cout<<"[FITTER] initial refp P1: ["<<refp[1].X()<<" , "<<refp[1].Y()<<"]"<<std::endl;
+//      std::cout<<"[FITTER] initial lambda: ["<<lambda.X()<<" , "<<lambda.Y()<<std::endl;
       
       // track is \vec{r} = \vec{p0} + \vec{lambda} * t, p0 = barycenter of points
       // point of CDA on the track line: \vec{p0} + ( (\vec{point}_i - \vec{p0}) dot \vec{lambda} ) \vec{lambda}                                                                                                    
@@ -90,7 +90,7 @@ public:
       for (uint i= 0; i<fTrackmmt.size(); i++) {
 	TVector2 point(fTrackmmt.at(i)[1-fFitMode%10],fTrackmmt.at(i)[2]);
 
-	std::cout<<"[FITTER] point"<<i<<" : ["<<point.X()<<" , "<<point.Y()<<"]"<<std::endl;
+	//	std::cout<<"[FITTER] point"<<i<<" : ["<<point.X()<<" , "<<point.Y()<<"]"<<std::endl;
 
 	if (fFitMode/10) {// fit DZ
 	  if (fTrackBdIds.at(i)>=0 && fTrackBdIds.at(i)<8)       point.SetY(point.Y() - par[4]);

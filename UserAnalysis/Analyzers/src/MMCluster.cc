@@ -178,7 +178,7 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   
   fMMTrackFcn.setFitMode(fitmode);
 
-  bool calibration = kFALSE; //TO BE DEFINED IN GENERAL SETTING
+  bool calibration = kTRUE; //TO BE DEFINED IN GENERAL SETTING
   if (fIpmode) InitFit(hitArray); // if IP is not used
   else {
     if(!calibration) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
@@ -355,7 +355,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
 //    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
 //    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
     
-    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT*4) return kFALSE;
+    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) return kFALSE;
   }
   // add present hit to the cluster    
   fMMHitsInClu.push_back(softhit);

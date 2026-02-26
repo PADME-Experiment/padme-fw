@@ -72,6 +72,7 @@ void MMClustering::Clear() {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
       fMMClusters[ipmode][clumode].clear();
       fMergedMMClusters[ipmode][clumode].clear();
+      fIndicesOfMergedClusters[ipmode][clumode].clear();
     }
   }
   fMMSoftHits.clear();
@@ -185,7 +186,12 @@ void MMClustering::Clusterize() {
 	fMMClusters[0][1].push_back(new_clu);
 	fMergedMMClusters[0][0].at(i) = kTRUE; // store the cluster-merged flag
 	fMergedMMClusters[0][0].at(j) = kTRUE; // store the cluster-merged flag
-	
+
+	// store link between this level one cluster and all level zero clusters contributing to it
+	vector<int> indicesLevelZero;
+	indicesLevelZero.push_back(i);
+	indicesLevelZero.push_back(j);
+	fIndicesOfMergedClusters[0][1].push_back(indicesLevelZero);
 	matched = kTRUE;
 	break;
       }

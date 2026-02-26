@@ -68,6 +68,7 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),100,-300,300,100,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsXEcal",viewlabel.Data()),100,-300,300,100,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsAngleLevelZero",viewlabel.Data()),100,-0.1,0.1,100,0,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsDZ",viewlabel.Data()),100,-80,80,100,0,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_DdzvsDZ",viewlabel.Data()),100,-80,80,100,-200,200);
   }
@@ -75,6 +76,8 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),256,-0.5,255.5,900,-150,750);
   }
   for(int quad=0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),100,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+50);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),8,0,8,4,0,4);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_TrackMatchedCode2vs1"),4,0,4,4,0,4);
   return true;
 }
 
@@ -163,19 +166,35 @@ Bool_t MMTrackDevel::Process(){
       fHS->FillHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),stripid,timeHit,1.);
     }
   }
+
+  // Variable for response evaluation. For any given Ecal cluster, provides a response code:
+  // 0    -> no track-Ecal matching
+  // bit0 -> Yview matching
+  // bit1 -> Xview matching
   
+  vector<int> responseCode;
+  for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) responseCode.push_back(0);
 
   // plots to evaluate matching of level-1 tracks with the ECal info
 
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,1); iclu++) {
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().quad;
     int view = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().view;
-   
+    vector<int> level0Merged = fMMClusteringInstance->GetHitComposition(iclu,0,1);
+    if (level0Merged.size() != 2) {
+      std::cout << "Inconsistente level one merging " << level0Merged.size() << std::endl;
+      continue;
+    }
+    MMCluster* levelZeroClus[2] = {fMMClusteringInstance->GetMMCluster(level0Merged.at(0),0,0),fMMClusteringInstance->GetMMCluster(level0Merged.at(1),0,0)};
+    
+    double angleLevelZero = levelZeroClus[0]->GetTracklet().lambda.Angle(levelZeroClus[1]->GetTracklet().lambda);
+  
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
     double dz = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().pars[4];
     double chi2 = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().chi2;
     double ipphaseangle = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetIPPhaseAngle();
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_dz",dz,chi2,1.);
+    fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
 
     for(int ipair=0; ipair<(int) cluTime_avg.size(); ipair++) {
       double dt_Ecal = cluTime_avg.at(ipair);
@@ -204,6 +223,9 @@ Bool_t MMTrackDevel::Process(){
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],y_Ecal,1.);
 	
 	if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad] && fabs(Ddz-offsetdDZvsXY[1-view][quad])< maxdDZvsXY[1-view][quad]) { // calorimeter matching
+	  responseCode.at(iidx) |= (1 << view);
+	  
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsAngleLevelZero",viewlabel.Data()),angleLevelZero,chi2,1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsDZ",viewlabel.Data()),dz,chi2,1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_DdzvsDZ",viewlabel.Data()),dz,Ddz,1.);
 
@@ -234,34 +256,45 @@ Bool_t MMTrackDevel::Process(){
 	  fHS->FillHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),z_min,1.);
 	}
       }
-//      if(view == YVIEW) {
-//	double dy_MMEcal = MMposAtEcal.Y() - y_Ecal;	
-//	
-//	if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0) {
-//	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dY_vs_dz_Q%d_clu1",quad),Ddz,dy_MMEcal,1.);
-//	  if(fabs(dy_MMEcal-offsetY[quad])< dy_MMEcalMax[quad] && fabs(Ddz-offsetdDZvsY[quad])< maxdDZvsY[quad]) { // calorimeter matching
-//	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Y_vs_IPtheta_Q%d_clu1",quad),ipphaseangle,MMposAtEcal.Y(),1.);
-//	    // plot of track extrapolation at z target
-//	    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_YAtTarget_Q%d_clu1",quad),MMposAtTarg.Y(),1.);
-//	    
-//	  }
-//	}
-//      }
-//      if(view == XVIEW) {
-//	double dx_MMEcal = MMposAtEcal.X() - x_Ecal;
-//	
-//	if(y_Ecal*signsQuadY[quad] > 0 && x_Ecal*signsQuadX[quad] > 0) {
-//	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_dz_Q%d_clu1",quad),Ddz,dx_MMEcal,1.);
-//	  if(fabs(dx_MMEcal-offsetX[quad])< dx_MMEcalMax[quad] && fabs(Ddz-offsetdDZvsX[quad])<maxdDZvsX[quad]){
-//	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_X_vs_IPtheta_Q%d_clu1",quad),ipphaseangle,MMposAtEcal.X(),1.);
-//	    // plot of track extrapolation at z target
-//	    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_XAtTarget_Q%d_clu1",quad),MMposAtTarg.X(),1.);
-//	  }
-//	}
-//      }   
     } // cluster loop
   } // MM track loop type 1
 
+  // plot for response evaluation per track
+
+  for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
+    TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
+    double y_Ecal = tempClu->GetPosition().Y();
+    double x_Ecal = tempClu->GetPosition().X();
+    int quad = 0;
+    if (x_Ecal < 0 && y_Ecal < 0) quad = 0;
+    else if (x_Ecal < 0 && y_Ecal > 0) quad = 1;
+    else if (x_Ecal > 0 && y_Ecal > 0) quad = 2;
+    else quad = 3;
+
+    fHS->FillHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),responseCode.at(iidx),quad);
+  }
+
+  // plot for response evaluation per track pair
+  int counter = 0;
+  for (int i=0; i< ECalSel::GetInstance()->getNECalEvents(); i++){
+    ECalSelEvent* selEvent = ECalSel::GetInstance()->getECalEvent(i);
+    if (selEvent->flagEv != ev_gg) continue;
+
+//      TRecoVCluster* tempClu = ECal_clEvent->Element(selEvent->indexECal[h1]);
+//      double y_Ecal = tempClu->GetPosition().Y();
+//      double x_Ecal = tempClu->GetPosition().X();
+//      int quad = 0;
+//      if (x_Ecal < 0 && y_Ecal < 0) quad = 0;
+//      else if (x_Ecal < 0 && y_Ecal > 0) quad = 1;
+//      else if (x_Ecal > 0 && y_Ecal > 0) quad = 2;
+//      else quad = 3;
+      
+    fHS->FillHisto2List("MMTrackDevel",Form("MM_TrackMatchedCode2vs1"),responseCode.at(counter),responseCode.at(counter+1));
+    counter+=2;
+  }
+  
+  // check on level-zero clusters
+  
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu++) {
     int Nhit = (int) fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHitsVectorSize();
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().quad;

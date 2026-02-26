@@ -7,7 +7,7 @@
 #include "MMTrackFcn.hh"
 #include "GeneralInfo.hh"
 
-#define IPSINCUT 0.005
+#define IPSINCUT 0.05
 
 struct MMTracklet{
   Double_t slope; // dv/dz

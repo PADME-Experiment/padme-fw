@@ -35,7 +35,8 @@ public:
   void Import(MMCluster* oldclu);
   bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
   bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
-  
+  bool ReFitWithClusterTime(bool ipused, double refTimeZ); // re-fit level-1 cluster with fixed DZ
+
   //  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
   void RemoveHit(Int_t i); // remove a hit if necessary
     

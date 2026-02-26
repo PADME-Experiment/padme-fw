@@ -74,6 +74,74 @@ void MMCluster::Import(MMCluster* oldclu){
   fDvAtMeshPlane = oldclu->GetDvAtMeshPlane();
 }
 
+bool MMCluster::ReFitWithClusterTime(bool ipused, double refTimeZ){
+  // build complete hit vector
+  vector<MMSoftHit*> hitArray;
+  for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
+
+  // init fit
+  double x_init_P0=0., y_init_P0=0., x_init_P1=0., y_init_P1=0.;  
+  fFitter.SetFCN(5, fMMTrackFcn); // 5 parameters
+  TString parnames[5] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y","DZOffset"};
+  double parinput[5] = {x_init_P0,y_init_P0,x_init_P1,y_init_P1,0.};
+  double parstep[5] = {0.1,0.1,0.1,0.1,0.1};
+  for (int ip=0; ip < 5; ip++)  fFitter.Config().ParSettings(ip) = ROOT::Fit::ParameterSettings(parnames[ip].Data(),parinput[ip],parstep[ip]);
+  
+  // now decide if fit is XZ view, YZ view or 3d: 0-> fit y positions, 1-> fit x positions, 2->fit x and y positions
+  MMchInfo chinfoThis =  fMMHitsInClu.at(0)->GetMMchInfo(); // IN FUTURE MIGHT CHECK THE VIEW FOR ALL HITS AND IF X and Y ARE FOUND -> FIT 3d
+
+  int fitmode = 10+chinfoThis.view; // 1 for fitting XZ view; 0 for fitting YZ 
+  for (int i=0; i<2; i++) fFitter.Config().ParSettings(chinfoThis.view+2*i).Fix(); // for Y view, fix parameters 0,2; for X view fix 1,3
+  // FIX PAR 4 (DZ) to the input value
+
+  fFitter.Config().ParSettings(4).SetValue(refTimeZ);
+  fFitter.Config().ParSettings(4).Fix(); // Fix DZ
+
+  fMMTrackFcn.setFitMode(fitmode);
+
+  if (fIpmode) InitFit(hitArray); // if IP is not used
+  else {
+    if(ipused) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
+    else InitFit(hitArray);
+  }
+  
+  bool okfit = fFitter.FitFCN();
+  const ROOT::Fit::FitResult & result = fFitter.Result(); 
+
+  if (!okfit) {    
+    //    result.Print(std::cout);
+    return kFALSE;
+  }
+
+  // success
+
+  fTracos.chi2 = result.MinFcnValue();
+  for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
+
+  fTracos.slope = (fTracos.pars[3-chinfoThis.view]- fTracos.pars[1-chinfoThis.view])/(GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
+  fTracos.inter = fTracos.pars[1-chinfoThis.view] + fTracos.slope*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
+
+  double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
+  double cosz = 1./TMath::Sqrt(1+fTracos.slope*fTracos.slope);
+  
+  fTracos.lambda[1-chinfoThis.view] = cosv; 
+  fTracos.lambda[chinfoThis.view] = 0.;     
+  fTracos.lambda.SetZ(cosz);
+
+  //IP phase angle in Clu Mode 1
+  double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
+  double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
+  
+  double ravg_minus_target[2] = {fTracos.inter-v_target, GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-z_target};
+  double lambda_hits[2] = {cosv,cosz};
+  double ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target[0]*ravg_minus_target[0]+ravg_minus_target[1]*ravg_minus_target[1]);
+  for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
+  fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];  
+  
+  return kTRUE;
+}
+
+
 
 bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   MMchInfo chinfoThis = fMMHitsInClu.at(0)->GetMMchInfo();
@@ -86,31 +154,16 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
 
   const double dvAtMeshMax = 5; // mm
   // check the dv at the mesh between the two clusters
-  double dv = fTracos.inter - inputclus->GetTracklet().inter;
-  
+  double dv = fTracos.inter - inputclus->GetTracklet().inter;  
   if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
 
-  double x_init_P0=0., y_init_P0=0., x_init_P1=0., y_init_P1=0.;
-  if(chinfoThis.plane == 0) {
-    x_init_P0 = fMMHitsInClu.at(0)->GetPosition().X();
-    y_init_P0 = fMMHitsInClu.at(0)->GetPosition().Y();
-
-    x_init_P1 = inputclus->GetHit(0)->GetPosition().X();
-    y_init_P1 = inputclus->GetHit(0)->GetPosition().Y();
-  }
-  else if(chinfoThis.plane == 1) {
-    x_init_P1 = fMMHitsInClu.at(0)->GetPosition().X();
-    y_init_P1 = fMMHitsInClu.at(0)->GetPosition().Y();
-
-    x_init_P0 = inputclus->GetHit(0)->GetPosition().X();
-    y_init_P0 = inputclus->GetHit(0)->GetPosition().Y();
-  }
-  else {
-    std::cerr<<"[MergeAcrossPlanes] Planes in MMchInfo NOT RECOGNIZED!!!"<<std::endl;
-    return kFALSE;
-  }
+  // build complete hit vector
+  vector<MMSoftHit*> hitArray;
+  for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
+  for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) hitArray.push_back(inputclus->GetHit(i));
 
   
+  double x_init_P0=0., y_init_P0=0., x_init_P1=0., y_init_P1=0.;  
   fFitter.SetFCN(5, fMMTrackFcn); // 5 parameters
   TString parnames[5] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y","DZOffset"};
   double parinput[5] = {x_init_P0,y_init_P0,x_init_P1,y_init_P1,0.};
@@ -124,11 +177,8 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   for (int i=0; i<2; i++) fFitter.Config().ParSettings(chinfoThis.view+2*i).Fix(); // for Y view, fix parameters 0,2; for X view fix 1,3
   
   fMMTrackFcn.setFitMode(fitmode);
-  vector<MMSoftHit*> hitArray;
-  for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
-  for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) hitArray.push_back(inputclus->GetHit(i));
 
-  bool calibration = kTRUE; //TO BE DEFINED IN GENERAL SETTING
+  bool calibration = kFALSE; //TO BE DEFINED IN GENERAL SETTING
   if (fIpmode) InitFit(hitArray); // if IP is not used
   else {
     if(!calibration) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
@@ -165,7 +215,7 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fTracos.lambda.SetZ(cosz);
 
 
-  std::cout<<"[MERGE PLANES] cosv: "<<cosv<<" cosz: "<<cosz<<" dz: "<<fTracos.pars[4]<<std::endl;
+  //  std::cout<<"[MERGE PLANES] cosv: "<<cosv<<" cosz: "<<cosz<<" dz: "<<fTracos.pars[4]<<std::endl;
   
   
   //IP phase angle in Clu Mode 1

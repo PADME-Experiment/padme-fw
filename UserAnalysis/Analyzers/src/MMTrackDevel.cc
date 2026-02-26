@@ -60,12 +60,16 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_%s_vs_IPtheta_Q%d_clu1",viewlabel.Data(),quad),100,-0.01,0.01,1200,-600,600);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_Nhit_Q%d_clu0",viewlabel.Data(),quad),10,0,10,1000,-100,100);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200.,200.);
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_quality_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,0,120.);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_XEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
+    for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
   }
   for (int view = 0; view<2; view++){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),100,-300,300,100,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsXEcal",viewlabel.Data()),100,-300,300,100,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsDZ",viewlabel.Data()),100,-80,80,100,0,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_DdzvsDZ",viewlabel.Data()),100,-80,80,100,-200,200);
   }
   for (int bdid = 0; bdid < 16; bdid++) {
     fHS->BookHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),256,-0.5,255.5,900,-150,750);
@@ -77,7 +81,7 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
 Bool_t MMTrackDevel::Process(){
 
   // retrieve ecal info
-
+  
   if (ECalSel::GetInstance()->getNECalEvents() == 0) return kFALSE;
   
   TRecoVClusCollection* ECal_clEvent = fEvent->ECalRecoCl;
@@ -128,11 +132,11 @@ Bool_t MMTrackDevel::Process(){
     20,  20., 20., 20.,
     20,  20., 20., 20.};
   double offsetdDZvsXY[2][4] = {
-    5.,  5.,  5., 5. ,
-    0,  50.,  0., 5. };
+    12.3,  -1.1, 15., 8. ,
+    -10,  29.,  18.2, 3. };
   double maxdDZvsXY[2][4]    = {
-    50., 50., 50., 50.,
-    50, 50., 50., 50.};
+    30., 22., 16., 16.,
+    16, 16., 16., 16.};
 
 //  // dDZ vs Y
 //  double offsetY[4]      = {  0, -10., -5., 0. };
@@ -191,23 +195,31 @@ Bool_t MMTrackDevel::Process(){
 
       double Ddz = dz - dz_Ecal;
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
-      if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0) {
+      if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0 && chi2 < 20) {
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1",viewlabel.Data(),quad),Ddz,dv_MMEcal,1.);
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1_recenter",viewlabel.Data(),quad),
 			    (Ddz-offsetdDZvsXY[1-view][quad])  / (maxdDZvsXY[1-view][quad]),
 			    (dv_MMEcal-offsetXY[1-view][quad]) / (dxy_MMEcalMax[1-view][quad]), 1.);
-	double radius = TMath::Sqrt(
-				    TMath::Power((dv_MMEcal-offsetXY[1-view][quad]) / (dxy_MMEcalMax[1-view][quad]),2) +
-				    TMath::Power((Ddz-offsetdDZvsXY[1-view][quad])  / (maxdDZvsXY[1-view][quad]),2)
-				    );
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_quality_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],radius,1.);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_XEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],x_Ecal,1.);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],y_Ecal,1.);
 	
 	if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad] && fabs(Ddz-offsetdDZvsXY[1-view][quad])< maxdDZvsXY[1-view][quad]) { // calorimeter matching
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_Chi2vsDZ",viewlabel.Data()),dz,chi2,1.);
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECALMatch_d%s_vs_dz_Qall_clu1_DdzvsDZ",viewlabel.Data()),dz,Ddz,1.);
+
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_%s_vs_IPtheta_Q%d_clu1",viewlabel.Data(),quad),ipphaseangle,MMposAtEcal[1-view],1.);
 	  // plot of track extrapolation at z target
 	  fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),MMposAtTarg[1-view],1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsXEcal",viewlabel.Data()),x_Ecal,dv_MMEcal,1.);
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),y_Ecal,dv_MMEcal,1.);
+
+	  // refit track with DZ from ECal
+	  if (fMMClusteringInstance->GetMMCluster(iclu,0,1)->ReFitWithClusterTime(kTRUE,dz_Ecal+offsetdDZvsXY[1-view][quad])) {
+	    TVector3 MMposAtTarg = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(GeneralInfo::GetInstance()->GetTargetPos().Z());
+	    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),MMposAtTarg[1-view],1.);	    
+	  }
+
+
 
 	  int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
 	  double z_min=100000000,z_max=-10000000;

@@ -63,6 +63,7 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_XEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,1000,0,100);
   }
   for (int view = 0; view<2; view++){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
@@ -193,9 +194,11 @@ Bool_t MMTrackDevel::Process(){
     double dz = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().pars[4];
     double chi2 = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().chi2;
     double ipphaseangle = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetIPPhaseAngle();
+    int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_dz",dz,chi2,1.);
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
-
+    fHS->FillHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,chi2,1.);
+    
     for(int ipair=0; ipair<(int) cluTime_avg.size(); ipair++) {
       double dt_Ecal = cluTime_avg.at(ipair);
       //double dz_Ecal = dt_Ecal*fGeneralInfo->GetDriftVelocity();
@@ -241,9 +244,6 @@ Bool_t MMTrackDevel::Process(){
 	    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),MMposAtTarg[1-view],1.);	    
 	  }
 
-
-
-	  int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
 	  double z_min=100000000,z_max=-10000000;
 	  for(int h=0; h<Nhit; h++) {
 	    double z_hit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(h)->GetZfromTime(1.);
@@ -294,13 +294,21 @@ Bool_t MMTrackDevel::Process(){
   }
   
   // check on level-zero clusters
+
+  vector<bool> is_used;
+  for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu++) {
+    is_used.push_back(kFALSE);
+  }
   
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu++) {
     int Nhit = (int) fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHitsVectorSize();
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().quad;
     int view = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().view;
+    int plane = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().view;
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
 
+    double slope_1 = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().slope;
+    
     for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
       TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
       double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
@@ -311,6 +319,30 @@ Bool_t MMTrackDevel::Process(){
       double x_Ecal = tempClu->GetPosition().X();
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
       if(x_Ecal*signsQuadX[quad]>0 && y_Ecal*signsQuadY[quad]>0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_Nhit_Q%d_clu0",viewlabel.Data(),quad),Nhit,dv_MMEcal,1.);
+
+      for(int iclu_2=0; iclu_2<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu_2++) {
+	int quad_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().quad;
+	int view_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().view;
+	int plane_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().view;
+
+	if(is_used.at(iclu_2)) continue;
+	if(plane != plane_2 && quad == quad_2 && view == view_2) {
+	  double slope_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetTracklet().slope;
+	  if(fabs(slope_1 - slope_2)<0.015) { // TO BE REPLACED WITH A VARIABLE !!!
+	    is_used.at(iclu) = kTRUE;
+	    is_used.at(iclu_2) = kTRUE;
+	    
+	    TVector3 MMposAtEcal_1 = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+	    TVector3 MMposAtEcal_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+
+	    double x_MMposAtEcal = 0.5*(MMposAtEcal_1.X()+MMposAtEcal_1.X());
+	    double y_MMposAtEcal = 0.5*(MMposAtEcal_1.Y()+MMposAtEcal_1.Y());
+
+	    
+	  }
+	}
+	
+      }
       
 //      if(view == YVIEW) {
 //	double dy_MMEcal = MMposAtEcal.Y() - y_Ecal;

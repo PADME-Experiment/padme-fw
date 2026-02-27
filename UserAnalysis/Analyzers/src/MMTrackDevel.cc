@@ -79,6 +79,10 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   for(int quad=0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),100,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+50);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),8,0,8,4,0,4);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_TrackMatchedCode2vs1"),4,0,4,4,0,4);
+
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dX1_vs_dX2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY1_vs_dY2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_clu0",100,-50,50,100,-50,50);
   return true;
 }
 
@@ -299,12 +303,14 @@ Bool_t MMTrackDevel::Process(){
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu++) {
     is_used.push_back(kFALSE);
   }
+
+  
   
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu++) {
     int Nhit = (int) fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHitsVectorSize();
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().quad;
     int view = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().view;
-    int plane = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().view;
+    int plane = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(0)->GetMMchInfo().plane;
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
 
     double slope_1 = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().slope;
@@ -317,13 +323,17 @@ Bool_t MMTrackDevel::Process(){
 
       double y_Ecal = tempClu->GetPosition().Y();
       double x_Ecal = tempClu->GetPosition().X();
+      
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
-      if(x_Ecal*signsQuadX[quad]>0 && y_Ecal*signsQuadY[quad]>0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_Nhit_Q%d_clu0",viewlabel.Data(),quad),Nhit,dv_MMEcal,1.);
-
+      
+      if(x_Ecal*signsQuadX[quad]>0 && y_Ecal*signsQuadY[quad]>0) {
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_Nhit_Q%d_clu0",viewlabel.Data(),quad),Nhit,dv_MMEcal,1.);
+      }
+      
       for(int iclu_2=0; iclu_2<(int) fMMClusteringInstance->GetMMClusterLength(0,0); iclu_2++) {
 	int quad_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().quad;
 	int view_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().view;
-	int plane_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().view;
+	int plane_2 = fMMClusteringInstance->GetMMCluster(iclu_2,0,0)->GetHit(0)->GetMMchInfo().plane;
 
 	if(is_used.at(iclu_2)) continue;
 	if(plane != plane_2 && quad == quad_2 && view == view_2) {
@@ -343,7 +353,7 @@ Bool_t MMTrackDevel::Process(){
 	}
 	
       }
-      
+          
 //      if(view == YVIEW) {
 //	double dy_MMEcal = MMposAtEcal.Y() - y_Ecal;
 //      }
@@ -357,6 +367,62 @@ Bool_t MMTrackDevel::Process(){
     
   }
 
+
+  vector<pair<double,int>> distance;
+  
+  for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
+      TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
+      double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
+
+      distance.clear();
+      for(int itra=0; itra<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra++) {
+	int Nhit = (int) fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHitsVectorSize();
+	int quad = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().quad;
+	int view = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
+	int plane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
+	
+	TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+	double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+
+	distance.emplace_back(fabs(dv_MMEcal), itra);
+      }
+
+      std::sort(distance.begin(), distance.end());
+
+
+      int view_before, plane_before;
+      TString viewlabel_before;
+      double dv_MMEcal_before;
+      
+      for(int idist=0; idist<(int) distance.size(); idist++) {
+	int itra = distance.at(idist).second;
+	int quad = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().quad;
+	int view = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
+	int plane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
+	
+	TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+	double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+
+	if(idist == 1) {// || idist == 3) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s1_vs_d%s2_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	}
+	
+	  
+	view_before = view;
+	plane_before = plane;
+	viewlabel_before = GeneralInfo::GetInstance()->GetMMViewLabel(view);
+	dv_MMEcal_before = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+      }
+  } 
+
+  
+  
+  
   
   fEventCounter++;
   return true;

@@ -82,7 +82,13 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
 
   fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dX1_vs_dX2_clu0",100,-50,50,100,-50,50);
   fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY1_vs_dY2_clu0",100,-50,50,100,-50,50);
-  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY1_vs_dX2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dX3_vs_dX4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY3_vs_dY4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY3_vs_dX4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dX_vs_dX_4p_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dY_4p_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_4p_clu0",100,-50,50,100,-50,50);
   return true;
 }
 
@@ -405,13 +411,25 @@ Bool_t MMTrackDevel::Process(){
 	TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
 	double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
 
-	if(idist == 1) {// || idist == 3) {
+	if(idist == 1) {
 	  if(plane_before != plane) {
 	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s1_vs_d%s2_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
 	  }
-	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY1_vs_dX2_clu0",dv_MMEcal_before,dv_MMEcal,1.);
 	}
-	
+	if(idist == 3) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s3_vs_d%s4_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY3_vs_dX4_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	}
+	if(idist > 3 && idist%2!=0) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_d%s_4p_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_4p_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	  
+	}
 	  
 	view_before = view;
 	plane_before = plane;

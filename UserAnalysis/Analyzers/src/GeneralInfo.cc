@@ -80,12 +80,12 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fQuadrantTempCorr[1] = 0.0; // correction
   fQuadrantTempCorr[2] = 0.0; // correction
   fQuadrantTempCorr[3] = 0.0; // correction
-
+  
   
   fMMStripPitch      = 1.2; // mm
   fMMOffsetPlaneX[0] = 0; // mm 
   fMMOffsetPlaneY[0] = 0; // mm
-  fMMPosPlaneZ[0]	   = 2357.32 + 6.35; // mm accounting for the measurement sphere
+  fMMPosPlaneZ[0]    = 2357.32 + 6.35; // mm accounting for the measurement sphere
   fMMOffsetPlaneX[1] = 0; // mm
   fMMOffsetPlaneY[1] = 0;  // mm
   fMMPosPlaneZ[1]    = 2458.32 - 6.35; // mm accounting for the measurement sphere

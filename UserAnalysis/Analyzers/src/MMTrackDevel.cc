@@ -374,27 +374,69 @@ Bool_t MMTrackDevel::Process(){
   }
 
 
-  vector<pair<double,int>> distance;
+  vector<pair<double,int>> distance, wrong_distance;
   
   for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
       TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
       double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
 
       distance.clear();
+      wrong_distance.clear();
       for(int itra=0; itra<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra++) {
 	int Nhit = (int) fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHitsVectorSize();
 	int quad = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().quad;
 	int view = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
 	int plane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	int other_view = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().otherview;
 	TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
-	
+
 	TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
 	double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
-
-	distance.emplace_back(fabs(dv_MMEcal), itra);
+	
+	TVector3 MMHitpos = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetPosition();
+	if(view == 1) { //XVIEW
+	  double YEcal = tempClu->GetPosition().Y();
+	  double YMM = MMHitpos.Y();
+	  if((quad == 0) && (YEcal < 0) && (YEcal > 2*YMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 1) && (YEcal > 0) && (YEcal < 2*YMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 2) && (YEcal > 0) && (YEcal < 2*YMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 3) && (YEcal < 0) && (YEcal > 2*YMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else {
+	    wrong_distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	}
+	if(view == 0) { //YVIEW
+	  double XEcal = tempClu->GetPosition().X();
+	  double XMM = MMHitpos.X();
+	  if((quad == 0) && (XEcal < 0) && (XEcal > 2*XMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 1) && (XEcal < 0) && (XEcal > 2*XMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 2) && (XEcal > 0) && (XEcal < 2*XMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else if((quad == 3) && (XEcal > 0) && (XEcal < 2*XMM)) {
+	    distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	  else {
+	    wrong_distance.emplace_back(fabs(dv_MMEcal), itra);
+	  }
+	}
       }
 
+      
       std::sort(distance.begin(), distance.end());
+      std::sort(wrong_distance.begin(), wrong_distance.end());
 
 
       int view_before, plane_before;
@@ -428,7 +470,6 @@ Bool_t MMTrackDevel::Process(){
 	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_d%s_4p_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
 	  }
 	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_4p_clu0",dv_MMEcal_before,dv_MMEcal,1.);
-	  
 	}
 	  
 	view_before = view;
@@ -436,6 +477,9 @@ Bool_t MMTrackDevel::Process(){
 	viewlabel_before = GeneralInfo::GetInstance()->GetMMViewLabel(view);
 	dv_MMEcal_before = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
       }
+
+      //wrong distance histos !!!
+      
   } 
 
   

@@ -43,7 +43,9 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   cout<<" Creating MMTrackDevel Hystograms for Run "<<nRun<<" "<<endl;
   //  fHS->BookHisto2List("MMTrackDevel","cluDistance",100,0,100,200,-100,100);
   fHS->BookHisto2List("MMTrackDevel","MM_Nclus_vs_NHits",100,0,3000.,500,0,500); 
-  
+
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),32,0,32,129,-0.5,128.5);
+
   int ipmodeMax[2] = {2,1};
   for (int clumode=0; clumode<2; clumode++){
     for (int ipmode=0; ipmode<ipmodeMax[clumode]; ipmode++){
@@ -65,6 +67,9 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,1000,0,100);
   }
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
+
+  
   for (int view = 0; view<2; view++){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Qall_clu1_vsYEcal",viewlabel.Data()),100,-300,300,100,-200,200);
@@ -142,6 +147,12 @@ Bool_t MMTrackDevel::Process(){
   fMMClusteringInstance->Clusterize();
 
   // plot NHit vs apv vs boardid Nhit vs (apvid + 2*boardid)
+  for (int apvid = 0; apvid<2; apvid++){
+    for (int bdid = 0; bdid<16; bdid++){
+      int NHitsPerAPV = fMMClusteringInstance->GetNHitsPerAPV(apvid,bdid);
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),apvid+2*bdid, NHitsPerAPV);
+    }
+  }
   
   int ipmodeMax[2] = {2,1};
   for (int clumode=0; clumode<2; clumode++){
@@ -295,7 +306,8 @@ Bool_t MMTrackDevel::Process(){
     else quad = 3;
 
     double pitch = GeneralInfo::GetInstance()->GetMMStripPitch();
-    int apvid;
+    int apvid = 0;
+    int bdid = 0;
     for(int pl=0; pl<2; pl++) {
       for(int vw=0; vw<2; vw++) {
 	if(vw == 0) { //YVIEW
@@ -344,7 +356,7 @@ Bool_t MMTrackDevel::Process(){
 	}
 	
 	int NHitsPerAPV = fMMClusteringInstance->GetNHitsPerAPV(apvid,bdid);
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),responseCode.at(iidx),NHitsPerAPV);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),(responseCode.at(iidx) & (1<<vw)) >0, NHitsPerAPV);
       }
     }
 

@@ -89,6 +89,17 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dX_vs_dX_4p_clu0",100,-50,50,100,-50,50);
   fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dY_4p_clu0",100,-50,50,100,-50,50);
   fHS->BookHisto2List("MMTrackDevel","MM_ECAL_dY_vs_dX_4p_clu0",100,-50,50,100,-50,50);
+
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dX1_vs_dX2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY1_vs_dY2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY1_vs_dX2_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dX3_vs_dX4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY3_vs_dY4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY3_vs_dX4_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dX_vs_dX_4p_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY_vs_dY_4p_clu0",100,-50,50,100,-50,50);
+  fHS->BookHisto2List("MMTrackDevel","MM_ECAL_wrong_dY_vs_dX_4p_clu0",100,-50,50,100,-50,50);
+ 
   return true;
 }
 
@@ -283,15 +294,73 @@ Bool_t MMTrackDevel::Process(){
     else if (x_Ecal > 0 && y_Ecal > 0) quad = 2;
     else quad = 3;
 
+    double pitch = GeneralInfo::GetInstance()->GetMMStripPitch();
+    int apvid;
+    for(int pl=0; pl<2; pl++) {
+      for(int vw=0; vw<2; vw++) {
+	if(vw == 0) { //YVIEW
+	  if(quad == 0) {
+	    bdid = 0+8*pl;
+	    if(fabs(y_Ecal)>128*pitch) apvid = 0;
+	    else  apvid = 1; //fabs(y_Ecal)<128*pitch
+	  }
+	  if(quad == 1) {
+	    bdid = 1+8*pl;
+	    if(fabs(y_Ecal)<128*pitch) apvid = 0;
+	    else  apvid = 1; // fabs(y_Ecal)>128*pitch
+	  }
+	  if(quad == 2) {
+	    bdid = 3+8*pl;
+	    if(fabs(y_Ecal)<128*pitch) apvid = 0;
+	    else apvid = 1; // fabs(y_Ecal)>128*pitch
+	  }
+	  if(quad == 3){
+	    bdid = 2+8*pl;
+	    if(fabs(y_Ecal)>128*pitch) apvid = 0;
+	    else apvid = 1; //fabs(y_Ecal)<128*pitch
+	  } 
+	}
+	else { //XVIEW
+	 if(quad == 0) {
+	    bdid = 6+8*pl;
+	    if(fabs(x_Ecal)>128*pitch) apvid = 0;
+	    else  apvid = 1; //fabs(x_Ecal)<128*pitch
+	  }
+	  if(quad == 1) {
+	    bdid = 4+8*pl;
+	    if(fabs(x_Ecal)>128*pitch) apvid = 0;
+	    else  apvid = 1; // fabs(x_Ecal)<128*pitch
+	  }
+	  if(quad == 2) {
+	    bdid = 5+8*pl;
+	    if(fabs(x_Ecal)<128*pitch) apvid = 0;
+	    else apvid = 1; // fabs(x_Ecal)>128*pitch
+	  }
+	  if(quad == 3){
+	    bdid = 7+8*pl;
+	    if(fabs(x_Ecal)<128*pitch) apvid = 0;
+	    else apvid = 1; //fabs(x_Ecal)>128*pitch
+	  } 
+	}
+	
+	int NHitsPerAPV = fMMClusteringInstance->GetNHitsPerAPV(apvid,bdid);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),responseCode.at(iidx),NHitsPerAPV);
+      }
+    }
+
+    //plot Nhits vs apvid+2*bdid ([0.5,128.5] vs [0.5,31.5])
     // we expect that when the responseCode has no bit raised for the view x(y), the number of hits for the apvid,bdid pair corresponding to view x(y) has more often LOW number of hits than when the response code has the bit raised for the view x(y)
     // loop over the view
     //     from the quadrant and from the value of the v for that view, derive the apvid,bdid pair which has that view and which can be used to detect a track in that quadrant
     //     plot IsBitOfThatViewRaised vs NHits(apvid,bdid)
     
+        
     fHS->FillHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),responseCode.at(iidx),quad);
     
   }
 
+  
+  
   // plot for response evaluation per track pair
   int counter = 0;
   for (int i=0; i< ECalSel::GetInstance()->getNECalEvents(); i++){
@@ -485,8 +554,43 @@ Bool_t MMTrackDevel::Process(){
 	viewlabel_before = GeneralInfo::GetInstance()->GetMMViewLabel(view);
 	dv_MMEcal_before = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
       }
+      
+      for(int iwdist=0; iwdist<(int) wrong_distance.size(); iwdist++) {
+	int itra = wrong_distance.at(iwdist).second;
+	int quad = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().quad;
+	int view = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
+	int plane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
+	
+	TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+	double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
 
-      //wrong distance histos !!!
+	if(iwdist == 1) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s1_vs_d%s2_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_wrong_dY1_vs_dX2_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	}
+	if(iwdist == 3) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s3_vs_d%s4_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_wrong_dY3_vs_dX4_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	}
+	if(iwdist > 3 && iwdist%2!=0) {
+	  if(plane_before != plane) {
+	    if(view_before == view)  fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s_vs_d%s_4p_clu0",viewlabel_before.Data(),viewlabel.Data()),dv_MMEcal_before,dv_MMEcal,1.);
+	  }
+	  if(view_before != view)  fHS->FillHisto2List("MMTrackDevel","MM_ECAL_wrong_dY_vs_dX_4p_clu0",dv_MMEcal_before,dv_MMEcal,1.);
+	}
+	  
+	view_before = view;
+	plane_before = plane;
+	viewlabel_before = GeneralInfo::GetInstance()->GetMMViewLabel(view);
+	dv_MMEcal_before = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+      }
+
+      
       
   } 
 

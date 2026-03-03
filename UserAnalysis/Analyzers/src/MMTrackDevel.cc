@@ -129,6 +129,8 @@ Bool_t MMTrackDevel::Process(){
   fMMClusteringInstance->Clear();
   fMMClusteringInstance->Init(fEvent->MMRecoEvent);
   fMMClusteringInstance->Clusterize();
+
+  // plot NHit vs apv vs boardid Nhit vs (apvid + 2*boardid)
   
   int ipmodeMax[2] = {2,1};
   for (int clumode=0; clumode<2; clumode++){
@@ -281,7 +283,13 @@ Bool_t MMTrackDevel::Process(){
     else if (x_Ecal > 0 && y_Ecal > 0) quad = 2;
     else quad = 3;
 
+    // we expect that when the responseCode has no bit raised for the view x(y), the number of hits for the apvid,bdid pair corresponding to view x(y) has more often LOW number of hits than when the response code has the bit raised for the view x(y)
+    // loop over the view
+    //     from the quadrant and from the value of the v for that view, derive the apvid,bdid pair which has that view and which can be used to detect a track in that quadrant
+    //     plot IsBitOfThatViewRaised vs NHits(apvid,bdid)
+    
     fHS->FillHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),responseCode.at(iidx),quad);
+    
   }
 
   // plot for response evaluation per track pair

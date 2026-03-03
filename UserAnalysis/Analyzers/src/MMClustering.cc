@@ -33,11 +33,19 @@ MMClustering::~MMClustering() {
 
 void MMClustering::Init(TMMRecoEvent* mmevent){
   Int_t nhits = mmevent->GetNHits();
+
+  for (int i=0; i<16; i++){
+    for (int j=0; j<2; j++) fNHitsPerAPV[j][i] = 0;
+  }
+
   for(Int_t h=0; h<nhits; h++) {
     MMSoftHit *softhit = new MMSoftHit();
     softhit->CopyHit(mmevent->Hit(h));
     MMchInfo mmi_hit = softhit->GetMMchInfo();
-
+    int apvid = 0;
+    if (mmi_hit.strip >= 128) apvid = 1;
+    fNHitsPerAPV[apvid][mmi_hit.bdid]++;
+      
     //isolation
     Int_t isollevel = 0;
     if(h>0) {

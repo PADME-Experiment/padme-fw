@@ -45,7 +45,8 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel","MM_Nclus_vs_NHits",100,0,3000.,500,0,500); 
 
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),32,0,32,129,-0.5,128.5);
-
+  fHS->BookHistoList("MMTrackDevel",Form("MM_ZeroHit"),32,0,32);
+  
   int ipmodeMax[2] = {2,1};
   for (int clumode=0; clumode<2; clumode++){
     for (int ipmode=0; ipmode<ipmodeMax[clumode]; ipmode++){
@@ -147,12 +148,17 @@ Bool_t MMTrackDevel::Process(){
   fMMClusteringInstance->Clusterize();
 
   // plot NHit vs apv vs boardid Nhit vs (apvid + 2*boardid)
+  int zero_hit=0;
   for (int apvid = 0; apvid<2; apvid++){
     for (int bdid = 0; bdid<16; bdid++){
       int NHitsPerAPV = fMMClusteringInstance->GetNHitsPerAPV(apvid,bdid);
-      fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),apvid+2*bdid, NHitsPerAPV);
+      if(NHitsPerAPV == 0) zero_hit++;
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),apvid+2*bdid, NHitsPerAPV,1.);
     }
   }
+
+  fHS->FillHistoList("MMTrackDevel",Form("MM_ZeroHit"),zero_hit,1.);
+
   
   int ipmodeMax[2] = {2,1};
   for (int clumode=0; clumode<2; clumode++){

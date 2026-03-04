@@ -76,7 +76,7 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 
   PadmeVReconstruction::ProcessEvent(rawEv,MMRawEv);
   
-  std::cout << "Second This event has " << (int) MMRawEv->GetNMMBoards() << " Boards " << std::endl;
+  //  std::cout << "Second This event has " << (int) MMRawEv->GetNMMBoards() << " Boards " << std::endl;
 
   NoiseFinder(MMRawEv);
   

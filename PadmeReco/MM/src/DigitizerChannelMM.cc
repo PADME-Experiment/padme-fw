@@ -165,7 +165,10 @@ bool DigitizerChannelMM::evaluateSig(Short_t sampleMaxId, Short_t maxQ, double* 
   fSignalShape->SetParLimits(2,fHitTimeLow,fHitTimeHigh); //ns
   fSignalShape->FixParameter(0,0.);
   fSignalShape->FixParameter(3,fTimeTau); // ns
-  
+
+  if (grafoSignal->GetN() < 1) {
+    std::cout << "cannot fit because number of points is " << grafoSignal->GetN()  << std::endl;
+  }
   TFitResultPtr fitres = grafoSignal->Fit(fSignalShape,"SQ");
   
 //  if (fCounters < 100) {

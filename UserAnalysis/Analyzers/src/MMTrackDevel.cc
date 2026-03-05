@@ -90,7 +90,20 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX2_vs_dX1_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dY2_vs_dY1_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_dY_clu0_Q%d",quad),100,-100,100,100,-100,100);
-    }
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX2_vs_dX1_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dY2_vs_dY1_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX_vs_dY_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_chi2_clu0_Q%d",quad),100,0,100);
+    fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_wrong_chi2_clu0_Q%d",quad),100,0,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DdX12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DdY12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_DdX12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_DdY12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterX12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterY12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterX12_vs_Dslope12_cut_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterY12_vs_Dslope12_cut_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+  }
 
   
   return true;
@@ -457,6 +470,11 @@ Bool_t MMTrackDevel::Process(){
 
 
   vector<pair<double,int>> distance[4], wrong_distance[4];
+  double dx0=10000, dx1=10000, dy0=10000, dy1=10000;
+  double wdx0=10000, wdx1=10000, wdy0=10000, wdy1=10000;
+
+  int wrong_quadY[4] = {3,2,1,0};
+  int wrong_quadX[4] = {1,0,3,2};
   
   for(int iidx=0; iidx<(int) cluIndices.size(); iidx++) {
     TRecoVCluster* tempClu = ECal_clEvent->Element(cluIndices.at(iidx));
@@ -484,38 +502,107 @@ Bool_t MMTrackDevel::Process(){
       
       TVector3 MMposAtEcal = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+
+      if(quad == wrong_quadX[Ecal_quad]) {
+	if(view == 1 && plane == 0 && fabs(dv_MMEcal) < wdx0) wdx0 = fabs(dv_MMEcal);
+	if(view == 1 && plane == 1 && fabs(dv_MMEcal) < wdx1) wdx1 = fabs(dv_MMEcal);
+	if(view == 1) wrong_distance[Ecal_quad].emplace_back(dv_MMEcal,itra);
+      }
+      if(quad == wrong_quadY[Ecal_quad]) {
+	if(view == 0 && plane == 0 && fabs(dv_MMEcal) < wdy0) wdy0 = fabs(dv_MMEcal);
+	if(view == 0 && plane == 1 && fabs(dv_MMEcal) < wdy1) wdy1 = fabs(dv_MMEcal);
+	if(view == 0) wrong_distance[Ecal_quad].emplace_back(dv_MMEcal,itra);
+      }
       
       if(Ecal_quad != quad) continue;
       distance[quad].emplace_back(dv_MMEcal, itra);
+
+      if(view == 1 && plane == 0 && fabs(dv_MMEcal) < dx0) dx0 = fabs(dv_MMEcal);
+      if(view == 1 && plane == 1 && fabs(dv_MMEcal) < dx1) dx1 = fabs(dv_MMEcal);
+      if(view == 0 && plane == 0 && fabs(dv_MMEcal) < dy0) dy0 = fabs(dv_MMEcal);
+      if(view == 0 && plane == 1 && fabs(dv_MMEcal) < dy1) dy1 = fabs(dv_MMEcal);
+    }
+
+    double chi2 = dx0*dx0 + dx1*dx1 + dy0*dy0 + dy1*dy1;
+    double wchi2 = wdx0*wdx0 + wdx1*wdx1 + wdy0*wdy0 + wdy1*wdy1; 
+    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_chi2_clu0_Q%d",Ecal_quad),chi2/100.,1.);
+    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_wrong_chi2_clu0_Q%d",Ecal_quad),wchi2/100.,1.); 
+
+    int q = Ecal_quad;
+    
+    for(int idist=0; idist<(int) distance[q].size(); idist++) {
+      int itra = distance[q].at(idist).second;
+      int iview = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
+      int iplane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+      TString iviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(iview);
+      
+      double islope = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().slope;
+      double iinter = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().inter;
+      
+      double idv_MMEcal = distance[q].at(idist).first;
+      
+      for(int jdist=idist+1; jdist<(int) distance[q].size(); jdist++) {
+	int jtra = distance[q].at(jdist).second;
+	int jview = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().view;
+	int jplane = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	TString jviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(jview);
+	
+	double jslope = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().slope;
+	double jinter = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().inter;
+	
+	double jdv_MMEcal = distance[q].at(jdist).first;
+	
+        
+	if(iplane != jplane) {
+	  if(iview == jview) {
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
+	    if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_cut_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
+	  }
+	}
+	if(iview != jview) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_dY_clu0_Q%d",q),idv_MMEcal,jdv_MMEcal,1.); 
+        
+      }
       
     }
     
-    for(int q=0; q<4; q++) {
-      for(int idist=0; idist<(int) distance[q].size(); idist++) {
-	int itra = distance[q].at(idist).second;
-	int iview = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
-	int iplane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
-	TString iviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(iview);
+    for(int iwdist=0; iwdist<(int) wrong_distance[q].size(); iwdist++) {
+      int itra = wrong_distance[q].at(iwdist).second;
+      int iview = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().view;
+      int iplane = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHit(0)->GetMMchInfo().plane;
+      TString iviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(iview);
+      
+      double islope = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().slope;
+      double iinter = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().inter;
+      double idv_MMEcal = wrong_distance[q].at(iwdist).first;
+      
+      for(int jwdist=iwdist+1; jwdist<(int) wrong_distance[q].size(); jwdist++) {
+	int jtra = wrong_distance[q].at(jwdist).second;
+	int jview = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().view;
+	int jplane = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().plane;
+	TString jviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(jview);
+
+	double jslope = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().slope;
+	double jinter = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().inter;
+	double jdv_MMEcal = wrong_distance[q].at(jwdist).first;
 	
-	double idv_MMEcal = distance[q].at(idist).first;
-	
-	for(int jdist=idist+1; jdist<(int) distance[q].size(); jdist++) {
-	  int jtra = distance[q].at(jdist).second;
-	  int jview = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().view;
-	  int jplane = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetHit(0)->GetMMchInfo().plane;
-	  TString jviewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(jview);
-	  
-	  double jdv_MMEcal = distance[q].at(jdist).first;
-	  
-          
-	  if(iplane != jplane) {
-	    if(iview == jview) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
-	    
+        
+	if(iplane != jplane) {
+	  if(iview == jview) {
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
 	  }
-	  if(iview != jview) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_dY_clu0_Q%d",q),idv_MMEcal,jdv_MMEcal,1.); 
+	  
 	}
+	if(iview != jview) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX_vs_dY_clu0_Q%d",q),idv_MMEcal,jdv_MMEcal,1.); 
+        
       }
+      
     }
+
+
+    
   } 
   
   

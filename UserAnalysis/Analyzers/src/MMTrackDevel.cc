@@ -89,9 +89,13 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   for(int quad=0; quad<4; quad++) {
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX2_vs_dX1_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dY2_vs_dY1_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX2_vs_dX1_cut_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dY2_vs_dY1_cut_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_dY_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX2_vs_dX1_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dY2_vs_dY1_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX2_vs_dX1_cut_clu0_Q%d",quad),100,-100,100,100,-100,100);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dY2_vs_dY1_cut_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_dX_vs_dY_clu0_Q%d",quad),100,-100,100,100,-100,100);
     fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_chi2_clu0_Q%d",quad),100,0,100);
     fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_wrong_chi2_clu0_Q%d",quad),100,0,100);
@@ -555,7 +559,8 @@ Bool_t MMTrackDevel::Process(){
         
 	if(iplane != jplane) {
 	  if(iview == jview) {
-	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
 	    if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_cut_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
@@ -590,7 +595,8 @@ Bool_t MMTrackDevel::Process(){
         
 	if(iplane != jplane) {
 	  if(iview == jview) {
-	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
 	  }
 	  

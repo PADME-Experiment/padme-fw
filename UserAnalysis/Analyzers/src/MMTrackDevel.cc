@@ -107,6 +107,11 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterY12_vs_Dslope12_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterX12_vs_Dslope12_cut_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_DinterY12_vs_Dslope12_cut_clu0_Q%d",quad),100,-0.1,0.1,200,-200,200);
+    fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_tEcal_clu0_Q%d",quad),100,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dinterMM_clu0_Q%d",quad),20,-5,5,20,-200,200);
+    fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_dz_clu0_Q%d",quad),100,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dtMM_clu0_Q%d",quad),100,-700,700,100,-200,200);
+    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dzECAL_vs_dzMM_clu1_Q%d",quad),100,-200,200,100,-200,200);
   }
 
   
@@ -240,7 +245,7 @@ Bool_t MMTrackDevel::Process(){
     double ipphaseangle = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetIPPhaseAngle();
     int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_dz",dz,chi2,1.);
-    fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
+    //fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
     fHS->FillHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,chi2,1.);
     
     for(int ipair=0; ipair<(int) cluTime_avg.size(); ipair++) {
@@ -263,6 +268,7 @@ Bool_t MMTrackDevel::Process(){
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
       if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0 && chi2 < 20) {
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1",viewlabel.Data(),quad),Ddz,dv_MMEcal,1.);
+	if(fabs(dv_MMEcal)<20) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dzECAL_vs_dzMM_clu1_Q%d",quad),dz,dz_Ecal,1.);
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1_recenter",viewlabel.Data(),quad),
 			    (Ddz-offsetdDZvsXY[1-view][quad])  / (maxdDZvsXY[1-view][quad]),
 			    (dv_MMEcal-offsetXY[1-view][quad]) / (dxy_MMEcalMax[1-view][quad]), 1.);
@@ -487,7 +493,7 @@ Bool_t MMTrackDevel::Process(){
       distance[q].clear();
       wrong_distance[q].clear();
     }
-    
+
     double x_Ecal = tempClu->GetPosition().X();
     double y_Ecal = tempClu->GetPosition().Y();
     int Ecal_quad;
@@ -495,6 +501,9 @@ Bool_t MMTrackDevel::Process(){
     else if (x_Ecal < 0 && y_Ecal > 0) Ecal_quad = 1;
     else if (x_Ecal > 0 && y_Ecal > 0) Ecal_quad = 2;
     else Ecal_quad = 3;
+
+    double t_Ecal = tempClu->GetTime()+440;
+    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_tEcal_clu0_Q%d",Ecal_quad),t_Ecal,1.);
     
     for(int itra=0; itra<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra++) {
       int Nhit = (int) fMMClusteringInstance->GetMMCluster(itra,0,0)->GetHitsVectorSize();
@@ -555,14 +564,32 @@ Bool_t MMTrackDevel::Process(){
 	double jinter = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().inter;
 	
 	double jdv_MMEcal = distance[q].at(jdist).first;
+
 	
         
 	if(iplane != jplane) {
 	  if(iview == jview) {
+	    double dv_inter;
+	    if(iplane == 0) dv_inter = iinter-jinter;
+	    else dv_inter = -iinter+jinter;
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
-	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	       if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) {
+		double m_avg = 0.5*(islope+jslope);
+		double dz = dv_inter/m_avg;
+		
+		fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_dz_clu0_Q%d",q),dz,1.);
+		
+		double dt = dz/GeneralInfo::GetInstance()->GetMMDriftVelocity();
+
+		fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dinterMM_clu0_Q%d",q),dv_inter,t_Ecal,1.);
+		fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dtMM_clu0_Q%d",q),dt,t_Ecal,1.);
+	      }
+	    }
+	    
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
-	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,dv_inter,1.);
 	    if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Dinter%s12_vs_Dslope12_cut_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,iinter-jinter,1.);
 	  }
 	}
@@ -592,11 +619,14 @@ Bool_t MMTrackDevel::Process(){
 	double jinter = fMMClusteringInstance->GetMMCluster(jtra,0,0)->GetTracklet().inter;
 	double jdv_MMEcal = wrong_distance[q].at(jwdist).first;
 	
-        
 	if(iplane != jplane) {
 	  if(iview == jview) {
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
-	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) {
+	      
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+	   
+	    }
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_wrong_Dd%s12_vs_Dslope12_clu0_Q%d",iviewlabel.Data(),q),islope-jslope,idv_MMEcal-jdv_MMEcal,1.);
 	  }
 	  

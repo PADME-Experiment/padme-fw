@@ -67,6 +67,8 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,1000,0,100);
+    for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),100,-30,30,100,-5,5);
   }
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
 
@@ -247,6 +249,12 @@ Bool_t MMTrackDevel::Process(){
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_dz",dz,chi2,1.);
     //fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
     fHS->FillHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,chi2,1.);
+    fHS->FillHistoList("MMTrackDevel",Form("MM_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,1.);
+    vector<TVector3> residuals = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().vres;
+    //std::cout<<"residual size: "<<residuals.size()<<" hit size: "<<Nhit<<std::endl;
+    for(int i=0; i<(int) residuals.size(); i++) {
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),residuals.at(i)[1-view],residuals.at(i).Z(),1.);
+    }
     
     for(int ipair=0; ipair<(int) cluTime_avg.size(); ipair++) {
       double dt_Ecal = cluTime_avg.at(ipair);
@@ -572,10 +580,14 @@ Bool_t MMTrackDevel::Process(){
 	    double dv_inter;
 	    if(iplane == 0) dv_inter = iinter-jinter;
 	    else dv_inter = -iinter+jinter;
+	    
 	    fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
+
 	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) {
+
 	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);
-	       if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) {
+
+	      if(fabs(idv_MMEcal)<20 && fabs(jdv_MMEcal)<20) {
 		double m_avg = 0.5*(islope+jslope);
 		double dz = dv_inter/m_avg;
 		

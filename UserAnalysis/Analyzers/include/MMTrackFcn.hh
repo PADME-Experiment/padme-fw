@@ -111,7 +111,7 @@ public:
 	delta  = (distance.Y())/fTrackerr.at(i).Z();
 	//	std::cout << " deltaz = " << delta << std::endl;
 	chisq += delta*delta;
-
+	
 	//std::cout<<"[FITTER] chi2 step: "<<chisq<<std::endl;
       }
       //      std::cout << " chi2 = " << chisq;
@@ -119,11 +119,97 @@ public:
     
     return chisq; // Npoints-4 degrees of freedom
   }
+  
+  
+  void ComputeResiduals (const double *par) {
+    for (uint i= 0; i<fTrackmmt.size(); i++) {
+      TVector3 init_res(-999999,-999999,-999999);
+      fTrackres.push_back(init_res);
+    }
+    
+    if (fFitMode%10 == 2){ //3D fit
+      TVector3 refp[2];
+      for (uint i=0; i<2; i++) refp[i].SetXYZ(par[2*i],par[1+2*i],fRefZPoints[i]); // reference points of the straight line
+      TVector3 lambda = refp[1];
+      lambda -= refp[0];
+      lambda *= (1./lambda.Mag()); // direction of the track
+
+      for (uint i= 0; i<fTrackmmt.size(); i++) {
+	TVector3 distance;
+	distance.SetX(fTrackmmt.at(i).X());
+	distance.SetY(fTrackmmt.at(i).Y());
+	distance.SetZ(fTrackmmt.at(i).Z());
+	if (fFitMode/10) {// fit DZ
+	  if (fTrackBdIds.at(i)>=0 && fTrackBdIds.at(i)<8)       distance.SetZ(distance.Z() - par[4]);
+	  else if (fTrackBdIds.at(i)>=8 && fTrackBdIds.at(i)<16) distance.SetZ(distance.Z() + par[4]);
+	}
+	distance -= refp[0];
+	double projection = distance*lambda;
+	TVector3 parallelDist = lambda;
+	parallelDist *= projection;
+      
+	distance -= parallelDist ; // ortogonal distance point to line                  
+	if (fFitMode%10 != 0){ //                                                                      CHE VORDI!!!!
+	  fTrackres.at(i).SetX(distance.X());
+	}
+	if (fFitMode%10 != 1){ //                                                                      CHE VORDI!!!!
+	  fTrackres.at(i).SetY(distance.Y());
+	}
+	fTrackres.at(i).SetZ(distance.Z());
+	
+	//std::cout<<"[FITTER] chi2 step: "<<chisq<<std::endl;
+      }
+    }
+    else { //2D fit
+      TVector2 refp[2];
+      for (uint i=0; i<2; i++) refp[i].Set(par[1-fFitMode%10+2*i],fRefZPoints[i]); // reference points of the straight line
+      TVector2 lambda = refp[1];
+      lambda -= refp[0];
+      lambda *= (1./lambda.Mod()); // direction of the track
+      
+      
+      for (uint i= 0; i<fTrackmmt.size(); i++) {
+	TVector2 point(fTrackmmt.at(i)[1-fFitMode%10],fTrackmmt.at(i)[2]);
+	
+	//	std::cout<<"[FITTER] point"<<i<<" : ["<<point.X()<<" , "<<point.Y()<<"]"<<std::endl;
+
+	if (fFitMode/10) {// fit DZ
+	  if (fTrackBdIds.at(i)>=0 && fTrackBdIds.at(i)<8)       point.SetY(point.Y() - par[4]);
+	  else if (fTrackBdIds.at(i)>=8 && fTrackBdIds.at(i)<16) point.SetY(point.Y() + par[4]);
+	}
+	
+	TVector2 distance = point;
+	distance -= refp[0];
+	double projection = distance*lambda;
+	TVector2 parallelDist = lambda;
+	parallelDist *= projection;
+	
+	distance -= parallelDist ; // ortogonal distance point to line                  
+
+	if(1-fFitMode%10 == 0) { //X view
+	  fTrackres.at(i).SetX(distance.X());
+	  fTrackres.at(i).SetY(0.);
+	}
+	else {                   //Y view
+	  fTrackres.at(i).SetX(0.);
+	  fTrackres.at(i).SetY(distance.X());
+	}
+	fTrackres.at(i).SetZ(distance.Y());
+      }
+    }
+  }
+  
+  int GetResVectorLenght() {return (int) fTrackres.size();}
+  TVector3 GetResidual(int i) {if(i<0 && i>(int) fTrackres.size()) return {-999999,-999999,-999999}; return fTrackres.at(i);}
+  
+  
 private:
   Double_t fRefZPoints[2];
   std::vector<TVector3> fTrackmmt; // track position measurements
   std::vector<TVector3> fTrackerr; // track position expected errors
   std::vector<int> fTrackBdIds; // track Board ID number, -1 for additional point
+  std::vector<TVector3> fTrackres;
+
   int fFitMode;
 };
 #endif

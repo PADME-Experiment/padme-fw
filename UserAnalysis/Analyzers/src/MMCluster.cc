@@ -21,6 +21,8 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
     fTracos.pars[p] = -9999;
   }
   fTracos.lambda = {-9999,-9999,-9999};
+  fTracos.vres.clear();
+    
   fIPPhaseAngle = -9999;
   fDvAtMeshPlane = -9999;
   fEcalClusIndex = -999;
@@ -28,6 +30,7 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
 
 MMCluster::~MMCluster() {
   fMMHitsInClu.clear();
+  fTracos.vres.clear();
 }
 
 void MMCluster::Print() {
@@ -107,14 +110,15 @@ bool MMCluster::ReFitWithClusterTime(bool ipused, double refTimeZ){
   
   bool okfit = fFitter.FitFCN();
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
-
+  fMMTrackFcn.ComputeResiduals(result.GetParams());
+  
   if (!okfit) {    
     //    result.Print(std::cout);
     return kFALSE;
   }
 
   // success
-
+  
   fTracos.chi2 = result.MinFcnValue();
   for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
 
@@ -128,6 +132,12 @@ bool MMCluster::ReFitWithClusterTime(bool ipused, double refTimeZ){
   fTracos.lambda[chinfoThis.view] = 0.;     
   fTracos.lambda.SetZ(cosz);
 
+  int vres_size = fMMTrackFcn.GetResVectorLenght();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = fMMTrackFcn.GetResidual(i);
+    fTracos.vres.push_back(res);
+  }
+  
   //IP phase angle in Clu Mode 1
   double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
   double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
@@ -153,9 +163,12 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
 
 
   const double dvAtMeshMax = 5; // mm
+  const double dslopeMAX = 0.025; 
   // check the dv at the mesh between the two clusters
   double dv = fTracos.inter - inputclus->GetTracklet().inter;  
+  double dslope = fTracos.slope - inputclus->GetTracklet().slope;  
   if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
+  if (TMath::Abs(dslope) > dslopeMAX) return kFALSE;
 
   // build complete hit vector
   vector<MMSoftHit*> hitArray;
@@ -187,7 +200,8 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   
   bool okfit = fFitter.FitFCN();
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
-
+  fMMTrackFcn.ComputeResiduals(result.GetParams());
+  
   //std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
   if (!okfit) {    
     //    result.Print(std::cout);
@@ -214,6 +228,12 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fTracos.lambda[chinfoThis.view] = 0.;     
   fTracos.lambda.SetZ(cosz);
 
+  int vres_size = fMMTrackFcn.GetResVectorLenght();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = fMMTrackFcn.GetResidual(i);
+    fTracos.vres.push_back(res);
+  }
+  
 
   //  std::cout<<"[MERGE PLANES] cosv: "<<cosv<<" cosz: "<<cosz<<" dz: "<<fTracos.pars[4]<<std::endl;
   

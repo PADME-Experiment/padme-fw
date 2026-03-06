@@ -15,7 +15,8 @@ struct MMTracklet{
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
   Double_t pars[5];// x0,y0,x1,y1,dz: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
   TVector3 lambda; // cosines of track directions
-
+  vector<TVector3> vres; //vector of residuals
+  
   TVector3 ExtrapolationAtZ(double z_in) {
     TVector3 ext_pos;
 

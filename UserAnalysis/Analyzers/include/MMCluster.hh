@@ -37,7 +37,8 @@ public:
   bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
   bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
   bool ReFitWithClusterTime(bool ipused, double refTimeZ); // re-fit level-1 cluster with fixed DZ
-
+  bool HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg);
+  
   //  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
   void RemoveHit(Int_t i); // remove a hit if necessary
     
@@ -61,7 +62,8 @@ public:
   
 private:
   void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double* chi2);
-
+  
+  
   Int_t fIpmode; // 0/1 if the ip connection is enfored/not
   Int_t fClumode; // 0--4: Double_tt of hits, Double_tt+hits in the same {plane,board}, match with other board in the same view [DeltaT fit], match with opposite view [3d fit]
   vector<MMSoftHit*> fMMHitsInClu; // vector of MMSoftHit objects filled in Clustering::Init

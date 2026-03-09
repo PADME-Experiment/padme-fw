@@ -377,6 +377,12 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     
     if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) return kFALSE;
   }
+
+  double v_new_hit = softhit->GetPosition()[1-softhit->GetMMchInfo().view];
+  double z_new_hit = softhit->GetZfromTime(1.);
+  // bool hit_rejected = HitRejectionAlgorithm(v_new_hit, z_new_hit, mt_avg, ct_avg); //evaluating the residue in z of the new hit: returns true if the hit is rejected, i.e. z_res > Z_RES_CUT (default DZ_CUT = 5mm)
+  //if(hit_rejected) return kFALSE;
+  
   // add present hit to the cluster    
   fMMHitsInClu.push_back(softhit);
   if (fMMHitsInClu.size()==2) fSeedSlope = mt_avg;
@@ -457,4 +463,21 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
   *cosvout = mt_avg*normo;
   *coszout = normo;
   *chi2out = chi2;
+}
+
+
+bool MMCluster::HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg) {
+  double Z_RES_CUT = 6*1.2; //mm 
+
+  //putting the z of the hit @ mesh
+  double z_new_hit_at_mesh = z_new_hit - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+
+  if(fabs(mt_avg)<1e-15) {
+    std::cerr<<"[HitRejectionAlgorithm] Found slope = 0 !!!!"<<std::endl;
+    return kTRUE;
+  }
+  double z_res = z_new_hit_at_mesh - (v_new_hit-ct_avg)/mt_avg;
+
+  if(fabs(z_res)<Z_RES_CUT) return kFALSE;
+  else return kTRUE;
 }

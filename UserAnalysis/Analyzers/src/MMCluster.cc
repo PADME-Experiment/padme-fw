@@ -163,7 +163,7 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
 
 
   const double dvAtMeshMax = 5; // mm
-  const double dslopeMAX = 0.025; 
+  const double dslopeMAX = 0.040; //old 0.025 
   // check the dv at the mesh between the two clusters
   double dv = fTracos.inter - inputclus->GetTracklet().inter;  
   double dslope = fTracos.slope - inputclus->GetTracklet().slope;  
@@ -197,17 +197,69 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
     if(!calibration) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
     else InitFit(hitArray);
   }
-  
+
   bool okfit = fFitter.FitFCN();
+  const ROOT::Fit::FitResult & result_temp = fFitter.Result(); 
+  
+  int Nhit_fclu = fMMHitsInClu.size();
+  int Nhit_inclu = inputclus->GetHitsVectorSize();
+  //----------------------------------------------- HIT REJECTION
+  for(int hr=0; hr<10; hr++) {
+
+    fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
+    double chi2 = result_temp.MinFcnValue();
+    double ndf = result_temp.Ndf();
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, ndf);
+    
+    /*if (!okfit) {    
+    //    result.Print(std::cout);
+    return kFALSE;
+    }*/
+    int res_size = fMMTrackFcn.GetResVectorLenght();
+    double res_m2_max = -1;
+    int i_max = 0;
+    for(int i=0; i<res_size; i++) {
+      double res_m2 = fMMTrackFcn.GetResidual(i).Mag2();
+      if(res_m2 > res_m2_max) {
+	res_m2_max = res_m2;
+	i_max = i;
+      }
+    }
+    
+    int hit_to_remove_index;
+    if((i_max - (int) fMMHitsInClu.size())>0) {
+      hit_to_remove_index = (i_max - (int) fMMHitsInClu.size());
+      Nhit_inclu--;
+    }
+    else {
+      hit_to_remove_index = i_max;
+      Nhit_fclu--;
+    }
+    
+    if(pchi2 < 0.001 && hitArray.size() > 4 && Nhit_fclu>1 && Nhit_inclu>1) {
+      hitArray.erase(hitArray.begin()+i_max);
+      InitFit(hitArray);
+      bool okfit_new = fFitter.FitFCN();
+      
+      double chi2_new = result_temp.MinFcnValue();
+      double ndf_new = result_temp.Ndf();
+      double pchi2_new = ROOT::Math::chisquared_cdf_c(chi2_new, ndf_new);
+      
+      if(pchi2_new > 0.001) {
+	okfit = okfit_new;
+      }
+    }
+  }
+  //-------------------------------------------------
+  
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
   fMMTrackFcn.ComputeResiduals(result.GetParams());
-  
   //std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
   if (!okfit) {    
     //    result.Print(std::cout);
     return kFALSE;
   }
-
+    
   // success: update the cluster
   for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
     fMMHitsInClu.push_back(inputclus->GetHit(i));
@@ -302,7 +354,7 @@ void MMCluster::setPoints(vector<MMSoftHit*> hitArray){
     double ers[3];
     ers[view] = 2.*TMath::Abs(hit->GetPosition()[view])/TMath::Sqrt(12.); // WILL USE VALUE FROM CONFIG
     ers[1-view] = 1.2/TMath::Sqrt(12.); // WILL USE VALUE FROM CONFIG
-    ers[2] = 5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
+    ers[2] = 2*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
     TVector3 errors;
     errors.SetXYZ(ers[0],ers[1],ers[2]);
     fErrors.push_back(errors);

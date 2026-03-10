@@ -66,9 +66,9 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_XEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,1000,0,100);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,100,0,1);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50);
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),100,-30,30,100,-5,5);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),100,-2,2,100,-2,2);
   }
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
 
@@ -113,7 +113,7 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dinterMM_clu0_Q%d",quad),20,-5,5,20,-200,200);
     fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_dz_clu0_Q%d",quad),100,-200,200);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_tEcal_vs_dtMM_clu0_Q%d",quad),100,-700,700,100,-200,200);
-    fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dzECAL_vs_dzMM_clu1_Q%d",quad),100,-200,200,100,-200,200);
+    
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dZ_vs_dV_FIRST_NOCUT_clu0_Q%d",quad),100,-10,10,200,-20,20);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dZ_vs_dV_SECOND_NOCUT_clu0_Q%d",quad),100,-10,10,200,-20,20);
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dZ_vs_dV_FIRST_CUT_clu0_Q%d",quad),100,-10,10,200,-20,20);
@@ -124,7 +124,10 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dZ_vs_Nhit_SECOND_CUT_clu0_Q%d",quad),10,0,10,200,-20,20);
   }
 
-  
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xn"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yn"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yp"),40,-400,400,100,-200,200);
   return true;
 }
 
@@ -239,7 +242,8 @@ Bool_t MMTrackDevel::Process(){
 
   for(int iclu=0; iclu<(int) fMMClusteringInstance->GetMMClusterLength(0,1); iclu++) {
     int quad = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().quad;
-    int view = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().view;
+    int view = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHit(0)->GetMMchInfo().view;    
+    
     vector<int> level0Merged = fMMClusteringInstance->GetHitComposition(iclu,0,1);
     if (level0Merged.size() != 2) {
       std::cout << "Inconsistente level one merging " << level0Merged.size() << std::endl;
@@ -256,14 +260,18 @@ Bool_t MMTrackDevel::Process(){
     int Nhit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetHitsVectorSize();
     fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_dz",dz,chi2,1.);
     //fHS->FillHisto2List("MMTrackDevel","MM_chi2_vs_angleDiffLevel0",dz,chi2,1.);
-    fHS->FillHisto2List("MMTrackDevel",Form("MM_chi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,chi2,1.);
+    
     fHS->FillHistoList("MMTrackDevel",Form("MM_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit,1.);
     vector<TVector3> residuals = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().vres;
     //std::cout<<"residual size: "<<residuals.size()<<" hit size: "<<Nhit<<std::endl;
     for(int i=0; i<(int) residuals.size(); i++) {
       fHS->FillHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),residuals.at(i)[1-view],residuals.at(i).Z(),1.);
     }
+    int Nhit_true = (int) residuals.size();
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, Nhit_true-3);
+    fHS->FillHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),Nhit_true,pchi2,1.);
     
+
     for(int ipair=0; ipair<(int) cluTime_avg.size(); ipair++) {
       double dt_Ecal = cluTime_avg.at(ipair);
       //double dz_Ecal = dt_Ecal*fGeneralInfo->GetDriftVelocity();
@@ -282,9 +290,18 @@ Bool_t MMTrackDevel::Process(){
 
       double Ddz = dz - dz_Ecal;
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
-      if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0 && chi2 < 20) {
+      if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0 && pchi2 > 0.5) {
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1",viewlabel.Data(),quad),Ddz,dv_MMEcal,1.);
-	if(fabs(dv_MMEcal)<20) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dzECAL_vs_dzMM_clu1_Q%d",quad),dz,dz_Ecal,1.);
+	if(fabs(dv_MMEcal)<10) { //20) {
+	  if(view == 1) { //X view
+	    if(y_Ecal > 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yp"),x_Ecal,Ddz,1.);
+	    if(y_Ecal < 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yn"),x_Ecal,Ddz,1.);
+	  }
+	  if(view == 0) { //Y view
+	    if(x_Ecal > 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),y_Ecal,Ddz,1.);
+	    if(x_Ecal < 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xn"),y_Ecal,Ddz,1.);
+	  }
+	}
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1_recenter",viewlabel.Data(),quad),
 			    (Ddz-offsetdDZvsXY[1-view][quad])  / (maxdDZvsXY[1-view][quad]),
 			    (dv_MMEcal-offsetXY[1-view][quad]) / (dxy_MMEcalMax[1-view][quad]), 1.);

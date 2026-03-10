@@ -122,6 +122,8 @@ public:
   
   
   void ComputeResiduals (const double *par) {
+
+    fTrackres.clear();
     for (uint i= 0; i<fTrackmmt.size(); i++) {
       TVector3 init_res(-999999,-999999,-999999);
       fTrackres.push_back(init_res);

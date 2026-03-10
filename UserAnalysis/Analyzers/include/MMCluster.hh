@@ -4,6 +4,7 @@
 #include <Fit/Fitter.h>
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
+#include "Math/ProbFunc.h"
 #include "MMTrackFcn.hh"
 #include "GeneralInfo.hh"
 

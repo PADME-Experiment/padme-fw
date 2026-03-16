@@ -139,7 +139,7 @@ bool MMCluster::ReFitWithClusterTime(bool ipused, double refTimeZ){
     
     Nhit_fclu--;
    
-    if(pchi2 < 0.001 && hitArray.size() > 4 && Nhit_fclu>1) {
+    if(pchi2 < 0.001 && hitArray.size() < 7 && hitArray.size() > 4 && Nhit_fclu>1) {
       hitArray.erase(hitArray.begin()+i_max);
       InitFit(hitArray);
       bool okfit_new = fFitter.FitFCN();

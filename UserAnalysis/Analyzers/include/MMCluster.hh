@@ -9,6 +9,8 @@
 #include "GeneralInfo.hh"
 
 #define IPSINCUT 0.05
+#define YES_CALIB true
+#define NO_CALIB false
 
 struct MMTracklet{
   Double_t slope; // dv/dz

@@ -639,7 +639,6 @@ Bool_t MMTrackDevel::Process(){
       double iinter = fMMClusteringInstance->GetMMCluster(itra,0,0)->GetTracklet().inter;
       
       double idv_MMEcal = distance[q].at(idist).first;
-
       
       for(int jdist=idist+1; jdist<(int) distance[q].size(); jdist++) {
 	int jtra = distance[q].at(jdist).second;
@@ -653,8 +652,6 @@ Bool_t MMTrackDevel::Process(){
 	
 	double jdv_MMEcal = distance[q].at(jdist).first;
 
-	
-        
 	if(iplane != jplane) {
 	  if(iview == jview) {
 	    double dv_inter;
@@ -686,7 +683,6 @@ Bool_t MMTrackDevel::Process(){
 	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dZ_vs_Nhit_SECOND_NOCUT_clu0_Q%d",q),jNhit,z_res,1.);
 	    }
 
-	    
 	    if(fabs(islope-jslope)<0.025 && fabs(iinter-jinter)<5) {
 
 	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s2_vs_d%s1_cut_clu0_Q%d",iviewlabel.Data(),jviewlabel.Data(),q),idv_MMEcal,jdv_MMEcal,1.);

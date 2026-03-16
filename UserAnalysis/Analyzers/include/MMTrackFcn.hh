@@ -23,6 +23,9 @@ public:
     fTrackBdIds.clear();
     for (uint i=0; i<val.size(); i++) fTrackBdIds.push_back(val.at(i));    
   }
+  void setDZ(double dz) {
+    fDZ = dz;
+  }
   void setFitMode(int fitMode){fFitMode = fitMode;}
 
   double operator()(const double *par) {
@@ -116,6 +119,11 @@ public:
       }
       //      std::cout << " chi2 = " << chisq;
     }
+
+    if(fDZ != -999) {
+      double sigma_dz = 10.;
+      chisq += (fDZ-par[4])*(fDZ-par[4])/(sigma_dz*sigma_dz);
+    }
     
     return chisq; // Npoints-4 degrees of freedom
   }
@@ -207,6 +215,7 @@ public:
   
 private:
   Double_t fRefZPoints[2];
+  Double_t fDZ;
   std::vector<TVector3> fTrackmmt; // track position measurements
   std::vector<TVector3> fTrackerr; // track position expected errors
   std::vector<int> fTrackBdIds; // track Board ID number, -1 for additional point

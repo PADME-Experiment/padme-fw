@@ -98,17 +98,63 @@ bool MMCluster::ReFitWithClusterTime(bool ipused, double refTimeZ){
   // FIX PAR 4 (DZ) to the input value
 
   fFitter.Config().ParSettings(4).SetValue(refTimeZ);
-  fFitter.Config().ParSettings(4).Fix(); // Fix DZ
+  //fFitter.Config().ParSettings(4).Fix(); // Fix DZ
 
   fMMTrackFcn.setFitMode(fitmode);
-
-  if (fIpmode) InitFit(hitArray); // if IP is not used
+  
+  bool calibration = kTRUE; //TO BE DEFINED IN GENERAL SETTING
+  if (fIpmode) InitFit(hitArray,refTimeZ); // if IP is not used
   else {
-    if(ipused) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
-    else InitFit(hitArray);
+    if(!calibration) InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
+    else InitFit(hitArray,refTimeZ);
   }
   
   bool okfit = fFitter.FitFCN();
+  const ROOT::Fit::FitResult & result_temp = fFitter.Result(); 
+
+  //----------------------------------------------- HIT REJECTION
+  int Nhit_fclu = fMMHitsInClu.size();
+  
+  for(int hr=0; hr<10; hr++) {
+
+    fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
+    double chi2 = result_temp.MinFcnValue();
+    double ndf = result_temp.Ndf();
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, ndf);
+    
+    /*if (!okfit) {    
+    //    result.Print(std::cout);
+    return kFALSE;
+    }*/
+    int res_size = fMMTrackFcn.GetResVectorLenght();
+    double res_m2_max = -1;
+    int i_max = 0;
+    for(int i=0; i<res_size; i++) {
+      double res_m2 = fMMTrackFcn.GetResidual(i).Mag2();
+      if(res_m2 > res_m2_max) {
+	res_m2_max = res_m2;
+	i_max = i;
+      }
+    }
+    
+    Nhit_fclu--;
+   
+    if(pchi2 < 0.001 && hitArray.size() > 4 && Nhit_fclu>1) {
+      hitArray.erase(hitArray.begin()+i_max);
+      InitFit(hitArray);
+      bool okfit_new = fFitter.FitFCN();
+      
+      double chi2_new = result_temp.MinFcnValue();
+      double ndf_new = result_temp.Ndf();
+      double pchi2_new = ROOT::Math::chisquared_cdf_c(chi2_new, ndf_new);
+      
+      if(pchi2_new > 0.001) {
+	okfit = okfit_new;
+      }
+    }
+  }
+  //-------------------------------------------------
+  
   const ROOT::Fit::FitResult & result = fFitter.Result(); 
   fMMTrackFcn.ComputeResiduals(result.GetParams());
   
@@ -199,11 +245,12 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   }
 
   bool okfit = fFitter.FitFCN();
-  const ROOT::Fit::FitResult & result_temp = fFitter.Result(); 
+  const ROOT::Fit::FitResult & result_temp = fFitter.Result();
   
+  //----------------------------------------------- HIT REJECTION
   int Nhit_fclu = fMMHitsInClu.size();
   int Nhit_inclu = inputclus->GetHitsVectorSize();
-  //----------------------------------------------- HIT REJECTION
+  
   for(int hr=0; hr<10; hr++) {
 
     fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
@@ -304,6 +351,15 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   return kTRUE;
 }
 
+void MMCluster::InitFit(vector<MMSoftHit*> hitArray, double dz) {
+  InitFit(hitArray);
+  fMMTrackFcn.setPositions(fPositions);
+  fMMTrackFcn.setErrors(fErrors);
+  fMMTrackFcn.setBoardIds(fBoardIds);
+  fMMTrackFcn.setReferenceZPlanes(GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),GeneralInfo::GetInstance()->GetMMPosPlaneZ(1));
+  fMMTrackFcn.setDZ(dz);
+}
+
 void MMCluster::InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z){ // probably will need to pass errors as well
   InitFit(hitArray);
   setAdditionalPoint(x,y,z);
@@ -311,6 +367,7 @@ void MMCluster::InitFit(vector<MMSoftHit*> hitArray, double x, double y, double 
   fMMTrackFcn.setErrors(fErrors);
   fMMTrackFcn.setBoardIds(fBoardIds);
   fMMTrackFcn.setReferenceZPlanes(GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),GeneralInfo::GetInstance()->GetMMPosPlaneZ(1));
+  fMMTrackFcn.setDZ(-999);
 }
 
 void MMCluster::InitFit(vector<MMSoftHit*> hitArray){
@@ -319,6 +376,7 @@ void MMCluster::InitFit(vector<MMSoftHit*> hitArray){
   fMMTrackFcn.setErrors(fErrors);
   fMMTrackFcn.setBoardIds(fBoardIds);
   fMMTrackFcn.setReferenceZPlanes(GeneralInfo::GetInstance()->GetMMPosPlaneZ(0),GeneralInfo::GetInstance()->GetMMPosPlaneZ(1));
+  fMMTrackFcn.setDZ(-999);
   // evaluate the reference point as a weighted average
   TVector3 refp(0,0,0);
   TVector3 refe(0,0,0);

@@ -84,6 +84,7 @@ private:
   ROOT::Fit::Fitter fFitter;  
   void InitFit(vector<MMSoftHit*> hitArray);
   void InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z);
+  void InitFit(vector<MMSoftHit*> hitArray, double dz);
   void setPoints(vector<MMSoftHit*> hitArray);
   void setAdditionalPoint(double x, double y, double z);
 };

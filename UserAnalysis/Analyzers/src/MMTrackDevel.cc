@@ -67,8 +67,10 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_YEcal_vs_%sAtTarget_Q%d_clu1",viewlabel.Data(),quad),400,-200,200,100,-300,300.);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),400,-200.,200.);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50,100,0,1);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_refit_Q%dV%s",quad,viewlabel.Data()),50,0,50,100,0,1);
     for (int quad = 0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Nhit_clu1_Q%dV%s",quad,viewlabel.Data()),50,0,50);
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_Q%d",viewlabel.Data(),quad),100,-2,2,100,-2,2);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_refit_Q%d",viewlabel.Data(),quad),100,-2,2,100,-2,2);
   }
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
 
@@ -128,6 +130,15 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),40,-400,400,100,-200,200);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yn"),40,-400,400,100,-200,200);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yp"),40,-400,400,100,-200,200);
+
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dY_vs_YECAL_clu1_Xn"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dY_vs_YECAL_clu1_Xp"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_XECAL_clu1_Yn"),40,-400,400,100,-200,200);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dX_vs_XECAL_clu1_Yp"),40,-400,400,100,-200,200);
+  for (int view = 0; view<2; view++){
+    TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
+    fHS->BookHistoList("MMTrackDevel",Form("MM_ECAL_d%s",viewlabel.Data()),100,-100,100);
+  }
   return true;
 }
 
@@ -193,13 +204,18 @@ Bool_t MMTrackDevel::Process(){
   int signsQuadY[4] = {-1,1,1,-1};
   double offsetXY[2][4]     = {
     0,   0.,-10.,-10. ,
-    0, -10., -5., 0.  };
+    -5, -10., -5., -5.  };  //updated were {0.,-10.,-5.,0.}
   double dxy_MMEcalMax[2][4] = {
     20,  20., 20., 20.,
     20,  20., 20., 20.};
-  double offsetdDZvsXY[2][4] = {
+  double  offsetdDZvsXY[2][4] = {
+    -7.2, 0., 14.7, -2.5,
+    10., 2.8, 10., 10.};
+  //old 
+  /* double offsetdDZvsXY[2][4] = {
     12.3,  -1.1, 15., 8. ,
     -10,  29.,  18.2, 3. };
+  */
   double maxdDZvsXY[2][4]    = {
     30., 22., 16., 16.,
     16, 16., 16., 16.};
@@ -290,16 +306,42 @@ Bool_t MMTrackDevel::Process(){
 
       double Ddz = dz - dz_Ecal;
       double dv_MMEcal = MMposAtEcal[1-view] - tempClu->GetPosition()[1-view];
+
+      bool tra0_otherview_matched = kFALSE;
+      for(int itra0=0; itra0<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra0++) { 
+	int view0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().view;
+	int quad0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;    
+	if(view0 == view && quad0 != quad) continue;
+	TVector3 MMposAtEcal_tra0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);
+	double dv0_MMEcal = MMposAtEcal_tra0[view] - tempClu->GetPosition()[view];
+	if(fabs(dv0_MMEcal) < 10) tra0_otherview_matched = kTRUE;
+      }
+      
       if(x_Ecal*signsQuadX[quad] > 0 && y_Ecal*signsQuadY[quad] > 0 && pchi2 > 0.5) {
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1",viewlabel.Data(),quad),Ddz,dv_MMEcal,1.);
-	if(fabs(dv_MMEcal)<10) { //20) {
+	if(tra0_otherview_matched && fabs(dz)<20) {//fabs(dv_MMEcal)<10) { //20) {
+
+	  if(fabs(tempClu->GetPosition()[1-view])>100) fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_d%s",viewlabel.Data()),dv_MMEcal,1.);
+	    
 	  if(view == 1) { //X view
-	    if(y_Ecal > 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yp"),x_Ecal,Ddz,1.);
-	    if(y_Ecal < 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yn"),x_Ecal,Ddz,1.);
+	    if(y_Ecal > 0) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_XECAL_clu1_Yp",viewlabel.Data()),x_Ecal,dv_MMEcal,1.);
+	      if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad]*0.5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yp"),x_Ecal,Ddz,1.);
+	    }
+	    if(y_Ecal < 0) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_XECAL_clu1_Yn",viewlabel.Data()),x_Ecal,dv_MMEcal,1.);
+	      if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad]*0.5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_XECAL_clu1_Yn"),x_Ecal,Ddz,1.);
+	    }
 	  }
 	  if(view == 0) { //Y view
-	    if(x_Ecal > 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),y_Ecal,Ddz,1.);
-	    if(x_Ecal < 0) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xn"),y_Ecal,Ddz,1.);
+	    if(x_Ecal > 0) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_YECAL_clu1_Xp",viewlabel.Data()),y_Ecal,dv_MMEcal,1.);
+	      if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad]*0.5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),y_Ecal,Ddz,1.);
+	    }
+	    if(x_Ecal < 0) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_YECAL_clu1_Xn",viewlabel.Data()),y_Ecal,dv_MMEcal,1.);
+	      if(fabs(dv_MMEcal-offsetXY[1-view][quad])< dxy_MMEcalMax[1-view][quad]*0.5) fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xn"),y_Ecal,Ddz,1.);
+	    }
 	  }
 	}
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_d%s_vs_dz_Q%d_clu1_recenter",viewlabel.Data(),quad),
@@ -323,6 +365,16 @@ Bool_t MMTrackDevel::Process(){
 
 	  // refit track with DZ from ECal
 	  if (fMMClusteringInstance->GetMMCluster(iclu,0,1)->ReFitWithClusterTime(kTRUE,dz_Ecal+offsetdDZvsXY[1-view][quad])) {
+	    vector<TVector3> residuals_refit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().vres;
+	    //std::cout<<"residual size: "<<residuals.size()<<" hit size: "<<Nhit<<std::endl;
+	    for(int i=0; i<(int) residuals_refit.size(); i++) {
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_Zres_vs_%sres_clu1_refit_Q%d",viewlabel.Data(),quad),residuals_refit.at(i)[1-view],residuals_refit.at(i).Z(),1.);
+	    }
+	    int Nhit_true_refit = (int) residuals_refit.size();
+	    double chi2_refit = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().chi2;
+	    double pchi2_refit = ROOT::Math::chisquared_cdf_c(chi2_refit, Nhit_true_refit-3);
+	    fHS->FillHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_refit_Q%dV%s",quad,viewlabel.Data()),Nhit_true_refit,pchi2_refit,1.);
+
 	    TVector3 MMposAtTarg = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().ExtrapolationAtZ(GeneralInfo::GetInstance()->GetTargetPos().Z());
 	    fHS->FillHistoList("MMTrackDevel",Form("MM_ECAL_%sAtTarget_Q%d_clu1_ReFit",viewlabel.Data(),quad),MMposAtTarg[1-view],1.);	    
 	  }

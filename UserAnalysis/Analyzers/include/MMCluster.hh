@@ -9,8 +9,9 @@
 #include "GeneralInfo.hh"
 
 #define IPSINCUT 0.05
-#define YES_CALIB true
-#define NO_CALIB false
+
+#define CALIBRATION false
+#define IPMODE false
 
 struct MMTracklet{
   Double_t slope; // dv/dz
@@ -39,7 +40,7 @@ public:
   void Import(MMCluster* oldclu);
   bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
   bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
-  bool ReFitWithClusterTime(bool ipused, double refTimeZ); // re-fit level-1 cluster with fixed DZ
+  bool FitWithClusterTime(double xEcal, double yEcal, double tEcal); // re-fit level-1 cluster with fixed DZ
   bool HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg);
   
   //  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
@@ -86,7 +87,7 @@ private:
   ROOT::Fit::Fitter fFitter;  
   void InitFit(vector<MMSoftHit*> hitArray);
   void InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z);
-  void InitFit(vector<MMSoftHit*> hitArray, double dz);
+  
   void setPoints(vector<MMSoftHit*> hitArray);
   void setAdditionalPoint(double x, double y, double z);
 };

@@ -1,4 +1,4 @@
-//
+#//
 // Management of Event-level information
 //
 #include "GeneralInfo.hh"
@@ -323,4 +323,22 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
   packed |= (mmi.otherview);
   mmi.packed = packed;
   return mmi;
+}
+
+double GeneralInfo::GetMMECALdz(int view, double xECal, double yECal, double tECal) {
+  double offsetdDZvsXY[2][4] = {
+    -8.8, 3., 14.3, 1.6,  //Ddz vs Y offset
+    10., 9., 10., 10.};   //Ddz vs X offset
+  double timeOffset = 440;
+  
+  int quad = 0;
+  if(xECal<0 && yECal>0) quad = 1;
+  if(xECal>0 && yECal>0) quad = 2;
+  if(xECal>0 && yECal<0) quad = 3;
+  
+  double dz;
+  
+  dz = (tECal+timeOffset)*fMMDriftVelocity + offsetdDZvsXY[view][quad];
+ 
+  return dz;
 }

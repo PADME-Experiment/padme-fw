@@ -100,6 +100,8 @@ public:
   inline double GetMMXZRotationAngle() const {return fMMXZRotationAngle;}
   inline double GetMMYZRotationAngle() const {return fMMYZRotationAngle;}
   inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
+
+  double GetMMECALdz(int view, double xECal, double yECal, double tECal);
   
   MMchInfo DecodeMMChannel(int);
   TString GetMMViewLabel(int view){TString retstr(Form("%s",fMMViewLabel[view].Data())); return retstr;} // for view = 0, return "Y"; for view = 1 returns "X"

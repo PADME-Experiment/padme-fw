@@ -68,10 +68,7 @@ Bool_t MMClustering::InitHistos(){
   // MMClustering directory will contain all histograms related to this analysis
 
   fHS->CreateList("MMClustering");
-  cout<<" Creating MMClustering Hystograms"<<endl;
-  for (int view = 0; view<2; view++){
-    fHS->BookHisto2List("MMClustering",Form("MM_dv_vs_c_before_cut_%s",GeneralInfo::GetInstance()->GetMMViewLabel(view).Data()),1200,-600,600,1000,-500,500);
-  }    
+  cout<<" Creating MMClustering Hystograms"<<endl;    
   return true;
 }
 
@@ -131,6 +128,7 @@ void MMClustering::Clusterize() {
       if(!added) { // hit cannot be added
 	if(new_clu->GetHitsVectorSize()>1) { // store the cluster if >1 hits are in it
 	  for (int j=0; j<(int)new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
+	  bool hitrejected = new_clu->HitRejectionAlgorithm(); // hit rejection algorithm before storing the cluster 
 	  fMMClusters[ipmode][0].push_back(new_clu); // store the cluster
 	  fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
 	}
@@ -144,6 +142,7 @@ void MMClustering::Clusterize() {
 
     if(new_clu->GetHitsVectorSize()>1) {
       for (int j=0; j<(int) new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0);
+      bool hitrejected = new_clu->HitRejectionAlgorithm(); // hit rejection algorithm before storing the cluster 
       fMMClusters[ipmode][0].push_back(new_clu);
       fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
     }
@@ -172,8 +171,7 @@ void MMClustering::Clusterize() {
 //original code      }
 //original code    }
 //original code  }
-
-
+  
   //CLUSTERING LEVEL 1, only done with ipmode = 0 --> using ip
 
   for (int i=0; i<(int) fMMClusters[0][0].size(); i++){ 
@@ -183,12 +181,6 @@ void MMClustering::Clusterize() {
     bool matched = kFALSE;
     for (int j=i+1; j<(int) fMMClusters[0][0].size(); j++){ 
       if (fMergedMMClusters[0][0].at(j)) continue;
-      double dv_before_cut = fMMClusters[0][0].at(i)->GetTracklet().inter - fMMClusters[0][0].at(j)->GetTracklet().inter;
-      int view_seed = fMMClusters[0][0].at(i)->GetHit(0)->GetMMchInfo().view;
-      int view_match = fMMClusters[0][0].at(j)->GetHit(0)->GetMMchInfo().view;
-      if(view_seed == view_match) {
-	fHS->FillHisto2List("MMClustering",Form("MM_dv_vs_c_before_cut_%s",GeneralInfo::GetInstance()->GetMMViewLabel(view_seed).Data()),fMMClusters[0][0].at(i)->GetTracklet().inter,dv_before_cut,1.);
-      }
       
       if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) {
 	fMMClusters[0][1].push_back(new_clu);

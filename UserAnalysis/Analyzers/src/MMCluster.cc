@@ -109,14 +109,16 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   const ROOT::Fit::FitResult & result_temp = fFitter.Result(); 
 
   //----------------------------------------------- HIT REJECTION
-  int Nhit_fclu = fMMHitsInClu.size();
+  int Nhit_P0 = fNHitsPerPlane[0];
+  int Nhit_P1 = fNHitsPerPlane[1];
+  int Nhit_tot = fMMHitsInClu.size();
   
   for(int hr=0; hr<10; hr++) {
 
     fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
     double chi2 = result_temp.MinFcnValue();
     double ndf = result_temp.Ndf();
-    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, ndf);
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)hitArray.size()-2);
     
     /*if (!okfit) {    
     //    result.Print(std::cout);
@@ -132,19 +134,20 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
 	i_max = i;
       }
     }
+
+    if(i_max - Nhit_P0 >= 0) Nhit_P1--;
+    else Nhit_P0--;
     
-    Nhit_fclu--;
-   
-    if(pchi2 < 0.001  && hitArray.size() > 4 && Nhit_fclu>1) {
+    if(pchi2 < 0.05  && hitArray.size() > 4){ // && Nhit_P0>1 && Nhit_P1>1) {
       hitArray.erase(hitArray.begin()+i_max);
       InitFit(hitArray);
       bool okfit_new = fFitter.FitFCN();
       
       double chi2_new = result_temp.MinFcnValue();
       double ndf_new = result_temp.Ndf();
-      double pchi2_new = ROOT::Math::chisquared_cdf_c(chi2_new, ndf_new);
+      double pchi2_new = ROOT::Math::chisquared_cdf_c(chi2_new, (int)hitArray.size()-2);
       
-      if(pchi2_new > 0.001) {
+      if(pchi2_new > 0.05) {
 	okfit = okfit_new;
       }
     }
@@ -174,11 +177,14 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   fTracos.lambda[chinfoThis.view] = 0.;     
   fTracos.lambda.SetZ(cosz);
 
+  fTracos.vres.clear();
   int vres_size = fMMTrackFcn.GetResVectorLenght();
+  //std::cout<<"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA Nhit:"<<vres_size<<std::endl;
   for(int i=0; i<vres_size; i++) {
     TVector3 res = fMMTrackFcn.GetResidual(i);
     fTracos.vres.push_back(res);
   }
+  //std::cout<<"CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC Nhit:"<<fTracos.vres.size()<<std::endl;
   
   //IP phase angle in Clu Mode 1
   double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
@@ -193,6 +199,97 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   return kTRUE;
 }
 
+
+bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal) {
+  MMchInfo chinfoThis =  fMMHitsInClu.at(0)->GetMMchInfo();
+  double dz = GeneralInfo::GetInstance()->GetMMECALdz(chinfoThis.view, xEcal, yEcal, tEcal);
+
+  vector<double> zhits, vhits;  
+  for (int i=0; i<(int)fMMHitsInClu.size(); i++){
+    double z_hit_corr = fMMHitsInClu.at(i)->GetZfromTime(1.);
+    if(fMMHitsInClu.at(i)->GetMMchInfo().plane == 0) z_hit_corr -= dz;
+    else z_hit_corr += dz;
+    zhits.push_back(z_hit_corr);
+    vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
+ 
+  }
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
+  evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+
+  for(int h=0; h<10; h++) {
+    
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)zhits.size()-2);
+
+    double res_m2_max = -1;
+    int i_max = 0;
+    for(int r=0; r<(int)zhits.size(); r++) {
+      double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+      double v_hit = vhits.at(r);
+      
+      double v_reco = mt_avg * z_hit + ct_avg;
+      double v_res2 = (v_hit - v_reco)*(v_hit - v_reco);
+      
+      if(v_res2 > res_m2_max) {
+	res_m2_max = v_res2;
+	i_max = r;
+      }
+    }
+    
+    if(pchi2 < 0.05 && zhits.size() > 4) {
+      zhits.erase(zhits.begin()+i_max);
+      vhits.erase(vhits.begin()+i_max);
+      
+      std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
+      
+      evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+    }
+  }  
+
+  int Nhit = zhits.size();
+  vector<TVector3> residues;
+  for(int r=0; r<Nhit; r++) {
+    double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    double v_hit = vhits.at(r);
+    
+    double v_reco = mt_avg * z_hit + ct_avg;
+    double z_reco = -999;
+    if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
+    else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
+    
+    TVector3 res;
+    res[1-chinfoThis.view] = v_hit - v_reco;
+    res[chinfoThis.view] = 0;
+    res.SetZ(z_hit - z_reco);
+    residues.push_back(res);
+  }
+
+  fTracos.vres.clear();
+  int vres_size = residues.size();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = residues.at(i);
+    fTracos.vres.push_back(res);
+  }
+  
+    
+  fTracos.slope = mt_avg;
+  fTracos.inter = ct_avg;
+  // evaluate intercepts at the two planes
+  for(Int_t pl = 0; pl<2; pl++) {
+    double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;
+    fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
+    fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
+  }
+  
+  // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
+  int reverseTrack = 1;
+  if (cosz < 0) reverseTrack = -1;
+  fTracos.lambda[1-fMMHitsInClu.at(0)->GetMMchInfo().view] = reverseTrack*cosv;
+  fTracos.lambda[fMMHitsInClu.at(0)->GetMMchInfo().view] = 0; 
+  fTracos.lambda.SetZ(reverseTrack*cosz);
+  fTracos.chi2 = chi2;
+
+  return true;
+}
 
 
 bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
@@ -250,8 +347,8 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
       
       fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
       double chi2 = result_temp.MinFcnValue();
-      double ndf = result_temp.Ndf();
-      double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, ndf);
+      //double ndf = result_temp.Ndf();
+      double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)hitArray.size()-2);
       
       /*if (!okfit) {    
       //    result.Print(std::cout);
@@ -414,8 +511,8 @@ void MMCluster::setPoints(vector<MMSoftHit*> hitArray){
     int view = hit->GetMMchInfo().view;
     double ers[3];
     ers[view] = 2.*TMath::Abs(hit->GetPosition()[view])/TMath::Sqrt(12.); // WILL USE VALUE FROM CONFIG
-    ers[1-view] = 1.2/TMath::Sqrt(12.); // WILL USE VALUE FROM CONFIG
-    ers[2] = 2*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
+    ers[1-view] = 3*1.2/TMath::Sqrt(12.); // WILL USE VALUE FROM CONFIG
+    ers[2] = 3*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
     TVector3 errors;
     errors.SetXYZ(ers[0],ers[1],ers[2]);
     fErrors.push_back(errors);
@@ -516,6 +613,32 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   fTracos.lambda[fMMHitsInClu.at(0)->GetMMchInfo().view] = 0; 
   fTracos.lambda.SetZ(reverseTrack*cosz);
   fTracos.chi2 = chi2;
+
+
+  int Nhit = zhits.size();
+  vector<TVector3> residues;
+  for(int r=0; r<Nhit; r++) {
+    double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    double v_hit = vhits.at(r);
+    
+    double v_reco = mt_avg * z_hit + ct_avg;
+    double z_reco = -999;
+    if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
+    else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
+    
+    TVector3 res;
+    res[1-softhit->GetMMchInfo().view] = v_hit - v_reco;
+    res[softhit->GetMMchInfo().view] = 0;
+    res.SetZ(z_hit - z_reco);
+    residues.push_back(res);
+  }
+  
+  fTracos.vres.clear();
+  int vres_size = residues.size();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = residues.at(i);
+    fTracos.vres.push_back(res);
+  }
   
   //std::cout<<"New Hit Added!\n\t";
   //softhit->Print();
@@ -523,7 +646,6 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   return kTRUE;
   
 }
-
 
 void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double*chi2out){
   double very_small = 1e-15;
@@ -557,12 +679,15 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
     //std::cout<<"z_rms2 = "<<z_rms2<<std::endl;
     z_rms2 = very_small;
   }
+
+  double err_v = 3*GeneralInfo::GetInstance()->GetMMStripPitch()/TMath::Sqrt(12);
+  double err_z = 3*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
   
   double mt_avg = (zv_avg - z_avg*v_avg)/(z_rms2);
   double ct_tmp = v_avg - mt_avg*z_avg; // intercept at 0 PADME reference frame
   double chi2 = 0;
   for (int i=0; i<npts; i++){
-    double residual = (vhits.at(i)-(mt_avg*zhits.at(i) + ct_tmp));
+    double residual = (vhits.at(i)-(mt_avg*zhits.at(i) + ct_tmp))/TMath::Sqrt(err_v*err_v + err_z*err_z*mt_avg*mt_avg);
     chi2 += residual*residual;
   }
 
@@ -578,7 +703,7 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
   *chi2out = chi2;
 }
 
-
+/*
 bool MMCluster::HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg) {
   double Z_RES_CUT = 6*1.2; //mm 
 
@@ -593,4 +718,148 @@ bool MMCluster::HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double
 
   if(fabs(z_res)<Z_RES_CUT) return kFALSE;
   else return kTRUE;
+}
+*/
+
+bool MMCluster::HitRejectionAlgorithm() {
+  bool hit_rejected_flag = kFALSE;
+
+  double err_v = 3*GeneralInfo::GetInstance()->GetMMStripPitch()/TMath::Sqrt(12);
+  double err_z = 3*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
+
+  int Nhit = fMMHitsInClu.size();
+  int plane = fMMHitsInClu.at(0)->GetMMchInfo().plane;
+  int view = fMMHitsInClu.at(0)->GetMMchInfo().view;
+
+  double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-view];
+  double z_target = GeneralInfo::GetInstance()->GetTargetPos().Z();
+  
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
+  vector<double> zhits, vhits;
+  vector<MMSoftHit*> hits_temp;
+  for(int i=0; i<Nhit; i++) {
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
+    vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-view]); // view == 1 corresponds to Xview
+    hits_temp.push_back(fMMHitsInClu.at(i));
+  }
+  fMMHitsInClu.clear();
+  
+  
+  chi2 = fTracos.chi2;
+  mt_avg = fTracos.slope;
+  ct_avg = fTracos.inter;
+
+  int Niter = 10;
+  for(int h=0; h<Niter; h++) {
+
+    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, Nhit-2);
+
+    if(pchi2 < 0.15 && Nhit > 2) {
+      
+      double res_m2_max = -1;
+      int i_res_max = 0;
+      double v_hit_res_max = -999, z_hit_res_max=-999;
+      for(int i=0; i<Nhit; i++){
+	double z_hit = zhits.at(i) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+	double v_hit = vhits.at(i);
+	double v_reco = mt_avg * z_hit + ct_avg;
+	
+	double residual = (v_hit - v_reco)/TMath::Sqrt(err_v*err_v + err_z*err_z*mt_avg*mt_avg);
+	
+	double res_m2 = residual*residual;
+	
+	if(res_m2 > res_m2_max) {
+	  res_m2_max = res_m2;
+	  i_res_max = i;
+	  v_hit_res_max = v_hit;
+	  z_hit_res_max = z_hit;
+	}
+      }
+
+      vector<double> zhits_pair, vhits_pair;
+      int not_ip_counter=0;
+      for(int i=0; i<Nhit; i++){ //angolo da ip  con doppietti hit res max 
+	zhits_pair.clear();
+	vhits_pair.clear();
+	
+	if(i == i_res_max) continue;
+  
+	double z_hit = zhits.at(i);
+	double v_hit = vhits.at(i);
+
+	zhits_pair.push_back(z_hit);
+	vhits_pair.push_back(v_hit);
+	zhits_pair.push_back(z_hit_res_max + GeneralInfo::GetInstance()->GetMMPosPlaneZ(2));
+	vhits_pair.push_back(v_hit_res_max);
+		
+	double v_avg_pair,z_avg_pair,mt_avg_pair,ct_avg_pair,cosv_pair,cosz_pair,chi2_pair;	
+	evaluateStraightLineTwoD(vhits_pair,zhits_pair, &v_avg_pair, &z_avg_pair, &mt_avg_pair, &ct_avg_pair, &cosv_pair, &cosz_pair, &chi2_pair); // add quality control?
+
+	double ravg_minus_target[2] = {v_avg_pair-v_target, z_avg_pair-z_target};
+	double lambda_hits[2] = {cosv_pair,cosz_pair};
+	double ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target[0]*ravg_minus_target[0]+ravg_minus_target[1]*ravg_minus_target[1]);
+	for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
+	double IPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];
+
+	if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) not_ip_counter++;
+      }
+      
+      if(Nhit >= 3 && (float)not_ip_counter/Nhit > 0.5) {  
+	hit_rejected_flag = kTRUE;
+	zhits.erase(zhits.begin()+i_res_max);
+	vhits.erase(vhits.begin()+i_res_max);
+	hits_temp.erase(hits_temp.begin()+i_res_max);	
+	fNHitsPerPlane[plane]--;
+	Nhit--;
+	
+	evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+      }
+    }
+  }
+
+  for(int i=0; i<(int) hits_temp.size(); i++) fMMHitsInClu.push_back(hits_temp.at(i));
+  
+  if(hit_rejected_flag) {
+    fTracos.slope = mt_avg;
+    fTracos.inter = ct_avg;
+    // evaluate intercepts at the two planes
+    for(Int_t pl = 0; pl<2; pl++) {
+      double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;
+      fTracos.pars[2*pl+1-view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
+      fTracos.pars[2*pl+view] = fMMHitsInClu.at(0)->GetPosition()[view]; // for view=0, it's the X of the hit (center point)
+    }
+    // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
+    int reverseTrack = 1;
+    if (cosz < 0) reverseTrack = -1;
+    fTracos.lambda[1-view] = reverseTrack*cosv;
+    fTracos.lambda[view] = 0; 
+    fTracos.lambda.SetZ(reverseTrack*cosz);
+    fTracos.chi2 = chi2;
+    
+    vector<TVector3> residues;
+    for(int r=0; r<Nhit; r++) {
+      double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+      double v_hit = vhits.at(r);
+      
+      double v_reco = mt_avg * z_hit + ct_avg;
+      double z_reco = -999;
+      if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
+      else std::cerr<<"[HitRejectionAlgorithm] AIUTO SLOPE NULLA!!!!"<<std::endl;
+      
+      TVector3 res;
+      res[1-view] = v_hit - v_reco;
+      res[view] = 0;
+      res.SetZ(z_hit - z_reco);
+      residues.push_back(res);
+    }
+    
+    fTracos.vres.clear();
+    int vres_size = residues.size();
+    for(int i=0; i<vres_size; i++) {
+      TVector3 res = residues.at(i);
+      fTracos.vres.push_back(res);
+    } 
+  }
+  
+  return kTRUE;
 }

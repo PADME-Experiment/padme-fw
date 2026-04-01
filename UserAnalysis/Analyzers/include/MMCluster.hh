@@ -40,8 +40,10 @@ public:
   void Import(MMCluster* oldclu);
   bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
   bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
+  bool SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal);
   bool FitWithClusterTime(double xEcal, double yEcal, double tEcal); // re-fit level-1 cluster with fixed DZ
-  bool HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg);
+  //bool HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg);
+  bool HitRejectionAlgorithm();
   
   //  TCLuster* MergeCluster(TCluster* tomerge); // is able to merge with another cluster built with the same mode
   void RemoveHit(Int_t i); // remove a hit if necessary

@@ -87,7 +87,7 @@ public:
       // track is \vec{r} = \vec{p0} + \vec{lambda} * t, p0 = barycenter of points
       // point of CDA on the track line: \vec{p0} + ( (\vec{point}_i - \vec{p0}) dot \vec{lambda} ) \vec{lambda}                                                                                                    
       // vector ortogonal to the line at CDA: (\vec{point}_i - \vec{p0}) - ( (\vec{point}_i - \vec{p0}) dot \vec{lambda} ) \vec{lambda}
-      
+
       for (uint i= 0; i<fTrackmmt.size(); i++) {
 	TVector2 point(fTrackmmt.at(i)[1-fFitMode%10],fTrackmmt.at(i)[2]);
 
@@ -107,6 +107,10 @@ public:
 	//	std::cout << "Prova point " << i << " / " << fTrackmmt.size() << " v = " << fTrackmmt.at(i)[1-fFitMode%10] << " z = " << fTrackmmt.at(i)[2] << " v0 = " << refp[0].X() << " v1 = " << refp[1].X();
 	distance -= parallelDist ; // ortogonal distance point to line                  
 	delta  = (distance.X())/fTrackerr.at(i)[1-fFitMode%10];
+	  //delta  = (distance.X())/
+	  //(TMath::Sqrt(
+	  //	       fTrackerr.at(i)[1-fFitMode%10]*fTrackerr.at(i)[1-fFitMode%10] +
+	  //	       fTrackerr.at(i).Z()*fTrackerr.at(i).Z() * lambda.Y()*lambda.Y()));
 	//	std::cout << " deltav = " << delta;
 	chisq += delta*delta;
 	delta  = (distance.Y())/fTrackerr.at(i).Z();

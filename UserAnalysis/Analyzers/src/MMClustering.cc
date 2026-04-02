@@ -127,8 +127,8 @@ void MMClustering::Clusterize() {
 
       if(!added) { // hit cannot be added
 	if(new_clu->GetHitsVectorSize()>1) { // store the cluster if >1 hits are in it
-	  for (int j=0; j<(int)new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
 	  bool hitrejected = new_clu->HitRejectionAlgorithm(); // hit rejection algorithm before storing the cluster 
+	  for (int j=0; j<(int)new_clu->GetHitsVectorSize(); j++) new_clu->GetHit(j)->SetCluPtr((fMMClusters[ipmode][0].size()), ipmode, 0); // store the map hit --> clu
 	  fMMClusters[ipmode][0].push_back(new_clu); // store the cluster
 	  fMergedMMClusters[ipmode][0].push_back(kFALSE); // store the cluster
 	}

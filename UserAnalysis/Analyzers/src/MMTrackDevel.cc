@@ -101,6 +101,8 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   }
 
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),300,-300,300,300,-300,300);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu0"),50,0,1,300,-300,300);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu1"),50,0,1,300,-300,300);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_wrong_clu1"),50,0,1,300,-300,300);
     
@@ -390,9 +392,56 @@ Bool_t MMTrackDevel::Process(){
     double t_Ecal = tempClu->GetTime();
     double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
 
+    
+    // loop over level-zero tracks, find the best levelzero for each view
+    double pchi2bestPair = -999;
+    double dv_MMEcalbest[2] = {-999,-999};
+
+    for(int itra0=0; itra0<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra0++) {
+      int quad0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
+      int view0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().view;
+      if(x_Ecal*signsQuadX[quad0] < 0 || y_Ecal*signsQuadY[quad0] < 0) continue; //matching ECal clu position with MM quad 	
+      int nhit_tmp0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
+      if (nhit_tmp0 < 3) continue; //only consider tracks with 3+ hits
+      double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
+      TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
+      double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
+
+
+      for(int itra1=itra0+1; itra1<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra1++) {
+	int quad1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHit(0)->GetMMchInfo().quad;
+	int view1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHit(0)->GetMMchInfo().view;
+	if(x_Ecal*signsQuadX[quad1] < 0 || y_Ecal*signsQuadY[quad1] < 0) continue; //matching ECal clu position with MM quad 	
+	int nhit_tmp1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHitsVectorSize();
+	if (nhit_tmp1 < 3) continue; //only consider tracks with 3+ hits
+	double pchi2_tmp1 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetTracklet().chi2,nhit_tmp1-2);
+
+	if (view0 == view1) continue; // only consider pair of level zero tracks with different views
+	
+	TVector3 MMposAtEcal1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
+	double dv1 = MMposAtEcal0[1-view1] - tempClu->GetPosition()[1-view1];
+
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),view0==0?dv1:dv0,view0==0?dv0:dv1,1.);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu0"),pchi2_tmp0*pchi2_tmp1,
+			    TMath::Sign(TMath::Sqrt(dv0*dv0+dv1*dv1),dv0*dv1),
+			    1.);
+	
+	if(pchi2bestPair < pchi2_tmp0*pchi2_tmp1) {
+	  pchi2bestPair = pchi2_tmp0*pchi2_tmp1;
+	  dv_MMEcalbest[view0] = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
+	  dv_MMEcalbest[view1] = MMposAtEcal0[1-view1] - tempClu->GetPosition()[1-view1];
+	}
+      } // loop over tracks level 0 - second of the pair
+    } // loop over tracks level 0 - first of the pair
+
+
+
+    
+
+    // loop over level-one tracks
+    
     double dv_MMEcal = -999, dv_MMEcal_wrong = -999;
     double pchi2 = -999, pchi2_wrong = -999;
-    
     for(int itra=0; itra<(int) fMMClusteringInstance->GetMMClusterLength(0,1); itra++) {
 
       int quad = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetHit(0)->GetMMchInfo().quad;

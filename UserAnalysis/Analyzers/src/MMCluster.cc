@@ -585,7 +585,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
 //    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
 //    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
     
-    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) return kFALSE;
+    if (TMath::Abs(fIPPhaseAngle) > 6*IPSINCUT) return kFALSE;
   }
 
   double v_new_hit = softhit->GetPosition()[1-softhit->GetMMchInfo().view];

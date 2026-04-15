@@ -113,7 +113,8 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),8,0,8,4,0,4);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_TrackMatchedCode2vs1"),4,0,4,4,0,4);
 
- 
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_m_vs_c_clu1"),400,-400,400,200,-0.5,0.5);
+  
   /* //CALIBRATION
   fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xn"),40,-400,400,100,-200,200);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_YECAL_clu1_Xp"),40,-400,400,100,-200,200);
@@ -363,8 +364,14 @@ Bool_t MMTrackDevel::Process(){
 	    if(Nhit_true_refit == 7) fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_vs_pchi2_7hit_clu1_simplefit",viewlabel.Data()),pchi2_refit,dv_MMEcal_simple,1.);
 	    if(Nhit_true_refit == 8) fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_vs_pchi2_8hit_clu1_simplefit",viewlabel.Data()),pchi2_refit,dv_MMEcal_simple,1.);
 	    if(Nhit_true_refit >= 9) fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_vs_pchi2_910hit_clu1_simplefit",viewlabel.Data()),pchi2_refit,dv_MMEcal_simple,1.);
-	  }
 
+	    if(fabs(dv_MMEcal) < 10) {
+	      double slope = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().slope;
+	      double inter = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().inter;
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_m_vs_c_clu1"),inter,slope,1.);
+	    }
+	  }
+	  
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_refit_vs_d%sMMECAL_simplefit_clu1_Q%d",viewlabel.Data(),viewlabel.Data(),quad),dv_MMEcal_simple,dv_MMEcal_refit);
 	  //This below must be rewritten after one has discarted the hits in the track clu1 (now the hit rejection is not doing it properly)
 	  /*double z_min=100000000,z_max=-10000000;

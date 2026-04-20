@@ -21,14 +21,11 @@ class TRawMergedEvent : public TObject
     
   void SetTMMRawEvent(TMMRawEvent* v){fTMMRawEvent = v;}  
   TMMRawEvent* GetTMMRawEvent(){return fTMMRawEvent;}
-    
-  
+
  private:
   TRawEvent* fTRawEvent;
   TMMRawEvent* fTMMRawEvent;
-  
-  
-  
+
   ClassDef(TRawMergedEvent,1);
 };
 #endif

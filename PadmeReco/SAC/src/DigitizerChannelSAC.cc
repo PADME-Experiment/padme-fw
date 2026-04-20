@@ -54,7 +54,7 @@ void DigitizerChannelSAC::Init(GlobalRecoConfigOptions* gMode, PadmeVRecoConfig 
   fUseAbsSignals  = cfg->GetParOrDefault("RECO","UseAbsSignals",0);
   
   //Set a default Adc channel pedestals;
-  for(int kk=0;kk<32;kk++){
+  for(int kk=0;kk<25;kk++){
     fPedCh[kk] = 3800;
   }
   std::cout << cfg->GetName() << "*******************************" <<  std::endl;
@@ -104,15 +104,15 @@ Short_t DigitizerChannelSAC::CalcMaximum() {
 }
 
 Double_t DigitizerChannelSAC::CalcPedestal() {
-  double rms;
-  double avg;
+//REMOVED_SINCE_UNUSED BELOW  double rms;
+//REMOVED_SINCE_UNUSED BELOW  double avg;
   Int_t fCh       = GetChID();
   UInt_t fTrigMask= GetTrigMask();
   Int_t ElCh = fCh/10 +fCh%10*5;
   //  std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
   // Se non trovo eventi vuoti?
   //  fSigRms[] = TMath::RMS(1000,&fSamples[0]);
-  rms = TMath::RMS(1000,&fSamples[0]);
+//REMOVED_SINCE_UNUSED BELOW  rms = TMath::RMS(1000,&fSamples[0]);
   char name[50];
   //  if(rms<5){ // ci vorrebbe il cosmic trigger
   // Remove the TList !!
@@ -153,14 +153,14 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   fCharge = 0.;
   static TSpectrum SpectrumProcessor(50);// = new TSpectrum(20);
 
-  Int_t NImage=0;
+//REMOVED_SINCE_UNUSED BELOW  Int_t NImage=0;
   static const Double_t pCMeV= 3.2E5*2*1.67E-7; //Nominal Gain at 1500 x npe/MeV x echarge (in pC) needs tuning by calibration
   //  Double_t pCMeV= 1.; //Nominal Gain at 1500 x npe/MeV x echarge (in pC)
   static Int_t NIntSamp= fSignalWidth/fTimeBin; 
       
   //currently looking for peaks with TSpectrum to obtain multi hit times
   //M. Raggi 19/10/2018
-  static const Int_t npeaks =50;
+//REMOVED_SINCE_UNUSED BELOW  static const Int_t npeaks =50;
   static Double_t AbsSamRec[1024];
 
   Int_t fCh  = GetChID();
@@ -173,7 +173,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     AbsSamRec[s] = (Double_t) (-1.*fSamples[s]+fAvg80)/4096*1000.; //in mV 
   }
   H1->SetContent(AbsSamRec);
-  char name[50];
+//REMOVED_SINCE_UNUSED BELOW  char name[50];
 //  if(fTrigMask==2){
 //    //    std::cout<<ElCh<<" mask "<<fTrigMask<<std::endl;
 //    fileOut->cd();
@@ -186,7 +186,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
   Double_t VMax = H1->GetMaximum();
   Double_t VMin = H1->GetMinimum();
 
-  Double_t Charge; //CT
+//REMOVED_SINCE_UNUSED BELOW  Double_t Charge; //CT
   //  Charge = (VMax*2*pow(10,-9))/(2*50); // in pC, CT
   //  std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<std::endl;
   //  if(VMax<-2*VMin && VMax>15.) std::cout<<VMax<<" VMax "<< " fCh "<<GetChID()<<" VMin "<<VMin<<std::endl;
@@ -195,7 +195,7 @@ Double_t DigitizerChannelSAC::CalcChaTime(std::vector<TRecoVHit *> &hitArray,USh
     TSpectrum *s = &SpectrumProcessor;//new TSpectrum(npeaks);
     Double_t peak_thr  = fAmpThresholdLow/VMax;   //minimum peak height allowed.
     Int_t nfound = s->Search(H1,2,"",peak_thr);   //corrected for 2.5GHz cannot be less then 0.05
-    Int_t fTrigMask=GetTrigMask();
+//REMOVED_SINCE_UNUSED BELOW    Int_t fTrigMask=GetTrigMask();
     
     // ROOT 6 version
     //    Double_t *xpeaks = s->GetPositionX();

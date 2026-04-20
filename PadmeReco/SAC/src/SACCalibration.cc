@@ -50,7 +50,7 @@ void SACCalibration::ReadCalibrationConstants(){
 
 
   std::ifstream Calib;
-  char fname[50];
+//REMOVED_SINCE_UNUSED BELOW  char fname[50];
   //Int_t Calibration=0;
 
   //sprintf(fname,"config/Calibration/SAC_EnergyCalibration_%d.txt", fCalibrationFile);

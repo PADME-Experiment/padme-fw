@@ -187,8 +187,8 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
   double Time = 0.;
   //currently looking only at the signal rising edge
   
-  float t1=0.;
-  float t2=0.;
+//REMOVED_SINCE_UNUSED BELOW  float t1=0.;
+//REMOVED_SINCE_UNUSED BELOW  float t2=0.;
 
   float t3=0.;
   float t4=0.;
@@ -197,13 +197,13 @@ Double_t DigitizerChannelReco::CalcTime(UShort_t iMax) {
   float val1=0.;
   float val2=0.;
 
-  int t1_ok=0;
-  int t2_ok=0;
+//REMOVED_SINCE_UNUSED BELOW  int t1_ok=0;
+//REMOVED_SINCE_UNUSED BELOW  int t2_ok=0;
 
   int t3_ok=0;
   int t4_ok=0;
 
-  float max = ( fPed - fMax);
+//REMOVED_SINCE_UNUSED BELOW  float max = ( fPed - fMax);
 
   Short_t begin =  - fPreSamples > 0? fIMax - fPreSamples:0;
   for(Short_t i = begin ;i < fIMax;i++) {
@@ -271,7 +271,7 @@ void DigitizerChannelReco::DigitalProcessingRRC(Double_t *uin, Double_t *uout,in
 }
 
 Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,UShort_t iMax, UShort_t ped) {
-  Int_t npeaks = 10;
+//REMOVED_SINCE_UNUSED BELOW  Int_t npeaks = 10;
   static TSpectrum SpectrumProcessor(20);// = new TSpectrum(20);
   double Time   = 0.;
   fCharge = 0.;
@@ -310,7 +310,7 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
   //  H1->Rebin(4);
 
   Double_t VMax = H1->GetMaximum();
-  Double_t VMin = H1->GetMinimum();
+//REMOVED_SINCE_UNUSED BELOW  Double_t VMin = H1->GetMinimum();
   //   std::cout<<"Get Maximum     "<<VMax<<"   Get Minimum    "<<VMin<<std::endl;
   
   //if (VMax>fAmpThresholdHigh) std::cout<<VMax<<" VMax "<<std::endl;
@@ -327,7 +327,7 @@ Double_t DigitizerChannelReco::CalcChaTime(std::vector<TRecoVHit *> &hitArray,US
       Double_t yp = (s->GetPositionY())[ll];
       fAmpli=yp;
       Time=xp*fTimeBin;
-      Int_t bin    = H1->GetXaxis()->FindBin(xp);
+//REMOVED_SINCE_UNUSED BELOW      Int_t bin    = H1->GetXaxis()->FindBin(xp);
 
       TRecoVHit *Hit = new TRecoVHit();  
       Hit->SetTime(Time);

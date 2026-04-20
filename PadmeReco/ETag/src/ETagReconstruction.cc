@@ -84,7 +84,7 @@ void ETagReconstruction::HistoInit(){
   AddHisto("ETagTimeVsChannelID",new TH2F("ETagTimeVsChannelID","ETag Time vs Ch. ID",100,0,100,100,-200.0,200.0) );
   AddHisto("ETagTimeVsETagTime",new TH2F("ETagTimeVsETagTime","ETag Time vs ETagTime",400,-200.0,200.0, 400,-200.0,200.0));
 
-  char name[256];
+//REMOVED_SINCE_UNUSED BELOW  char name[256];
 
   //for (int i=0; i<95; i++) { 
   //  sprintf(name, "ETagDTch%dch%d",i,i+1);
@@ -124,7 +124,7 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
 
   if (tEvent==NULL) return;
 
-  for(Int_t i=0; i<fHits.size(); i++) delete fHits[i];
+  for(Int_t i=0; i<(int) fHits.size(); i++) delete fHits[i];
   fHits.clear();
 
   // MC to reco hits
@@ -162,7 +162,7 @@ void ETagReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* t
   }
   // last loop to correct the time 
   TRecoVHit* Hit;
-  Double_t Noise=0.;
+//REMOVED_SINCE_UNUSED BELOW  Double_t Noise=0.;
   for (unsigned int ih=0; ih<fHits.size(); ++ih) {
     Hit = fHits[ih];
     Hit->SetTime(Hit->GetTime()/Hit->GetEnergy());
@@ -216,7 +216,7 @@ void ETagReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     }
 
     GetHisto("ETagEnergy")->Fill(Hits[iHit1]->GetEnergy());
-    int chid = Hits[iHit1]->GetChannelId();
+//REMOVED_SINCE_UNUSED BELOW    int chid = Hits[iHit1]->GetChannelId();
     
     //charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
     

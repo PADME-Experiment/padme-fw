@@ -231,9 +231,9 @@ void SACReconstruction::BuildSimpleSACClusters(){
   const int NRows=5;
   const int NCols=5;
   const int NTotCh=NRows*NCols;
-  double TTotSACCh[NTotCh][NMaxCl];
-  double ETotSACCh[NTotCh][NMaxCl];
-  Double_t Time=0;
+//REMOVED_SINCE_UNUSED BELOW  double TTotSACCh[NTotCh][NMaxCl];
+//REMOVED_SINCE_UNUSED BELOW  double ETotSACCh[NTotCh][NMaxCl];
+//REMOVED_SINCE_UNUSED BELOW  Double_t Time=0;
  
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //std::cout<<"In SACBuildClusters ... n. of input hits = "<<Hits.size()<<std::endl;
@@ -242,15 +242,15 @@ void SACReconstruction::BuildSimpleSACClusters(){
     //    std::cout<<"No hits !!!!"<<std::endl;
     return; //-1;
   }
-  int NClus =1;
+//REMOVED_SINCE_UNUSED BELOW  int NClus =1;
   int NSeeds=0;
   int NGoodClus=0; 
   //  std::cout<<"Ci sono No hits !!!!"<<Hits.size()<<std::endl;
   for(Int_t ll=0;ll<NMaxCl;ll++){ 
     //    ETotSAC[ll]=0;
     for(Int_t kk=0;kk<NTotCh;kk++){ 
-      ETotSACCh[kk][ll]=0.;
-      TTotSACCh[kk][ll]=0.;
+//REMOVED_SINCE_UNUSED BELOW      ETotSACCh[kk][ll]=0.;
+//REMOVED_SINCE_UNUSED BELOW      TTotSACCh[kk][ll]=0.;
       //      XSACCh[kk][ll]=0.;
       //      YSACCh[kk][ll]=0.;
     }
@@ -348,7 +348,7 @@ void SACReconstruction::BuildSimpleSACClusters(){
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     //std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
-    for (unsigned int j=0; j<ClNCry[iCl]; ++j)
+    for (int j=0; j<ClNCry[iCl]; ++j)
       {
 	tmpHitsInCl.push_back(clusMatrix[iCl][j]);
 	//std::cout<<" "<<clusMatrix[iCl][j];
@@ -539,7 +539,7 @@ void SACReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 void SACReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
-  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
+  for(Int_t i=0; i < (int) fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {

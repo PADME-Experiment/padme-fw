@@ -100,7 +100,7 @@ void PVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void PVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) 
 {
   if (tEvent==NULL) return;
-  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
+  for(Int_t i=0; i < (int) fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   //std::cout<<"New Event ----------- nDigi = "<< tEvent->GetNDigi()<<std::endl;
@@ -208,7 +208,6 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
     }
 
     GetHisto("PVetoEnergy") -> Fill(Hits[iHit1]->GetEnergy() );
-    int chid = Hits[iHit1]->GetChannelId();
     
     charges[Hits[iHit1]->GetChannelId()] = Hits[iHit1]->GetEnergy();
     
@@ -216,7 +215,6 @@ void PVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   char name[256];
   
-  int ih1,ih2;
 
   for(int i = 1; i < 95; i++) {
     if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      

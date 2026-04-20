@@ -271,7 +271,7 @@ void ETagSimpleClusterization::Reconstruct(vector<TRecoVHit *> &Hits, vector<TRe
 	clusterHitsRightIdx[barID] = vector<int>{};
   }
 
-  for (auto hitIdx = 0; hitIdx < Hits.size(); hitIdx++) {
+  for (auto hitIdx = 0; hitIdx < (int) Hits.size(); hitIdx++) {
 	if (HitToClusterMapLeft.find(Hits[hitIdx]->GetChannelId()) != HitToClusterMapLeft.end())
 		clusterHitsLeftIdx[HitToClusterMapLeft[Hits[hitIdx]->GetChannelId()]].push_back(hitIdx);
 	else if (HitToClusterMapRight.find(Hits[hitIdx]->GetChannelId()) != HitToClusterMapRight.end())

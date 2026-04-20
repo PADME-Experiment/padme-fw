@@ -196,7 +196,7 @@ Double_t DigitizerChannelETag::CalcChaTime(std::vector<TRecoVHit *> &hitVec){//c
        }
        );
 
-  if((index.size()!=nfound)){
+  if(((int)index.size()!=nfound)){
     std::cout<<"CONFUSION!"<<std::endl;
     return -100;
   }
@@ -482,7 +482,7 @@ void DigitizerChannelETag::HitPlots(std::vector<TRecoVHit *> &hitVec){
   //  double hitV=0;
   double AmpDiff=0;
   //  std::cout<<"Tot "<<vRawCorrectHitVec.size()<<std::endl;
-  for(UInt_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
+  for(Int_t myiHit=0;myiHit<fNFoundPerChannel[GetChID()];myiHit++){
     
     auto it = std::find(fListOfChannels.begin(), fListOfChannels.end(), GetChID());
     auto idx = it - fListOfChannels.begin();

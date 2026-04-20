@@ -90,15 +90,13 @@ double PadmeVTrigger::CalcTime(Short_t * sample){
 
   float avg;
 
-  int min;
-  int imin;
-  int max;
-  int imax;
+  int min = 4096;
+  int imin = -1;
+  int max = 0;
+  int imax = -1;
   double time=-10000.;
   int imiddle=0;
 
-  min = 4096;
-  max = 0;
   for(int ss=0;ss<ns;ss++){
     if(sample[ss] > max){
       max = sample[ss];

@@ -53,7 +53,7 @@ void HEPVetoCalibration::ReadCalibrationConstants(){
 
 
   std::ifstream Calib;
-  char fname[50];
+  char fname[61];
   //Int_t Calibration=0;
 
   sprintf(fname,"config/Calibration/HEPVeto_EnergyCalibration_%d.txt", fCalibrationFile);

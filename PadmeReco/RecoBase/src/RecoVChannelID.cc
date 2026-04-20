@@ -73,7 +73,7 @@ void RecoVChannelID::InitChannelID(PadmeVRecoConfig *cfg){
     
     std::vector<Short_t> *Boards = fRecoConfig->GetBoards();
     //    for(auto it = Boards->begin(); it != Boards->end(); ++it) {
-    for (int ib = 0;ib < Boards->size();ib++){
+    for (int ib = 0;ib < (int)Boards->size();ib++){
       int bID = (*Boards)[ib];
       ParName = ADCName +  std::to_string(bID);
       std::cout << "Processing the map for board:  " <<  bID <<"   " <<  ParName << std::endl;

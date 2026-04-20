@@ -356,7 +356,7 @@ void ECalReconstruction::BuildECalIslandRadiusClusters(Int_t type)
   vector<TRecoVHit *> Hits = GetRecoHits();
   // Let's do some cluster finding
   ECalCrystalHandler *cryHand = new ECalCrystalHandler();
-  for (Int_t ih = 0; ih < Hits.size(); ++ih)
+  for (Int_t ih = 0; ih < (int) Hits.size(); ++ih)
   {
     TRecoVHit *rhit = Hits[ih];
     Int_t ch = rhit->GetChannelId();
@@ -727,7 +727,7 @@ void ECalReconstruction::BuildClusters()
 Double_t ECalReconstruction::CompensateMissingE(Double_t ECl, Int_t ClSeed)
 {
   Double_t EFraction;
-  Int_t ClusterSize = 5;
+//REMOVED_SINCE_UNUSED BELOW  Int_t ClusterSize = 5;
   //  EFraction[490]=0.95;
   //  cout<<"dime "<<fClDeltaCellMax<<endl;
   // std::cout << "in compensate missing e" << std::endl;
@@ -794,7 +794,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
   const int NTotCh = NRows * NCols;
   double TTotECALCh[NTotCh][NMaxCl];
   double ETotECALCh[NTotCh][NMaxCl];
-  Double_t Time = 0;
+//REMOVED_SINCE_UNUSED BELOW  Double_t Time = 0;
 
   vector<TRecoVHit *> &Hits = GetRecoHits();
   int NCry = 0;
@@ -974,7 +974,7 @@ void ECalReconstruction::BuildSimpleECalClusters()
     myCl->SetSeed(ClSeed[iCl]);
     myCl->SetNHitsInClus(ClNCry[iCl]);
     // std::cout<<ClNCry[iCl]<<" Hits in cl. n. "<<iCl<<" = ";
-    for (unsigned int j = 0; j < ClNCry[iCl]; ++j)
+    for (int j = 0; j < ClNCry[iCl]; ++j)
     {
       tmpHitsInCl.push_back(clusMatrix[iCl][j]);
       // std::cout<<" "<<clusMatrix[iCl][j];
@@ -1035,7 +1035,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent *tEvent, TMCEve
   // std::cout << " max template " << fmaxValuemyTemplate << std::end;
   if (tEvent == NULL)
     return;
-  for (Int_t i = 0; i < fHits.size(); i++)
+  for (Int_t i = 0; i < (int) fHits.size(); i++)
     delete fHits[i];
   fHits.clear();
 
@@ -1165,7 +1165,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent *tEvent, TMCEve
     Double_t vMaxMC = 0.;
     for (int i = 0; i < 1024; i++)
       wave.push_back(0);
-    for (int j = 0; j < hitArrayInCrystal.size(); j++)
+    for (int j = 0; j < (int) hitArrayInCrystal.size(); j++)
     {
       Double_t energy_ = hitArrayInCrystal[j].digiEnergy;
       Double_t time_ = hitArrayInCrystal[j].digiTime;
@@ -1200,7 +1200,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent *tEvent, TMCEve
         Double_t Charge200 = 0.;
         Double_t fImpedance = 50.;
         Int_t fTimeBin = 1.;
-        for (Short_t s = 0; s < tempVec1.size(); s++)
+        for (Short_t s = 0; s < (int) tempVec1.size(); s++)
         {
           if (tempVec1.at(s) > -100)
           {
@@ -1241,7 +1241,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent *tEvent, TMCEve
     for (int ll = 0; ll < 1024; ll++)
     {
       // if(ll< wave.size() && wave.at(ll)>900)wave.at(ll)=900;
-      if (ll < wave.size())
+      if (ll < (int) wave.size())
         waveLikeData.at(ll) = -wave.at(ll) * ConversionFactor + fAvg200;
       else
         waveLikeData.at(ll) = 0.;
@@ -1367,7 +1367,7 @@ void ECalReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent *tEvent, TMCEvent *
   fMultihitForMC =2;
   if (tEvent == NULL)
     return;
-  for (Int_t i = 0; i < fHits.size(); i++)
+  for (Int_t i = 0; i < (int) fHits.size(); i++)
     delete fHits[i];
   fHits.clear();
   Int_t idigi=0;

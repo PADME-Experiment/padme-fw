@@ -134,7 +134,7 @@ void EVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void EVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
-  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
+  for(Int_t i=0; i < (int) fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -230,7 +230,6 @@ void EVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
 
   char name[256];
   
-  int ih1,ih2;
 
   for(int i = 1; i < 95; i++) {
     if(charges[i] > 0. && charges[i-1] < 0. && charges[i+1] < 0.) {      

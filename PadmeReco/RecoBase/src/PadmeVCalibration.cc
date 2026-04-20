@@ -45,7 +45,7 @@ void PadmeVCalibration::Init(PadmeVRecoConfig *cfg, RecoVChannelID *chIdMgr ){
   
   // calibration maps 
   std::vector<int> chIds = chIdMgr->GetChannelIDVector();
-  if (chIds.size() != fNChannels) std::cout<<" PadmeVCalibration::Init .... WARNING - chIds.size() = "<<chIds.size()<<" != fNChannels = "<<fNChannels<<std::endl;
+  if ((int)chIds.size() != fNChannels) std::cout<<" PadmeVCalibration::Init .... WARNING - chIds.size() = "<<chIds.size()<<" != fNChannels = "<<fNChannels<<std::endl;
   if (chIds.size() == 0)          std::cout<<" PadmeVCalibration::Init .... WARNING - chIds.size() = 0;  fNChannels = "                  <<fNChannels<<std::endl;
   for (unsigned int j=0; j<chIds.size();++j)
     {

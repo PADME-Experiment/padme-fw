@@ -138,7 +138,7 @@ void HEPVetoReconstruction::ProcessEvent(TMCVEvent* tEvent, TMCEvent* tMCEvent)
 void HEPVetoReconstruction::ConvertMCDigitsToRecoHits(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
   if (tEvent==NULL) return;
-  for(Int_t i=0; i < fHits.size(); i++) delete fHits[i];
+  for(Int_t i=0; i < (int) fHits.size(); i++) delete fHits[i];
   fHits.clear();
   // MC to reco hits
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
@@ -228,9 +228,7 @@ void HEPVetoReconstruction::AnalyzeEvent(TRawEvent* rawEv){
   
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   
-  UChar_t nBoards = rawEv->GetNADCBoards();
   
-  TADCBoard* ADC;
   
   GetHisto("HEPVetoMultiplicity")->Fill(Hits.size());
   for(unsigned int iHit1 = 0; iHit1 < Hits.size();++iHit1) {

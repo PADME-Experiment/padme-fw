@@ -18,6 +18,8 @@ TRawMergedEvent::~TRawMergedEvent()
 {
   std::cout << " Delete TRawMergedEvent " << fTRawEvent << " " << fTMMRawEvent << std::endl;
   Clear();
+  delete fTRawEvent;
+  delete fTMMRawEvent;
 }
 
 void TRawMergedEvent::Clear(Option_t* option)

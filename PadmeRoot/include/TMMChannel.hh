@@ -13,6 +13,7 @@ class TMMChannel : public TObject
   TMMChannel();
   ~TMMChannel();
 
+  void Clear(Option_t* = "");
  public:
 
   void     SetChannelNumber(UChar_t v)  { fChannelNumber = v; }

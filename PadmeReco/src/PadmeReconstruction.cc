@@ -383,7 +383,7 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   if(fRawChain) {
     fRawEvent = new TRawEvent();
     nEntries = fRawChain->GetEntries();
-    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events"<<std::endl;
+    std::cout<<" Tree named "<<rawTreeName<<" found with "<<nEntries<<" events" << std::endl;
     TObjArray* branches = fRawChain->GetListOfBranches();
     std::cout << "Found Tree '" << rawTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
     fRawChain->SetBranchAddress("RawEvent",&fRawEvent);
@@ -396,11 +396,12 @@ void PadmeReconstruction::Init(Int_t NEvt, UInt_t Seed)
   fRawMergedChain = BuildChain(rawMergedTreeName);
   std::cout<<" Looking for tree named "<<rawMergedTreeName<<std::endl;
   if(fRawMergedChain) {
-    fRawMergedEvent = new TRawMergedEvent();
     nEntries = fRawMergedChain->GetEntries();
     std::cout<<" Tree named "<<rawMergedTreeName<<" found with "<<nEntries<<" events"<<std::endl;
     TObjArray* branches = fRawMergedChain->GetListOfBranches();
     std::cout << "Found Tree '" << rawMergedTreeName << "' with " << branches->GetEntries() << " branches and " << nEntries << " entries" << std::endl;
+    fRawMergedEvent = new TRawMergedEvent();
+    std::cout << "Allocated in " << fRawMergedEvent << std::endl;
     fRawMergedChain->SetBranchAddress("RawMergedEvent",&fRawMergedEvent);
   }
   else std::cout << " Tree " << rawMergedTreeName << " not found "<<std::endl;
@@ -499,7 +500,7 @@ Bool_t PadmeReconstruction::NextEvent()
     
   }
   
-  if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+  if ( fRawChain && fRawChain->GetEntry(fNProcessedEventsInTotal) >0 && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
 
     //std::cout<<"Do we come here .... "<<std::endl;
     
@@ -514,7 +515,7 @@ Bool_t PadmeReconstruction::NextEvent()
 
 //    // Insert Trigger choice for the monitor MR 18/09/2020
 //    In monitor mode just shows the Physics trigger
-    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawMergedEvent->GetTRawEvent()->GetEventTrigMask()==1) ){
+    if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawEvent->GetEventTrigMask()==1) ){
       // Reconstruct individual detectors (but check if they exist, first!)
       for (UInt_t iLib = 0; iLib < fRecoLibrary.size(); iLib++) {
        fRecoLibrary[iLib]->ProcessEvent(fRawEvent);
@@ -527,18 +528,20 @@ Bool_t PadmeReconstruction::NextEvent()
   }
 
   // MERGED Event raw
-  if ( fRawMergedChain && fRawMergedChain->GetEntry(fNProcessedEventsInTotal) && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+
+  if ( fRawMergedChain && fRawMergedChain->GetEntry(fNProcessedEventsInTotal) > 0 && (fNEvt == 0 || fNProcessedEventsInTotal < fNEvt) ) {
+    
+//    std::cout << "=== Read rawMERGED event in position " << fNProcessedEventsInTotal << " === start position: " << fRawMergedEvent << " RawEvStartPos: " << fRawMergedEvent->GetTRawEvent() << " MMRawEvStartPos: " << fRawMergedEvent->GetTMMRawEvent() <<  std::endl;
+//    std::cout << "     After Nothing33 " << fNProcessedEventsInTotal << " === start position: " << fRawMergedEvent << " RawEvStartPos: " << fRawMergedEvent->GetTRawEvent() << " MMRawEvStartPos: " << fRawMergedEvent->GetTMMRawEvent() <<  std::endl;
 
     if (fNProcessedEventsInTotal%100==0) {
-      std::cout << "=== Read rawMERGED event in position " << fNProcessedEventsInTotal << " ===" << std::endl;
-      std::cout << "--- PadmeReconstruction --- run/event/time " << fRawMergedEvent->GetTRawEvent()->GetRunNumber()
-		<< " " << fRawMergedEvent->GetTRawEvent()->GetEventNumber() << " " << fRawMergedEvent->GetTRawEvent()->GetEventAbsTime()
-		<< " " << fRawMergedEvent->GetTMMRawEvent()->MMInfo()->GetRunTimeDiff() << std::endl;
+      std::cout << "     After GetEntry: " << " " << fNProcessedEventsInTotal << " === start position: " << fRawMergedEvent << " RawEvStartPos: " << fRawMergedEvent->GetTRawEvent() << " MMRawEvStartPos: " << fRawMergedEvent->GetTMMRawEvent() <<  std::endl;
+      std::cout << "--- PadmeReconstruction --- TRawEventInfo: run/event/time " << fRawMergedEvent->GetTRawEvent()->GetRunNumber()
+		<< " " << fRawMergedEvent->GetTRawEvent()->GetEventNumber() << " " << fRawMergedEvent->GetTRawEvent()->GetEventAbsTime() << std::endl;
+      std::cout << "--- PadmeReconstruction --- TMMRawEventInfo===" << (int)fRawMergedEvent->GetTMMRawEvent()->GetNMMBoards() << " ===" << fRawMergedEvent->GetTMMRawEvent()->MMInfo()->GetRunTimeDiff() << std::endl;
     }
-
     // Process event to extract global information
     ProcessEvent(fRawMergedEvent->GetTRawEvent());
-
 
 //    In monitor mode just shows the Physics trigger
     if(fGlobalRecoConfigOptions->IsMonitorMode()==0  || (fRawMergedEvent->GetTRawEvent()->GetEventTrigMask()==1) ){
@@ -549,14 +552,13 @@ Bool_t PadmeReconstruction::NextEvent()
 	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent(),fRawMergedEvent->GetTMMRawEvent());
 	} else {
 	  fRecoLibrary[iLib]->ProcessEvent(fRawMergedEvent->GetTRawEvent());
-	}
+	}      
       }
-    }
+    }  
 
     fNProcessedEventsInTotal++;
     return true;
-
-  }
+  }// GetEntry condition
 
   
   return false;

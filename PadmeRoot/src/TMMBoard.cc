@@ -16,8 +16,8 @@ TMMBoard::TMMBoard()
 TMMBoard::~TMMBoard()
 {
 
-  Clear();
-
+  Clear("C");
+  delete fMMChannels;
 }
 
 void TMMBoard::Clear(Option_t* option)

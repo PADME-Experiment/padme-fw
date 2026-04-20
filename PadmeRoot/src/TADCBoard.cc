@@ -27,8 +27,9 @@ TADCBoard::TADCBoard()
 TADCBoard::~TADCBoard()
 {
 
-  Clear();
-
+  Clear("C");
+  delete fADCChannels;
+  delete fADCTriggers;
 }
 
 void TADCBoard::Clear(Option_t* option)

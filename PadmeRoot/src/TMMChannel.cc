@@ -11,4 +11,13 @@ TMMChannel::TMMChannel()
 }
 
 TMMChannel::~TMMChannel()
-{;}
+{
+  Clear();
+}
+
+void TMMChannel::Clear(Option_t* option)
+{
+  fChannelFail = kFALSE;
+  fChannelNumber = 0;
+  for(Int_t i = 0; i<TMMCHANNEL_NSAMPLES; i++) fSamples[i] = 0;
+}

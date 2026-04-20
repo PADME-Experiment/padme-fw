@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <iostream>
 #include "TRawEvent.hh"
 
 ClassImp(TRawEvent)
@@ -20,13 +22,16 @@ TRawEvent::TRawEvent()
   fADCBoards = new TClonesArray("TADCBoard",TRAWEVENT_MAXADCBOARDS);
   fNADCBoards = 0;
 
+  //  std::cout << " Allocate TRawEvent " << this << std::endl;
 }
 
 TRawEvent::~TRawEvent()
 {
+  //  std::cout << " Delete TRawEvent " << this << std::endl;
 
-  Clear();
-
+  Clear("C");
+  delete fTriggerInfo;
+  delete fADCBoards;
 }
 
 void TRawEvent::Clear(Option_t* option)
@@ -42,7 +47,7 @@ void TRawEvent::Clear(Option_t* option)
   fEventStatus   = 0;
   fMissingADCBoards = 0;
 
-  fTriggerInfo->Clear(option);
+  //  fTriggerInfo->Clear(option);
 
   fNADCBoards = 0;
   fADCBoards->Clear(option);

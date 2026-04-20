@@ -12,20 +12,21 @@ TMMRawEvent::TMMRawEvent()
   fMMBoards = new TClonesArray("TMMBoard",TRAWEVENT_MAXMMBOARDS);
   fNMMBoards = 0;
 
-  //  std::cout << " Allocate TMMRawEvent " << this << " " << fMMInfo << " " << fNMMBoards << " " << fMMBoards << std::endl;
+  //  std::cout << " Allocate TMMRawEvent " << this << " " << fMMInfo << " " << (int)fNMMBoards << " " << fMMBoards << std::endl;
 }
 
 TMMRawEvent::~TMMRawEvent()
 {
-  //  std::cout << " Delete TMMRawEvent " << this << " " << fMMInfo << " " << fNMMBoards << " " << fMMBoards << std::endl;
+  //  std::cout << " Delete TMMRawEvent " << this << " " << fMMInfo << " " << (int) fNMMBoards << " " << fMMBoards << std::endl;
 
-  Clear();
-
+  Clear("C");
+  delete fMMInfo;
+  delete fMMBoards;
 }
 
 void TMMRawEvent::Clear(Option_t* option)
 {
-  fMMInfo->Clear(option);
+  fMMInfo->Clear("");
   fNMMBoards = 0;
   fMMBoards->Clear(option);
 }

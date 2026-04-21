@@ -44,7 +44,7 @@ bool ECalSel::isinTCUT(const std::vector<Point> &polygon, const Point &p)
       double xinters = (p.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
       if (p1.x == p2.x || p.x <= xinters)
       {
-        count++;
+	count++;
       }
     }
   }
@@ -1444,6 +1444,7 @@ Int_t ECalSel::TwoClusters_couples(){
 
     if(fabs(dt) > fMaxTimeDistance) continue;
     CutFlow |=  (1<<1);
+    
     fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_dt"),
                                  fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
                                  labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
@@ -1455,9 +1456,9 @@ Int_t ECalSel::TwoClusters_couples(){
     if(dr < fMinGGDistance) continue;
     CutFlow |=  (1<<2);
     fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_DrVsDt_cut", dt, dr, 1.);
-
-   
-
+    
+    // fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_nosel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
+    
     fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_DTHEVsDPHIAbs_dr"),
                                  fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
                                  labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
@@ -1541,7 +1542,15 @@ Int_t ECalSel::TwoClusters_couples(){
       }
       CutFlow |=  (1<<5);
       //      QUIII
-      if(!(((cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin && cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMax()) && (cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin)) || ((cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin && cluPosRel[1].Perp() < fGeneralInfo->GetRadiusMax()) && (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin() - fSafeSpaceMargin))))
+      double factor = 5;
+      if(!
+	 (((cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin() - factor*fSafeSpaceMargin &&
+	     cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMax()) &&
+	    (cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMin() - factor*fSafeSpaceMargin)) ||
+	   ((cluPosRel[1].Perp() > fGeneralInfo->GetRadiusMin() - factor*fSafeSpaceMargin &&
+	     cluPosRel[1].Perp() < fGeneralInfo->GetRadiusMax()) &&
+	    (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin() - factor*fSafeSpaceMargin)))
+	 ) continue;
 
       //RMin cut
       
@@ -1637,6 +1646,9 @@ Int_t ECalSel::TwoClusters_couples(){
       fhSvcVal->FillHisto2List("ECalSel", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().Y());
       fhSvcVal->FillHisto2List("ECalSel", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().Y());
 
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_E1E2_vs_CogY", cog.Y(), cluEnergy[0]+cluEnergy[1], 1.);
+      //     fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
       
       if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED) && (processSelected.CompareTo("Babayaga")==0 ||processSelected.CompareTo("Bhabha")==0)){
         fhSvcVal->FillHisto2List("ECalSelTwoCluMC", Form("ECal_TC_NCells2vsR2_Babayaga"),xyclu[1].Mod(),tempClu[1]->GetNHitsInClus(), 1.);
@@ -2031,8 +2043,12 @@ Bool_t ECalSel::InitHistos()
     fhSvcVal->BookHistoList("ECalSelTwoCluMC", Form("ECal_TC_R2_%s", processIDsTwoClu[pid].Data()), 500, 0, 500);  
   
   }
-  
-  fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs_cut",600, 0., 2*TMath::Pi(),600, 0., 2*TMath::Pi());
+ 
+ //pippo
+ fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_nosel",60,-300.,300.,30,150.,-150.);
+ fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel",60,-300.,300.,30,150.,-150.);
+ 
+ fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsDPHIAbs_cut",600, 0., 2*TMath::Pi(),600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsEnergySum",600, 0., 2*TMath::Pi(), 400, 0, 400);
 
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EofClu_nocut", 500, 0, 1000);
@@ -2082,6 +2098,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel", "DPhiVsRotVsRunCos", fNThetaBins, 0, fNThetaBins * fThetaWid, fNPhiDirBins, 0, 2 * TMath::Pi()); // to be done run-wise: first read runID, then book
   fhSvcVal->BookHisto2List("ECalSel", "DPhiVsRotVsRun", fNThetaBins, 0, fNThetaBins * fThetaWid, fNPhiDirBins, 0, 2 * TMath::Pi());    // to be done run-wise: first read runID, then book
 
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_E1E2_vs_CogY",600,-300,300,300,0,300);
+  
   const float fEExpMin = 90;
   const float fEExpMax = 410;
   const int fNEExpBins = 80;
@@ -2615,7 +2633,7 @@ Bool_t ECalSel::FitTagProbeEff()
 
   std::cout << "NumAll: " << NumTempAll << " DenTempAll: " << DenTempAll << std::endl;
 
-  std::cout << "############ Overall Efficiency for FIT:  " << EffE << " +/- " << errEffE << "############" << std::endl;
+  std::cout << "############ Overall efficiency for FIT:  " << EffE << " +/- " << errEffE << "############" << std::endl;
 
 
   EffWeight/=errEffWeight;

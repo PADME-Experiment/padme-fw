@@ -90,19 +90,18 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
 
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_Nhit_refit_clu1"),11,4,15,100,-100,100);
 
-  for (int view = 0; view<2; view++){
-    TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);          
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu0_Q%d",quad),10,0,10,100,0,1);
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_Nhit_clu0_Q%d",quad),10,0,10,500,-10,10);
-    fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_3hit_clu0"),100,0,1,500,-10,10);
-    fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_4hit_clu0"),100,0,1,500,-10,10);
-    fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_5hit_clu0"),100,0,1,500,-10,10);
-    fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_67hit_clu0"),100,0,1,500,-10,10);
-  }
+  for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu0_Q%d",quad),10,0,10,100,0,1);
+  for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_Nhit_clu0_Q%d",quad),10,0,10,500,-10,10);
+  
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_3hit_clu0"),100,0,1,500,-10,10);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_4hit_clu0"),100,0,1,500,-10,10);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_5hit_clu0"),100,0,1,500,-10,10);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_67hit_clu0"),100,0,1,500,-10,10);
 
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),300,-300,300,300,-300,300);
-  fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu0"),50,0,1,300,-300,300);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_single_clu0"),50,0,1,300,-300,300);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_double_clu0"),50,0,1,300,-300,300);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu1"),50,0,1,300,-300,300);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_wrong_clu1"),50,0,1,300,-300,300);
     
@@ -365,7 +364,7 @@ Bool_t MMTrackDevel::Process(){
 	    if(Nhit_true_refit == 8) fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_vs_pchi2_8hit_clu1_simplefit",viewlabel.Data()),pchi2_refit,dv_MMEcal_simple,1.);
 	    if(Nhit_true_refit >= 9) fHS->FillHisto2List("MMTrackDevel",Form("MM_d%sMMECAL_vs_pchi2_910hit_clu1_simplefit",viewlabel.Data()),pchi2_refit,dv_MMEcal_simple,1.);
 
-	    if(fabs(dv_MMEcal) < 10) {
+	    if(fabs(dv_MMEcal) < 10 && pchi2_refit>0.5) {
 	      double slope = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().slope;
 	      double inter = fMMClusteringInstance->GetMMCluster(iclu,0,1)->GetTracklet().inter;
 	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_m_vs_c_clu1"),inter,slope,1.);
@@ -407,18 +406,21 @@ Bool_t MMTrackDevel::Process(){
     for(int itra0=0; itra0<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra0++) {
       int quad0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
       int view0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().view;
-      if(x_Ecal*signsQuadX[quad0] < 0 || y_Ecal*signsQuadY[quad0] < 0) continue; //matching ECal clu position with MM quad 	
+      if(!(x_Ecal*signsQuadX[quad0] > 0 && y_Ecal*signsQuadY[quad0] > 0)) continue; //matching ECal clu position with MM quad 
+      //if(x_Ecal*signsQuadX[quad0] < 0 || y_Ecal*signsQuadY[quad0] < 0) continue; //matching ECal clu position with MM quad 	
       int nhit_tmp0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
       if (nhit_tmp0 < 3) continue; //only consider tracks with 3+ hits
       double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
       TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
       double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
 
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_single_clu0"),pchi2_tmp0,dv0,1.);
 
       for(int itra1=itra0+1; itra1<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra1++) {
 	int quad1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHit(0)->GetMMchInfo().quad;
 	int view1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHit(0)->GetMMchInfo().view;
-	if(x_Ecal*signsQuadX[quad1] < 0 || y_Ecal*signsQuadY[quad1] < 0) continue; //matching ECal clu position with MM quad 	
+	if(!(x_Ecal*signsQuadX[quad1] > 0 && y_Ecal*signsQuadY[quad1] > 0)) continue; //matching ECal clu position with MM quad 
+	//if(x_Ecal*signsQuadX[quad1] < 0 || y_Ecal*signsQuadY[quad1] < 0) continue; //matching ECal clu position with MM quad 	
 	int nhit_tmp1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetHitsVectorSize();
 	if (nhit_tmp1 < 3) continue; //only consider tracks with 3+ hits
 	double pchi2_tmp1 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetTracklet().chi2,nhit_tmp1-2);
@@ -428,10 +430,12 @@ Bool_t MMTrackDevel::Process(){
 	TVector3 MMposAtEcal1 = fMMClusteringInstance->GetMMCluster(itra1,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
 	double dv1 = MMposAtEcal0[1-view1] - tempClu->GetPosition()[1-view1];
 
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),view0==0?dv1:dv0,view0==0?dv0:dv1,1.);
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_clu0"),pchi2_tmp0*pchi2_tmp1,
-			    TMath::Sign(TMath::Sqrt(dv0*dv0+dv1*dv1),dv0*dv1),
-			    1.);
+	if(pchi2_tmp0 > 0.7 && pchi2_tmp1 > 0.7) {
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),view0==0?dv1:dv0,view0==0?dv0:dv1,1.);
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_double_clu0"),pchi2_tmp0*pchi2_tmp1,
+			      TMath::Sign(TMath::Sqrt(dv0*dv0+dv1*dv1),dv0*dv1),
+			      1.);
+	}
 	
 	if(pchi2bestPair < pchi2_tmp0*pchi2_tmp1) {
 	  pchi2bestPair = pchi2_tmp0*pchi2_tmp1;

@@ -1648,7 +1648,7 @@ Int_t ECalSel::TwoClusters_couples(){
 
       fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_E1E2_vs_CogY", cog.Y(), cluEnergy[0]+cluEnergy[1], 1.);
       //     fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
-      fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
+      //fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
       
       if(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED) && (processSelected.CompareTo("Babayaga")==0 ||processSelected.CompareTo("Bhabha")==0)){
         fhSvcVal->FillHisto2List("ECalSelTwoCluMC", Form("ECal_TC_NCells2vsR2_Babayaga"),xyclu[1].Mod(),tempClu[1]->GetNHitsInClus(), 1.);

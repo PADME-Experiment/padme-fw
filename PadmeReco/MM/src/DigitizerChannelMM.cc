@@ -187,11 +187,16 @@ bool DigitizerChannelMM::evaluateSig(Short_t sampleMaxId, Short_t maxQ, double* 
   double p_chi2 = 1.0 - ROOT::Math::chisquared_cdf(chi2, ndf, 0);
   //  q_int  = fSignalShape->Integral(-200,800);
  
-  if (*sigTimePeak < fHitTimeLow+fHitTimeMinimum) return kFALSE;
-  if (maxQ < fHitChargeMaxForPChi2Cut && p_chi2 < fHitPChi2Cut) return kFALSE;
-  
-  delete grafoSignal;  
+  if (*sigTimePeak < fHitTimeLow+fHitTimeMinimum) {
+    delete grafoSignal;  
+    return kFALSE;
+  }
+  if (maxQ < fHitChargeMaxForPChi2Cut && p_chi2 < fHitPChi2Cut) {
+    delete grafoSignal;  
+    return kFALSE;
+  }
   fCounters++;
+  delete grafoSignal;  
   return kTRUE;
   //  return fitres;
 }

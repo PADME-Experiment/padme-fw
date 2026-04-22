@@ -10,7 +10,7 @@
 
 #define IPSINCUT 0.05
 
-#define CALIBRATION false
+#define CALIBRATION true
 #define IPMODE false
 
 struct MMTracklet{

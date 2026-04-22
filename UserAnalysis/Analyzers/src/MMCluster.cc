@@ -99,7 +99,7 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
 
   double refTimeZ = GeneralInfo::GetInstance()->GetMMECALdz(chinfoThis.view, xEcal, yEcal, tEcal);
   fFitter.Config().ParSettings(4).SetValue(refTimeZ);
-  fFitter.Config().ParSettings(4).Fix(); // Fix DZ
+  if(!CALIBRATION) fFitter.Config().ParSettings(4).Fix(); // Fix DZ
 
   fMMTrackFcn.setFitMode(fitmode);
   
@@ -309,144 +309,23 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
   if (TMath::Abs(dslope) > dslopeMAX) return kFALSE;
 
-  // CALIBRATION can be find in .hh (usually switched off)
-  if(CALIBRATION) {
-    vector<MMSoftHit*> hitArray;
-    for (Int_t i= 0; i<(int)fMMHitsInClu.size(); i++) hitArray.push_back(fMMHitsInClu.at(i));
-    for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) hitArray.push_back(inputclus->GetHit(i));
-    
-    
-    double x_init_P0=0., y_init_P0=0., x_init_P1=0., y_init_P1=0.;  
-    fFitter.SetFCN(5, fMMTrackFcn); // 5 parameters
-    TString parnames[5] = {"RefPlane0_X","RefPlane0_Y","RefPlane1_X","RefPlane1_Y","DZOffset"};
-    double parinput[5] = {x_init_P0,y_init_P0,x_init_P1,y_init_P1,0.};
-    double parstep[5] = {0.1,0.1,0.1,0.1,0.1};
-    for (int ip=0; ip < 5; ip++) {
-      fFitter.Config().ParSettings(ip) = ROOT::Fit::ParameterSettings(parnames[ip].Data(),parinput[ip],parstep[ip]);
-    }
-    // now decide if fit is XZ view, YZ view or 3d: 0-> fit y positions, 1-> fit x positions, 2->fit x and y positions
-    // need to add 10 if dZ to be fitted
-    int fitmode = 10 + chinfoThis.view; // 11 for fitting XZ view and DZ; 10 for fitting YZ and DZ 
-    for (int i=0; i<2; i++) fFitter.Config().ParSettings(chinfoThis.view+2*i).Fix(); // for Y view, fix parameters 0,2; for X view fix 1,3
-    
-    fMMTrackFcn.setFitMode(fitmode);
-    
-    if (IPMODE) InitFit(hitArray); // if IP is not used
-    else {
-      InitFit(hitArray,GeneralInfo::GetInstance()->GetTargetPos().X(),GeneralInfo::GetInstance()->GetTargetPos().Y(),GeneralInfo::GetInstance()->GetTargetPos().Z());
-    }
-    
-    bool okfit = fFitter.FitFCN();
-    const ROOT::Fit::FitResult & result_temp = fFitter.Result();
-    
-    //----------------------------------------------- HIT REJECTION
-    int Nhit_fclu = fMMHitsInClu.size();
-    int Nhit_inclu = inputclus->GetHitsVectorSize();
-    
-    for(int hr=0; hr<10; hr++) {
-      
-      fMMTrackFcn.ComputeResiduals(result_temp.GetParams());
-      double chi2 = result_temp.MinFcnValue();
-      //double ndf = result_temp.Ndf();
-      double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)hitArray.size()-2);
-      
-      /*if (!okfit) {    
-      //    result.Print(std::cout);
-      return kFALSE;
-      }*/
-      int res_size = fMMTrackFcn.GetResVectorLenght();
-      double res_m2_max = -1;
-      int i_max = 0;
-      for(int i=0; i<res_size; i++) {
-	double res_m2 = fMMTrackFcn.GetResidual(i).Mag2();
-	if(res_m2 > res_m2_max) {
-	  res_m2_max = res_m2;
-	  i_max = i;
-	}
-      }
-      
-      int hit_to_remove_index;
-      if((i_max - (int) fMMHitsInClu.size())>0) {
-	hit_to_remove_index = (i_max - (int) fMMHitsInClu.size());
-	Nhit_inclu--;
-      }
-      else {
-	hit_to_remove_index = i_max;
-	Nhit_fclu--;
-      }
-      
-      if(pchi2 < 0.001 && hitArray.size() > 4 && Nhit_fclu>1 && Nhit_inclu>1) {
-	hitArray.erase(hitArray.begin()+i_max);
-	InitFit(hitArray);
-	bool okfit_new = fFitter.FitFCN();
-	
-	double chi2_new = result_temp.MinFcnValue();
-	double ndf_new = result_temp.Ndf();
-	double pchi2_new = ROOT::Math::chisquared_cdf_c(chi2_new, ndf_new);
-	
-	if(pchi2_new > 0.001) {
-	  okfit = okfit_new;
-	}
-      }
-    }
-    //-------------------------------------------------
-    
-    const ROOT::Fit::FitResult & result = fFitter.Result(); 
-    fMMTrackFcn.ComputeResiduals(result.GetParams());
-    //std::cout<<"[MERGE PLANES] dv: "<<dv<<" okfit:"<<okfit<<" chi2: "<<result.MinFcnValue()<<std::endl;
-    if (!okfit) {    
-      //    result.Print(std::cout);
-      return kFALSE;
-    }
-    
-    // success: update the cluster
-    for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
-      fMMHitsInClu.push_back(inputclus->GetHit(i));
-    }
-    int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
-    fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
-    
-    fTracos.chi2 = result.MinFcnValue();
-    for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
-    
-    fTracos.slope = (fTracos.pars[3-chinfoThis.view]- fTracos.pars[1-chinfoThis.view])/(GeneralInfo::GetInstance()->GetMMPosPlaneZ(1)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-    fTracos.inter = fTracos.pars[1-chinfoThis.view] + fTracos.slope*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)-GeneralInfo::GetInstance()->GetMMPosPlaneZ(0));
-    
-    double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
-    double cosz = 1./TMath::Sqrt(1+fTracos.slope*fTracos.slope);
-    
-    fTracos.lambda[1-chinfoThis.view] = cosv; 
-    fTracos.lambda[chinfoThis.view] = 0.;     
-    fTracos.lambda.SetZ(cosz);
-    
-    int vres_size = fMMTrackFcn.GetResVectorLenght();
-    for(int i=0; i<vres_size; i++) {
-      TVector3 res = fMMTrackFcn.GetResidual(i);
-      fTracos.vres.push_back(res);
-    }
-  } //closing if(CALIBRATION)
-
-  else {
-
-    // success: update the cluster
-    for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
-      fMMHitsInClu.push_back(inputclus->GetHit(i));
-    }
-    int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
-    fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
-
-    for (int i=0; i<5; i++) fTracos.pars[i] = 0.5*(fTracos.pars[i] + inputclus->GetTracklet().pars[i]);
-    fTracos.slope = 0.5*(fTracos.slope + inputclus->GetTracklet().slope);
-    fTracos.inter = 0.5*(fTracos.inter + inputclus->GetTracklet().inter);
-    
-    double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
-    double cosz = 1./TMath::Sqrt(1+fTracos.slope*fTracos.slope);
-    
-    fTracos.lambda[1-chinfoThis.view] = cosv; 
-    fTracos.lambda[chinfoThis.view] = 0.;     
-    fTracos.lambda.SetZ(cosz);
-    
+  // success: update the cluster
+  for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
+    fMMHitsInClu.push_back(inputclus->GetHit(i));
   }
+  int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
+  fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
+  
+  for (int i=0; i<5; i++) fTracos.pars[i] = 0.5*(fTracos.pars[i] + inputclus->GetTracklet().pars[i]);
+  fTracos.slope = 0.5*(fTracos.slope + inputclus->GetTracklet().slope);
+  fTracos.inter = 0.5*(fTracos.inter + inputclus->GetTracklet().inter);
+  
+  double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
+  double cosz = 1./TMath::Sqrt(1+fTracos.slope*fTracos.slope);
+  
+  fTracos.lambda[1-chinfoThis.view] = cosv; 
+  fTracos.lambda[chinfoThis.view] = 0.;     
+  fTracos.lambda.SetZ(cosz);
   
   //IP phase angle in Clu Mode 1
   double v_target = GeneralInfo::GetInstance()->GetTargetPos()[1-fMMHitsInClu.at(0)->GetMMchInfo().view];
@@ -585,7 +464,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
 //    std::cout<<"N hit in clu: "<<fMMHitsInClu.size()<<std::endl;
 //    std::cout<<"cosv: "<<cosv<<" cosz: "<<cosz<<std::endl;
     
-    if (TMath::Abs(fIPPhaseAngle) > 6*IPSINCUT) return kFALSE;
+    if (TMath::Abs(fIPPhaseAngle) > IPSINCUT) return kFALSE;
   }
 
   double v_new_hit = softhit->GetPosition()[1-softhit->GetMMchInfo().view];
@@ -828,6 +707,7 @@ bool MMCluster::HitRejectionAlgorithm() {
       fTracos.pars[2*pl+1-view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
       fTracos.pars[2*pl+view] = fMMHitsInClu.at(0)->GetPosition()[view]; // for view=0, it's the X of the hit (center point)
     }
+    
     // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
     int reverseTrack = 1;
     if (cosz < 0) reverseTrack = -1;

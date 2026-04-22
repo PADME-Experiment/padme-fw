@@ -176,8 +176,8 @@ void ChamberStructure::CreateECalCarbonThinWindow()
   G4ThreeVector spherePos = G4ThreeVector(0.,0.,0.5*ewFThick+ewr1-ewC);
   G4SubtractionSolid* solidEWindow = new G4SubtractionSolid("ChamberECalWindow",solidEWSphere,solidEWFlange,0,G4ThreeVector(0.,0.,-0.5*ewFThick-ewr1+ewC));
   
-  //G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("CarbonFiber"), "ChamberECalWindow",0,0,0);
-  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_MYLAR"), "ChamberECalWindow",0,0,0);
+  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("CarbonFiber"), "ChamberECalWindow",0,0,0);
+  //G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_MYLAR"), "ChamberECalWindow",0,0,0);
  
   logicalEWindow->SetVisAttributes(cVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);
@@ -225,17 +225,16 @@ void ChamberStructure::CreateTargetPipes()
   G4double flangezROut = geo->GetCPZFlangeROut();
   G4double flangezThick = geo->GetCPZFlangeThick();
   G4Tubs* solidFlangeZ = new G4Tubs("JunFlangeZ",flangezRIn,flangezROut,0.5*flangezThick,0.*deg,360.*deg);
-  G4Tubs* solidFlangeZCap = new G4Tubs("JunFlangeZCap",0.,flangezRIn,300*um,0.*deg,360.*deg);
   //G4Tubs* solidFlangeZCap = new G4Tubs("JunFlangeZCap",0.,flangezRIn,300*um,0.*deg,360.*deg);
   G4LogicalVolume* logicalFlangeZ = new G4LogicalVolume(solidFlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlangeZ",0,0,0);
   //G4LogicalVolume* logicalFlangeZCap = new G4LogicalVolume(solidFlangeZCap,G4Material::GetMaterial("G4_Al"),"JunFlangeZCap",0,0,0);
-  G4LogicalVolume* logicalFlangeZCap = new G4LogicalVolume(solidFlangeZCap,G4Material::GetMaterial("G4_Be"),"JunFlangeZCap",0,0,0);
+  //G4LogicalVolume* logicalFlangeZCap = new G4LogicalVolume(solidFlangeZCap,G4Material::GetMaterial("G4_Be"),"JunFlangeZCap",0,0,0);
   logicalFlangeZ->SetVisAttributes(steelVisAttr);
-  logicalFlangeZCap->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
+  //logicalFlangeZCap->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   G4double flangez0PosZ = cpzPosZ-0.5*cpzLen+0.5*flangezThick;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,0,true);
   //AAAAA
-  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZCap,"CPZFlangeCap",fCrossMotherVolume,false,0,true);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZCap,"CPZFlangeCap",fCrossMotherVolume,false,0,true);
   G4double flangez1PosZ = cpzPosZ+0.5*cpzLen-0.5*flangezThick;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,1,true);
 

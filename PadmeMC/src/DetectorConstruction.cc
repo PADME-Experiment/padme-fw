@@ -224,7 +224,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     // Set world characteristics
     logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
     //    logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-    logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+    logicWorld->SetMaterial(G4Material::GetMaterial("Helium"));
     if (fVerbose)
       printf("World %s %s\n",logicWorld->GetName().data(),logicWorld->GetMaterial()->GetName().data());
     
@@ -250,8 +250,8 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
     // When the vacuum chamber is not required, just create the standard World volume
     G4Box* solidWorld = new G4Box("World",0.5*fWorldLength,0.5*fWorldLength,0.5*fWorldLength);
-    logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("G4_AIR"),"World",0,0,0);
-    if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Vacuum"));
+    logicWorld = new G4LogicalVolume(solidWorld,G4Material::GetMaterial("Helium"),"World",0,0,0);
+    if (! fWorldIsFilledWithAir) logicWorld->SetMaterial(G4Material::GetMaterial("Helium"));
     logicWorld->SetVisAttributes(G4VisAttributes::GetInvisible());
     // logicWorld->SetVisAttributes(G4VisAttributes(G4Colour::White()));
     physicWorld = new G4PVPlacement(0,G4ThreeVector(),logicWorld,"World",0,false,0);
@@ -350,7 +350,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4ThreeVector magVol4Pos = G4ThreeVector(0.,0.,0.5*(geoChamber->GetVCInnerFacePosZ()+geoChamber->GetJunBackFacePosZ())-magVolPosZ+1.*um);
   G4UnionSolid* solidMagneticVolume = new G4UnionSolid("MagneticVolume",solidMagVol3,solidMagVol4,0,magVol4Pos);
 
-  G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
+  G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Helium"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::GetInvisible());
   new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
 
@@ -363,16 +363,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     // Create magnetic volume inside beam entrance pipe
 
     G4double cpzRIn = geoChamber->GetCPZRIn();
-    //G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
-    //G4double cpzLen = 49.*cm; // Length is set to not include the instrumented section of the target
-    G4double cpzLen = geoChamber->GetJunBackFacePosZ()-geoChamber->GetCPZPosZ()-5.*mm; // Length is set to not include the instrumented section of the target
+    G4double cpzLen = 46.*cm; // Length is set to not include the instrumented section of the target
+
     G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
-
-    //positionMagneticVolumeCross = G4ThreeVector(0.,0.,geoChamber->GetVCOuterFacePosZ()-0.5*cpzLen);
     positionMagneticVolumeCross = G4ThreeVector(0.,0.,geoChamber->GetJunBackFacePosZ()-0.5*cpzLen-1.*um);
-    logicMagneticVolumeCross =
-      new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCross",0,0,0);
-
+    logicMagneticVolumeCross = new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Helium"),"MagneticVolumeCross",0,0,0);
   } else {
 
     // Create a box with XY section matching that of the volume inside the vacuum chamber
@@ -409,13 +404,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4double cmvPosY = 0.5*(cmvMaxY+cmvMinY);
     G4double cmvPosZ = 0.5*(cmvMaxZ+cmvMinZ);
     positionMagneticVolumeCross = G4ThreeVector(cmvPosX,cmvPosY,cmvPosZ);
-    logicMagneticVolumeCross = new G4LogicalVolume(cmvSolid5,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCross",0,0,0);
+    logicMagneticVolumeCross = new G4LogicalVolume(cmvSolid5,G4Material::GetMaterial("Helium"),"MagneticVolumeCross",0,0,0);
 
   }
 
   if (! fMagneticVolumeIsVisible)
     logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::GetInvisible());
-  new G4PVPlacement(0,positionMagneticVolumeCross,logicMagneticVolumeCross,"MagneticVolumeCross",logicWorld,false,0,true);
+  //new G4PVPlacement(0,positionMagneticVolumeCross,logicMagneticVolumeCross,"MagneticVolumeCross",logicWorld,false,0,true);
 
   // Add magnetic field to volumes
   if (fEnableMagneticField) {
@@ -604,11 +599,14 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildMaterial("G4_POLYVINYLIDENE_FLUORIDE"); // Tedlar (ECal)
   man->FindOrBuildMaterial("G4_NEOPRENE");                // Neoprene (Magnet)
   man->FindOrBuildMaterial("G4_PLEXIGLASS");              // Plexiglass (ECal)
+  man->FindOrBuildMaterial("G4_BRASS");                   // Brass (MMega lateral plane)
   //man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
   man->FindOrBuildMaterial("G4_POLYSTYRENE");             // Plastic scintillator (Veto)
-  man->FindOrBuildMaterial("G4_Li");
-  // Define all elements needed to define materials not in the NIST DB
+  //man->FindOrBuildMaterial("G4_Li");
+  //man->FindOrBuildMaterial("G4_Al");
+  // Define all elements needed to define materials not in the NIST DB 
   man->FindOrBuildElement("H");  // Hydrogen
+  man->FindOrBuildElement("He");  // Helium
   man->FindOrBuildElement("O");  // Oxygen
   man->FindOrBuildElement("N");  // Nitrogen
   man->FindOrBuildElement("C");  // Carbon
@@ -620,6 +618,7 @@ void DetectorConstruction::DefineMaterials()
 
   // Vacuum: leave some residual air with low density (Chamber, World)
   G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-7)*mg/cm3,2); // 1mbar
+  //G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-7)*mg/cm3,2); // 1mbar
   Vacuum->AddElement(G4Element::GetElement("N"),70.*perCent);
   Vacuum->AddElement(G4Element::GetElement("O"),30.*perCent);
 
@@ -632,6 +631,9 @@ void DetectorConstruction::DefineMaterials()
   G4Material* Water = new G4Material("Water",1.0*g/cm3,2);
   Water->AddElement(G4Element::GetElement("H"),2);
   Water->AddElement(G4Element::GetElement("O"),1);
+
+  G4Material* Helium =  new G4Material("Helium", 0.166*mg/cm3, 1, kStateGas, 293.*kelvin, 1.*atmosphere);
+  Helium->AddElement(G4Element::GetElement("He"), 1.0);                       
 
   // Diamond (Target)
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);
@@ -655,6 +657,13 @@ void DetectorConstruction::DefineMaterials()
   Nomex->AddElement(G4Element::GetElement("H"),10);
   Nomex->AddElement(G4Element::GetElement("O"),2);
   Nomex->AddElement(G4Element::GetElement("N"),2);
+
+  // Nomex MM => from producer specifics
+  G4Material* NomexFoilMM = new G4Material("NomexFoilMM",0.17*g/cm3,4);
+  NomexFoilMM->AddElement(G4Element::GetElement("C"),13);
+  NomexFoilMM->AddElement(G4Element::GetElement("H"),10);
+  NomexFoilMM->AddElement(G4Element::GetElement("O"),2);
+  NomexFoilMM->AddElement(G4Element::GetElement("N"),2);
 
   // Nomex foil(+glue) (ECal) => Should find better composition (now using that of Nomex)
   G4Material* NomexFoil = new G4Material("NomexFoil",1.07*g/cm3,4);

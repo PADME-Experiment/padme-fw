@@ -29,6 +29,8 @@ MMegaHit::MMegaHit(const MMegaHit& right)
 {
   fTrackType = right.fTrackType;
   fTrackId = right.fTrackId;
+  fParentId = right.fParentId;
+  fVertexPos = right.fVertexPos;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fETrack = right.fETrack;
@@ -43,6 +45,8 @@ const MMegaHit& MMegaHit::operator=(const MMegaHit& right)
 {
   fTrackType = right.fTrackType;
   fTrackId = right.fTrackId;
+  fParentId = right.fParentId;
+  fVertexPos = right.fVertexPos;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fETrack = right.fETrack;

@@ -58,6 +58,10 @@ public:
   G4double GetMMegaNomexSizeZ() { return fMMegaNomexSizeZ;  }
   G4double GetMMegaKaptonSizeZ(){ return fMMegaKaptonSizeZ; }
   G4double GetMMegaFR4ReadoutSizeZ(){ return fMMegaFR4ReadoutSizeZ; }
+  G4double GetMMegaLateralFR4(){ return fMMegaLateralFR4; }
+  G4double GetMMegaLateralBrass(){ return fMMegaLateralBrass; }
+  
+  
   G4double GetMMegaCarbonSizeZ(){ return fMMegaCarbonSizeZ; }
   G4double GetMMegaLayerGap()   { return fMMegaLayerGap;    }
   
@@ -153,6 +157,8 @@ private:
   G4double fMMegaCarbonSizeZ; //thickness of carbon resistive layer
   G4double fMMegaLayerGap;
   G4double fMMegaFR4ReadoutSizeZ;
+  G4double fMMegaLateralFR4;
+  G4double fMMegaLateralBrass;
 
   //geometry of strips readout design (same for x and y)
   G4double fMMegaStripPitch;

@@ -74,7 +74,10 @@ public:
   G4double GetTargetDisplacementY() { return fTargetDisplacementY; }
   void     SetTargetDisplacementX(G4double s) { fTargetDisplacementX = s; }
   void     SetTargetDisplacementY(G4double s) { fTargetDisplacementY = s; }
-
+  G4double GetSupportDisplacementX() { return fSupportDisplacementX; }
+  G4double GetSupportDisplacementY() { return fSupportDisplacementY; }
+  void     SetSupportDisplacementX(G4double s) { fSupportDisplacementX = s; }
+  void     SetSupportDisplacementY(G4double s) { fSupportDisplacementY = s; }
   // Set position along Z of Target front face
   G4double GetTargetFrontFacePosZ() { return fTargetFrontFacePosZ; }
   void     SetTargetFrontFacePosZ(G4double z) { fTargetFrontFacePosZ = z; }
@@ -180,7 +183,9 @@ private:
 
   G4double fTargetDisplacementX; // Target displacement along X axis wrt beam line
   G4double fTargetDisplacementY; // Target displacement along Y axis wrt beam line
-
+  G4double fSupportDisplacementX; // Support displacement along X axis wrt beam line (Run IV)
+  G4double fSupportDisplacementY; // Support displacement along X axis wrt beam line
+  
   G4double fTargetFrontFacePosZ; // Position along Z axis of Target front face
   G4double fTargetRotationAngle; // Target Rotation angle (RunIV)
   G4bool fTargetFastDigitization; // Enable/disable use of fast digitization

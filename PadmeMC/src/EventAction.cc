@@ -76,7 +76,7 @@ EventAction::EventAction(RunAction* run)
   Bpar  = BeamParameters::GetInstance();
 
   // Default printout once every 100 events
-  fPrintoutFrequency = 100;
+  fPrintoutFrequency = 1;
 
   //M. Raggi defining default output settings 
   fEnableSaveEcal = 1;

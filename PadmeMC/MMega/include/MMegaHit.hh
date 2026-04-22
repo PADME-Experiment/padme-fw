@@ -64,6 +64,9 @@ public:
   void SetTrackID(G4int track) { fTrackId = track; };
   G4int GetTrackID() { return fTrackId; };
 
+  void SetParentID(G4int parent) { fParentId = parent; };
+  G4int GetParentID() { return fParentId; };
+
   void SetEdep(G4double de) { fEnergy = de; };
   G4double GetEdep() { return fEnergy; };      
 
@@ -72,18 +75,22 @@ public:
 
   void SetPos(G4ThreeVector xyz) { fPosition = xyz; };
   G4ThreeVector GetPos(){ return fPosition; };
+  void SetVertexPosition(G4ThreeVector xyz) { fVertexPos = xyz; };
+  G4ThreeVector GetVertexPosition(){ return fVertexPos; };
   G4double GetX(){ return fPosition.x(); };
   G4double GetY(){ return fPosition.y(); };
   G4double GetZ(){ return fPosition.z(); };
 
 private:
 
+  G4int         fParentId;
   G4int         fTrackType;
   G4int         fTrackId;
   G4double      fTime;
   G4double      fEnergy;
   G4double      fETrack;
   G4ThreeVector fPosition;
+  G4ThreeVector fVertexPos;
   G4ThreeVector fLocalPositionStart;
   G4ThreeVector fLocalPositionEnd;
 };

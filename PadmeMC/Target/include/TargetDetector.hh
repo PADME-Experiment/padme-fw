@@ -32,7 +32,7 @@ public:
 
   // Define displacement of Target along Z due to position of magnetic volume
   void SetTargetDisplacePosZ(G4double z) { fTargetDisplacePosZ = z; }
-
+  
 private:
 
   G4LogicalVolume* fMotherVolume;
@@ -41,7 +41,7 @@ private:
   TargetMessenger* fTargetMessenger;
 
   G4double fTargetDisplacePosZ; // Displacement of Target along Z due to positioning inside magnetic volume
-
+  
 };
 
 #endif

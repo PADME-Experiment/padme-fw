@@ -67,6 +67,8 @@ G4bool MMegaSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   newHit->SetPType(ClassifyTrack(aStep->GetTrack()));
   newHit->SetTrackID(track->GetTrackID());
+  newHit->SetParentID(track->GetParentID());
+  newHit->SetVertexPosition(track->GetVertexPosition());
   newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
   newHit->SetEnergy(aStep->GetTotalEnergyDeposit() - aStep->GetNonIonizingEnergyDeposit());
   newHit->SetETrack(track->GetTotalEnergy());

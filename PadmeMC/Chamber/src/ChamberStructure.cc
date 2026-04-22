@@ -159,22 +159,29 @@ void ChamberStructure::CreateECalCarbonThinWindow()
   G4double ewr1 = (ewR*ewR+ewC*ewC)/(2.*ewC);
   //G4double ewz1 = efFBackZ+(ewr1-ewC);
   G4double ewth1 = asin(ewR/ewr1);
-
  // Create flange around thin window
   G4Tubs* solidEWFlange = new G4Tubs("EWFlange",ewFRIn,ewFROut,0.5*ewFThick,0.*deg,360.*deg);
   G4LogicalVolume* logicalEWFlange = new G4LogicalVolume(solidEWFlange,G4Material::GetMaterial("G4_Al"), "ChamberECalWindowFlange",0,0,0);
   logicalEWFlange->SetVisAttributes(alVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+0.5*ewFThick),logicalEWFlange,"ChamberECalWindowFlange",fMotherVolume,false,0,true);
+//to be removed
+  // G4double holeRadius = 5.0*cm;
+  // G4double holeHalfZ  = 2*cm;  
+
+  // G4Tubs* solidHole = new G4Tubs( "EWindowHole", 0., holeRadius,holeHalfZ, 0.*deg,360.*deg);
+  // G4LogicalVolume* logicHole = new G4LogicalVolume(solidHole, G4Material::GetMaterial("G4_AIR"), "AirHole");
 
   // Create the thin window spherical cap and subtract flange to smooth its edge
   G4Sphere* solidEWSphere = new G4Sphere("EWSphere",ewr1,ewr1+ewT,0.*deg,360.*deg,180.*deg-ewth1,ewth1);
   G4ThreeVector spherePos = G4ThreeVector(0.,0.,0.5*ewFThick+ewr1-ewC);
   G4SubtractionSolid* solidEWindow = new G4SubtractionSolid("ChamberECalWindow",solidEWSphere,solidEWFlange,0,G4ThreeVector(0.,0.,-0.5*ewFThick-ewr1+ewC));
-  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("CarbonFiber"), "ChamberECalWindow",0,0,0);
-  //G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_AIR"), "ChamberECalWindow",0,0,0);
+  
+  //G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("CarbonFiber"), "ChamberECalWindow",0,0,0);
+  G4LogicalVolume* logicalEWindow = new G4LogicalVolume(solidEWindow,G4Material::GetMaterial("G4_MYLAR"), "ChamberECalWindow",0,0,0);
+ 
   logicalEWindow->SetVisAttributes(cVisAttr);
   new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);
-  //new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewr1-ewC),logicalEWindow,"ChamberECalWindow",fMotherVolume,false,0,true);
+  //new G4PVPlacement(0,G4ThreeVector(0.,0.,efFFrontZ+ewFThick-ewC),logicHole,"HoleECalWindow",fMotherVolume,false,0,false);
 
 }
 
@@ -218,10 +225,17 @@ void ChamberStructure::CreateTargetPipes()
   G4double flangezROut = geo->GetCPZFlangeROut();
   G4double flangezThick = geo->GetCPZFlangeThick();
   G4Tubs* solidFlangeZ = new G4Tubs("JunFlangeZ",flangezRIn,flangezROut,0.5*flangezThick,0.*deg,360.*deg);
+  G4Tubs* solidFlangeZCap = new G4Tubs("JunFlangeZCap",0.,flangezRIn,300*um,0.*deg,360.*deg);
+  //G4Tubs* solidFlangeZCap = new G4Tubs("JunFlangeZCap",0.,flangezRIn,300*um,0.*deg,360.*deg);
   G4LogicalVolume* logicalFlangeZ = new G4LogicalVolume(solidFlangeZ,G4Material::GetMaterial("G4_STAINLESS-STEEL"),"JunFlangeZ",0,0,0);
+  //G4LogicalVolume* logicalFlangeZCap = new G4LogicalVolume(solidFlangeZCap,G4Material::GetMaterial("G4_Al"),"JunFlangeZCap",0,0,0);
+  G4LogicalVolume* logicalFlangeZCap = new G4LogicalVolume(solidFlangeZCap,G4Material::GetMaterial("G4_Be"),"JunFlangeZCap",0,0,0);
   logicalFlangeZ->SetVisAttributes(steelVisAttr);
+  logicalFlangeZCap->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   G4double flangez0PosZ = cpzPosZ-0.5*cpzLen+0.5*flangezThick;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,0,true);
+  //AAAAA
+  new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez0PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZCap,"CPZFlangeCap",fCrossMotherVolume,false,0,true);
   G4double flangez1PosZ = cpzPosZ+0.5*cpzLen-0.5*flangezThick;
   new G4PVPlacement(0,G4ThreeVector(0.,0.,flangez1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeZ,"CPZFlange",fCrossMotherVolume,false,1,true);
 
@@ -237,7 +251,6 @@ void ChamberStructure::CreateTargetPipes()
   G4double flangex1PosX = +0.5*cpxLen-0.5*flangexThick;
   G4double flangex1PosZ = cpzPosZ;
   new G4PVPlacement(rotCPX,G4ThreeVector(flangex1PosX,0.,flangex1PosZ)-G4ThreeVector(0.,0.,fCrossDisplacePosZ),logicalFlangeX,"CPXFlange",fCrossMotherVolume,false,1,true);
-
 }
 
 void ChamberStructure::CreateJunctionPipe()

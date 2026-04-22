@@ -66,8 +66,8 @@ void MMegaDetector::CreateGeometry()
   MMregion->AddRootLogicalVolume(fMMegaVolume);
 
   // G4ProductionCuts* cuts = new G4ProductionCuts();
-  // cuts->SetProductionCut(10*um, G4ProductionCuts::GetIndex("e-"));
-  // cuts->SetProductionCut(10*eV, G4ProductionCuts::GetIndex("e-"));
+  // cuts->SetProductionCut(5*um, G4ProductionCuts::GetIndex("e-"));
+  // cuts->SetProductionCut(5*um, G4ProductionCuts::GetIndex("gamma"));
   // MMregion->SetProductionCuts(cuts);
 
   fMMegaVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
@@ -87,6 +87,23 @@ void MMegaDetector::CreateGeometry()
   fDriftVolume = new G4LogicalVolume(solidMMegaDrift, G4Material::GetMaterial("ArCF4Iso"), "MMegaDrift",0,0,0);
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"MMegaDrift",fMMegaVolume,false,0,false);
+
+  //ADDING AN FR4 tube
+G4double tubeThickness =5*mm;
+
+  G4double rOuter = 10*cm;   
+  G4double rInner = rOuter - tubeThickness;
+
+  G4Tubs* solidFR4Tube = new G4Tubs("solidFR4Tube",rInner,rOuter,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
+  G4LogicalVolume* logicFR4Tube = new G4LogicalVolume(solidFR4Tube, G4Material::GetMaterial("CarbonFiber"), "CarbonFiberTube");
+  logicFR4Tube->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicFR4Tube,"FR4Tube",fMMegaVolume,false,0,false);
+
+  G4Tubs* solidAirTube = new G4Tubs("solidAirTube",0.,rInner,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
+  G4LogicalVolume* logicAirTube = new G4LogicalVolume(solidAirTube, G4Material::GetMaterial("ArCF4Iso"), "AirTube");
+  logicAirTube->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicAirTube,"AirTube",fMMegaVolume,false,0,false);
+
 
   //READOUT PLANES
   G4double MMegaPanelSizeX = geo->GetMMegaPanelSizeX();
@@ -140,6 +157,17 @@ void MMegaDetector::CreateGeometry()
   G4Box* solidFR4Volume = new G4Box("solidFR4Volume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaFR4SizeZ);
   G4LogicalVolume* fMMegaFR4Volume = new G4LogicalVolume(solidFR4Volume, G4Material::GetMaterial("PCB"), "FR4Volume", 0,0,0);
   fMMegaFR4Volume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
+  //Lateral panels, FR4 and Brass
+  G4double MMegaLateralFR4 = geo->GetMMegaLateralFR4();
+  G4Box* solidLateralFR4 = new G4Box("solidLateralFR4", 0.5*MMegaLateralFR4, 0.5*MMegaPanelSizeY, 0.5*geo->GetMMegaDriftSizeZ());
+  G4LogicalVolume* fMMegaLateralFR4Volume =new G4LogicalVolume(solidLateralFR4,G4Material::GetMaterial("PCB"), "solidLateralFR4Volume",0,0,0);
+
+  G4double MMegaLateralBrass = geo->GetMMegaLateralBrass();
+  G4Box* solidLateralBrass = new G4Box("solidLateralBrass",0.5*MMegaLateralBrass,0.5*MMegaPanelSizeY, 0.5*geo->GetMMegaDriftSizeZ());
+  G4LogicalVolume* fMMegaLateralBrassVolume =new G4LogicalVolume(solidLateralBrass,G4Material::GetMaterial("G4_BRASS"), "solidLateralBrassVolume",0,0,0);
+
+  fMMegaLateralFR4Volume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  fMMegaLateralBrassVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
 
   G4double MMegaFaradayFR4SizeZ = geo->GetMMegaFaradayFR4SizeZ();
   G4Box* solidFaradayFR4Volume = new G4Box("solidFaradayFR4Volume", 0.5*MMegaFaradayPanelSizeX, 0.5*MMegaFaradayPanelSizeY, 0.5*MMegaFaradayFR4SizeZ);
@@ -164,13 +192,18 @@ void MMegaDetector::CreateGeometry()
 
   G4double MMegaNomexSizeZ = geo->GetMMegaNomexSizeZ();
   G4Box* solidNomexVolume = new G4Box("solidNomexVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaNomexSizeZ);
-  G4LogicalVolume* fMMegaNomexVolume = new G4LogicalVolume(solidNomexVolume, G4Material::GetMaterial("Nomex"), "NomexVolume", 0,0,0);
+  G4LogicalVolume* fMMegaNomexVolume = new G4LogicalVolume(solidNomexVolume, G4Material::GetMaterial("NomexFoilMM"), "NomexVolume", 0,0,0);
   fMMegaNomexVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
 
   G4double MMegaCarbonSizeZ = geo->GetMMegaCarbonSizeZ();
   G4Box* solidCarbonVolume = new G4Box("solidCarbonVolume", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaCarbonSizeZ);
   G4LogicalVolume* fMMegaCarbonVolume = new G4LogicalVolume(solidCarbonVolume, G4Material::GetMaterial("G4_C"), "CarbonVolume", 0,0,0);
   fMMegaCarbonVolume->SetVisAttributes(G4VisAttributes(G4Colour::Cyan()));
+  //For test with Mylar panel
+  G4double MMegaMylarClosing = 100*um;
+  G4Box* solidMylarClosing = new G4Box("solidMylarClosing", 0.5*MMegaPanelSizeX, 0.5*MMegaPanelSizeY, 0.5*MMegaMylarClosing);
+  G4LogicalVolume* fMMegaMylarClosing = new G4LogicalVolume(solidMylarClosing, G4Material::GetMaterial("G4_MYLAR"), "MylarClosingVolume", 0,0,0);
+  fMMegaMylarClosing->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
   
   // Placement of layers inside front panel
@@ -178,36 +211,42 @@ void MMegaDetector::CreateGeometry()
   G4double MMegaLayerGap = geo->GetMMegaLayerGap();
 
   G4ThreeVector CarbonPos = G4ThreeVector(0,0,-0.5*(MMegaDriftSizeZ+MMegaCarbonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,0,false);
+  G4ThreeVector MylarPos = G4ThreeVector(0,0,-0.5*(MMegaDriftSizeZ+MMegaMylarClosing+MMegaLayerGap));
+  //TEST WITH MYLAR
+  new G4PVPlacement(0,CarbonPos, fMMegaMylarClosing, "MylarClosingVolume", fMMegaVolume,false,0,false);
+  //new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,0,false);
   G4ThreeVector KaptonPos2 = CarbonPos - G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
+  //new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos2 = KaptonPos2 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
+  //new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
   //to be changed to FR4Readout
   // G4ThreeVector KaptonPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   // new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
   // G4ThreeVector CopperPos1 = KaptonPos1 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
   G4ThreeVector FR4ReadoutPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4ReadoutSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
+  //new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos1 = FR4ReadoutPos1 - G4ThreeVector(0,0,0.5*(MMegaFR4ReadoutSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
 
-  new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
+  //new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector FR4Pos2 = CopperPos1 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4SizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FR4Pos2, fMMegaFR4Volume, "FR4Layer2", fMMegaVolume, false,0,false);
+  //new G4PVPlacement(0,FR4Pos2, fMMegaFR4Volume, "FR4Layer2", fMMegaVolume, false,0,false);
   G4ThreeVector NomexPos = FR4Pos2 - G4ThreeVector(0,0,0.5*(MMegaFR4SizeZ+MMegaNomexSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,0,false);
+  // AAAA new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,0,false);
+  
   G4ThreeVector FR4Pos1 = NomexPos - G4ThreeVector(0,0,0.5*(MMegaNomexSizeZ+MMegaFR4SizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FR4Pos1, fMMegaFR4Volume, "FR4Layer1", fMMegaVolume, false,0,false);
+  // AAAA new G4PVPlacement(0,FR4Pos1, fMMegaFR4Volume, "FR4Layer1", fMMegaVolume, false,0,false);
+  
   //Faraday cage positioning
   G4ThreeVector FR4FaradayPos1 = FR4Pos1 - G4ThreeVector(0,0,0.5*(MMegaFR4SizeZ + MMegaFaradayFR4SizeZ+MMegaLayerGap));
-  new G4PVPlacement(0, FR4FaradayPos1, fMMegaFaradayFR4Volume, "FaradayFR4", fMMegaVolume,false,0,false);
+  // AAAA new G4PVPlacement(0, FR4FaradayPos1, fMMegaFaradayFR4Volume, "FaradayFR4", fMMegaVolume,false,0,false);
   G4ThreeVector CopperFaradayPos1 = FR4FaradayPos1 - G4ThreeVector(0,0,0.5*(MMegaFaradayFR4SizeZ + MMegaFaradayCopperSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0, CopperFaradayPos1, fMMegaFaradayCopperVolume, "FaradayCopper", fMMegaVolume,false,0,false);
+  // AAAA new G4PVPlacement(0, CopperFaradayPos1, fMMegaFaradayCopperVolume, "FaradayCopper", fMMegaVolume,false,0,false);
   
   
 
   // Placement of layers inside rear panel
   CarbonPos = G4ThreeVector(0,0,+0.5*(MMegaDriftSizeZ+MMegaCarbonSizeZ+MMegaLayerGap));
+  //new G4PVPlacement(0,CarbonPos, fMMegaMylarClosing, "MylarClosing", fMMegaVolume,false,1,false);
   new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,1,false);
   KaptonPos2 = CarbonPos + G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,1,false);
@@ -237,7 +276,6 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, CopperFaradayPos1, fMMegaFaradayCopperVolume, "FaradayCopper", fMMegaVolume,false,0,false);
   
   
-  
   //Definition of the Meshes 
   G4double AmpMeshSizeZ = geo->GetMMegaAmpMeshSizeZ();
   G4double CathodeMeshSizeZ = geo->GetMMegaCathodeMeshSizeZ();
@@ -255,6 +293,16 @@ void MMegaDetector::CreateGeometry()
   new G4PVPlacement(0, G4ThreeVector(0,0,0), fCathodeMeshVolume, "CenterMesh", fDriftVolume,false,0,false);
 
 
+  //Placement of the lateral panels
+  G4double xOffsetFR4 = 0.5*MMegaDriftSizeX + 0.5*MMegaLateralFR4;
+  G4double xOffsetBrass = 0.5*MMegaDriftSizeX + MMegaLateralFR4 +10*um+0.5*MMegaLateralBrass;
+  //left side
+  new G4PVPlacement(0, G4ThreeVector(-xOffsetFR4,0,0), fMMegaLateralFR4Volume,"LeftSideLateralFR4",fMMegaVolume, false,0, false); 
+  new G4PVPlacement(0, G4ThreeVector(-xOffsetBrass,0,0), fMMegaLateralBrassVolume,"LeftSideLateralBrass",fMMegaVolume, false,0, false); 
+  //right side
+  new G4PVPlacement(0, G4ThreeVector(xOffsetFR4,0,0), fMMegaLateralFR4Volume,"RightSideLateralFR4",fMMegaVolume, false,0, false); 
+  new G4PVPlacement(0, G4ThreeVector(xOffsetBrass,0,0), fMMegaLateralBrassVolume,"RightSideLateralBrass",fMMegaVolume, false,0, false); 
+  
   // Create digitizer for MMega
   G4DigiManager* theDM = G4DigiManager::GetDMpointer();
   G4String MMegaDName = geo->GetMMegaDigitizerName();

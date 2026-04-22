@@ -3,7 +3,7 @@
 #include "G4ios.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Event.hh"
-
+#include "G4RunManager.hh"
 #include "DetectorConstruction.hh"
 
 PrimaryGeneratorAction::PrimaryGeneratorAction(DetectorConstruction* myDC)

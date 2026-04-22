@@ -25,8 +25,8 @@ MMegaGeometry::MMegaGeometry()
 
   //readout plane composition
   fMMegaCopperSizeZ = 0.018*mm; //strip
-  fMMegaFR4SizeZ = 0.900*mm; //FR4 layers updated 11/02/26 ?
-  fMMegaNomexSizeZ = 10*mm; //ok 11/02/26
+  fMMegaFR4SizeZ = 0.900*mm; //FR4 layers updated 11/02/26 ? /da primo strato raggio 10 cm 
+  fMMegaNomexSizeZ = 10*mm; //ok 11/02/26 //da rimuovere nel primo pannello raggio 10 cm 
   fMMegaKaptonSizeZ = 0.050*mm; //ok 11/02/26
   fMMegaFR4ReadoutSizeZ = 0.050*mm; //ok 11/02/26
   fMMegaCarbonSizeZ = 0.004*mm; //thickness of carbon resistive layer
@@ -34,12 +34,13 @@ MMegaGeometry::MMegaGeometry()
 
  
   // size of Faraday FR4 panels
-  fMMegaFaradayPanelSizeX = 880*mm; //11/02/26
+  fMMegaFaradayPanelSizeX = 880*mm; //set to 670*mm when shifted;////11/02/26
   fMMegaFaradayPanelSizeY = 880*mm;
   fMMegaFaradayPanelSizeZ = 0.700*mm;
-  fMMegaFaradayFR4SizeZ = 0.700*mm;
-  fMMegaFaradayCopperSizeZ = 0.100*mm;
-
+  fMMegaFaradayFR4SizeZ = 0.700*mm; //da rimuovere nel primo pannello raggio 10 cm 
+  fMMegaFaradayCopperSizeZ = 0.100*mm; //da rimuovere nel primo pannello raggio 10 cm 
+  fMMegaLateralFR4 = 10*mm;
+  fMMegaLateralBrass = 0.5*mm;
   //size of strips
   fMMegaStripPitch = 1.2*mm; //to be updated //1mm
   fMMegaStripWidth = 1.2*mm; //same
@@ -89,7 +90,7 @@ MMegaGeometry::MMegaGeometry()
   fMMegaYPadArea = 0.25*mm2;
   fMMegaPadDistance = 1.1*mm;
   fXPadStartPos = -fMMegaPanelSizeX/2.; //to be changed when i have readout maps
-  fYPadStartPos = -fMMegaPanelSizeX/2.;
+  fYPadStartPos = -fMMegaPanelSizeY/2.;
   
   //size of meshes
   fMMegaAmpMeshSizeZ = (0.018/2)*mm;
@@ -98,8 +99,8 @@ MMegaGeometry::MMegaGeometry()
 
   //fMMegaFrontFacePosZ = 2612.41*mm - fMMegaSizeZ - 25*mm; // Relative to center of magnet (using runIII ECal position)
   fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 45*mm; // USE THE SURVEY !!!!!
-  fMMegaDisplacementX=0*mm; //10*mm;
-  fMMegaDisplacementY=0*mm;//20*mm;
+  fMMegaDisplacementX=20*mm; //50*mm+fMMegaFaradayPanelSizeX/2;//10*mm; //
+  fMMegaDisplacementY=0; //20*mm;//0*mm;//;
   fMMegaRotationAngle=0*deg;
   fMMegaDigitizerName = "MMegaDigitizer";
   fMMegaSensitiveDetectorName = "MMegaSD";

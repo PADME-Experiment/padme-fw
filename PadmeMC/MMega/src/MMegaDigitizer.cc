@@ -60,7 +60,7 @@ void MMegaDigitizer::Digitize()
   MMegaHitsCollection* MMegaHC = 0;
   MMegaHC = (MMegaHitsCollection*)(theDM->GetHitsCollection(MMegaHCID));  
 
- 
+  G4cout<< MMegaHC<<" "<<MMegaHC->entries()<<G4endl;
   // If hits are present, digitize them  
   if (MMegaHC) {
     
@@ -80,12 +80,14 @@ void MMegaDigitizer::Digitize()
       G4ThreeVector  hPosition           = (*MMegaHC)[i]->GetPosition();
       G4ThreeVector  hLocalPositionStart = (*MMegaHC)[i]->GetLocalPositionStart();
       G4ThreeVector  hLocalPositionEnd   = (*MMegaHC)[i]->GetLocalPositionEnd();
+      G4ThreeVector  hVertexPos   = (*MMegaHC)[i]->GetVertexPosition();
       G4double       hETrack             = (*MMegaHC)[i]->GetETrack();
-      // G4int         hTrackId   = (*MMegaHC)[i]->GetTrackID();
-
+      G4int          hTrackId   = (*MMegaHC)[i]->GetTrackID();
+      G4int          hParentId   = (*MMegaHC)[i]->GetParentID();
       //only digitize electrons and positrons
       if(hTrackType == 2 || hTrackType == 3){ 
-          
+
+        //G4cout<<"tagg "<<hTrackId<< " "<<hParentId<<" "<<hPosition.x()<< " "<< hPosition.y()<<" "<<hPosition.z()<<" "<<hVertexPos.x()<< " "<< hVertexPos.y()<<" "<<hVertexPos.z()<<G4endl;
         // Generate ionizations for current hit
         MMegaIonizations* ioni = new MMegaIonizations(hLocalPositionStart, hLocalPositionEnd, hEnergy);
         

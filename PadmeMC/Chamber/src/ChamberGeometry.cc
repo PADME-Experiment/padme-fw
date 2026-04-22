@@ -42,7 +42,7 @@ ChamberGeometry::ChamberGeometry()
   fEWAlThick  = 4.*mm; // Thickness of aluminum window
   fEWAlConvexity = 29.*mm; // Convexity of aluminum window at its center
 
-  fEWCarbonThick  = 2.5*mm; // Thickness of carbon window M. Raggi June 2022 according to drawings 06/03/2017
+  fEWCarbonThick  = 100*um;//2.5*mm;//2.5*mm; // Thickness of carbon window M. Raggi June 2022 according to drawings 06/03/2017
   //  fEWCarbonThick  = 0.01*mm; // Thickness of carbon window AHHHHHHHHHH RAGGIIII
   fEWCarbonConvexity = 29.*mm; // Convexity of carbon window at its center
 
@@ -213,8 +213,10 @@ void ChamberGeometry::UpdateDerivedMeasures()
 {
 
   //Move the target cross and pipes to Run IV location
-  if(fDetectorSetup>40) fCPZPosZ = -732.47*mm; 
-
+  if(fDetectorSetup>40){
+     fCPZPosZ = -732.47*mm; 
+     fCPXPosZ= -732.47*mm; 
+    }
 }
 
 void ChamberGeometry::SetDetectorSetup(G4int setup)

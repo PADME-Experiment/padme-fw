@@ -89,8 +89,10 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
 			     channel->GetNSamples(),
 			     channel->GetSamplesArray());
       
+      
       ((DigitizerChannelMM*)fChannelReco)->Reconstruct(Hits,board,channel);
       if (Hits.size()) fMMCharge += Hits.at(Hits.size()-1)->GetEnergy();
+      
       //      std::cout << "Board " << b << " Channel " << MMRawEv->MMBoard(b)->MMChannel(c)->GetChannelNumber() << " fired, channel " << c << " / " << MMRawEv->MMBoard(b)->GetNMMChannels() << std::endl;
       fMMFound = true;
     }
@@ -102,7 +104,7 @@ void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){
   if(fGeometry)  fGeometry->ComputePositions(GetRecoHits());
 //  
 //  // from Hits to Clusters
-//  ClearClusters();
+  ClearClusters();
   if (fClusterization) BuildClusters();
 
   //  if(fChannelCalibration) fChannelCalibration->PerformCalibration(GetClusters());

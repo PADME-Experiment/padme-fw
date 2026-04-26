@@ -7,6 +7,7 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
   fClumode = clumode;
 
   fMMHitsInClu.clear();
+  fMMHitsInClu_HR.clear();
   
   fSeedSlope = -999;
   for(Int_t h=0; h<2; h++) {
@@ -30,6 +31,7 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
 
 MMCluster::~MMCluster() {
   fMMHitsInClu.clear();
+  fMMHitsInClu_HR.clear();
   fTracos.vres.clear();
 }
 
@@ -41,6 +43,12 @@ void MMCluster::Print() {
     std::cout<<"\t\t";
     fMMHitsInClu.at(h)->Print();
   }
+  std::cout<<"\t Hits belonging to cluster after Hit Rejection (lvl1): "<<std::endl;
+  for(Int_t h=0; h<(int) fMMHitsInClu_HR.size(); h++) {
+    std::cout<<"\t\t";
+    fMMHitsInClu_HR.at(h)->Print();
+  }
+  
   std::cout<<"\t Slope of the first doublet (cluster seed): "<<fSeedSlope<<std::endl; 
   std::cout<<"\t IP phase angle: "<<fIPPhaseAngle<<std::endl;
 
@@ -163,6 +171,8 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   }
 
   // success
+  fMMHitsInClu_HR.clear();
+  for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
   
   fTracos.chi2 = result.MinFcnValue();
   for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
@@ -204,8 +214,10 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
   MMchInfo chinfoThis =  fMMHitsInClu.at(0)->GetMMchInfo();
   double dz = GeneralInfo::GetInstance()->GetMMECALdz(chinfoThis.view, xEcal, yEcal, tEcal);
 
-  vector<double> zhits, vhits;  
+  vector<double> zhits, vhits;
+  vector<MMSoftHit*> hitArray;
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
+    hitArray.push_back(fMMHitsInClu.at(i));
     double z_hit_corr = fMMHitsInClu.at(i)->GetZfromTime(1.);
     if(fMMHitsInClu.at(i)->GetMMchInfo().plane == 0) z_hit_corr -= dz;
     else z_hit_corr += dz;
@@ -238,13 +250,17 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
     if(pchi2 < 0.05 && zhits.size() > 4) {
       zhits.erase(zhits.begin()+i_max);
       vhits.erase(vhits.begin()+i_max);
+      hitArray.erase(hitArray.begin()+i_max);
       
-      std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
+      //std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
       
       evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
     }
-  }  
-
+  }
+  
+  fMMHitsInClu_HR.clear();
+  for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
+  
   int Nhit = zhits.size();
   vector<TVector3> residues;
   for(int r=0; r<Nhit; r++) {

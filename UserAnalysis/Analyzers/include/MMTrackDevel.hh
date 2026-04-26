@@ -7,7 +7,6 @@
 #include "MMClustering.hh"
 #include "GeneralInfo.hh"
 
-
 class MMTrackDevel {
 
 public:

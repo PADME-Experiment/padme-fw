@@ -123,12 +123,14 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   for (int view = 0; view<2; view++){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);    
     for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_%s_Q%d_atMesh_clu1",viewlabel.Data(),quad),700,-350,350,400,-200,200);
+    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_z_first_last_hit_vs_%s_Q%d_atMesh_clu1",viewlabel.Data(),quad),700,-350,350,400,-200,200);
+    
   }
   
   for (int bdid = 0; bdid < 16; bdid++) {
     fHS->BookHisto2List("MMTrackDevel",Form("MM_Time_vs_channel_bdid%d",bdid),256,-0.5,255.5,900,-150,750);
   }
-  for(int quad=0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),100,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+50);
+  //for(int quad=0; quad<4; quad++) fHS->BookHistoList("MMTrackDevel",Form("MM_Z_first_last_hit_clu1_matched_Q%d",quad),100,fGeneralInfo->GetMMPosPlaneZ(0)-50,fGeneralInfo->GetMMPosPlaneZ(1)+50);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_QuadrantID_vs_TrackMatchedCode"),8,0,8,4,0,4);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_TrackMatchedCode2vs1"),4,0,4,4,0,4);
 
@@ -182,9 +184,9 @@ Bool_t MMTrackDevel::Process(){
   if(trigMask & (1 << 0)) {
   }
 
-  int nclus = fEvent->MMRecoCl->GetNElements();
+  //int nclus = fEvent->MMRecoCl->GetNElements();
   int nhits = fEvent->MMRecoEvent->GetNHits();
-  fHS->FillHisto2List("MMTrackDevel","MM_Nclus_vs_NHits",nhits,nclus,1.);
+  //fHS->FillHisto2List("MMTrackDevel","MM_Nclus_vs_NHits",nhits,nclus,1.);
 
   fMMClusteringInstance->Clear();
   fMMClusteringInstance->Init(fEvent->MMRecoEvent);
@@ -574,7 +576,7 @@ Bool_t MMTrackDevel::Process(){
     for(int vw=0; vw<2; vw++) {
       if(CALIBRATION) {
 	if(itrack_good[vw] != -999) {
-	  if(fabs(dv_MMEcal[vw]) < 20.) {
+	  if(fabs(dv_MMEcal[vw]) < 20. && pchi2[vw] > 0.5) {
 	    if(fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->FitWithClusterTime(x_Ecal,y_Ecal,t_Ecal)) {
 	      int quad = fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->GetHit(0)->GetMMchInfo().quad;
 	      int view = fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->GetHit(0)->GetMMchInfo().view;
@@ -584,6 +586,18 @@ Bool_t MMTrackDevel::Process(){
 	      double Ddz = dz - dz_Ecal;
 	      TVector3 MMposAtMesh_refit = fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->GetTracklet().ExtrapolationAtZ(GeneralInfo::GetInstance()->GetMMPosPlaneZ(2));
 	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_Ddz_vs_%s_Q%d_atMesh_clu1",viewlabel.Data(),quad),MMposAtMesh_refit[1-view],Ddz,1.);
+
+	      int Nhit_HR = fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->GetHitsHRVectorSize();
+	      double z_first_hit = +999, z_last_hit = -999; 
+	      for(int h=0; h<Nhit_HR; h++) {
+		MMSoftHit * hit = fMMClusteringInstance->GetMMCluster(itrack_good[vw],0,1)->GetHitHR(h);
+		double z_hit = hit->GetZfromTime(1.) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+		if(z_first_hit > z_hit) z_first_hit = z_hit;
+		if(z_last_hit  < z_hit) z_last_hit  = z_hit;
+		
+	      }
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_z_first_last_hit_vs_%s_Q%d_atMesh_clu1",viewlabel.Data(),quad),MMposAtMesh_refit[1-view],z_first_hit,1.);
+	      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_z_first_last_hit_vs_%s_Q%d_atMesh_clu1",viewlabel.Data(),quad),MMposAtMesh_refit[1-view],z_last_hit,1.);
 	    }
 	  }
 	}

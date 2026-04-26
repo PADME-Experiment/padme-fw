@@ -55,6 +55,8 @@ public:
   Int_t GetClumode() {return fClumode;};
   UInt_t GetHitsVectorSize() {return fMMHitsInClu.size();};
   MMSoftHit* GetHit(Int_t i){if (i >= 0 && i < (int) fMMHitsInClu.size()) return fMMHitsInClu.at(i); return nullptr;};
+  UInt_t GetHitsHRVectorSize() {return fMMHitsInClu_HR.size();};
+  MMSoftHit* GetHitHR(Int_t i){if (i >= 0 && i < (int) fMMHitsInClu_HR.size()) return fMMHitsInClu_HR.at(i); return nullptr;};
   Double_t GetSeedSlope() {return fSeedSlope;};
   Int_t GetNHitsPerPlane(Int_t plane) {if(plane>0 && plane<2) return fNHitsPerPlane[plane]; return -1;};
   Int_t GetIsolationFlag() {return fIsolationFlag;};
@@ -73,6 +75,7 @@ private:
   Int_t fIpmode; // 0/1 if the ip connection is enfored/not
   Int_t fClumode; // 0--4: Double_tt of hits, Double_tt+hits in the same {plane,board}, match with other board in the same view [DeltaT fit], match with opposite view [3d fit]
   vector<MMSoftHit*> fMMHitsInClu; // vector of MMSoftHit objects filled in Clustering::Init
+  vector<MMSoftHit*> fMMHitsInClu_HR; // vector of MMSoftHit objects filled in Clustering::Init
   Double_t fSeedSlope;  // slope of the first Double_tt which generated the cluster in mode = 0
   Int_t fNHitsPerPlane[2]; // useful to make cluster categories
   Int_t fIsolationFlag; // the cluster is isolated in some sense

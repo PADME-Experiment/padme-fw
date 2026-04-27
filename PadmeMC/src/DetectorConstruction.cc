@@ -633,7 +633,7 @@ void DetectorConstruction::DefineMaterials()
   Water->AddElement(G4Element::GetElement("O"),1);
 
   G4Material* Helium =  new G4Material("Helium", 0.166*mg/cm3, 1, kStateGas, 293.*kelvin, 1.*atmosphere);
-  Vacuum->AddElement(G4Element::GetElement("He"), 1.0);                       
+  Helium->AddElement(G4Element::GetElement("He"), 1.0);                       
 
   // Diamond (Target)
   G4Material* Diamond = new G4Material("Diamond",3.515*g/cm3,1);

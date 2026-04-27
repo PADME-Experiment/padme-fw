@@ -216,6 +216,11 @@ void ChamberGeometry::UpdateDerivedMeasures()
   if(fDetectorSetup>40){
      fCPZPosZ = -732.47*mm; 
      fCPXPosZ= -732.47*mm; 
+     fJunFrontFacePosZ = fCPZPosZ+0.5*fCPZLength;
+     fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
+     fJunLength = fJunBackFacePosZ-fJunFrontFacePosZ;
+     fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
+
     }
 }
 

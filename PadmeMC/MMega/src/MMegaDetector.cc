@@ -224,7 +224,7 @@ void MMegaDetector::CreateGeometry()
   // new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
   // G4ThreeVector CopperPos1 = KaptonPos1 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
   G4ThreeVector FR4ReadoutPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4ReadoutSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayerFront", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos1 = FR4ReadoutPos1 - G4ThreeVector(0,0,0.5*(MMegaFR4ReadoutSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
 
   new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
@@ -257,7 +257,7 @@ void MMegaDetector::CreateGeometry()
   // new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,1,false);
   // CopperPos1 = KaptonPos1 + G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
   FR4ReadoutPos1 = CopperPos2 + G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4ReadoutSizeZ+MMegaLayerGap));
-  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayerRear", fMMegaVolume, false,0,false);
   CopperPos1 = FR4ReadoutPos1 + G4ThreeVector(0,0,0.5*(MMegaFR4ReadoutSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
 
   new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,1,false);

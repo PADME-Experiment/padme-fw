@@ -213,34 +213,34 @@ void MMegaDetector::CreateGeometry()
   G4ThreeVector CarbonPos = G4ThreeVector(0,0,-0.5*(MMegaDriftSizeZ+MMegaCarbonSizeZ+MMegaLayerGap));
   G4ThreeVector MylarPos = G4ThreeVector(0,0,-0.5*(MMegaDriftSizeZ+MMegaMylarClosing+MMegaLayerGap));
   //TEST WITH MYLAR
-  new G4PVPlacement(0,CarbonPos, fMMegaMylarClosing, "MylarClosingVolume", fMMegaVolume,false,0,false);
-  //new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,0,false);
+  //new G4PVPlacement(0,CarbonPos, fMMegaMylarClosing, "MylarClosingVolume", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0,CarbonPos, fMMegaCarbonVolume, "CarbonResistiveLayer", fMMegaVolume,false,0,false);
   G4ThreeVector KaptonPos2 = CarbonPos - G4ThreeVector(0,0,0.5*(MMegaCarbonSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
-  //new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,KaptonPos2, fMMegaKaptonVolume, "KaptonLayer2", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos2 = KaptonPos2 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
-  //new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fMMegaVolume, false,0,false);
   //to be changed to FR4Readout
   // G4ThreeVector KaptonPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaKaptonSizeZ+MMegaLayerGap));
   // new G4PVPlacement(0,KaptonPos1, fMMegaKaptonVolume, "KaptonLayer1", fMMegaVolume, false,0,false);
   // G4ThreeVector CopperPos1 = KaptonPos1 - G4ThreeVector(0,0,0.5*(MMegaKaptonSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
   G4ThreeVector FR4ReadoutPos1 = CopperPos2 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4ReadoutSizeZ+MMegaLayerGap));
-  //new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FR4ReadoutPos1, fMMegaFR4ReadoutVolume, "FR4ReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector CopperPos1 = FR4ReadoutPos1 - G4ThreeVector(0,0,0.5*(MMegaFR4ReadoutSizeZ+MMegaCopperSizeZ+MMegaLayerGap));
 
-  //new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,CopperPos1, fXReadoutVolume, "XReadoutLayer", fMMegaVolume, false,0,false);
   G4ThreeVector FR4Pos2 = CopperPos1 - G4ThreeVector(0,0,0.5*(MMegaCopperSizeZ+MMegaFR4SizeZ+MMegaLayerGap));
-  //new G4PVPlacement(0,FR4Pos2, fMMegaFR4Volume, "FR4Layer2", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FR4Pos2, fMMegaFR4Volume, "FR4Layer2", fMMegaVolume, false,0,false);
   G4ThreeVector NomexPos = FR4Pos2 - G4ThreeVector(0,0,0.5*(MMegaFR4SizeZ+MMegaNomexSizeZ+MMegaLayerGap));
-  // AAAA new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,NomexPos, fMMegaNomexVolume, "NomexLayer", fMMegaVolume, false,0,false);
   
   G4ThreeVector FR4Pos1 = NomexPos - G4ThreeVector(0,0,0.5*(MMegaNomexSizeZ+MMegaFR4SizeZ+MMegaLayerGap));
-  // AAAA new G4PVPlacement(0,FR4Pos1, fMMegaFR4Volume, "FR4Layer1", fMMegaVolume, false,0,false);
+  new G4PVPlacement(0,FR4Pos1, fMMegaFR4Volume, "FR4Layer1", fMMegaVolume, false,0,false);
   
   //Faraday cage positioning
   G4ThreeVector FR4FaradayPos1 = FR4Pos1 - G4ThreeVector(0,0,0.5*(MMegaFR4SizeZ + MMegaFaradayFR4SizeZ+MMegaLayerGap));
-  // AAAA new G4PVPlacement(0, FR4FaradayPos1, fMMegaFaradayFR4Volume, "FaradayFR4", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0, FR4FaradayPos1, fMMegaFaradayFR4Volume, "FaradayFR4", fMMegaVolume,false,0,false);
   G4ThreeVector CopperFaradayPos1 = FR4FaradayPos1 - G4ThreeVector(0,0,0.5*(MMegaFaradayFR4SizeZ + MMegaFaradayCopperSizeZ+MMegaLayerGap));
-  // AAAA new G4PVPlacement(0, CopperFaradayPos1, fMMegaFaradayCopperVolume, "FaradayCopper", fMMegaVolume,false,0,false);
+  new G4PVPlacement(0, CopperFaradayPos1, fMMegaFaradayCopperVolume, "FaradayCopper", fMMegaVolume,false,0,false);
   
   
 

@@ -88,21 +88,21 @@ void MMegaDetector::CreateGeometry()
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"MMegaDrift",fMMegaVolume,false,0,false);
 
-  //ADDING AN FR4 tube
-G4double tubeThickness =5*mm;
+  // //ADDING AN FR4 tube
+  // G4double tubeThickness =5*mm;
 
-  G4double rOuter = 10*cm;   
-  G4double rInner = rOuter - tubeThickness;
+  // G4double rOuter = 10*cm;   
+  // G4double rInner = rOuter - tubeThickness;
 
-  G4Tubs* solidFR4Tube = new G4Tubs("solidFR4Tube",rInner,rOuter,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
-  G4LogicalVolume* logicFR4Tube = new G4LogicalVolume(solidFR4Tube, G4Material::GetMaterial("CarbonFiber"), "CarbonFiberTube");
-  logicFR4Tube->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
-  new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicFR4Tube,"FR4Tube",fMMegaVolume,false,0,false);
+  // G4Tubs* solidFR4Tube = new G4Tubs("solidFR4Tube",rInner,rOuter,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
+  // G4LogicalVolume* logicFR4Tube = new G4LogicalVolume(solidFR4Tube, G4Material::GetMaterial("CarbonFiber"), "CarbonFiberTube");
+  // logicFR4Tube->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  // new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicFR4Tube,"FR4Tube",fMMegaVolume,false,0,false);
 
-  G4Tubs* solidAirTube = new G4Tubs("solidAirTube",0.,rInner,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
-  G4LogicalVolume* logicAirTube = new G4LogicalVolume(solidAirTube, G4Material::GetMaterial("ArCF4Iso"), "AirTube");
-  logicAirTube->SetVisAttributes(G4VisAttributes(G4Colour::White()));
-  new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicAirTube,"AirTube",fMMegaVolume,false,0,false);
+  // G4Tubs* solidAirTube = new G4Tubs("solidAirTube",0.,rInner,0.5 * MMegaDriftSizeZ,0.*deg,360.*deg);
+  // G4LogicalVolume* logicAirTube = new G4LogicalVolume(solidAirTube, G4Material::GetMaterial("ArCF4Iso"), "AirTube");
+  // logicAirTube->SetVisAttributes(G4VisAttributes(G4Colour::White()));
+  // new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicAirTube,"AirTube",fMMegaVolume,false,0,false);
 
 
   //READOUT PLANES

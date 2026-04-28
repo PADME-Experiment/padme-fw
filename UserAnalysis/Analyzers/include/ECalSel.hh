@@ -114,6 +114,7 @@ protected:
 private:
   std::vector<std::pair<Int_t, Int_t>> GetCluCouples();
   Int_t TwoClusters_couples();
+  Int_t BFieldSelection();
   Int_t TwoClusSel();
   Int_t OneClusSel();
   Int_t OneClusTagAndProbeSel();

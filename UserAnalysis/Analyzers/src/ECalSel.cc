@@ -1792,6 +1792,52 @@ Int_t ECalSel::TwoClusters_couples(){
 }
 
 
+Int_t ECalSel::BFieldSelection(){
+  std::vector<std::pair<Int_t, Int_t>> couples = GetCluCouples();
+  TRecoVCluster *tempClu[2];
+  double cluTime[2];
+  for (std::vector<std::pair<Int_t, Int_t>>::iterator clupairs = couples.begin(); clupairs != couples.end(); ++clupairs) {
+  
+    tempClu[0] = fECal_clEvent->Element(clupairs->first);
+    tempClu[1] = fECal_clEvent->Element(clupairs->second);
+
+    if(tempClu[0]->GetEnergy() < tempClu[1]->GetEnergy()){
+        tempClu[0] = fECal_clEvent->Element(clupairs->second);
+        tempClu[1] = fECal_clEvent->Element(clupairs->first);
+    }
+
+    double dt = tempClu[0]->GetTime()-tempClu[1]->GetTime();
+    double cluEnergy[2];
+    cluEnergy[0] = tempClu[0]->GetEnergy();
+    cluEnergy[1] = tempClu[1]->GetEnergy();
+
+    //    std::cout << "Position info clu0 " << tempClu[0]->GetPosition().X() << " " <<  tempClu[0]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    //    std::cout << "Position info clu1 " << tempClu[1]->GetPosition().X() << " " <<  tempClu[1]->GetPosition().Y() << " " << fGeneralInfo->GetCOG().Z() << std::endl;
+    TVector3 cluPos[2];
+    cluPos[0].SetXYZ(
+        tempClu[0]->GetPosition().X(),
+        tempClu[0]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
+ 
+    cluPos[1].SetXYZ(
+        tempClu[1]->GetPosition().X(),
+        tempClu[1]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
+
+    TVector3 cluPosRel[2];
+    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
+    cluPosRel[1] = cluPos[1]-fGeneralInfo->GetCOG();
+    
+    double dr = (cluPos[0] - cluPos[1]).Mag();
+    if(fabs(dt) > fMaxTimeDistance) continue;
+    if(dr < fMinGGDistance) continue;
+    if(fabs(cluEnergy[0]+cluEnergy[1]-fGeneralInfo->GetBeamEnergy())>5*0.06*fGeneralInfo->GetBeamEnergy()) continue;
+    
+
+
+  
+  }
+  return 0;
+}
+
 Bool_t ECalSel::InitHistos()
 {
   static int NprocessAvailable = 7;
@@ -1800,6 +1846,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->CreateList("ECalSel");
   fhSvcVal->CreateList("ECalSelMCTruth");
   fhSvcVal->CreateList("ECalSelTwoClu");
+  fhSvcVal->CreateList("ECalSelBField");
   fhSvcVal->CreateList("ECalSelTwoCluMC");
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx_Eweight", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);

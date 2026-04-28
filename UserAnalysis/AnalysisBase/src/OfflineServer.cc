@@ -54,10 +54,10 @@ OfflineServer::OfflineServer()
       rInfo.sigmaCOGX>>rInfo.errsigmaCOGX>>rInfo.sigmaCOGY>>rInfo.errsigmaCOGY>>
       rInfo.E1E2>>rInfo.errE1E2>>rInfo.dt>>rInfo.errdt>>rInfo.sigmaE1E2>>rInfo.errsigmaE1E2>>rInfo.dsigmadt>>rInfo.errsigmadt>>
       rInfo.period>>rInfo.LGCorr;
- 
- 
- // sets EOF flag if no value found
-
+    if(rInfo.RunID> 80000) inputDBFile>> rInfo.targetflag >> rInfo.ecalflag; //target in/out 1/0, ecal HV not ok/ok/partially ok during the run 0/1/2
+    //std::cout<<"Printing target and ecal flags: "<<rInfo.targetflag<<" "<< rInfo.ecalflag <<std::endl;
+    // sets EOF flag if no value found
+    if(rInfo.RunID> 90000) inputDBFile>>rInfo.BField;
     rInfo.quadrantTemperature[0] = tempQuadTL;
     rInfo.quadrantTemperature[1] = tempQuadTR;
     rInfo.quadrantTemperature[2] = tempQuadBR;
@@ -83,6 +83,7 @@ OfflineServer::OfflineServer()
       rInfo.retrieveStatus |= (1<<kTemperature); // all quadrant temperatures should be available
     if (rInfo.period >= 0) rInfo.retrieveStatus |= (1<<kPeriod);
     if (rInfo.LGCorr > 0) rInfo.retrieveStatus |= (1<<kLGCorr);
+    if (rInfo.RunID> 90000 && rInfo.BField != 0) rInfo.retrieveStatus |= (1<<kBField);
 
   // populate structure
     runInfos.push_back(rInfo);

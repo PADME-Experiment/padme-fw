@@ -54,8 +54,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fBeamMomentum = 268.94;
     fZTarg = -732.47;
     fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
-   }
-
+  }
   // default start and stop time of runs
   fRunStartTime = 0;
   fRunStopTime = 1;
@@ -246,7 +245,16 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     //   fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
     //   fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
     // }
-
+    if(runID > 80000){
+        fECalFlag = fOfflineServerDB->getecalflag(runID);
+        fIsecalflagAvailable = fOfflineServerDB->isECalFlagAvailable(runID);
+        fTargetFlag = fOfflineServerDB->gettargetflag(runID);
+        fIstargetflagAvailable = fOfflineServerDB->isTargetFlagAvailable(runID);
+        if(runID > 90000){
+          fBField = fOfflineServerDB->getBField(runID);
+          fIsBFieldAvailable = fOfflineServerDB->isBFieldAvailable(runID);
+        }
+    }
     fXTarg = fOfflineServerDB->getTargetXAvg(runID);
     fYTarg = fOfflineServerDB->getTargetYAvg(runID);
     fIsTargetAvgAvailable = fOfflineServerDB->isTargetAvgAvailable(runID);

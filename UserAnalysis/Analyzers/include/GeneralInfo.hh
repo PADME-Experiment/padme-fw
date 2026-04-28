@@ -59,7 +59,9 @@ public:
   inline double GetLGCorr(){return fLGCorr;}
   inline double GetQuadrantTemperature(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTemperature[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
   inline double GetQuadrantTempCorr(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTempCorr[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
-
+  inline Int_t GetECalFlag(){return fECalFlag;}
+  inline Int_t GetTargetFlag(){return fTargetFlag;}
+  inline double GetBField(){return fBField;}
   // methods giving availability of original information
 
   bool IsEnergyAvailable(){return fIsEnergyAvailable;}
@@ -138,6 +140,9 @@ private:
   double fLGCorr;
   double fQuadrantTemperature[4];
   double fQuadrantTempCorr[4];
+  Int_t fECalFlag;
+  Int_t fTargetFlag;
+  double fBField;
 
   // availability of original information
 
@@ -150,6 +155,10 @@ private:
   bool fIsTemperatureAvailable;
   bool fIsPeriodAvailable;
   bool fIsLGCorrAvailable;
+  bool fIsecalflagAvailable;
+  bool fIsecalflagAvailable;
+  bool fIstargetflagAvailable;
+  bool fIsBFieldAvailable;
   // global quantities
 
   double fZTarg;

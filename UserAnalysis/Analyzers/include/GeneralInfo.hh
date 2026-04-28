@@ -156,7 +156,6 @@ private:
   bool fIsPeriodAvailable;
   bool fIsLGCorrAvailable;
   bool fIsecalflagAvailable;
-  bool fIsecalflagAvailable;
   bool fIstargetflagAvailable;
   bool fIsBFieldAvailable;
   // global quantities

@@ -1643,8 +1643,8 @@ Int_t ECalSel::TwoClusters_couples(){
       fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_NCells2vsR2"),xyclu[1].Mod(),tempClu[1]->GetNHitsInClus(), 1.);
       fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_EMeasvsEExp"), cluEnergy[0], pg[0], 1.);
       fhSvcVal->FillHisto2List("ECalSelTwoClu", Form("ECal_TC_EMeasvsEExp"), cluEnergy[1], pg[1], 1.);
-      fhSvcVal->FillHisto2List("ECalSel", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().Y());
-      fhSvcVal->FillHisto2List("ECalSel", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().Y());
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().Y());
+      fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_TC_XYmap", fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().X(),fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().Y());
 
       fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_E1E2_vs_CogY", cog.Y(), cluEnergy[0]+cluEnergy[1], 1.);
       //     fhSvcVal->FillHisto2List("ECalSelTwoClu", "ECal_EbeamMinusE1plusE2_vs_CogY_sel", cog.Y(), fGeneralInfo->GetBeamEnergy() - (cluEnergy[0] + cluEnergy[1]), 1.);
@@ -1968,7 +1968,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSelTwoCluMC", Form("ECal_TC_InvMass_True_Babayaga"), 500, 0, 25);
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_ESeed"), 600, 0, 300);
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_ESum"), 600, 0, 600);
-  fhSvcVal->BookHisto2List("ECalSel", "ECal_TC_XYmap", 29,-305, 305, 29,-305, 305);
+  fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_XYmap", 29,-305, 305, 29,-305, 305);
 
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_ESumExp"), 600, 0, 600);
   fhSvcVal->BookHistoList("ECalSelTwoClu", Form("ECal_TC_Theta1"),300, 0, TMath::Pi());
@@ -2131,7 +2131,7 @@ Bool_t ECalSel::TagProbeEff_macro()
   if (fileIn->IsOpen() == false)
   {
     std::cout << "ECalSel-TagProbeEff_macro *ERROR *File " << InputHistofile.Data() << " does not exist" << std::endl;
-    exit(1);
+    //exit(1);
   }
   std::cout << "File to analyze for Tag and Probe: " << InputHistofile.Data() << std::endl;
   // PhiFullProbe =(TH1D*) fileIn->Get("ECalSel/ECal_TP_DPHIAbs_probe")->Clone();
@@ -2143,10 +2143,10 @@ Bool_t ECalSel::TagProbeEff_macro()
     std::cout << "ECalSel-TagProbeEff_macro *ERROR *File " << "run385.root" << " does not exist" << std::endl;
     exit(1);
   }
-  TH2D *notargetbkg = (TH2D *)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone();
-  notargetbkg->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287)); // da rifare
-  TH2D *notargetbkg_probe = (TH2D *)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();
-  notargetbkg_probe->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287)); //
+  // TH2D *notargetbkg = (TH2D *)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_NOcut_tag")->Clone();
+  // notargetbkg->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287)); // da rifare
+  // TH2D *notargetbkg_probe = (TH2D *)fileNoTarget->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();
+  // notargetbkg_probe->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287)); //
   TH1D *sliceNoTarg;
   for (int i = 0; i < NSlicesE; i++)
   {
@@ -2157,13 +2157,13 @@ Bool_t ECalSel::TagProbeEff_macro()
     TH2D *sliceProbe = (TH2D *)fileIn->Get(Form("ECalSel/ECal_TP_DEvsPhiExp_probe_slice_%i", i))->Clone();
     TH2D *sliceDhiProbe = (TH2D *)fileIn->Get(Form("ECalSel/ECal_TP_DPhivsPhiExp_probe_slice_%i", i))->Clone();
 
-    if (fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") == 0 && fGeneralInfo->isMC() == true)
-    {
-      fileNoTarget->cd();
-      sliceNoTarg = (TH1D *)fileNoTarget->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
-      sliceNoTarg->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287));
-      slice->Add(sliceNoTarg);
-    }
+    // if (fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") == 0 && fGeneralInfo->isMC() == true)
+    // {
+    //   fileNoTarget->cd();
+    //   sliceNoTarg = (TH1D *)fileNoTarget->Get(Form("ECalSel/ECal_TP_DPHIAbs_probe_slice_%i", i))->Clone();
+    //   sliceNoTarg->Scale(NPoTforMC->GetEntries() * 3000 / (2.368e6 * 5287));
+    //   slice->Add(sliceNoTarg);
+    // }
 
     TagSlicevsPhi.push_back(sliceTag);
     ProbeSlicevsPhi.push_back(sliceProbe);
@@ -2189,11 +2189,11 @@ Bool_t ECalSel::TagProbeEff_macro()
   }
   // EofProbe_cut = (TH2D*) fileIn->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();
   EofProbe_cut = (TH2D *)fileIn->Get("ECalSel/ECal_TP_DEVsE_cut_probe")->Clone();
-  if (fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") == 0 && fGeneralInfo->isMC() == true)
-  {
-    EofTag->Add(notargetbkg);
-    EofProbe_cut->Add(notargetbkg_probe);
-  }
+  // if (fCfgParser->HasConfig("ECAL", "AddNoTargetToMC") && TString(fCfgParser->GetSingleArg("ECAL", "AddNoTargetToMC")).CompareTo("1") == 0 && fGeneralInfo->isMC() == true)
+  // {
+  //   EofTag->Add(notargetbkg);
+  //   EofProbe_cut->Add(notargetbkg_probe);
+  // }
   // MCTagProbeEff(); //wold be better if this one is called only if the fileIn is a MC prod -->but is tricky
 
   FitTagProbeEff();
@@ -2227,7 +2227,7 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
     dataType = "MC";
   else
     dataType = "DATA";
-  sliceOutname = Form("/mnt/l1padme2/dimeco/TagAndProbeOut/DATAout/Phi_FitsliceOut_%s_%s", dataType.Data(), InputHistofileName.Data());
+  sliceOutname = Form("%sPhi_FitsliceOut_%s_%s",fcfgPath.Data(), dataType.Data(), InputHistofileName.Data());
 
   TFile *SliceOut = new TFile(sliceOutname, "recreate");
   std::cout << "Slice output file: " << sliceOutname << std::endl;
@@ -2289,9 +2289,9 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
       expBkg->SetParameter(1, expGaus->GetParameter(1));
       ProYTag->GetXaxis()->SetRangeUser(tpLow, tpHigh);
 
-      Double_t BkgInt = (Double_t)expBkg->Integral(tpLow, tpHigh);
+      Double_t BkgInt = (Double_t)expBkg->Integral(tpLow, tpHigh)/ProYTag->GetBinWidth(1);
       //Double_t DenTemp = (Double_t)(expGaus->Integral(tpLow, tpHigh)) - BkgInt;
-      Double_t DenTemp = ProYTag->Integral() - BkgInt;
+      Double_t DenTemp = expGaus->GetParameter(2);
       DenPhi = DenTemp;
       Double_t errDen = expGaus->GetParError(2);
 

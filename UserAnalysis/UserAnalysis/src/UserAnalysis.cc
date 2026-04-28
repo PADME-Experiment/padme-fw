@@ -31,7 +31,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
-//  fECalCalib    = ECalCalib::GetInstance();
+  fECalCalib    = ECalCalib::GetInstance();
 //  fECalCalib22    = ECalCalib22::GetInstance();
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
@@ -39,7 +39,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
 
   //Physics analysis last reviewed by M. Raggi 05/22
-  //  fNPoTAnalysis = NPoTAnalysis::GetInstance();
+  fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
   //  fECalETagMatching  = ECalETagMatching::GetInstance();
@@ -57,8 +57,8 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
 
 UserAnalysis::~UserAnalysis(){
   delete fCfgParser;
-//  delete fECalCalib;
-//  delete fNPoTAnalysis;
+  delete fECalCalib;
+  delete fNPoTAnalysis;
   delete fGeneralInfo;
   delete fECalSel;
   //  delete fETagAn;
@@ -79,14 +79,14 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   if (fVerbose) printf("---> Initializing UserAnalysis\n");
   fEvent = event;
   InitHistos();
-  //  fECalCalib->Init();
+  fECalCalib->Init();
 
   if(fEvent->MCTruthEvent){
      fMCTruth->Init(fEvent);
      fMCTruthECal->Init(fEvent);
   }
   fGeneralInfo->Init(fEvent, DBRunNumber);
-  //  fNPoTAnalysis->Init(fEvent);
+  fNPoTAnalysis->Init(fEvent);
   //  fECalCalib22->Init(fHistoMode,InputHistofile);
   //  fDataQuality->Init(fEvent,fHistoMode,InputHistofile);
   fECalSel->Init(fEvent,fHistoMode,InputHistofile);
@@ -130,10 +130,10 @@ Bool_t UserAnalysis::Process(){
   fHS->FillHistoList("MyHistos","Trigger Mask",trigMask,1.);
   for (int i=0;i<8;i++) { if (trigMask & (1 << i)) fHS->FillHistoList("MyHistos","Triggers",i,1.); }
   fGeneralInfo->Process();
-  //  fNPoTAnalysis->Process();
+  fNPoTAnalysis->Process();
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
-  //  fECalCalib->Process(fEvent);
+  fECalCalib->Process(fEvent);
   if(!(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))){
  //   fDataQuality->Process();
  //   fECalCalib22->Process(fEvent);
@@ -210,7 +210,7 @@ Bool_t UserAnalysis::Finalize()
      fMCTruthECal->Finalize();
 
   }
-  //  fNPoTAnalysis->Finalize();
+  fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
 //  if (fETagHitsAvail) fETagAn->Finalize();
 //  if (fETagHitsAvail) fECalETagMatching->Finalize();
@@ -218,6 +218,7 @@ Bool_t UserAnalysis::Finalize()
   //if (fETagHitsAvail && fETagClusAvail)  fETagAnalysis->Finalize();
   //fIs22GGAnalysis->Finalize();
 //  fECalCalib22->Finalize();
+  fECalCalib->Finalize();
 //  fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();
   fMMTrackDevel->Finalize();

@@ -39,6 +39,7 @@ private:
   Bool_t TriggerToBeSkipped();
   void AnalyzeEvent(TRawEvent*);
   void AnalyzeChannel(UChar_t leadglassID, Short_t*);
+  Double_t ComputePedestal(UChar_t leadglassID, Short_t*);
   void ComputeTotalCharge(UChar_t leadglassID, Short_t*);
   void ComputeTotalChargeLED(UChar_t leadglassID, Short_t*);
   void ComputeBunchLength(Short_t*);
@@ -58,11 +59,16 @@ private:
   UInt_t fLEDSamplesStart; // Index of first sample of LED signal (included)
   UInt_t fLEDSamplesEnd;   // Index of last sample of LED signal (excluded)
 
+  Double_t fPed, fPedRMS;
+
   // Results of pedestal and total charge evaluation
   Double_t fLGPedestal[N_LEADGLASS]; // Pedestal level from the first fPedestalSamples samples
   Double_t fLGPedRMS[N_LEADGLASS];   // Pedestal RMS
+  Double_t fLGPedestal_v2[N_LEADGLASS]; // Pedestal level 
+  Double_t fLGPedRMS_v2[N_LEADGLASS];   // Pedestal RMS
   Int_t fLGStartIndexCell[N_LEADGLASS]; // Index of signal start
   Double_t fLGCharge[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+  Double_t fLGCharge_v2[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
 
   // Calibration parameter to convert Total Charge to Total Energy
   Double_t fChargeToEnergy;

@@ -33,7 +33,7 @@ void LeadGlassRecoRootIO::SaveEvent()
 
   if (fLGReco->LeadGlassFound()) {
     for (UChar_t lgID = 0; lgID < N_LEADGLASS; lgID++){
-      printf("Processing leadglass %d\n",lgID);
+      //printf("Processing leadglass %d\n",lgID);
       //UChar_t lgID = fLGReco->LeadGlassID();
       ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(lgID,fLGReco->GetPedestal(lgID));
       ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMS(lgID,fLGReco->GetPedestalRMS(lgID));

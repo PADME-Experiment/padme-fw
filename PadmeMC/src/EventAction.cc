@@ -791,7 +791,7 @@ void EventAction::AddLeadGlassHits(LeadGlassHitsCollection* hcont)  //BeW readou
       //      TrEne = hit->GetTrackEnergy();   // track energy
  
       if(Z>182.){
-	std::cout<<"ELG "<<ETotLG<<" Z "<<Z<<std::endl;
+	//std::cout<<"ELG "<<ETotLG<<" Z "<<Z<<std::endl;
 	fHistoManager->FillHisto(42,X);  
 	fHistoManager->FillHisto(43,Y);  
 	fHistoManager->FillHisto(44,Z); 

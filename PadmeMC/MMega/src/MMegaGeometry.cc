@@ -98,10 +98,10 @@ MMegaGeometry::MMegaGeometry()
   fMMegaPadDistance = 1.1*mm;
 
   //fMMegaFrontFacePosZ = 2612.41*mm - fMMegaSizeZ - 25*mm; // Relative to center of magnet (using runIII ECal position)
-  fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 45*mm; // USE THE SURVEY !!!!!
+  fMMegaFrontFacePosZ = 2526.5*mm - fMMegaSizeZ - 45*mm; //  SURVEY  INFO 2353.32!!!!! CHECK IT (fMMegaSizeZ should be ~100)
   fMMegaDisplacementX=10*mm; //50*mm+fMMegaFaradayPanelSizeX/2 for slipped chamber configuration;//10*mm; //
   fMMegaDisplacementY=20*mm; //0*mm;//;
-  fMMegaRotationAngle=0*deg;
+  fMMegaRotationAngle=0*deg; // z-x 0.1 deg (testa in avanti)
   fMMegaDigitizerName = "MMegaDigitizer";
   fMMegaSensitiveDetectorName = "MMegaSD";
 }

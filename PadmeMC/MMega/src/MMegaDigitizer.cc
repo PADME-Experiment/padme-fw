@@ -60,7 +60,7 @@ void MMegaDigitizer::Digitize()
   MMegaHitsCollection* MMegaHC = 0;
   MMegaHC = (MMegaHitsCollection*)(theDM->GetHitsCollection(MMegaHCID));  
 
-  G4cout<< MMegaHC<<" "<<MMegaHC->entries()<<G4endl;
+  //G4cout<< MMegaHC<<" "<<MMegaHC->entries()<<G4endl;
   // If hits are present, digitize them  
   if (MMegaHC) {
     

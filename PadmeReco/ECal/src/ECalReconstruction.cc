@@ -1325,30 +1325,53 @@ void ECalReconstruction::ConvertMCDigitsToRecoHitsWave(TMCVEvent *tEvent, TMCEve
 }
 
 Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y)
-{
-  Bool_t BrSU = false;
-  if (x == 16 && y == 25)
-    BrSU = true;
-  if (x == 18 && y == 10)
-    BrSU = true;
-  if (x == 22 && y == 8)
-    BrSU = true;
-  if (x == 18 && y == 4)
-    BrSU = true;
-  if (x == 5 && y == 5)
-    BrSU = true;
-  if (x == 12 && y == 18)
-    BrSU = true;
-  // new dead units
+{ 
+   Bool_t BrSU = false;
+   //Run III broken SU //EDM I don't like this thing, should be run prefix dependent
+  //  if (x == 16 && y == 25)
+  //   BrSU = true;
+  //  if (x == 18 && y == 10)
+  //   BrSU = true;
+  //  if (x == 22 && y == 8)
+  //   BrSU = true;
+  //  if (x == 18 && y == 4)
+  //   BrSU = true;
+  //  if (x == 5 && y == 5)
+  //   BrSU = true;
+  //  if (x == 12 && y == 18)
+  //   BrSU = true;
+  // // //new dead units
+  //  if (x == 24 && y == 9)
+  //   BrSU = true;
+  //  if (x == 14 && y == 9)
+  //   BrSU = true;
+  //  if (x == 10 && y == 22)
+  //   BrSU = true;
+  //  if (x == 21 && y == 22)
+  //   BrSU = true;
 
-  if (x == 24 && y == 9)
-    BrSU = true;
-  if (x == 14 && y == 9)
-    BrSU = true;
-  if (x == 10 && y == 22)
-    BrSU = true;
+  //Run IV broken SU
   if (x == 21 && y == 22)
-    BrSU = true;
+       BrSU = true;
+   if (x == 22 && y == 19)
+       BrSU = true;
+   if (x == 20 && y == 12)
+       BrSU = true;
+   if (x == 22 && y == 8)
+       BrSU = true;
+   if (x == 25 && y == 9)
+       BrSU = true;
+   if (x == 18 && y == 10)
+       BrSU = true;
+   if (x == 18 && y == 4)
+       BrSU = true;
+   if (x == 18 && y == 5)
+       BrSU = true;
+   if (x == 20 && y == 4)
+       BrSU = true;
+   if (x == 15 && y == 2)
+       BrSU = true;
+  
   return BrSU;
 }
 

@@ -286,6 +286,7 @@ Bool_t ECalSel::Process()
     TwoClusSel();
     TwoClusters_couples();
 //TMP    OneClusSel();
+    BFieldSelection();
     OneClusTagAndProbeSel();
   }
   return true;
@@ -1540,7 +1541,7 @@ Int_t ECalSel::TwoClusters_couples(){
       }
       CutFlow |=  (1<<5);
       //      QUIII
-      double factor = 5;
+      double factor = 1;
       if(!
 	 (((cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin() - factor*fSafeSpaceMargin &&
 	     cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMax()) &&

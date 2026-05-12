@@ -79,8 +79,8 @@ Bool_t MCTruthECal::Init(PadmeAnalysisEvent* event){
 Bool_t MCTruthECal::InitHistos(){
   //MCTruthECal directory will contain all histograms related to this analysis
   //Histograms for MCTruthECal information
-  Int_t    NBinE=600.;
-  Double_t MaxE=NBinE;
+  //Int_t    NBinE=600.;
+  //Double_t MaxE=NBinE;
   static int NprocessAvailable = 6;
   TString processIDs[NprocessAvailable]={"eIoni", "eBrem", "annihil", "Bhabha","Babayaga","NoVtx"};
 
@@ -119,6 +119,9 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","EPcle_eBrem",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_eBrem",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcle_annihil",100,0,400);
+  fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_annihil",300,-3.14, 3.14, 100,0,400);
+  fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_eBrem",300,-3.14, 3.14, 100,0,400);
+  fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_eIoni",300,-3.14, 3.14, 100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_annihil",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcle_eIoni",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_eIoni",100,0,400);
@@ -139,11 +142,11 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHisto2List("MCTruthECal","R1vsR2_eIoni",350,0,350,350,0,350);
   fHS->BookHisto2List("MCTruthECal","E1vsR1_eIoni",300,50,350,400,0,400);
   fHS->BookHisto2List("MCTruthECal","E2vsR2_eIoni",300,50,350,400,0,400);
-  fHS->BookHisto2List("MCTruthECal","XYmap",30,0,30,30,0,30);
-  fHS->BookHisto2List("MCTruthECal","XYmapEw",30,0,30,30,0,30);
-  fHS->BookHisto2List("MCTruthECal","XYmapAss",30,0,30,30,0,30);
-  fHS->BookHisto2List("MCTruthECal","XY_DE",30,0,30,30,0,30);
-  fHS->BookHisto2List("MCTruthECal","XYmapEwAss",30,0,30,30,0,30);
+  fHS->BookHisto2List("MCTruthECal","XYmap",30,0,29,30,0,29);
+  fHS->BookHisto2List("MCTruthECal","XYmapEw",30,0,29,30,0,29);
+  fHS->BookHisto2List("MCTruthECal","XYmapAss",30,0,29,30,0,29);
+  fHS->BookHisto2List("MCTruthECal","XY_DE",30,0,29,30,0,29);
+  fHS->BookHisto2List("MCTruthECal","XYmapEwAss",30,0,29,30,0,29);
   fHS->BookHistoList("MCTruthECal","dECluVtx",400,-400,400);
   fHS->BookHisto2List("MCTruthECal","dEvsECluVtx",500,0,1000,400,-400,400);
   hAnnihil = fHS->BookHisto2List("MCTruthECal","dEvsECluVtx_annihil",400,0,400,400,-400,400);
@@ -211,6 +214,8 @@ Bool_t MCTruthECal::Process(){
     //std::cout<<"Event: "<<fEvent->RecoEvent->GetEventNumber()<<std::endl;
     CorrelateVtxClu();
     return true;
+  }else{
+    return false;
   }
 }
 
@@ -224,15 +229,15 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
   TVector3 cluPos, VtxPos;
 
   TRecoVCluster* clu;
-  double cluEnergy;
-  double mcIPartE;
+  double cluEnergy=0;
+  //double mcIPartE;
   double VtxTime;
   double cluTime =-99;
   int NCluVtx    =0;
   double cVal = 30.; //cm/ns
 
-  double TOFoffset = 13.6; //ns --> TOF offset moving towards the calorimeter
-  const double DTlow     = -0.09;//4.0; //from fit on DT
+  double TOFoffset = 13.6; //ns --> TOF offset moving towards the calorimeter //just assigned default value, evaluated precisely later in the code
+  const double DTlow     = -0.00;//4.0; //from fit on DT
   const double DTup      = 7.27;//6.0; //from fit on DT
   const double muX       =  1.442; //0.868;//1.389; //from fit on DX
   const double muY       = -0.0731;//-0.100; //from fit on DY
@@ -285,7 +290,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
       TLorentzVector sumBabayaga;
       sumBabayaga.SetXYZT(0.,0.,0.,0.);
       Double_t enSum =0;
-      Double_t enSum_atcalo =0;
+      //Double_t enSum_atcalo =0;
       Double_t enTrue =0;
       Double_t enTrue_atcalo =0;
       int npclesass=0;
@@ -304,8 +309,8 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           sumBabayaga+=pcle;
           TVector3 VtxPosAtCalo;
           VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
-          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - 3.13);
-          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - 3.86);
+          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - fGeneralInfo->GetDisplacementXECal());
+          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - fGeneralInfo->GetDisplacementYECal());
        
           int icellX = VtxPosAtCalo.X()/cellSize + ncells/2;
           int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
@@ -315,7 +320,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           if(icellX>ncells || icellX<0) continue;
           if(icellY>ncells || icellY<0) continue;
           
-          Double_t PhiPcle0 = TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X());
+          //Double_t PhiPcle0 = TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X());
 
           //if(abs((abs(PhiPcle0)-TMath::Pi()/2))<TMath::Pi()/6) continue;
           //if ((TMath::Abs(TMath::Cos(PhiPcle0)) < 0.7648) ) continue;
@@ -340,28 +345,33 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           EPcleOut[iO]=pcleE;
           
 
-            fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
+          fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
 
           //fHS->FillHisto2List("MCTruthECal","XYmapEw",icellX,icellY, pcleE);
-          Bool_t notClosetoDead;
-          notClosetoDead = (icellX == 23 || icellX == 24 || icellX == 25 || icellX == 26 || icellX == 27);
-          notClosetoDead = !(notClosetoDead && (icellY == 7 || icellY == 8|| icellY == 9));
-          if( ((TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648) )) {
+          Bool_t notClosetoDead=true;
+          // notClosetoDead = (icellX == 23 || icellX == 24 || icellX == 25 || icellX == 26 || icellX == 27);
+          // notClosetoDead = !(notClosetoDead && (icellY == 7 || icellY == 8|| icellY == 9));
+          if(1){//((TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648) )) {
             if(notClosetoDead)fHS->FillHistoList("MCTruthECal","EPcle",pcleE, 1.);
             if(pcleE > 110. && pcleE < 200)fHS->FillHisto2List("MCTruthECal","XYmap",icellX,icellY, 1.);
 
           }
+          TLorentzVector labMomenta, labMomentaCM;
+          labMomenta.SetVectM(pcleMom, 0.); // define a photon-like tlorentzVector
+          labMomentaCM.SetVectM(labMomenta.Vect(), 0);
+          labMomentaCM.Boost(-fGeneralInfo->GetBoost());
+          double theta = labMomentaCM.Vect().Theta();
           fHS->FillHistoList("MCTruthECal",Form("EPcle_%s",mcVtx->GetProcess().Data()),pcleE);
+          fHS->FillHisto2List("MCTruthECal",Form("EPcleVsTheta_%s",mcVtx->GetProcess().Data()), theta, pcleE);
           Double_t Rpcle = TMath::Sqrt((VtxPosAtCalo.X()*VtxPosAtCalo.X())+(VtxPosAtCalo.Y()*VtxPosAtCalo.Y()));
 
           TOFoffset = TMath::Sqrt(((Rpcle*Rpcle)+(fGeneralInfo->GetCOG().Z()*fGeneralInfo->GetCOG().Z())))/(10*cVal); // ns -->c is in cm/ns, R is in mm and 
           //std::cout<<"Rpcle: "<<Rpcle<<" fGeneralInfo->GetCOG().Z(): "<<fGeneralInfo->GetCOG().Z()<<" TOFoffset:"<<TOFoffset<<std::endl;
           VtxTime   = mcVtx->GetTime()+TOFoffset; 
-          fHS->FillHistoList("MCTruthECal","DTCluVtx",cluTime-VtxTime,1.);
           NCluVtx =0;
           Double_t tempChiPos = 10;
           Int_t cluIdx =-1;
-          Double_t DeltaXass, DeltaYass;
+          Double_t DeltaXass=-999, DeltaYass=-999;
             //Loop on clu
           for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
               clu = fECal_clEvent->Element((int)h1);
@@ -370,7 +380,8 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
               cluPos.SetXYZ(
                   clu->GetPosition().X(),
                   clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
-             
+              fHS->FillHistoList("MCTruthECal","DTCluVtx",cluTime-VtxTime,1.);
+
               // std::cout<<"muoio nel loop cluster"<<std::endl;
                   if((cluTime-VtxTime)>DTlow && (cluTime-VtxTime)<DTup){        
 
@@ -426,7 +437,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
               enSum+= cluEnergy;
               npclesass++;
               enTrue_atcalo+=pcleE;
-              if( (TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648))
+              if(1)//(TMath::Abs(TMath::Cos(PhiPcle0)) > 0.7648))
                {if(notClosetoDead)fHS->FillHistoList("MCTruthECal","EPcleAss",pcleE);
               if(pcleE > 110. && pcleE < 200) fHS->FillHisto2List("MCTruthECal","XYmapAss",icellX,icellY, 1.);
               }

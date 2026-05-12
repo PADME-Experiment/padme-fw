@@ -41,6 +41,9 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
     fZTarg = -1028;
+    fDisplacementXECal = 3.14; 
+    fDisplacementYECal = 3.86; 
+
    }
   else if(trueRunNumber < 60000){
     fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
@@ -48,12 +51,17 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     //fZECal = 2508.31 + 175.650 ; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
     fZECal = 2612.4 ; // front face of ECAL (crystal front) from MC Detector setup 40, no shower max, ok for positrons
     fZTarg = -1028; 
+    fDisplacementXECal = 3.41; 
+    fDisplacementYECal = 3.86; 
+
    }
   else if(trueRunNumber > 80000){
     fPeriodStartTime = 174000000;
     fBeamMomentum = 268.94;
     fZTarg = -732.47;
-    fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
+    fZECal = 2577.77; //front face of ECAL allinamento 
+    fDisplacementXECal = 3.41; 
+    fDisplacementYECal = -1.46; 
   }
   // default start and stop time of runs
   fRunStartTime = 0;

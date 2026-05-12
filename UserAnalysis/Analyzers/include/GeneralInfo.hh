@@ -89,7 +89,8 @@ public:
   inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;} //default time-energy slope
   inline double GetGlobalBunchTimeStart() const { return fGlobalBunchTimeStart;} // default bunch time start
   inline double GetGlobalBunchTimeLength() const { return fGlobalBunchTimeLength;} // default bunch time length
-  
+  inline double GetDisplacementXECal() const {return fDisplacementXECal;}
+  inline double GetDisplacementYECal() const {return fDisplacementYECal;}
   inline Bool_t isMC() const { return fisMC;} // default bunch time length
 
   inline double GetMMStripPitch() const {return fMMStripPitch;} // mm
@@ -162,6 +163,8 @@ private:
 
   double fZTarg;
   double fZECal;
+  double fDisplacementXECal;
+  double fDisplacementYECal;
 
   TVector3 fRTarg;
   TVector3 fCOGAtECal;

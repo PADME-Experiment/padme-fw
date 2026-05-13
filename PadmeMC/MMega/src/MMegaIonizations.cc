@@ -208,9 +208,11 @@ void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
             //G4cout<<"passed P0 x geo check "<<G4endl;
             if(geo->GetisChV1Active(iChx)){  //mask non active strips
                 if(y<yP0+(0.5*V2Panel)){
-                    fid = iChx + 10000; //to be replaced with bit version
+                    if(x<xP0+0.5*V1Panel) fid = iChx + 4000; //layer 2 brd 4
+                    else fid = iChx-1 + 5000; //layer 2 brd 5, -1 to exclude the hole
                 }else{
-                fid = iChx + 13000; 
+                    if(x<xP0+0.5*V1Panel) fid = iChx + 6000; //layer 3 brd 6
+                    else fid = iChx-1 + 7000; //layer 3 brd 7, -1 to exclude the hole
                 }
 
                 fIDs.push_back(fid);
@@ -225,9 +227,11 @@ void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
             if(geo->GetisChV2Active(iChy)){ //mask non active strips
                 //G4cout<<"passed P0 y ch mask "<<G4endl;
                 if(x<xP0+(0.5*V1Panel)){
-                    fid = iChy + 30000; //to be replaced with bit version
+                    if(y>yP0+0.5*V2Panel) fid = iChy; //layer 0 brd 0
+                    else fid = iChy-6 + 1000; //layer 0 brd 1, -6 to account for the hole
                 }else{
-                fid = iChy + 33000; 
+                    if(y>yP0+0.5*V2Panel) fid = iChy+2000; //layer 1 brd 2
+                    else fid = iChy-6 + 3000; //layer 1 brd 3, -6 to account for the hole
                 }
                 fIDs.push_back(fid);
                 fTimes.push_back(ftime);
@@ -249,10 +253,12 @@ void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
             //G4cout<<"passed P1 x geo check "<<G4endl;
             if(geo->GetisChV2Active(iChx)){  //mask non active strips
                 //G4cout<<"passed P1 x ch mask "<<G4endl;
-                if(y<yP1+(0.5*V1Panel)){
-                    fid = iChx + 20000; //to be replaced with bit version
+                if(y<yP1+(0.5*V1Panel)){ 
+                    if(x<xP1+0.5*V2Panel) fid = iChx + 12000; //layer 6 brd 12
+                    else fid = iChx-6 + 13000; //layer 6 brd 13, -6 to exclude the hole
                 }else{
-                fid = iChx + 23000; 
+                    if(x<xP1+0.5*V2Panel) fid = iChx + 12000; //layer 7 brd 14
+                    else fid = iChx-6 + 13000; //layer 7 brd 15, -6 to exclude the hole
                 }
                 fIDs.push_back(fid);
                 fTimes.push_back(ftime);
@@ -266,9 +272,11 @@ void MMegaIonizations::ComputeStripID(G4ThreeVector ionipos){
             if(geo->GetisChV1Active(iChy)){ //mask non active strips
                 //G4cout<<"passed P1 y ch mask "<<G4endl;
                 if(x<xP1+(0.5*V2Panel)){
-                    fid = iChy + 40000; //to be replaced with bit version
+                    if(y>yP1+0.5*V1Panel) fid = iChy + 8000; //layer 4 brd 8
+                    else fid = iChy-1 + 9000; //layer 4 brd 9, -6 to account for the hole
                 }else{
-                fid = iChy + 43000; 
+                    if(y>yP1+0.5*V1Panel) fid = iChy + 10000; //layer 5 brd 8
+                    else fid = iChy-1 + 11000; //layer 5 brd 9, -6 to account for the hole
                 }
                 fIDs.push_back(fid);
                 fTimes.push_back(ftime);

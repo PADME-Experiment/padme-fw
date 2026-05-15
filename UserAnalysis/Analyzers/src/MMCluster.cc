@@ -173,6 +173,7 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   // success
   fMMHitsInClu_HR.clear();
   for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
+  hitArray.clear();
   
   fTracos.chi2 = result.MinFcnValue();
   for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
@@ -260,6 +261,7 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
   
   fMMHitsInClu_HR.clear();
   for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
+  hitArray.clear();
   
   int Nhit = zhits.size();
   vector<TVector3> residues;
@@ -270,7 +272,7 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
     double v_reco = mt_avg * z_hit + ct_avg;
     double z_reco = -999;
     if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-    else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
+    //else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
     
     TVector3 res;
     res[1-chinfoThis.view] = v_hit - v_reco;
@@ -519,7 +521,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     double v_reco = mt_avg * z_hit + ct_avg;
     double z_reco = -999;
     if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-    else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
+    //else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
     
     TVector3 res;
     res[1-softhit->GetMMchInfo().view] = v_hit - v_reco;
@@ -740,8 +742,7 @@ bool MMCluster::HitRejectionAlgorithm() {
       double v_reco = mt_avg * z_hit + ct_avg;
       double z_reco = -999;
       if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-      else std::cerr<<"[HitRejectionAlgorithm] AIUTO SLOPE NULLA!!!!"<<std::endl;
-      
+      //else std::cerr<<"[HitRejectionAlgorithm] AIUTO SLOPE NULLA!!!!"<<std::endl;
       TVector3 res;
       res[1-view] = v_hit - v_reco;
       res[view] = 0;

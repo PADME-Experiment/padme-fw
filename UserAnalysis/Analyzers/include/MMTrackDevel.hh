@@ -33,5 +33,6 @@ private:
   TString InputHistofileName;
   int fEventCounter;
   bool fSaveEvent;
+
 };
 #endif

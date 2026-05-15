@@ -20,6 +20,7 @@ public:
   ~MMReconstruction();
 
   void ProcessEvent(TRawEvent*, TMMRawEvent*);
+  void ProcessEvent(TMCVEvent*, TMCEvent*);
   virtual void HistoInit();
 
   Bool_t MMFound()     { return fMMFound; }
@@ -34,6 +35,10 @@ private:
   void ComputeTotalCharge(Short_t*);
   void ComputeBunchLength(Short_t*);
   void NoiseFinder(TMMRawEvent*);
+  //cfg file settings
+  Double_t fADCUnitToCharge; // electrons / adccount
+  Double_t fHitChargeThreshold; // ADC counts
+
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
 

@@ -1,16 +1,16 @@
-#include "TLeadGlassRecoEvent.hh"
+#include "TLeadGlass2RecoEvent.hh"
 
-ClassImp(TLeadGlassRecoEvent)
+ClassImp(TLeadGlass2RecoEvent)
 
-TLeadGlassRecoEvent::TLeadGlassRecoEvent() : TRecoVObject(TRecoVHit::Class())
+TLeadGlass2RecoEvent::TLeadGlass2RecoEvent() : TRecoVObject(TRecoVHit::Class())
 {
   Clear();
 }
 
-TLeadGlassRecoEvent::~TLeadGlassRecoEvent()
+TLeadGlass2RecoEvent::~TLeadGlass2RecoEvent()
 {;}
 
-void TLeadGlassRecoEvent::Clear()
+void TLeadGlass2RecoEvent::Clear()
 {
   fLGPedestal = 0.;
   fLGPedestalRMS = 0.;

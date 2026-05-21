@@ -32,15 +32,15 @@ void LeadGlassRecoRootIO::SaveEvent()
   if (! fLGReco) fLGReco = (LeadGlassReconstruction*)RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
 
   if (fLGReco->LeadGlassFound()) {
-    for (UChar_t lgID = 0; lgID < N_LEADGLASS; lgID++){
-      //printf("Processing leadglass %d\n",lgID);
-      //UChar_t lgID = fLGReco->LeadGlassID();
-      ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(lgID,fLGReco->GetPedestal(lgID));
-      ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMS(lgID,fLGReco->GetPedestalRMS(lgID));
-      ((TLeadGlassRecoEvent*)fEvent)->SetStartIndexCell(lgID,fLGReco->GetStartIndexCell(lgID));
-      ((TLeadGlassRecoEvent*)fEvent)->SetTotalCharge(lgID,fLGReco->GetCharge(lgID));
-      ((TLeadGlassRecoEvent*)fEvent)->SetTotalEnergy(lgID,fLGReco->GetEnergy(lgID));
-    }
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestal(fLGReco->GetPedestal(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMS(fLGReco->GetPedestalRMS(0));    
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestalV2(fLGReco->GetPedestalV2(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetPedestalRMSV2(fLGReco->GetPedestalRMSV2(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetStartIndexCell(fLGReco->GetStartIndexCell(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalCharge(fLGReco->GetCharge(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalChargeV2(fLGReco->GetChargeV2(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalChargeWPed(fLGReco->GetChargeWPed(0));
+    ((TLeadGlassRecoEvent*)fEvent)->SetTotalEnergy(fLGReco->GetEnergy(0));
     ((TLeadGlassRecoEvent*)fEvent)->SetNPoTs(fLGReco->GetNPoTs());
     ((TLeadGlassRecoEvent*)fEvent)->SetBunchLength(fLGReco->GetBunchLength());
     ((TLeadGlassRecoEvent*)fEvent)->SetBunchBBQ(fLGReco->GetBunchBBQ());

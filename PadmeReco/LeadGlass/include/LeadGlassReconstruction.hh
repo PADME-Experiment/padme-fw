@@ -22,13 +22,18 @@ public:
   void ProcessEvent(TRawEvent*);
   virtual void HistoInit();
 
-  Bool_t LeadGlassFound() { return fLeadGlassFound; }
+  Bool_t LeadGlassFound() { return fLeadGlassFound[0]; }
+  Bool_t LeadGlass2Found() { return fLeadGlassFound[1]; }
   //UChar_t LeadGlassID() { return leadglassID; }
 
   Double_t GetPedestal(UChar_t leadglassID)    { return fLGPedestal[leadglassID];  }
+  Double_t GetPedestalV2(UChar_t leadglassID)    { return fLGPedestal_v2[leadglassID];  }
   Double_t GetPedestalRMS(UChar_t leadglassID) { return fLGPedRMS[leadglassID];    }
+  Double_t GetPedestalRMSV2(UChar_t leadglassID) { return fLGPedRMS_v2[leadglassID];    }
   Int_t GetStartIndexCell(UChar_t leadglassID) { return fLGStartIndexCell[leadglassID];    }
   Double_t GetCharge(UChar_t leadglassID)      { return fLGCharge[leadglassID];    }
+  Double_t GetChargeV2(UChar_t leadglassID)      { return fLGCharge_v2[leadglassID];    }
+  Double_t GetChargeWPed(UChar_t leadglassID)  { return fLGChargeWPed[leadglassID];    }
   Double_t GetEnergy(UChar_t leadglassID)      { return fLGEnergy[leadglassID];    }
   Double_t GetNPoTs()       { return fLGNPoTs;     }
   Double_t GetBunchLength() { return fBunchLength; }
@@ -39,13 +44,12 @@ private:
   Bool_t TriggerToBeSkipped();
   void AnalyzeEvent(TRawEvent*);
   void AnalyzeChannel(UChar_t leadglassID, Short_t*);
-  Double_t ComputePedestal(UChar_t leadglassID, Short_t*);
   void ComputeTotalCharge(UChar_t leadglassID, Short_t*);
   void ComputeTotalChargeLED(UChar_t leadglassID, Short_t*);
   void ComputeBunchLength(Short_t*);
 
   // Flag to signal if LeadGlass channel was found in this event
-  Bool_t fLeadGlassFound;
+  Bool_t fLeadGlassFound[N_LEADGLASS];
 
   UChar_t leadglassID;
 
@@ -69,6 +73,7 @@ private:
   Int_t fLGStartIndexCell[N_LEADGLASS]; // Index of signal start
   Double_t fLGCharge[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
   Double_t fLGCharge_v2[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
+  Double_t fLGChargeWPed[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd without Pedestal substraction
 
   // Calibration parameter to convert Total Charge to Total Energy
   Double_t fChargeToEnergy;

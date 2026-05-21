@@ -1,14 +1,14 @@
-#ifndef TLeadGlassRecoEvent_H
-#define TLeadGlassRecoEvent_H
+#ifndef TLeadGlass2RecoEvent_H
+#define TLeadGlass2RecoEvent_H
 
 #include "TRecoVObject.hh"
 
-class TLeadGlassRecoEvent : public TRecoVObject {
+class TLeadGlass2RecoEvent : public TRecoVObject {
 
 public:
 
-  TLeadGlassRecoEvent(); 
-  ~TLeadGlassRecoEvent();
+  TLeadGlass2RecoEvent(); 
+  ~TLeadGlass2RecoEvent();
 
   void Clear();
 
@@ -28,11 +28,11 @@ public:
   Int_t GetStartIndexCell(UChar_t lg) { return fLGStartIndexCell; }
 
   void SetTotalCharge(Double_t c) { fLGTotalCharge = c; }
-  Double_t GetTotalCharge(UChar_t lg) { return fLGTotalCharge; }
-
+  Double_t GetTotalCharge(UChar_t lg) { return fLGTotalCharge; }  
+  
   void SetTotalChargeV2(Double_t c) { fLGTotalCharge_v2= c; }
   Double_t GetTotalChargeV2(UChar_t lg) { return fLGTotalCharge_v2; }  
-
+  
   void SetTotalChargeWPed(Double_t c) { fLGTotalChargeWPed = c; }
   Double_t GetTotalChargeWPed(UChar_t lg) { return fLGTotalChargeWPed; }
 
@@ -65,6 +65,6 @@ private:
   Double_t fLGBunchLength;
   Double_t fLGBunchBBQ;
 
-  ClassDef(TLeadGlassRecoEvent,1);
+  ClassDef(TLeadGlass2RecoEvent,1);
 };
 #endif

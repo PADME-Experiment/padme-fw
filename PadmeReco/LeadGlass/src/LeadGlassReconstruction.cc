@@ -30,7 +30,7 @@ LeadGlassReconstruction::LeadGlassReconstruction(TFile* HistoFile, TString Confi
     //std::cout << (*it) << "   ";
   }
   //std::cout << std::endl;
-  InitChannelID(cfg);
+  //InitChannelID(cfg);
   //std::cout << std::endl;
   
 
@@ -99,7 +99,8 @@ void LeadGlassReconstruction::HistoInit()
 void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 {
 
-  fLeadGlassFound = false;
+  // Reset list of LeadGlass blocks found in this event
+  for(UChar_t il = 0; il<N_LEADGLASS; il++) fLeadGlassFound[il] = false;
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
@@ -113,26 +114,24 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
   // Loop through the boards
   for(UChar_t b = 0; b < rawEv->GetNADCBoards(); b++) {
     TADCBoard* adcB = rawEv->ADCBoard(b);
-    if (cfg->BoardIsMine(adcB->GetBoardId())) {
+    //if (cfg->BoardIsMine(adcB->GetBoardId())) {
       //std::cout << "Selected board " << (Int_t)adcB->GetBoardId() << std::endl; 
 
-      RecoVChannelID *chanID = new RecoVChannelID();  
+      //RecoVChannelID *chanID = new RecoVChannelID();  
       
-      for(int c = 0; c < 32; c++) {
+      //for(int c = 0; c < 32; c++) {
         //Int_t fCh = chreco->GetChanelID();
         //std::cout << "Channel " << Ch << std::endl;
         //Int_t fCh = chanID->scanChannelID(c);
         
-        int fCh = chanID->GetChannelID((Int_t)adcB->GetBoardId(), c);
-
-        Int_t ElCh = fCh/10 +fCh%10*5;
+        //int fCh = chanID->GetChannelID((Int_t)adcB->GetBoardId(), c);
+        //Int_t ElCh = fCh/10 +fCh%10*5;
 
         //std::cout << "Channel " << fCh << " " << ElCh << std::endl;
-
         //if(Ch >= 0) std::cout << "Selected channel " << Ch << std::endl; 
         //printf("Channel %d\n", ElCh);
-      }
-    }
+      //}
+    //}
     // Leadglass-on-beam
     if (adcB->GetBoardId() == LEADGLASS_BOARD) {
       leadglassID = 0;
@@ -157,7 +156,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 	      if (adcB->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
         //printf(" chanNum = %d", adcB->ADCChannel(c)->GetChannelNumber());
         //printf(" %d\n", chanID->scanChannelID(LEADGLASS_CHANNEL-1));
-	        fLeadGlassFound = true;
+	        fLeadGlassFound[0] = true;
 	        //lg_c = c;
 	        // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
 	        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
@@ -185,7 +184,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
       
       for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
         if (adcB->ADCChannel(c)->GetChannelNumber() == SECOND_LEADGLASS_CHANNEL) {
-        fLeadGlassFound = true;
+        fLeadGlassFound[1] = true;
         //lg_c = c;
         // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
         AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
@@ -196,7 +195,7 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
   }
 
   //Processing is over, let's analyze what's here, if requested
-  if (fLeadGlassFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+  if (fLeadGlassFound[0] && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
 
   /*
   if (rawEv->GetEventNumber() == 110) {
@@ -266,6 +265,123 @@ void LeadGlassReconstruction::AnalyzeChannel(UChar_t lgID, Short_t* samples)
 
 }
 
+void LeadGlassReconstruction::ComputeTotalCharge(UChar_t lgID, Short_t* samples)
+{
+  Int_t sum = 0;
+  Int_t sum_v2 = 0;
+  Int_t sum_ped = 0;
+  Int_t sum_ped_v2 = 0;
+  ULong_t sum2_ped = 0;
+  ULong_t sum2_ped_v2 = 0;
+
+  // BTF triggers:
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    // Get total signal area using first fPedestalSamples samples as pedestal
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s<fPedestalSamples) {
+        sum_ped += samples[s];
+        sum2_ped += samples[s]*samples[s];
+      } else if (s >= fSignalSamplesStart) {
+        if (s < fSignalSamplesEnd) {
+          sum += samples[s];
+        } else {
+          break;
+        }
+      }
+    }
+    fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+    fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
+    fLGChargeWPed[lgID] = (Double_t)sum;
+  }
+
+  // LED triggers:
+  if (GetTriggerProcessor()->IsLEDTrigger()) { 
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s<fPedestalSamples) {
+        sum_ped += samples[s];
+        sum2_ped += samples[s]*samples[s];
+      } else if (s >= fLEDSamplesStart) {
+        if (s < fLEDSamplesEnd) {
+          sum += samples[s];
+        } else {
+          break;
+        }
+      }
+    }
+    fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+    fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fLEDSamplesEnd-fLEDSamplesStart)-(Double_t)sum;
+    fLGChargeWPed[lgID] = (Double_t)sum;
+  }
+
+  // BTF triggers -- pedestal method 2:
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s >= (fSignalSamplesStart-fPedestalSamples/2)) {
+        if (s < fSignalSamplesStart) {
+          sum_ped_v2 += samples[s];
+          sum2_ped_v2 += samples[s]*samples[s];
+        } else if (s >= fSignalSamplesStart) {
+          if (s < fSignalSamplesEnd) {
+            sum_v2 += samples[s];
+          } else if (s >= fSignalSamplesEnd) {
+            if (s < (fSignalSamplesEnd+fPedestalSamples/2)) {
+              sum_ped_v2 += samples[s];
+              sum2_ped_v2 += samples[s]*samples[s];
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+    fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
+    fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge_v2[lgID] = fLGPedestal_v2[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum_v2;
+  }
+
+  // LED triggers -- pedestal method 2:
+  if (GetTriggerProcessor()->IsLEDTrigger()) {
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s >= (fLEDSamplesStart-fPedestalSamples/2)) {
+        if (s < fLEDSamplesStart) {
+          sum_ped_v2 += samples[s];
+          sum2_ped_v2 += samples[s]*samples[s];
+        } else if (s >= fLEDSamplesStart) {
+          if (s < fLEDSamplesEnd) {
+            sum_v2 += samples[s];
+          } else if (s >= fLEDSamplesEnd) {
+            if (s < (fLEDSamplesEnd+fPedestalSamples/2)) {
+              sum_ped_v2 += samples[s];
+              sum2_ped_v2 += samples[s]*samples[s];
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+    fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
+    fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge_v2[lgID] = fLGPedestal_v2[lgID]*(Double_t)(fLEDSamplesEnd-fLEDSamplesStart)-(Double_t)sum_v2;
+  }
+
+  //fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+  //fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+  //fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
+  
+  // Convert counts to charge in pC
+  //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
+  //fLGCharge[lgID] *= 4.8828E-3;
+  //fLGChargeWPed[lgID] *= 4.8828E-3;
+  //fLGCharge_v2[lgID] *= 4.8828E-3;
+  fLGCharge[lgID] *= (1.E3/(4096.*50.));
+  fLGChargeWPed[lgID] *= (1.E3/(4096.*50.));
+  fLGCharge_v2[lgID] *= (1.E3/(4096.*50.));
+}
+
+/*
 void LeadGlassReconstruction::ComputeTotalCharge(UChar_t lgID, Short_t* samples)
 {
   Int_t sum = 0;
@@ -351,12 +467,12 @@ void LeadGlassReconstruction::ComputeTotalCharge(UChar_t lgID, Short_t* samples)
   fLGCharge[lgID] *= 4.8828E-3;
 
   // 2. 
-  fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
-  fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
-  fLGCharge_v2[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
+  //fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
+  //fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
+  //fLGCharge_v2[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
   // Convert counts to charge in pC
   //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
-  fLGCharge_v2[lgID] *= 4.8828E-3;
+  //fLGCharge_v2[lgID] *= 4.8828E-3;
 
 
   // Add new pedestal evaluation method as a new hit to this event
@@ -376,7 +492,7 @@ void LeadGlassReconstruction::ComputeTotalCharge(UChar_t lgID, Short_t* samples)
     //fLGChargeLED2[lgID] *= 4.8828E-3;
   //}
 }
-
+*/
 //Double_t LeadGlassReconstruction::ComputePedestal(UChar_t lgID, Short_t* samples)
 //{
 //  Int_t sum_ped = 0;

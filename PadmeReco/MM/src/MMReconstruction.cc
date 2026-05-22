@@ -23,6 +23,7 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
 
   fADCUnitToCharge = fConfig->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
   fHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
+  fHitChargeSaturation = fConfig->GetParOrDefault("RECO","HitChargeSaturation",4000);  //ADC counts  
 
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
@@ -78,24 +79,26 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       TMCVDigi* digi = tEvent->Digi(i); 
       if(digi->GetEnergy()/fADCUnitToCharge<fHitChargeThreshold) continue; // zero suppression
-      // std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
+      //saturation ??
+      if(digi->GetEnergy()/fADCUnitToCharge>fHitChargeSaturation) continue; // saturation
+      //std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
       int brdNum = digi->GetChannelId()/1000; //first decode from MC saving format: channelid is encoded as (boardNum*1000 + channelNum) 
       int chNum = digi->GetChannelId()%1000;
-      //std::cout << "MMReconstruction::ProcessEvent - Found digi with channel " << digi->GetChannelId() << " in board " << brdNum << " channel " << chNum << std::endl;
       // then coded with Reco nomenclature, so that we're able to use directly ComputePosition 
-      //int channelid = chNum;     // channelid occupy 8 least significant bits of channelid
-      int channelid =  digi->GetChannelId();     // channelid occupy 8 least significant bits of channelid
-      channelid |= (brdNum << 8);
+      if(brdNum%2==1) chNum -= 256; // even boards have channel number 256-511, odd boards have channel number 0-255
+      chNum |= (brdNum << 8);
+
       TRecoVHit *Hit = new TRecoVHit();
-      Hit->SetChannelId(channelid);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-      Hit->SetTime(digi->GetTime()); // ns
-      Hit->SetEnergy(digi->GetEnergy()/fADCUnitToCharge); // electrons
+      Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
+      Hit->SetTime(digi->GetTime()); // ns to be smeared
+      Hit->SetEnergy(digi->GetEnergy()/fADCUnitToCharge); // ADC
       Hits.push_back(Hit);
     } //pile-up of digis is alreadt handled in the digi creation --> confirmed by Occupancy plots
     //ready to evaluate positions from the channelID and then clusterize
-    //if(fGeometry)  fGeometry->ComputePositions(GetRecoHits());
+    if(fGeometry)  fGeometry->ComputePositions(GetRecoHits());
+    //position to be smeared 
     // 
-    //  // from Hits to Clusters
+     // from Hits to Clusters
     ClearClusters();
     if (fClusterization) BuildClusters();
 }

@@ -38,7 +38,7 @@ private:
   //cfg file settings
   Double_t fADCUnitToCharge; // electrons / adccount
   Double_t fHitChargeThreshold; // ADC counts
-
+  Double_t fHitChargeSaturation; // ADC counts
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
 

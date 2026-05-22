@@ -2,7 +2,7 @@
 /run/verbose 1	    
 /tracking/verbose 0	 
 #Detector and line configuration
-/Detector/Setup 40
+/Detector/Setup 50
 /output/DataFileName output/data_y0.root
 /output/HistoFileName output/histo_y0.root
 #/Detector/EnableStructure BeamLine
@@ -19,16 +19,17 @@
 #/Detector/BeamLine/SLTB4Aperture 2.1 mm
 #/Detector/BeamLine/SLTB5Aperture 5.  mm
 
-/Detector/DisableSubDetector ECal
-/Detector/DisableSubDetector Target
+#/Detector/DisableSubDetector ECal
+#/Detector/DisableSubDetector Target
 /Detector/DisableSubDetector SAC
 /Detector/DisableSubDetector PVeto
 /Detector/DisableSubDetector EVeto
 /Detector/DisableSubDetector HEPVeto
 /Detector/DisableSubDetector TDump
+#/Detector/DisableSubDetector MMega
 #/Detector/DisableSubDetector TPix
 /Detector/DisableSubDetector ETag
-/Detector/DisableSubDetector LeadGlass
+#/Detector/DisableSubDetector LeadGlass
 
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
@@ -50,7 +51,9 @@
 /beam/emittance_y 2. mrad
 
 #STARTING at the center of the magnet
-/beam/position_x 0 mm
+/beam/position_x -1028 mm
+#STARTING at the target (Run III)
+#/beam/position_x -1028 mm
 /beam/position_y 0 mm
 /beam/position_z 0.0 mm
 /beam/direction  0. 0. 1.
@@ -106,4 +109,5 @@
 #/vis/filtering/trajectories/attributeFilter-0/addInterval 5. MeV 1000. MeV
 
 /run/setRunID 0
-/run/beamOn 100
+/run/beamOn 1
+

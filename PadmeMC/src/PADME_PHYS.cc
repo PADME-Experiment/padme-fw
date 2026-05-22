@@ -27,7 +27,7 @@
 #include "G4StoppingPhysics.hh"
 #include "G4HadronElasticPhysics.hh"
 #include "G4HadronElasticPhysicsHP.hh"
-// #include "G4EmParameters.hh"
+#include "G4EmParameters.hh"
 #include "G4NeutronTrackingCut.hh"
 
 #include "G4OpticalPhysics.hh"
@@ -79,9 +79,9 @@ PADME_PHYS::PADME_PHYS(G4int ver): G4VModularPhysicsList()
   //this->RegisterPhysics(new G4EmLivermorePhysics(ver));
   //MR Penelope
   //this->RegisterPhysics( new G4EmPenelopePhysics(ver) );
-  // G4EmParameters emParams = G4EmParameters::Instance();
-  // emParams->SetMinEnergy(10*eV);
-  // emParams->SetLowestElectronEnergy(10*eV);
+  // G4EmParameters *emParams = G4EmParameters::Instance();
+  // emParams->SetMinEnergy(10*CLHEP::eV);
+  // emParams->SetLowestElectronEnergy(10*CLHEP::eV);
   // emParams->SetNumberOfBinsPerDecade(20);
   // Synchroton Radiation & GN Physics
   // includes: 

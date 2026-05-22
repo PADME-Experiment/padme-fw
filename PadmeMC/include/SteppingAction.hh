@@ -67,8 +67,8 @@ public:
   void EnableECalAnalysis()  { fEnableECalAnalysis = 1; }
   void DisableECalAnalysis() { fEnableECalAnalysis = 0; }
 
-  void EnableMMegaAnalysis()  { fEnableMMegaAnalysis = 1; } //EDM from D.Quaranta
-  void DisableMMegaAnalysis() { fEnableMMegaAnalysis = 0; }
+  void EnableMMAnalysis()  { fEnableMMAnalysis = 1; } //EDM from D.Quaranta
+  void DisableMMAnalysis() { fEnableMMAnalysis = 0; }
 
 
   G4ThreeVector & GetPositronMomentum(){ return PositronMomentum;  };
@@ -82,7 +82,7 @@ private:
 
   G4int fEnableSACAnalysis;
   G4int fEnableECalAnalysis;
-  G4int fEnableMMegaAnalysis;
+  G4int fEnableMMAnalysis;
 
   double ProcID;
   double PositronE;

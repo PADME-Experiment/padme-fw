@@ -14,7 +14,7 @@
 #include "TPixDetector.hh"
 #include "ETagDetector.hh"
 #include "TungstenDetector.hh"
-#include "MMegaDetector.hh" //EDM Raggi D.Quaranta
+#include "MMDetector.hh" //EDM Raggi D.Quaranta
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
@@ -28,7 +28,7 @@
 #include "EVetoGeometry.hh"
 #include "HEPVetoGeometry.hh"
 #include "LeadGlassGeometry.hh"
-#include "MMegaGeometry.hh" //EDM Raggi D.Quaranta
+#include "MMGeometry.hh" //EDM Raggi D.Quaranta
 
 #include "TDumpGeometry.hh"
 #include "TPixGeometry.hh"
@@ -94,7 +94,7 @@ DetectorConstruction::DetectorConstruction()
   fHEPVetoDetector   = new HEPVetoDetector(0);
   fLeadGlassDetector = new LeadGlassDetector(0);
   fTDumpDetector     = new TDumpDetector(0);
-  fMMegaDetector     = new MMegaDetector(0); //EDM from D.Quaranta
+  fMMDetector     = new MMDetector(0); //EDM from D.Quaranta
 
   fTPixDetector      = new TPixDetector(0);
   fTungstenDetector  = new TungstenDetector(0); 
@@ -118,7 +118,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableTDump    = 0;
   fEnableTPix     = 1;
   fEnableTungsten = 0;
-  fEnableMMega     = 0; //EDM from D.Quaranta
+  fEnableMM     = 0; //EDM from D.Quaranta
 
 
   fEnableWall     = 0;
@@ -133,7 +133,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableMagneticField = 1;
   fMagneticVolumeIsVisible = 0;
   fCrossMagneticVolume = "internal";
-  fMMegaReadoutType = "strips";
+  fMMReadoutType = "strips";
 
 
   fWorldIsFilledWithAir = 0;
@@ -168,7 +168,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fBeamLineStructure;    //M. Raggi 07/03/2019
   delete fHallStructure;
   delete fMagneticFieldManager;
-  delete fMMegaDetector;  //EDM from D.Quaranta
+  delete fMMDetector;  //EDM from D.Quaranta
 
 
 }
@@ -190,7 +190,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     BeamParameters::GetInstance()->DisableBeamLine();
   }
   BeamParameters::GetInstance()->SetDetectorSetup(fDetectorSetup);
-  MMegaGeometry* geoMMega = MMegaGeometry::GetInstance(); //EDM from D.Quaranta
+  MMGeometry* geoMM = MMGeometry::GetInstance(); //EDM from D.Quaranta
 
   //------------------------------
   // World Volume
@@ -521,12 +521,12 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fETagDetector->CreateGeometry();
     }
   }
-  // MMega EDM from D.Quaranta
-  if (fEnableMMega) {
-    fMMegaDetector->SetMotherVolume(logicWorld);
-    geoMMega->SetReadoutType(fMMegaReadoutType);
+  // MM EDM from D.Quaranta
+  if (fEnableMM) {
+    fMMDetector->SetMotherVolume(logicWorld);
+    geoMM->SetReadoutType(fMMReadoutType);
     if(fDetectorSetup ==50){    
-      fMMegaDetector->CreateGeometry();
+      fMMDetector->CreateGeometry();
     }
   }
   // PVeto
@@ -599,7 +599,7 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildMaterial("G4_POLYVINYLIDENE_FLUORIDE"); // Tedlar (ECal)
   man->FindOrBuildMaterial("G4_NEOPRENE");                // Neoprene (Magnet)
   man->FindOrBuildMaterial("G4_PLEXIGLASS");              // Plexiglass (ECal)
-  man->FindOrBuildMaterial("G4_BRASS");                   // Brass (MMega lateral plane)
+  man->FindOrBuildMaterial("G4_BRASS");                   // Brass (MM lateral plane)
   //man->FindOrBuildMaterial("G4_PLASTIC_SC_VINYLTOLUENE"); // Plastic scintillator (Veto)
   man->FindOrBuildMaterial("G4_POLYSTYRENE");             // Plastic scintillator (Veto)
   //man->FindOrBuildMaterial("G4_Li");
@@ -614,7 +614,7 @@ void DetectorConstruction::DefineMaterials()
   man->FindOrBuildElement("Pb"); // Lead
   man->FindOrBuildElement("Al"); // Aluminum
   man->FindOrBuildElement("Ti"); // Titanium
-  man->FindOrBuildElement("Ar"); // Argon (MMega) EDM from D. Quaranta
+  man->FindOrBuildElement("Ar"); // Argon (MM) EDM from D. Quaranta
 
   // Vacuum: leave some residual air with low density (Chamber, World)
   G4Material* Vacuum = new G4Material("Vacuum",(1.290*1E-7)*mg/cm3,2); // 1mbar
@@ -762,7 +762,7 @@ void DetectorConstruction::DefineMaterials()
   PbGl->AddMaterial(G4Material::GetMaterial("LAV_K2O"), 1.0 * perCent);    // 0.5-1.5%
 
 
-  //ArCF4Iso (MMega)
+  //ArCF4Iso (MM)
   // Isobutane at STP (quencher)
   G4Material* iso = new G4Material("isobutane", 2.49*mg/cm3, 2);
   iso->AddElement(G4Element::GetElement("C"), 4);
@@ -777,7 +777,7 @@ void DetectorConstruction::DefineMaterials()
   TPCgas->AddMaterial(Cf4, 10.*perCent);
   TPCgas->AddMaterial(iso, 2.*perCent);
 
-  //Kapton (MMega)
+  //Kapton (MM)
   G4Material* kapton = new G4Material("Kapton", 1.413*g/cm3, 4);
   kapton->AddElement(G4Element::GetElement("O"),5);
   kapton->AddElement(G4Element::GetElement("C"),22);
@@ -969,7 +969,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableHEPVeto  = 1;
     fEnableTPix     = 1;
     fEnableLeadGlass = 1;
-    fEnableMMega = 1;
+    fEnableMM = 1;
     fEnableMagneticField = 1; // PADME magnet is OFF
   }
 
@@ -978,7 +978,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   TargetGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   SACGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   ETagGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
-  MMegaGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
+  MMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
   PVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   EVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   HEPVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
@@ -1044,7 +1044,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="PVeto")   { fEnablePVeto   = 1; }
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
-  else if (det=="MMega")   { fEnableMMega     = 1; } //EDM 
+  else if (det=="MM")   { fEnableMM     = 1; } //EDM 
   else if (det=="LeadGlass") { fEnableLeadGlass = 1; }
   else if (det=="TDump")   { fEnableTDump   = 1; }
   else if (det=="TPix")    { fEnableTPix    = 1; }
@@ -1059,7 +1059,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="Target")  { fEnableTarget  = 0; }
   else if (det=="SAC")     { fEnableSAC     = 0; }
   else if (det=="ETag")    { fEnableETag    = 0; }
-  else if (det=="MMega")   { fEnableMMega    = 0; } //EDM 
+  else if (det=="MM")   { fEnableMM    = 0; } //EDM 
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
@@ -1076,7 +1076,7 @@ G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
        ( (det=="Target")   && (fEnableTarget   == 1) ) ||
        ( (det=="SAC")      && (fEnableSAC      == 1) ) ||
        ( (det=="ETag")     && (fEnableETag     == 1) ) ||
-       ( (det=="MMega")    && (fEnableMMega    == 1) ) || //EDM
+       ( (det=="MM")    && (fEnableMM    == 1) ) || //EDM
        ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
        ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
        ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||
@@ -1194,10 +1194,10 @@ void DetectorConstruction::BeamLineIsInvisible()
   fBeamLineIsVisible = 0;
 }
 
-void DetectorConstruction::SetMMegaReadoutType(G4String str) //EDM from D. Quaranta
+void DetectorConstruction::SetMMReadoutType(G4String str) //EDM from D. Quaranta
 {
-  if (fVerbose) printf("MMega Readout type is %s\n",str.data());
-  fMMegaReadoutType = str;
+  if (fVerbose) printf("MM Readout type is %s\n",str.data());
+  fMMReadoutType = str;
 }
 
 void DetectorConstruction::WorldIsAir()

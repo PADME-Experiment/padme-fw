@@ -63,9 +63,9 @@ class MMIonizations
     // https://pdg.lbl.gov/2023/web/viewer.html?file=../reviews/rpp2023-rev-particle-detectors-accel.pdf
     // Gas Mixture ArCF4Iso (88:10:2)
     G4double fNPrimary    = 0.1*(0.88*25 + 0.10*63 + 0.02*90)/mm;   //Primary mm^-1
-    G4double fIonizationEnergy = (0.88*15.7 + 0.10*16 + 0.02*10.6)*eV;
+    G4double fIonizationEnergy = (0.88*15.7 + 0.10*16 + 0.02*10.6)*eV; //15.62eV
     
-    G4double fWI    = (0.88*26 + 0.10*26 + 0.02*43.5) * eV;          //Carrier cost (eV)
+    G4double fWI    = (0.88*26 + 0.10*26 + 0.02*43.5) * eV;   //26.35eV       //Carrier cost (eV)
     G4double fvdrift = 105 * mm/us;
     G4double feCharge = e_SI;
     

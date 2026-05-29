@@ -24,7 +24,7 @@ LeadGlassGeometry::LeadGlassGeometry()
 
   fBlockId = 1; // OPAL block type 8
 
-  fLeadGlassFrontFacePosZ = 3100.*mm; // Position of block front face
+  fLeadGlassFrontFacePosZ = 3452.79*mm; //allignment 3100.*mm; // Position of block front face
 
   fLeadGlassDigitizerName = "LeadGlassDigitizer";
   fLeadGlassSensitiveDetectorName = "LeadGlassSD";

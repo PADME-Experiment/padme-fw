@@ -61,7 +61,7 @@ void TMMDetector::CreateGeometry()
 
   printf("TMM size is %f %f %f\n",TMMSizeX,TMMSizeY,TMMSizeZ);
   G4Box* solidTMMFull = new G4Box("solidTMMFull",0.5*TMMSizeX,0.5*TMMSizeY,0.5*TMMSizeZ);
-  fTMMVolume = new G4LogicalVolume(solidTMMFull,G4Material::GetMaterial("Vacuum"),"TMMLogic",0,0,0);
+  fTMMVolume = new G4LogicalVolume(solidTMMFull,G4Material::GetMaterial("ArCF4Iso"),"TMMLogic",0,0,0);
   G4Region* TMMregion = new G4Region("TMM-Region");
   TMMregion->AddRootLogicalVolume(fTMMVolume);
 
@@ -76,17 +76,40 @@ void TMMDetector::CreateGeometry()
   rotationMatrix->rotateY(0.*deg); // added to mimic test beam conditions
   new G4PVPlacement(rotationMatrix,TMMPos,fTMMVolume,"TMM",fMotherVolume,false,0,false);
 
+
+  //READOUT PLANES
+  G4double TMMPanelSizeX = geo->GetTMMPanelSizeX();
+  G4double TMMPanelSizeY = geo->GetTMMPanelSizeY();
+  G4double TMMPanelSizeZ = geo->GetTMMPanelSizeZ();
+
+  G4double TMMMylarClosingZ = geo->GetTMMMylarClosingZ();
+
+  G4double TMMExtFrameZ = geo->GetTMMExtFrameZ();
+  G4double TMMExtFrameX = geo->GetTMMExtFrameX();
+  G4double TMMExtFrameY = geo->GetTMMExtFrameY(); 
+
+  G4double TMMAluFrameSizeZ = geo->GetTMMAluFrameSizeZ();
+  G4double TMMAluFrameSizeX = geo->GetTMMAluFrameSizeX();
+  G4double TMMAluFrameSizeY = geo->GetTMMAluFrameSizeY();
+  G4double TMMAluFrameInternalSizeX = geo->GetTMMAluFrameInternalSizeX();
+  G4double TMMAluFrameInternalSizeY = geo->GetTMMAluFrameInternalSizeY();
+  
+
+  G4double TMMFaradayPanelSizeX = geo->GetTMMFaradayPanelSizeX();
+  G4double TMMFaradayPanelSizeY = geo->GetTMMFaradayPanelSizeY();
+
   //GAS VOLUME
   G4double TMMDriftSizeX = geo->GetTMMDriftSizeX(); 
   G4double TMMDriftSizeY = geo->GetTMMDriftSizeY(); 
   G4double TMMDriftSizeZ = geo->GetTMMDriftSizeZ() + 1*(geo->GetTMMAmpGapSizeZ());
 
+  G4double DriftOffsetZ = 0.5*TMMAluFrameSizeZ-TMMDriftSizeZ-TMMPanelSizeZ+6.21*mm;//6.21 tuned with visualization
   printf("TMM Gas Volume size is %f %f %f\n",TMMDriftSizeX,TMMDriftSizeY,TMMDriftSizeZ);
   G4Box* solidTMMDrift = new G4Box("solidTMMDrift", 0.5*TMMDriftSizeX, 0.5*TMMDriftSizeY, 0.5*TMMDriftSizeZ);
   printf("GasDensity: %f\n", G4Material::GetMaterial("ArCF4Iso")->GetDensity() / (g/cm3));
   fDriftVolume = new G4LogicalVolume(solidTMMDrift, G4Material::GetMaterial("ArCF4Iso"), "TMMDrift",0,0,0);
   fDriftVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-  new G4PVPlacement(0,G4ThreeVector(0,0,0),fDriftVolume,"TMMDrift",fTMMVolume,false,0,false);
+  new G4PVPlacement(0,G4ThreeVector(0,0,DriftOffsetZ),fDriftVolume,"TMMDrift",fTMMVolume,false,0,false);
 
   // //ADDING AN FR4 tube
   // G4double tubeThickness =5*mm;
@@ -105,13 +128,9 @@ void TMMDetector::CreateGeometry()
   // new G4PVPlacement( 0,G4ThreeVector(0,0,0),logicAirTube,"AirTube",fTMMVolume,false,0,false);
 
 
-  //READOUT PLANES
-  G4double TMMPanelSizeX = geo->GetTMMPanelSizeX();
-  G4double TMMPanelSizeY = geo->GetTMMPanelSizeY();
-  G4double TMMPanelSizeZ = geo->GetTMMPanelSizeZ();
 
-  G4double TMMFaradayPanelSizeX = geo->GetTMMFaradayPanelSizeX();
-  G4double TMMFaradayPanelSizeY = geo->GetTMMFaradayPanelSizeY();
+
+  
 
   //define layers of planes
   G4double TMMCopperSizeZ = geo->GetTMMCopperSizeZ();
@@ -157,18 +176,7 @@ void TMMDetector::CreateGeometry()
   G4Box* solidFR4Volume = new G4Box("solidFR4Volume", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*TMMFR4SizeZ);
   G4LogicalVolume* fTMMFR4Volume = new G4LogicalVolume(solidFR4Volume, G4Material::GetMaterial("PCB"), "FR4Volume", 0,0,0);
   fTMMFR4Volume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
-  //Lateral panels, FR4 and Brass
-  G4double TMMLateralFR4 = geo->GetTMMLateralFR4();
-  G4Box* solidLateralFR4 = new G4Box("solidLateralFR4", 0.5*TMMLateralFR4, 0.5*TMMPanelSizeY, 0.5*geo->GetTMMDriftSizeZ());
-  G4LogicalVolume* fTMMLateralFR4Volume =new G4LogicalVolume(solidLateralFR4,G4Material::GetMaterial("PCB"), "solidLateralFR4Volume",0,0,0);
-
-  G4double TMMLateralBrass = geo->GetTMMLateralBrass();
-  G4Box* solidLateralBrass = new G4Box("solidLateralBrass",0.5*TMMLateralBrass,0.5*TMMPanelSizeY, 0.5*geo->GetTMMDriftSizeZ());
-  G4LogicalVolume* fTMMLateralBrassVolume =new G4LogicalVolume(solidLateralBrass,G4Material::GetMaterial("G4_BRASS"), "solidLateralBrassVolume",0,0,0);
-
-  fTMMLateralFR4Volume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
-  fTMMLateralBrassVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
-
+  
   G4double TMMFaradayFR4SizeZ = geo->GetTMMFaradayFR4SizeZ();
   G4Box* solidFaradayFR4Volume = new G4Box("solidFaradayFR4Volume", 0.5*TMMFaradayPanelSizeX, 0.5*TMMFaradayPanelSizeY, 0.5*TMMFaradayFR4SizeZ);
   G4LogicalVolume* fTMMFaradayFR4Volume = new G4LogicalVolume(solidFaradayFR4Volume, G4Material::GetMaterial("PCB"), "FaradayFR4Volume", 0,0,0);
@@ -189,45 +197,56 @@ void TMMDetector::CreateGeometry()
   G4LogicalVolume* fTMMFR4ReadoutVolume = new G4LogicalVolume(solidFR4ReadoutVolume, G4Material::GetMaterial("PCB"), "FR4ReadoutVolume",0,0,0);
   fTMMFR4ReadoutVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
 
-  // G4double TMMNomexSizeZ = geo->GetTMMNomexSizeZ();
-  // G4Box* solidNomexVolume = new G4Box("solidNomexVolume", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*TMMNomexSizeZ);
-  // G4LogicalVolume* fTMMNomexVolume = new G4LogicalVolume(solidNomexVolume, G4Material::GetMaterial("NomexFoilMM"), "NomexVolume", 0,0,0);
-  // fTMMNomexVolume->SetVisAttributes(G4VisAttributes(G4Colour::Magenta()));
-
   G4double TMMCarbonSizeZ = geo->GetTMMCarbonSizeZ();
   G4Box* solidCarbonVolume = new G4Box("solidCarbonVolume", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*TMMCarbonSizeZ);
   G4LogicalVolume* fTMMCarbonVolume = new G4LogicalVolume(solidCarbonVolume, G4Material::GetMaterial("G4_C"), "CarbonVolume", 0,0,0);
   fTMMCarbonVolume->SetVisAttributes(G4VisAttributes(G4Colour::Cyan()));
   
-  //TMM exsternal frame 
+  //TMM exsternal frames 
 
-  G4Box* solidFrameFull = new G4Box("solidFrameFull", 0.5*TMMFaradayPanelSizeX, 0.5*TMMFaradayPanelSizeY, 0.5*geo->GetTMMExtFrameZ());
-  G4Box* solidFrameSubtr = new G4Box("solidFrameSubtr", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*geo->GetTMMExtFrameZ());
+  G4Box* solidFrameFull = new G4Box("solidFrameFull", 0.5*TMMAluFrameSizeX, 0.5*TMMAluFrameSizeY, 0.5*TMMExtFrameZ);
+  G4Box* solidFrameSubtr = new G4Box("solidFrameSubtr", 0.5*TMMExtFrameX, 0.5*TMMExtFrameY, 0.5*TMMExtFrameZ);
   G4SubtractionSolid* solidFrame = new G4SubtractionSolid("solidFrame", solidFrameFull, solidFrameSubtr, 0, G4ThreeVector(0.,0.,0.));
-  G4LogicalVolume* fTMMFrameVolume = new G4LogicalVolume(solidFrame, G4Material::GetMaterial("G4_BRASS"), "FrameVolume", 0,0,0);
+  G4LogicalVolume* fTMMFrameVolume = new G4LogicalVolume(solidFrame, G4Material::GetMaterial("PCB"), "FR4FrameVolume", 0,0,0);
   fTMMFrameVolume->SetVisAttributes(G4VisAttributes(G4Colour::Yellow()));
+  
+  G4Box* solidFrameCuFull = new G4Box("solidFrameCuFull", 0.5*TMMAluFrameSizeX, 0.5*TMMAluFrameSizeY, 0.5*TMMFaradayCopperSizeZ);
+  G4Box* solidFrameCuSubtr = new G4Box("solidFrameCuSubtr", 0.5*TMMExtFrameX, 0.5*TMMExtFrameY, 0.5*TMMExtFrameZ);
+  G4SubtractionSolid* solidCuFrame = new G4SubtractionSolid("solidFrame", solidFrameCuFull, solidFrameCuSubtr, 0, G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* fTMMFrameCuVolume = new G4LogicalVolume(solidCuFrame, G4Material::GetMaterial("G4_Cu"), "CuFrameVolume", 0,0,0);
+  fTMMFrameCuVolume->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
+
+
+
+  G4Box* solidAluFrameFull = new G4Box("solidAluFrameFull", 0.5*TMMAluFrameSizeX, 0.5*TMMAluFrameSizeY, 0.5*TMMAluFrameSizeZ);
+  G4Box* solidAluFrameSubtr = new G4Box("solidAluFrameSubtr", 0.5*TMMAluFrameInternalSizeX, 0.5*TMMAluFrameInternalSizeY, 0.5*TMMAluFrameSizeZ);
+  G4SubtractionSolid* solidAluFrame = new G4SubtractionSolid("solidAluFrame", solidAluFrameFull, solidAluFrameSubtr, 0, G4ThreeVector(0.,0.,0.));
+  G4LogicalVolume* fTMMAluFrameVolume = new G4LogicalVolume(solidAluFrame, G4Material::GetMaterial("G4_Al"), "AluFrameVolume", 0,0,0);
+  fTMMAluFrameVolume->SetVisAttributes(G4VisAttributes(G4Colour::Blue()));
   
   
   // Mylar panel
   
-  G4Box* solidMylarClosing = new G4Box("solidMylarClosing", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*geo->GetTMMMylarClosingZ());
+  G4Box* solidMylarClosing = new G4Box("solidMylarClosing", 0.5*TMMPanelSizeX, 0.5*TMMPanelSizeY, 0.5*TMMMylarClosingZ);
   G4LogicalVolume* fTMMMylarClosing = new G4LogicalVolume(solidMylarClosing, G4Material::GetMaterial("G4_MYLAR"), "MylarClosingVolume", 0,0,0);
   fTMMMylarClosing->SetVisAttributes(G4VisAttributes(G4Colour::Red()));
 
-
+  G4ThreeVector AluFramePos = G4ThreeVector(0,0,0);
+  new G4PVPlacement(0, AluFramePos, fTMMAluFrameVolume, "AluFrame", fTMMVolume, false, 0, false);
  
   // Placement of layers inside front panel
   G4double TMMLayerGap = geo->GetTMMLayerGap();
-  G4ThreeVector MylarPos = G4ThreeVector(0,0,-0.5*(TMMDriftSizeZ+geo->GetTMMMylarClosingZ()+TMMLayerGap));
+  G4ThreeVector MylarPos = G4ThreeVector(0,0,-0.5*(TMMAluFrameSizeZ+TMMMylarClosingZ+TMMLayerGap));
   new G4PVPlacement(0,MylarPos, fTMMMylarClosing, "MylarClosingVolume", fTMMVolume,false,0,false);
 
-  G4ThreeVector FramePos = MylarPos-G4ThreeVector(0,0,0.5*(geo->GetTMMExtFrameZ()+TMMLayerGap));
-  //G4ThreeVector CarbonPos = G4ThreeVector(0,0,-0.5*(TMMDriftSizeZ+geo->GetTMMMylarClosingZ()+TMMLayerGap));
-  new G4PVPlacement(0, FramePos, fTMMFrameVolume, "TMMFrame", fTMMVolume, false, 0, false);
+  G4ThreeVector FramePos = MylarPos-G4ThreeVector(0,0,0.5*(TMMExtFrameZ+TMMMylarClosingZ+TMMLayerGap));
+  new G4PVPlacement(0, FramePos, fTMMFrameVolume, "FR4Frame", fTMMVolume, false, 0, false);
+  G4ThreeVector CuFramePos = FramePos - G4ThreeVector(0,0,0.5*(TMMFaradayCopperSizeZ+TMMExtFrameZ+TMMLayerGap));
+  new G4PVPlacement(0, CuFramePos, fTMMFrameCuVolume, "CuFrame", fTMMVolume, false, 0, false);
   
-// Placement of layers inside rear panel
-
-  G4ThreeVector CarbonPos = G4ThreeVector(0,0,+0.5*(TMMDriftSizeZ+TMMLayerGap));
+  // Placement of layers inside rear panel
+  TMMLayerGap=TMMLayerGap;
+  G4ThreeVector CarbonPos = G4ThreeVector(0,0,+0.5*(TMMDriftSizeZ+TMMLayerGap)+DriftOffsetZ);
 
   new G4PVPlacement(0,CarbonPos, fTMMCarbonVolume, "CarbonResistiveLayer", fTMMVolume,false,0,false);
   G4ThreeVector KaptonPos = CarbonPos + G4ThreeVector(0,0,0.5*(TMMCarbonSizeZ+TMMKaptonSizeZ+TMMLayerGap));
@@ -239,6 +258,10 @@ void TMMDetector::CreateGeometry()
   G4ThreeVector CopperPos2 = FR4ReadoutPos1 + G4ThreeVector(0,0,0.5*(TMMFR4ReadoutSizeZ+TMMCopperSizeZ+TMMLayerGap));
   new G4PVPlacement(0,CopperPos2, fYReadoutVolume, "YReadoutLayer", fTMMVolume, false,0,false);
   G4ThreeVector ExternalFR4 = CopperPos2 + G4ThreeVector(0,0,0.5*(TMMFaradayFR4SizeZ +TMMFR4ReadoutSizeZ+TMMLayerGap));
+  new G4PVPlacement(0,ExternalFR4, fTMMFaradayFR4Volume, "FR4plane", fTMMVolume, false,0,false);
+  G4ThreeVector CopperFR4 = ExternalFR4 + G4ThreeVector(0,0,0.5*(TMMFaradayCopperSizeZ+TMMFaradayFR4SizeZ +TMMLayerGap));
+  new G4PVPlacement(0, CopperFR4, fTMMFaradayCopperVolume, "CopperFR4Plane", fTMMVolume,false,0,false);
+  
   // //new G4PVPlacement(0, CopperFaradayPos1, fTMMFaradayCopperVolume, "FaradayCopper", fTMMVolume,false,0,false);
   
   

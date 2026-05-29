@@ -81,7 +81,16 @@ public:
   G4double GetTMMAmpGapSizeY() { return fTMMAmpGapSizeY; }
   G4double GetTMMAmpGapSizeZ() { return fTMMAmpGapSizeZ; }
   G4double GetTMMMylarClosingZ() { return fTMMMylarClosingZ; }
+  
   G4double GetTMMExtFrameZ() { return fTMMExtFrameZ; }
+  G4double GetTMMExtFrameX() { return fTMMExtFrameX; }
+  G4double GetTMMExtFrameY() { return fTMMExtFrameY; }
+
+  G4double GetTMMAluFrameSizeZ() { return fTMMAluFrameSizeZ; } 
+  G4double GetTMMAluFrameSizeX() { return fTMMAluFrameSizeX; }
+  G4double GetTMMAluFrameSizeY() { return fTMMAluFrameSizeY; }
+  G4double GetTMMAluFrameInternalSizeX() { return fTMMAluFrameInternalSizeX; }
+  G4double GetTMMAluFrameInternalSizeY() { return fTMMAluFrameInternalSizeY; }
 
   G4double GetTMMStripPitch() { return fTMMStripPitch;}
   G4double GetTMMStripWidth() { return fTMMStripWidth;}
@@ -164,7 +173,16 @@ private:
   G4double fTMMLateralFR4;
   G4double fTMMLateralBrass;
   G4double fTMMMylarClosingZ;
+
   G4double fTMMExtFrameZ;
+  G4double fTMMExtFrameX;
+  G4double fTMMExtFrameY;
+
+  G4double fTMMAluFrameSizeZ;
+  G4double fTMMAluFrameSizeX;
+  G4double fTMMAluFrameSizeY;
+  G4double fTMMAluFrameInternalSizeX;
+  G4double fTMMAluFrameInternalSizeY;
 
   //geometry of strips readout design (same for x and y)
   G4double fTMMStripPitch;

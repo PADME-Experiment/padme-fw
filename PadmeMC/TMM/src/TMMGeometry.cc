@@ -38,17 +38,25 @@ TMMGeometry::TMMGeometry()
   // size of Faraday FR4 panel
   fTMMFaradayPanelSizeX = 200*mm; //set to 670*mm when shifted;////11/02/26
   fTMMFaradayPanelSizeY = 200*mm;
-  fTMMFaradayPanelSizeZ = 0.700*mm;
+  fTMMFaradayPanelSizeZ = 1.700*mm;
   fTMMFaradayFR4SizeZ = 0.700*mm; //da rimuovere nel primo pannello raggio 10 cm 
-  fTMMFaradayCopperSizeZ = 0.50*mm; //da rimuovere nel primo pannello raggio 10 cm 
+  fTMMFaradayCopperSizeZ = 0.050*mm; //da rimuovere nel primo pannello raggio 10 cm 
   fTMMLateralFR4 = 10*mm;
   fTMMLateralBrass = 0.5*mm;
   //size of strips
   fTMMStripPitch = 0.250*mm; //updated 11/02/26
   fTMMStripWidth = 0.250*mm; //same
   
-  fTMMExtFrameZ = 5*mm; //updated 28/05/26
   
+
+  fTMMAluFrameSizeZ = 2.2*cm; //updated 28/05/26
+  fTMMAluFrameSizeX = 187.3*mm; //updated 28/05/26
+  fTMMAluFrameSizeY = 187.3*mm; //updated 28/05/26
+  fTMMAluFrameInternalSizeX = fTMMAluFrameSizeX - 2*1.58*cm;
+  fTMMAluFrameInternalSizeY = fTMMAluFrameSizeY - 2*1.58*cm;
+  fTMMExtFrameZ = 1.7*mm; //updated 28/05/26
+  fTMMExtFrameY = fTMMAluFrameSizeY-4*cm; //updated 28/05/26
+  fTMMExtFrameX = fTMMAluFrameSizeY-4*cm; ; //updated 28/05/26
   
   // size of active area --> squared
   fTMMPanelSizeX= 100*mm;
@@ -57,7 +65,7 @@ TMMGeometry::TMMGeometry()
   fVXStripStartPos= -fTMMPanelSizeX/2.;
   fVYStripStartPos= -fTMMPanelSizeY/2.;
 
-  fTMMPanelSizeZ = 2*fTMMCopperSizeZ  + 1*fTMMKaptonSizeZ + 1*fTMMFR4ReadoutSizeZ + 1*fTMMCarbonSizeZ+1*fTMMFaradayCopperSizeZ+1*fTMMFaradayPanelSizeZ+fTMMExtFrameZ; 
+  fTMMPanelSizeZ = 2*fTMMCopperSizeZ  + 1*fTMMKaptonSizeZ + 1*fTMMFR4ReadoutSizeZ + 1*fTMMCarbonSizeZ+5*fTMMFaradayCopperSizeZ+1*fTMMFaradayPanelSizeZ+fTMMExtFrameZ; 
   //size of drift region
   fTMMDriftSizeX = fTMMPanelSizeX;
   fTMMDriftSizeY = fTMMPanelSizeY;
@@ -74,7 +82,7 @@ TMMGeometry::TMMGeometry()
   fTMMSizeX = fTMMFaradayPanelSizeX + 5*mm;  // add 5 mm as in other detectors
   fTMMSizeY = fTMMFaradayPanelSizeY + 5*mm;
 
-  fTMMSizeZ = fTMMDriftSizeZ + 1*fTMMAmpGapSizeZ + 1*fTMMPanelSizeZ + 5*mm; 
+  fTMMSizeZ = fTMMAluFrameSizeZ +  1*fTMMFR4ReadoutSizeZ +fTMMFaradayCopperSizeZ+ fTMMExtFrameZ + 5*mm; 
   //size of pads
   fTMMXPadArea = 0.49*mm2;
   fTMMYPadArea = 0.25*mm2;

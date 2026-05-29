@@ -322,19 +322,19 @@ void MMDetector::CreateGeometry()
   printf("Setting drift volume as SD \n");
 
   // Computation of Radiation Length
-  G4double inverse_sum = MMDriftSizeZ/(fDriftVolume->GetMaterial()->GetRadlen()) +
-                        2*MMCopperSizeZ/(fMMCopperVolume->GetMaterial()->GetRadlen()) + 
-                        2*MMCarbonSizeZ/(fMMCarbonVolume->GetMaterial()->GetRadlen()) +
-                        4*MMFR4SizeZ/(fMMFR4Volume->GetMaterial()->GetRadlen()) + 
-                        2*MMNomexSizeZ/(fMMNomexVolume->GetMaterial()->GetRadlen())  + 
-                        4*MMKaptonSizeZ/(fMMKaptonVolume->GetMaterial()->GetRadlen()) + 
-                        2*MMCopperSizeZ/(fXReadoutVolume->GetMaterial()->GetRadlen()) + 
-                        2*MMCopperSizeZ/(fYReadoutVolume->GetMaterial()->GetRadlen()) +   
-                        2*AmpMeshSizeZ/(fAmpMeshVolume->GetMaterial()->GetRadlen())  + 
-                        CathodeMeshSizeZ/(fCathodeMeshVolume->GetMaterial()->GetRadlen());
+  // G4double inverse_sum = MMDriftSizeZ/(fDriftVolume->GetMaterial()->GetRadlen()) +
+  //                       2*MMCopperSizeZ/(fMMCopperVolume->GetMaterial()->GetRadlen()) + 
+  //                       2*MMCarbonSizeZ/(fMMCarbonVolume->GetMaterial()->GetRadlen()) +
+  //                       4*MMFR4SizeZ/(fMMFR4Volume->GetMaterial()->GetRadlen()) + 
+  //                       2*MMNomexSizeZ/(fMMNomexVolume->GetMaterial()->GetRadlen())  + 
+  //                       4*MMKaptonSizeZ/(fMMKaptonVolume->GetMaterial()->GetRadlen()) + 
+  //                       2*MMCopperSizeZ/(fXReadoutVolume->GetMaterial()->GetRadlen()) + 
+  //                       2*MMCopperSizeZ/(fYReadoutVolume->GetMaterial()->GetRadlen()) +   
+  //                       2*AmpMeshSizeZ/(fAmpMeshVolume->GetMaterial()->GetRadlen())  + 
+  //                       CathodeMeshSizeZ/(fCathodeMeshVolume->GetMaterial()->GetRadlen());
 
-  G4double radlen_tot = ((MMSizeZ-5*mm)/inverse_sum);
-  G4cout << "Total Radiation Length is : " << G4BestUnit(radlen_tot, "Length")<<G4endl;
+  // G4double radlen_tot = ((MMSizeZ-5*mm)/inverse_sum);
+  // G4cout << "Total Radiation Length is : " << G4BestUnit(radlen_tot, "Length")<<G4endl;
   //Total Radiation Length is : 664.797 cm
 
 

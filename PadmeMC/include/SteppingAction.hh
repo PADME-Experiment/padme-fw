@@ -70,6 +70,9 @@ public:
   void EnableMMAnalysis()  { fEnableMMAnalysis = 1; } //EDM from D.Quaranta
   void DisableMMAnalysis() { fEnableMMAnalysis = 0; }
 
+  void EnableTMMAnalysis()  { fEnableTMMAnalysis = 1; } //EDM 
+  void DisableTMMAnalysis() { fEnableTMMAnalysis = 0; }
+
 
   G4ThreeVector & GetPositronMomentum(){ return PositronMomentum;  };
   
@@ -83,6 +86,7 @@ private:
   G4int fEnableSACAnalysis;
   G4int fEnableECalAnalysis;
   G4int fEnableMMAnalysis;
+  G4int fEnableTMMAnalysis;
 
   double ProcID;
   double PositronE;

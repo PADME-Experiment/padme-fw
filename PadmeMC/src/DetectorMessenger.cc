@@ -115,6 +115,17 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fMMReadoutCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 
+  fTMMReadoutCmd = new G4UIcmdWithAString("/Detector/TMMReadoutType",this);
+  fTMMReadoutCmd->SetGuidance("Defines layout of TMM Readout Planes.");
+  fTMMReadoutCmd->SetGuidance("Possible choices are:");
+  fTMMReadoutCmd->SetGuidance("strips: readout electrode is segmented in strips.");
+  fTMMReadoutCmd->SetGuidance("pads: readout electrode is segmented in pads");
+  fTMMReadoutCmd->SetParameterName("Readout Type",false);
+  fTMMReadoutCmd->SetCandidates("strips pads");
+  fTMMReadoutCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+
+
   fWorldIsAirCmd = new G4UIcmdWithoutParameter("/Detector/WorldIsAir",this);
   fWorldIsAirCmd->SetGuidance("Fill world (and magnetic volume) with air.");
   fWorldIsAirCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -153,6 +164,7 @@ DetectorMessenger::~DetectorMessenger()
   delete fBeamLineVisibleCmd;   //M. Raggi 07/03/2019
   delete fBeamLineInvisibleCmd; //M. Raggi 07/03/2019
   delete fMMReadoutCmd; //EDM from D. Quaranta
+  delete fTMMReadoutCmd; //EDM 
   delete fWorldIsAirCmd;
   delete fWorldIsVacuumCmd;
   delete fSetVerboseLevelCmd;
@@ -192,6 +204,7 @@ void DetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
   if( command == fBeamLineVisibleCmd )   fDetector->BeamLineIsVisible(); //M. Raggi 07/03/2019
   if( command == fBeamLineInvisibleCmd ) fDetector->BeamLineIsInvisible(); //M. Raggi 07/03/2019
   if( command == fMMReadoutCmd)    fDetector->SetMMReadoutType(newValue); //EDM from D. Quaranta
+  if( command == fTMMReadoutCmd)    fDetector->SetTMMReadoutType(newValue); //EDM 
 
   if( command == fWorldIsAirCmd )    fDetector->WorldIsAir();
   if( command == fWorldIsVacuumCmd ) fDetector->WorldIsVacuum();

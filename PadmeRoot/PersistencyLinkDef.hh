@@ -60,6 +60,10 @@
 #pragma link C++ class TMMMCDigi+;
 #pragma link C++ class TMMMCEvent+;
 
+#pragma link C++ class TTMMMCHit+;
+#pragma link C++ class TTMMMCDigi+;
+#pragma link C++ class TTMMMCEvent+;
+
 #pragma link C++ class TMCTruthEvent+;
 #pragma link C++ class TMCParticle+;
 #pragma link C++ class TMCVertex+;

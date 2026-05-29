@@ -55,6 +55,7 @@ private:
   G4UIcmdWithoutParameter* fBeamLineInvisibleCmd;   //M. Raggi 07/03/2019
 
   G4UIcmdWithAString* fMMReadoutCmd;  //EDM from D. Quaranta
+  G4UIcmdWithAString* fTMMReadoutCmd;  //EDM 
   G4UIcmdWithADoubleAndUnit* fSetMagFieldValueCmd;
 
   G4UIcmdWithoutParameter* fWorldIsAirCmd;

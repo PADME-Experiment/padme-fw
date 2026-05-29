@@ -24,6 +24,7 @@
 //#include "MagnetRootIO.hh"
 //#include "TDumpRootIO.hh"
 #include "MMRootIO.hh" //EDM 
+#include "TMMRootIO.hh" //EDM 
 #include "G4RunManager.hh"
 #include "G4Event.hh"
 #include "G4Run.hh"
@@ -80,6 +81,7 @@ RootIOManager::RootIOManager()
   fRootIOList.push_back(new MCTruthRootIO);
   fRootIOList.push_back(new ETagRootIO);
   fRootIOList.push_back(new MMRootIO);
+  fRootIOList.push_back(new TMMRootIO);
   fRootIOList.push_back(new LeadGlassRootIO);
   //fRootIOList.push_back(new MagnetRootIO);
   //fRootIOList.push_back(new TDumpRootIO);

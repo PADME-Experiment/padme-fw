@@ -15,6 +15,7 @@
 #include "ETagDetector.hh"
 #include "TungstenDetector.hh"
 #include "MMDetector.hh" //EDM Raggi D.Quaranta
+#include "TMMDetector.hh" //EDM Raggi D.Quaranta
 
 #include "MagnetStructure.hh"
 #include "ChamberStructure.hh"
@@ -29,6 +30,7 @@
 #include "HEPVetoGeometry.hh"
 #include "LeadGlassGeometry.hh"
 #include "MMGeometry.hh" //EDM Raggi D.Quaranta
+#include "TMMGeometry.hh" //EDM Raggi D.Quaranta
 
 #include "TDumpGeometry.hh"
 #include "TPixGeometry.hh"
@@ -95,6 +97,7 @@ DetectorConstruction::DetectorConstruction()
   fLeadGlassDetector = new LeadGlassDetector(0);
   fTDumpDetector     = new TDumpDetector(0);
   fMMDetector     = new MMDetector(0); //EDM from D.Quaranta
+  fTMMDetector     = new TMMDetector(0); //EDM 
 
   fTPixDetector      = new TPixDetector(0);
   fTungstenDetector  = new TungstenDetector(0); 
@@ -119,6 +122,7 @@ DetectorConstruction::DetectorConstruction()
   fEnableTPix     = 1;
   fEnableTungsten = 0;
   fEnableMM     = 0; //EDM from D.Quaranta
+  fEnableTMM     = 0; //EDM 
 
 
   fEnableWall     = 0;
@@ -134,6 +138,7 @@ DetectorConstruction::DetectorConstruction()
   fMagneticVolumeIsVisible = 0;
   fCrossMagneticVolume = "internal";
   fMMReadoutType = "strips";
+  fTMMReadoutType = "strips";
 
 
   fWorldIsFilledWithAir = 0;
@@ -169,6 +174,7 @@ DetectorConstruction::~DetectorConstruction()
   delete fHallStructure;
   delete fMagneticFieldManager;
   delete fMMDetector;  //EDM from D.Quaranta
+  delete fTMMDetector;  //EDM
 
 
 }
@@ -191,6 +197,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   }
   BeamParameters::GetInstance()->SetDetectorSetup(fDetectorSetup);
   MMGeometry* geoMM = MMGeometry::GetInstance(); //EDM from D.Quaranta
+  TMMGeometry* geoTMM = TMMGeometry::GetInstance(); //EDM from D.Quaranta
 
   //------------------------------
   // World Volume
@@ -527,6 +534,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     geoMM->SetReadoutType(fMMReadoutType);
     if(fDetectorSetup ==50){    
       fMMDetector->CreateGeometry();
+    }
+  }
+  //TMM EDM
+  if (fEnableTMM) {
+    fTMMDetector->SetMotherVolume(logicWorld);
+    geoTMM->SetReadoutType(fTMMReadoutType);
+    if(fDetectorSetup ==50){    
+      fTMMDetector->CreateGeometry();
     }
   }
   // PVeto
@@ -970,6 +985,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
     fEnableTPix     = 1;
     fEnableLeadGlass = 1;
     fEnableMM = 1;
+    fEnableTMM = 1;
     fEnableMagneticField = 1; // PADME magnet is OFF
   }
 
@@ -979,6 +995,7 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   SACGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   ETagGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   MMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
+  TMMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
   PVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   EVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   HEPVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
@@ -1045,6 +1062,7 @@ void DetectorConstruction::EnableSubDetector(G4String det)
   else if (det=="EVeto")   { fEnableEVeto   = 1; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 1; }
   else if (det=="MM")   { fEnableMM     = 1; } //EDM 
+  else if (det=="TMM")   { fEnableTMM     = 1; } //EDM 
   else if (det=="LeadGlass") { fEnableLeadGlass = 1; }
   else if (det=="TDump")   { fEnableTDump   = 1; }
   else if (det=="TPix")    { fEnableTPix    = 1; }
@@ -1060,6 +1078,7 @@ void DetectorConstruction::DisableSubDetector(G4String det)
   else if (det=="SAC")     { fEnableSAC     = 0; }
   else if (det=="ETag")    { fEnableETag    = 0; }
   else if (det=="MM")   { fEnableMM    = 0; } //EDM 
+  else if (det=="TMM")   { fEnableTMM    = 0; } //EDM 
   else if (det=="PVeto")   { fEnablePVeto   = 0; }
   else if (det=="EVeto")   { fEnableEVeto   = 0; }
   else if (det=="HEPVeto") { fEnableHEPVeto = 0; }
@@ -1077,6 +1096,7 @@ G4bool DetectorConstruction::IsSubDetectorEnabled(G4String det)
        ( (det=="SAC")      && (fEnableSAC      == 1) ) ||
        ( (det=="ETag")     && (fEnableETag     == 1) ) ||
        ( (det=="MM")    && (fEnableMM    == 1) ) || //EDM
+       ( (det=="TMM")    && (fEnableTMM    == 1) ) || //EDM
        ( (det=="PVeto")    && (fEnablePVeto    == 1) ) ||
        ( (det=="EVeto")    && (fEnableEVeto    == 1) ) ||
        ( (det=="HEPVeto")  && (fEnableHEPVeto  == 1) ) ||
@@ -1199,6 +1219,12 @@ void DetectorConstruction::SetMMReadoutType(G4String str) //EDM from D. Quaranta
   if (fVerbose) printf("MM Readout type is %s\n",str.data());
   fMMReadoutType = str;
 }
+void DetectorConstruction::SetTMMReadoutType(G4String str) //EDM from D. Quaranta
+{
+  if (fVerbose) printf("TMM Readout type is %s\n",str.data());
+  fTMMReadoutType = str;
+}
+
 
 void DetectorConstruction::WorldIsAir()
 {

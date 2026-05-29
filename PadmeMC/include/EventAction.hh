@@ -15,14 +15,17 @@
 #include "BeamFlagHit.hh"  //M. Raggi 30/08/2019
 #include "LeadGlassHit.hh"
 #include "MMHit.hh" //EDM from D. Quaranta
+#include "TMMHit.hh" //EDM
 #include "DetectorConstruction.hh"
 #include "ECalGeometry.hh"
 #include "ETagGeometry.hh"
 #include "TargetGeometry.hh"
 #include "MMGeometry.hh" //EDM from D. Quaranta
+#include "TMMGeometry.hh" //EDM
 #include "LeadGlassGeometry.hh"
 #include "BeamParameters.hh"
 #include "MMDigi.hh" //EDM from D. Quaranta
+#include "TMMDigi.hh" //EDM
 
 class G4Event;
 class RunAction;
@@ -39,6 +42,7 @@ class TPixDigitizer;
 class ETagDigitizer;
 class LeadGlassDigitizer; //MR
 class MMDigitizer; //EDM from D.Quaranta
+class TMMDigitizer; //EDM 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class EventAction : public G4UserEventAction
@@ -124,6 +128,7 @@ class EventAction : public G4UserEventAction
   TPixDigitizer*    fTPixDigitizer;
   LeadGlassDigitizer*    fLeadGlassDigitizer; //MR
   MMDigitizer*   fMMDigitizer; //EDM from D. Quaranta
+  TMMDigitizer*   fTMMDigitizer; //EDM 
 
   //che devo fare ce debbo mettere il detector?
   G4double ETotCal;

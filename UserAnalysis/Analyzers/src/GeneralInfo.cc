@@ -59,7 +59,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fPeriodStartTime = 174000000;
     fBeamMomentum = 268.94;
     fZTarg = -732.47;
-    fZECal = 2577.77; //front face of ECAL allinamento 
+    fZECal = 2577.77+6.5*11.2; //front face of ECAL allinamento + 6.5*X0, X0=11.2 mm, from 2024 survey
     fDisplacementXECal = 3.41; 
     fDisplacementYECal = -1.46; 
   }

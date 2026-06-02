@@ -39,6 +39,7 @@ private:
   TTimeStamp fEvTime;
 
   std::string fCalibList;
+  std::string fCalibRunList;  //Input file with the number of runs when there's new broken channels in ecal
 
   Int_t     fUseCalibE;
   Int_t     fUseCalibT;
@@ -63,11 +64,13 @@ private:
   std::string fCalibVersion;
   double fBID;
   double fChID;
-
+  std::vector<int> fRunList; // EDM keep track of what run is used for switching the calibration file --> files must have this name after the calib version f.i. Calib_8_80532
   std::ifstream ECalib; 
+  std::ifstream ECalibList; 
   std::ifstream TCalib; 
 
   std::map < std::pair<int,int>,double> fCalibMap;
+  std::map<int, std::map<std::pair<int,int>, double>> fCalibMapRun;// EDM map matching the different Run to the corresponding calibration maps
   std::map < std::pair<int,int>,double> fT0Map;
 };
 #endif

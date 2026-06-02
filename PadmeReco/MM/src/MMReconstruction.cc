@@ -24,6 +24,8 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   fADCUnitToCharge = fConfig->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
   fHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
   fHitChargeSaturation = fConfig->GetParOrDefault("RECO","HitChargeSaturation",4000);  //ADC counts  
+  fTimeTau = fConfig->GetParOrDefault("RECO","TimeTau",50.);  //ns  
+  fAPVTimeBin = fConfig->GetParOrDefault("RECO","APVTimeBin",25.);  //ns  
 
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
@@ -78,8 +80,8 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
   //fill the hit vector from MC digis
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       TMCVDigi* digi = tEvent->Digi(i); 
-      if(digi->GetEnergy()/fADCUnitToCharge<fHitChargeThreshold) continue; // zero suppression
-      //saturation ??
+      if(digi->GetEnergy()/fADCUnitToCharge<fHitChargeThreshold) continue; // zero suppression //should be channel based
+      // //saturation ??
       if(digi->GetEnergy()/fADCUnitToCharge>fHitChargeSaturation) continue; // saturation
       //std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
       int brdNum = digi->GetChannelId()/1000; //first decode from MC saving format: channelid is encoded as (boardNum*1000 + channelNum) 
@@ -91,7 +93,8 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
       TRecoVHit *Hit = new TRecoVHit();
       Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
       Hit->SetTime(digi->GetTime()); // ns to be smeared
-      Hit->SetEnergy(digi->GetEnergy()/fADCUnitToCharge); // ADC
+      double QtoMaxConv = (1./fADCUnitToCharge)*27*pow(TMath::E(),-3)*(fAPVTimeBin/fTimeTau)/6; // conversion factor from charge to maximum of the shaper output, for a given time binning and shaper time constant. N.B. assumes that the shaper output is sampled at its maximum.
+      Hit->SetEnergy(digi->GetEnergy()*QtoMaxConv); // ADC
       Hits.push_back(Hit);
     } //pile-up of digis is alreadt handled in the digi creation --> confirmed by Occupancy plots
     //ready to evaluate positions from the channelID and then clusterize

@@ -88,7 +88,7 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","DTCluVtx",100,-10.,10.); 
   fHS->BookHistoList("MCTruthECal","NPcleOut",10,0,10);	
   fHS->BookHistoList("MCTruthECal","ProcessID",7,-0.5,6.5);	
-  fHS->BookHistoList("MCTruthECal","dRCluVtx",600,0.,TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
+  fHS->BookHistoList("MCTruthECal","dRCluVtx",610,0.,305.); //TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
   fHS->BookHistoList("MCTruthECal","dXCluVtx",600,-2.*fXMax,2.*fXMax);
   fHS->BookHistoList("MCTruthECal","dYCluVtx",600,-2.*fYMax,2.*fYMax);
   fHS->BookHisto2List("MCTruthECal","dXvsPxovPzCluVtx",600,-3,3, 600,-2.*fYMax,2.*fYMax);

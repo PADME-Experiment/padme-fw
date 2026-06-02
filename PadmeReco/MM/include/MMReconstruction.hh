@@ -39,6 +39,8 @@ private:
   Double_t fADCUnitToCharge; // electrons / adccount
   Double_t fHitChargeThreshold; // ADC counts
   Double_t fHitChargeSaturation; // ADC counts
+  Double_t fTimeTau; // ns
+  Double_t fAPVTimeBin; // ns
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
 

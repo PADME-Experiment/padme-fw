@@ -1,0 +1,2 @@
+run,centerX_phys,centerX_adc,cXm1,err_Xm1,cX0,err_X0,cXp1,err_Xp1,centerY_phys,centerY_adc,cYm1,err_Ym1,cY0,err_Y0,cYp1,err_Yp1,skipped
+80509,7,4,0.0660219,0.0233513,1.38272,0.011234,-1.33763,0.0207709,28,29,3.55536,0.0728466,1.85893,0.0263141,-3.09289,0.0473977,0

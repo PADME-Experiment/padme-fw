@@ -21,3 +21,21 @@ tmp/
 lib/
 bin/
 *.dSYM
+
+# Beam monitor outputs / large files
+*.root
+*.dat
+*.out
+*.log
+*.pdf
+*.png
+*.jpg
+*.gif
+
+# Build products
+*.o
+*.so
+*.d
+*.pcm
+*.dylib
+*.exe

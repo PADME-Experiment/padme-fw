@@ -12,9 +12,6 @@ export G4WORKDIR=${PADMEMC}
 # Define PADMERECO
 export PADMERECO=${PADME}/PadmeReco
 
-# Define PADMERECO3
-export PADMERECO3=${PADME}/PadmeReco3
-
 # Define PADMEANALYSIS
 export PADMEANALYSIS=${PADME}/PadmeAnalysis
 

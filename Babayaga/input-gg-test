@@ -1,0 +1,22 @@
+fs gg
+ecms 1.
+thmin 45.
+thmax 135.
+zmax 10.
+emin 0.3
+nev 10000000000.
+path ffpaper/1GeV-exexp
+ntuple no
+arun on
+mode weighted
+eps 0.0005d0
+ord exp
+model matched
+seed 10
+nphot -1
+nwrite 5000000
+nsearch 5000000
+verbose 0
+sdmax 0.100E-17
+run
+0

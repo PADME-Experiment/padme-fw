@@ -21,3 +21,24 @@ tmp/
 lib/
 bin/
 *.dSYM
+
+# Generated events / large data files
+*.root
+*.dat
+*.lhe
+*.hepmc
+*.gz
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.out
+*.log
+
+# Build products
+*.o
+*.so
+*.d
+*.pcm
+*.dylib
+*.exe

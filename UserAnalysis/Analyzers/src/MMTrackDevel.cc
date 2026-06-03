@@ -6,7 +6,8 @@
 #include "GeneralInfo.hh"
 #include "ECalSel.hh"
 
-#define BFIELD true
+//#define BFIELD true
+#define BFIELD false
 
 MMTrackDevel* MMTrackDevel::fInstance = 0;
 
@@ -50,7 +51,7 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel","MM_Nclus0_vs_NHits",100,0,3000.,500,0,500); 
   fHS->BookHisto2List("MMTrackDevel","MM_Nclus1_vs_NHits",100,0,3000.,500,0,500); 
 
-  fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),32,0,32,129,-0.5,128.5);
+  //fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_APVID"),32,0,32,129,-0.5,128.5);
   fHS->BookHistoList("MMTrackDevel",Form("MM_ZeroHit"),32,0,32);
   
   int ipmodeMax[2] = {2,1};
@@ -448,7 +449,7 @@ Bool_t MMTrackDevel::Process(){
     double y_Ecal = tempClu->GetPosition().Y();
     double x_Ecal = tempClu->GetPosition().X();
     double t_Ecal = tempClu->GetTime();
-    double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z()+6.5*11.;
+    double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z(); //factor +6.5*11 in GeneralInfo
     double E_Ecal = tempClu->GetEnergy();
     
     // loop over level-zero tracks, find the best levelzero for each view
@@ -650,7 +651,7 @@ Bool_t MMTrackDevel::Process(){
     }
     std::cout<<std::endl;
     //                                    clu index                                                          
-    std::cout<<"WRONG "<<fEventCounter<<" "<<iidx<<" "<<x_Ecal<<" "<<y_Ecal<<" "<<z_Ecal<<" "<<t_Ecal<<" ";
+    std::cout<<"WRONG "<<fEventCounter<<" "<<iidx<<" "<<x_Ecal<<" "<<y_Ecal<<" "<<z_Ecal<<" "<<t_Ecal<<" "<<E_Ecal<<" ";
     for(int pl=0; pl<2; pl++) {
       for(int vw=0; vw<2; vw++) {
 	//             track index           plane             quad                    view
@@ -759,7 +760,7 @@ Bool_t MMTrackDevel::Process(){
 	}
 	
 	int NHitsPerAPV = fMMClusteringInstance->GetNHitsPerAPV(apvid,bdid);
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),(responseCode.at(iidx) & (1<<vw)) >0, NHitsPerAPV);
+	//fHS->FillHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),(responseCode.at(iidx) & (1<<vw)) >0, NHitsPerAPV);
       }
     }
 

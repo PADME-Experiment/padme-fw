@@ -8,8 +8,8 @@
 #include "MMTrackFcn.hh"
 #include "GeneralInfo.hh"
 
-//#define IPSINCUT 0.05 //Run IV 
-#define IPSINCUT 0.2  //BField on
+#define IPSINCUT 0.05 //Run IV 
+//#define IPSINCUT 0.2  //BField on
 
 #define CALIBRATION true
 #define IPMODE false

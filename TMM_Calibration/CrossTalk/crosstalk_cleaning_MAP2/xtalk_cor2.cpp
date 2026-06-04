@@ -35,11 +35,11 @@
 #include "TDirectory.h"
 #include "TObjString.h"
 
-using namespace std;
-
 //TFile *root_file;
 #include "APV_RAW_PED.h"
 #include "apv_raw.h"
+
+using namespace std;
 
 apv_raw *apv_raw_obj;
 APV_RAW_PED *apv_raw_ped;
@@ -153,13 +153,13 @@ int main(int argc, char *argv[]){
     TTree *aux;
     aux = new TTree("apv_raw", "apv_raw");
    
-    ULong64_t               write_evt;
-    ULong64_t               write_evt_temp=0;
-    UInt_t                  write_error;
-    Int_t                   write_daqTimeSec;
-    Int_t                   write_daqTimeMicroSec;
-    Int_t                   write_srsTimeStamp;
-    UInt_t                  write_srsTrigger;
+    ULong64_t                write_evt;
+    ULong64_t                write_evt_temp=0;
+    UInt_t                   write_error;
+    Int_t                    write_daqTimeSec;
+    Int_t                    write_daqTimeMicroSec;
+    Int_t                    write_srsTimeStamp;
+    UInt_t                   write_srsTrigger;
     vector <unsigned int>    write_srsFec;
     vector <unsigned int>    write_srsChip;
     vector <unsigned int>    write_srsChan;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]){
     vector <int>             write_mmLayer;
     vector <char>            write_mmReadout;
     vector <int>             write_mmStrip;
-    vector <vector <short> >  write_raw_q;
+    vector <vector <short> > write_raw_q;
 
     if (cleaning){
     aux->Branch("evt"              , &write_evt            );
@@ -193,13 +193,13 @@ int main(int argc, char *argv[]){
     Int_t                   daqTimeMicroSec_;
     Int_t                   srsTimeStamp_;
     UInt_t                  srsTrigger_;
-    vector <unsigned int>    srsFec_;
-    vector <unsigned int>    srsChip_;
+    vector <unsigned int>   srsFec_;
+    vector <unsigned int>   srsChip_;
  
-    vector <string>          mmChamber_;
-    vector <int>             mmLayer_;
-    vector <char>            mmReadout_;
-    vector <int>             mmStrip_;
+    vector <string>         mmChamber_;
+    vector <int>            mmLayer_;
+    vector <char>           mmReadout_;
+    vector <int>            mmStrip_;
     
     //LIST OF VARIABLES:
     
@@ -478,9 +478,7 @@ int main(int argc, char *argv[]){
         target->cd();
         CopyDir(root_file);
         target->cd();
-        
         ntuple->Write();
         ntuple->Close();
-    }
-       
+    }   
 } //end of run function

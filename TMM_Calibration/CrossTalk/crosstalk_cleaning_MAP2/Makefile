@@ -20,8 +20,6 @@ CFLAGSBASE=-c -O3 -g -Wall
 #-Wextra
 #-Wmost does not work in SLC 6 ?
 
-
-
 #for this to work root must be set up already (source thisroot.sh)
 ROOTINC=-I`root-config --incdir`
 ROOTCFLAGS=`root-config --cflags --auxcflags`
@@ -30,9 +28,6 @@ ROOTLDFLAGS=`root-config --ldflags`
 
 CFLAGS=$(CFLAGSBASE) $(ROOTINC) $(ROOTCFLAGS)
 LDFLAGS= $(ROOTLDFLAGS) $(ROOTLIB) 
-
-
-
 
 .PHONY : clean directories
 

@@ -1,6 +1,0 @@
-# Makefile
-
-NAME := TPix
-
-#include ../config/global.gmk
-include ../mkconfig/subdirs_mac.gmk

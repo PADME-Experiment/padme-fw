@@ -1,5 +1,0 @@
-# Makefile
-
-NAME := Analyzers
-
-include ../config/subdirs_mac.gmk

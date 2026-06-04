@@ -1,5 +1,0 @@
-# Makefile
-
-NAME := AnalysisBase
-
-include ../config/base_mac.gmk

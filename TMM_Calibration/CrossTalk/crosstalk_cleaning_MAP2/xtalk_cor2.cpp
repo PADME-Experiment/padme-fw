@@ -6,17 +6,15 @@
 //  edoardo.maria.farina@cern.ch    //
 //////////////////////////////////////
 
-
 #include <vector>
 #ifdef __MAKECINT__
-#pragma link C++ class vector<vector<short> >+;
+#pragma link C++ class vector <vector <short> >+;
 
-#pragma link C++ class vector<vector<short> >+;
+#pragma link C++ class vector <vector <short> >+;
 #endif
 #include <iostream>
 #include <string>
 #include <sstream>
-using namespace std;
 #include "Riostream.h"
 #include "TH1.h"
 #include "TH2.h"
@@ -37,9 +35,12 @@ using namespace std;
 #include "TDirectory.h"
 #include "TObjString.h"
 
+using namespace std;
+
 //TFile *root_file;
 #include "APV_RAW_PED.h"
 #include "apv_raw.h"
+
 apv_raw *apv_raw_obj;
 APV_RAW_PED *apv_raw_ped;
 
@@ -61,7 +62,6 @@ void CopyDir(TDirectory *source) {
             adir->cd();
             CopyDir(subdir);
             adir->cd();
-
         } else {
             source->cd();
             TObject *obj = key->ReadObj();
@@ -74,32 +74,28 @@ void CopyDir(TDirectory *source) {
     savdir->cd();
 }
 
-short max_charge(vector<short> charge){
+short max_charge(vector <short> charge){
     
-
-    vector<short>::iterator it = max_element(charge.begin(), charge.end());
+    vector <short>::iterator it = max_element(charge.begin(), charge.end());
     return *it;
     
 }
 
-
-double get_time_bin_max(vector<short> charge){
+double get_time_bin_max(vector <short> charge){
     
-    vector<short>::iterator it = max_element(charge.begin(), charge.end());
+    vector <short>::iterator it = max_element(charge.begin(), charge.end());
     double pos;
     pos= (it- charge.begin())*25;
     return pos;
-  
     
 }
 
-double get_time_bin_bin_max(vector<short> charge){
+double get_time_bin_bin_max(vector <short> charge){
     
-    vector<short>::iterator it = max_element(charge.begin(), charge.end());
+    vector <short>::iterator it = max_element(charge.begin(), charge.end());
     double pos;
-    pos= (it- charge.begin());
+    pos = (it- charge.begin());
     return pos;
-    
     
 }
 
@@ -109,7 +105,6 @@ int main(int argc, char *argv[]){
     cout<<"*          Cross Talk Cleaner MAP 2              *"<<endl;
     cout<<"*          Date: February 19, 2016               *"<<endl;
     cout<<"*          Created by Edoardo Farina             *"<<endl;
-
     cout<<"*                                                *"<<endl;
     cout<<"*        This program cleanes the raw data       *"<<endl;
     cout<<"*            from the crosstalk effect           *"<<endl;
@@ -117,27 +112,21 @@ int main(int argc, char *argv[]){
     cout<<"**************************************************"<<endl;
 
     string file = argv[1];
-    
 
-    
-
-    
     bool cleaning =true;
     double factor=0; int mmReadout=50 ; int charge_cut =0;
     
-    
 	TFile *root_file = new TFile(file.c_str(),"READ");
-	
 	apv_raw_obj = new apv_raw((TTree*)root_file->Get("apv_raw"));
 
 	double entries = (apv_raw_obj->fChain)->GetEntries();
 
-   std::size_t found_run = file.find("run");
-   std::size_t found_dotroot = file.find(".root");
-   std::string run_name = file.substr(found_run,found_dotroot);
-   std::string path = file.substr(0,found_run);
+    size_t found_run = file.find("run");
+    size_t found_dotroot = file.find(".root");
+    string run_name = file.substr(found_run,found_dotroot);
+    string path = file.substr(0,found_run);
     
-    vector<double> first, second;
+    vector <double> first, second;
     ifstream InputRead ("apv-crosstalk2.map");
 
     while (!InputRead.eof()) {
@@ -146,31 +135,24 @@ int main(int argc, char *argv[]){
         double c;
         
         InputRead >> a >> b;
-//        std::cout << a << std::endl;
+        // cout << a << endl;
         first.push_back(a);
         second.push_back(b);
     }
     
-  
 	//int zeroed = 0;
 	//int subtracted = 0;
-
-//	entries = 10000;
-    
-//CLEAning
-    
+    //	entries = 10000; 
+    //CLEAning
  
-    std::string new_file = run_name+"_xtalk2.root";
-    
+    string new_file = run_name+"_xtalk2.root";
     string action;
-
     action="RECREATE";
     
     TFile *ntuple = new TFile(new_file.c_str(), action.c_str());
     TTree *aux;
     aux = new TTree("apv_raw", "apv_raw");
    
-
     ULong64_t               write_evt;
     ULong64_t               write_evt_temp=0;
     UInt_t                  write_error;
@@ -178,16 +160,15 @@ int main(int argc, char *argv[]){
     Int_t                   write_daqTimeMicroSec;
     Int_t                   write_srsTimeStamp;
     UInt_t                  write_srsTrigger;
-    std::vector<unsigned int>   write_srsFec;
-    std::vector<unsigned int>   write_srsChip;
-    std::vector<unsigned int>   write_srsChan;
-    std::vector<string>         write_mmChamber;
-    std::vector<int>            write_mmLayer;
-    std::vector<char>           write_mmReadout;
-    std::vector<int>            write_mmStrip;
-    std::vector<vector<short> >      write_raw_q;
+    vector <unsigned int>    write_srsFec;
+    vector <unsigned int>    write_srsChip;
+    vector <unsigned int>    write_srsChan;
+    vector <string>          write_mmChamber;
+    vector <int>             write_mmLayer;
+    vector <char>            write_mmReadout;
+    vector <int>             write_mmStrip;
+    vector <vector <short> >  write_raw_q;
 
-    
     if (cleaning){
     aux->Branch("evt"              , &write_evt            );
     aux->Branch("error"            , &write_error          );
@@ -212,27 +193,26 @@ int main(int argc, char *argv[]){
     Int_t                   daqTimeMicroSec_;
     Int_t                   srsTimeStamp_;
     UInt_t                  srsTrigger_;
-    std::vector<unsigned int>   srsFec_;
-    std::vector<unsigned int>   srsChip_;
-
-    std::vector<string>         mmChamber_;
-    std::vector<int>            mmLayer_;
-    std::vector<char>           mmReadout_;
-    std::vector<int>            mmStrip_;
-    
+    vector <unsigned int>    srsFec_;
+    vector <unsigned int>    srsChip_;
+ 
+    vector <string>          mmChamber_;
+    vector <int>             mmLayer_;
+    vector <char>            mmReadout_;
+    vector <int>             mmStrip_;
     
     //LIST OF VARIABLES:
     
-    vector<double> channels_vec;
-    vector < vector< short > > charge_vec_vec;
+    vector <double> channels_vec;
+    vector <vector <short>> charge_vec_vec;
     int number_of_crosstalk;
     vector <int> cross_talk_vec;
     vector <double> vec_temp_cross_talk;
     vector <double> cross_effect_event;
     
-    vector<double> charge_vec_distribution [2];
-    vector<double> time_vec_distribution [2];
-    vector <double > time_crosstalked_father[2];
+    vector <double> charge_vec_distribution[2];
+    vector <double> time_vec_distribution[2];
+    vector <double> time_crosstalked_father[2];
     vector <double> strip_father;
     vector <double> strip_original;
     vector <double> strip_father_good;
@@ -241,10 +221,9 @@ int main(int argc, char *argv[]){
     vector <double> charge_first_son_vec;
     vector <double> charge_father_for_sons;
     
-    
 	for(int iEntry=0; iEntry<entries; iEntry++) {
 		if(iEntry%200==0)
-      cout << "\r" << (double)iEntry/(double)entries*100 << "\% processed" << flush;
+        cout << "\r" << (double)iEntry/(double)entries*100 << "\% processed" << flush;
 
 		(apv_raw_obj->fChain)->GetEntry(iEntry);
 
@@ -258,16 +237,12 @@ int main(int argc, char *argv[]){
         write_raw_q.clear();
         
         //starting for on FEC and on chip.
-        
         for (int isrsFec=1; isrsFec<=2; isrsFec++) {
             for (int isrsChip=0; isrsChip<=16; isrsChip++) {
-        
                 for (int j=0; j<(int)apv_raw_obj->srsFec->size(); j++) { // loop on all entries of the event
-            
-            
-                    if(apv_raw_obj->srsFec->at(j)==isrsFec && apv_raw_obj->srsChip->at(j)==isrsChip && max_charge(apv_raw_obj->raw_q->at(j))> charge_cut && (apv_raw_obj->mmReadout->at(j)== mmReadout || cleaning)){
-        
-                        
+                    if(apv_raw_obj->srsFec->at(j)==isrsFec && apv_raw_obj->srsChip->at(j)==isrsChip && 
+                        max_charge(apv_raw_obj->raw_q->at(j))> charge_cut && (apv_raw_obj->mmReadout->at(j)== mmReadout || cleaning)){
+
                         channels_vec.push_back(apv_raw_obj->srsChan->at(j));
                         charge_vec_vec.push_back(apv_raw_obj->raw_q->at(j));
                       
@@ -285,188 +260,138 @@ int main(int argc, char *argv[]){
                         mmReadout_.push_back(apv_raw_obj->mmReadout->at(j));
                         
                         strip_original.push_back(apv_raw_obj->mmStrip->at(j));
-                        
-
                     }
-                    
-        
                 } //end of internal loop of entries
         
-
-                
                 for (int i=0; i < channels_vec.size(); i++){
                     
-                        if (channels_vec.size() >0){
-                            
-                            vector<double>::iterator it = channels_vec.begin()+i;
-                        
+                    if (channels_vec.size() >0){
+                        vector <double>::iterator it = channels_vec.begin()+i;
 
                         //look into vector of affected channels to find the position
-                            std::vector<double>::iterator pp = std::find(second.begin(), second.end(), *it);
+                        vector <double>::iterator pp = find(second.begin(), second.end(), *it);
+                        
+                        int pos = pp - second.begin();
+                        // pos is the postion in the affected vector of the channel.
+                        
+                        vector <double>::iterator pp2 = find(channels_vec.begin(), channels_vec.end(), first[pos]);
+                        // I see wheter the channel at the same position on the vector "first" exists in channels_vec
+                        
+                        int pos_in_channel_for_charge = pp2-channels_vec.begin();
+                        // Position in channels vec
+                        
+                        // to put a limit in the charge add this:
+                        if(pp2!=channels_vec.end()&& (max_charge(charge_vec_vec[i]))< max_charge(charge_vec_vec[pos_in_channel_for_charge]) && abs(get_time_bin_bin_max(charge_vec_vec[i]) - get_time_bin_bin_max(charge_vec_vec[pos_in_channel_for_charge])) < 3 ){
+                            //DON't do anything
+                        } else {
+                            bool cond = true;
+                            number_of_crosstalk=0;
                             
-                            int pos = pp - second.begin();
-                            // pos is the postion in the affected vector of the channel.
-                            
-                            
-                            std::vector<double>::iterator pp2 = std::find(channels_vec.begin(), channels_vec.end(), first[pos]);
-                            // I see wheter the channel at the same position on the vector "first" exists in channels_vec
-                            
-                            int pos_in_channel_for_charge = pp2-channels_vec.begin();
-        //                  Position in channels vec
-                            
-                            // to put a limit in the charge add this:
-                            if(pp2!=channels_vec.end()&& (max_charge(charge_vec_vec[i]))< max_charge(charge_vec_vec[pos_in_channel_for_charge]) && abs(get_time_bin_bin_max(charge_vec_vec[i]) - get_time_bin_bin_max(charge_vec_vec[pos_in_channel_for_charge])) < 3 ){
-                            
-                                //DON't do anything
-
-                                
-                            }
-                            else {
-                        
-
-                                bool cond = true;
-                                number_of_crosstalk=0;
-                                
-                               
-                                write_evt =  evt_;
-         
-                                write_error = error_;
-                                write_daqTimeSec = daqTimeSec_;
-                                write_daqTimeMicroSec = daqTimeMicroSec_;
-                                write_srsTimeStamp = srsTimeStamp_;
-                                write_srsTrigger = srsTrigger_;
-                                write_srsFec.push_back(srsFec_[i]);
-                                write_srsChip.push_back(srsChip_[i]);
-                                write_mmChamber.push_back(mmChamber_[i]);
-                                write_mmLayer.push_back(mmLayer_[i]);
-                                write_mmReadout.push_back(mmReadout_[i]);
-                                write_mmStrip.push_back(mmStrip_[i]);
-                                write_raw_q.push_back(charge_vec_vec[i]);
-                                write_srsChan.push_back(channels_vec[i]);
-                                
-                                double charge_of_father = max_charge(charge_vec_vec[i]);
-                                //this variable contain the max charge of the father
-                              
-                                double charge_of_first_son;
-                        
-                                int time_father_max_bin;
-                               
-                                // this variable contains the time of the father to be compared with the other.
-
-                                while(cond){
-                        //start the search of the son
-                            
-                            
-                                    std::vector<double>::iterator pp3 = std::find(first.begin(), first.end(), *it);
-                                    int pos_ = pp3 - first.begin();
-                    //Look for my channel in the "first" vector and look for the position
-                            
-                                    std::vector<double>::iterator pp5 = std::find(channels_vec.begin(), channels_vec.end(), *it);
-                                    int pos_father = pp5 - channels_vec.begin();
-                    // position in the channel_vec of my channel
-
-                                    std::vector<double>::iterator pp4 = std::find(channels_vec.begin(), channels_vec.end(), second[pos_]);
-                                    int pos_son = pp4 - channels_vec.begin();
-                    // look for the channel affected by my channel in channels_vec
-                            
-                                    if (number_of_crosstalk==0){
-                                            time_father_max_bin=get_time_bin_max(charge_vec_vec[pos_father]);
-// this vector contains all the father and the good events
-                                            strip_father_good.push_back(mmStrip_[i]);
-                        
-                                    }
-                            
-                            //
-                                    if(pp4!=channels_vec.end() && (max_charge(charge_vec_vec[pos_father])- max_charge(charge_vec_vec[pos_son]))>0 && abs(get_time_bin_bin_max(charge_vec_vec[pos_father]) - get_time_bin_bin_max(charge_vec_vec[pos_son])) < 3){
-                            
-                            //HAS SON!!!!!! so crosstalk guys!!!!
-                                        number_of_crosstalk++;
-                        
-                                        vector<short> temp;
-                                        for (int m=0; m<write_raw_q.back().size(); m++){
-                                            if(charge_vec_vec[pos_son][m]>0){
-                                                temp.push_back ((charge_vec_vec[pos_son][m]*factor/100)+write_raw_q.back()[m]);}
-                                            else{
-                                                temp.push_back (write_raw_q.back()[m]);}
-                                        }
-                                        
-                                        write_raw_q.pop_back();
-                                        write_raw_q.push_back(temp);
-                        
-                        
-                        ///// FILL THE CHARGE DISTRIBUTION
-
-                                        if (number_of_crosstalk==1){
-                                            charge_of_first_son=max_charge(charge_vec_vec[pos_son]);
-                                            charge_vec_distribution[1].push_back(max_charge(charge_vec_vec[pos_son]));
-                                            charge_vec_distribution[0].push_back(max_charge(charge_vec_vec[pos_father]));
-                                            time_vec_distribution[0].push_back(get_time_bin_max(charge_vec_vec[pos_father]));
-                                            time_crosstalked_father[0].push_back(time_father_max_bin-get_time_bin_max(charge_vec_vec[pos_father]));
-                                            strip_father.push_back(mmStrip_[i]);
-
-                                        }
-                    
-
-                       // FILL THE TIME DISTRIBUTIO
-                        
-                                        if (number_of_crosstalk==1)
-                                            time_vec_distribution[1].push_back(get_time_bin_max(charge_vec_vec[pos_son]));
-                                        
-                        //time difference between first father and crosstlaked channel
-                        
-                                        if (number_of_crosstalk==1)
-                                            time_crosstalked_father[1].push_back(time_father_max_bin-get_time_bin_max(charge_vec_vec[pos_son]));
-                                        
-                        
-                        
-                                        it = std::find(first.begin(), first.end(), second[pos_]);
-                                        cond = false;
-
-                                    }
-                                    else {
-                                        
-                                        cond = false;
-                    
-                                    }
-                      
-                        
-                                } //end while
-                        
-                                cross_talk_vec.push_back(number_of_crosstalk);
-                                vec_temp_cross_talk.push_back(number_of_crosstalk);
-                                charge_father_for_sons.push_back(charge_of_father);
-                        
-                        
-                            } // finish else (if no father)
-                    
-                    
-                        }
-                    }//for on all the channels in one event
-                
-
-                
-                    channels_vec.clear();
-                    charge_vec_vec.clear();
-                
-                
-                
+                            write_evt =  evt_;
         
-                    srsFec_.clear();
-                    srsChip_.clear();
-                    mmChamber_.clear();
-                    mmLayer_.clear();
-                    mmStrip_.clear();
-                    mmReadout_.clear();
+                            write_error = error_;
+                            write_daqTimeSec = daqTimeSec_;
+                            write_daqTimeMicroSec = daqTimeMicroSec_;
+                            write_srsTimeStamp = srsTimeStamp_;
+                            write_srsTrigger = srsTrigger_;
+                            write_srsFec.push_back(srsFec_[i]);
+                            write_srsChip.push_back(srsChip_[i]);
+                            write_mmChamber.push_back(mmChamber_[i]);
+                            write_mmLayer.push_back(mmLayer_[i]);
+                            write_mmReadout.push_back(mmReadout_[i]);
+                            write_mmStrip.push_back(mmStrip_[i]);
+                            write_raw_q.push_back(charge_vec_vec[i]);
+                            write_srsChan.push_back(channels_vec[i]);
+                            
+                            double charge_of_father = max_charge(charge_vec_vec[i]);
+                            //this variable contain the max charge of the father
+                            
+                            double charge_of_first_son;
+                            int time_father_max_bin;
+                            // this variable contains the time of the father to be compared with the other.
+
+                            while(cond){
+                                //start the search of the son
+                                vector <double>::iterator pp3 = find(first.begin(), first.end(), *it);
+                                int pos_ = pp3 - first.begin();
+                                //Look for my channel in the "first" vector and look for the position
+                        
+                                vector <double>::iterator pp5 = find(channels_vec.begin(), channels_vec.end(), *it);
+                                int pos_father = pp5 - channels_vec.begin();
+                                // position in the channel_vec of my channel
+
+                                vector <double>::iterator pp4 = find(channels_vec.begin(), channels_vec.end(), second[pos_]);
+                                int pos_son = pp4 - channels_vec.begin();
+                                // look for the channel affected by my channel in channels_vec
+                        
+                                if (number_of_crosstalk==0){
+                                    time_father_max_bin=get_time_bin_max(charge_vec_vec[pos_father]);
+                                    // this vector contains all the father and the good events
+                                    strip_father_good.push_back(mmStrip_[i]);
+                                }
+                        
+                                if(pp4!=channels_vec.end() && (max_charge(charge_vec_vec[pos_father])- max_charge(charge_vec_vec[pos_son]))>0 && abs(get_time_bin_bin_max(charge_vec_vec[pos_father]) - get_time_bin_bin_max(charge_vec_vec[pos_son])) < 3){
+                        
+                                    //HAS SON!!!!!! so crosstalk guys!!!!
+                                    number_of_crosstalk++;
+                    
+                                    vector <short> temp;
+                                    for (int m=0; m<write_raw_q.back().size(); m++){
+                                        if(charge_vec_vec[pos_son][m]>0) temp.push_back((charge_vec_vec[pos_son][m]*factor/100)+write_raw_q.back()[m]);
+                                        else temp.push_back (write_raw_q.back()[m]);
+                                    }
+                                    
+                                    write_raw_q.pop_back();
+                                    write_raw_q.push_back(temp);
+                    
+                                    ///// FILL THE CHARGE DISTRIBUTION
+
+                                    if (number_of_crosstalk==1){
+                                        charge_of_first_son=max_charge(charge_vec_vec[pos_son]);
+                                        charge_vec_distribution[1].push_back(max_charge(charge_vec_vec[pos_son]));
+                                        charge_vec_distribution[0].push_back(max_charge(charge_vec_vec[pos_father]));
+                                        time_vec_distribution[0].push_back(get_time_bin_max(charge_vec_vec[pos_father]));
+                                        time_crosstalked_father[0].push_back(time_father_max_bin-get_time_bin_max(charge_vec_vec[pos_father]));
+                                        strip_father.push_back(mmStrip_[i]);
+                                    }
                 
+                                    // FILL THE TIME DISTRIBUTION
+                    
+                                    if (number_of_crosstalk==1) time_vec_distribution[1].push_back(get_time_bin_max(charge_vec_vec[pos_son]));    
+                                    //time difference between first father and crosstlaked channel
+                                    if (number_of_crosstalk==1) time_crosstalked_father[1].push_back(time_father_max_bin-get_time_bin_max(charge_vec_vec[pos_son]));
+                    
+                                    it = find(first.begin(), first.end(), second[pos_]);
+                                    cond = false;
+
+                                } else {
+                                    cond = false;
+                                }
+                            } //end while
+                    
+                            cross_talk_vec.push_back(number_of_crosstalk);
+                            vec_temp_cross_talk.push_back(number_of_crosstalk);
+                            charge_father_for_sons.push_back(charge_of_father);
+        
+                        } // finish else (if no father)
+                    }
+                }//for on all the channels in one event
+                
+                channels_vec.clear();
+                charge_vec_vec.clear();
+            
+                srsFec_.clear();
+                srsChip_.clear();
+                mmChamber_.clear();
+                mmLayer_.clear();
+                mmStrip_.clear();
+                mmReadout_.clear();
+            
             } //END OF CHIP
         } // END OF FEC
         
-        
-        
-        std::vector<double>::iterator gg =max_element (vec_temp_cross_talk.begin(), vec_temp_cross_talk.end());
-          
-        cross_effect_event.push_back(*gg);
-        
+        vector <double>::iterator gg =max_element (vec_temp_cross_talk.begin(), vec_temp_cross_talk.end());   
+        cross_effect_event.push_back(*gg);  
         vec_temp_cross_talk.clear();
         
         if (cleaning)
@@ -479,22 +404,22 @@ int main(int argc, char *argv[]){
     int entries_ped = (apv_raw_ped->fChain)->GetEntries();
     TTree *aux_ped;
     aux_ped = new TTree("apv_raw_ped", "apv_raw_ped");
-    ULong64_t       write_pedevt;
-    UInt_t          write_pederror;
-    Int_t           write_peddaqTimeSec;
-    Int_t           write_peddaqTimeMicroSec;
-    Int_t           write_pedsrsTimeStamp;
-    UInt_t          write_pedsrsTrigger;
-    vector<unsigned int> write_pedsrsFec;
-    vector<unsigned int> write_pedsrsChip;
-    vector<unsigned int> write_pedsrsChan;
-    vector<string>  write_pedmmChamber;
-    vector<int>     write_pedmmLayer;
-    vector<char>    write_pedmmReadout;
-    vector<int>     write_pedmmStrip;
-    vector<double>  write_pedped_mean;
-    vector<double>  write_pedped_stdev;
-    vector<double>  write_pedped_sigma;
+    ULong64_t        write_pedevt;
+    UInt_t           write_pederror;
+    Int_t            write_peddaqTimeSec;
+    Int_t            write_peddaqTimeMicroSec;
+    Int_t            write_pedsrsTimeStamp;
+    UInt_t           write_pedsrsTrigger;
+    vector <unsigned int> write_pedsrsFec;
+    vector <unsigned int> write_pedsrsChip;
+    vector <unsigned int> write_pedsrsChan;
+    vector <string>  write_pedmmChamber;
+    vector <int>     write_pedmmLayer;
+    vector <char>    write_pedmmReadout;
+    vector <int>     write_pedmmStrip;
+    vector <double>  write_pedped_mean;
+    vector <double>  write_pedped_stdev;
+    vector <double>  write_pedped_sigma;
     aux_ped->Branch("evt"              , &write_pedevt            );
     aux_ped->Branch("error"            , &write_pederror          );
     aux_ped->Branch("daqTimeSec"       , &write_peddaqTimeSec     );
@@ -515,11 +440,9 @@ int main(int argc, char *argv[]){
     cout << endl;
     for(int iEntry=0; iEntry<entries_ped; iEntry++) {
         
-        if(iEntry%200==0)
-            cout << std::setprecision(2) << "\r" << (double)iEntry/(double)entries_ped*100 << "\% processed" << flush;
+        if(iEntry%200==0) cout << setprecision(2) << "\r" << (double)iEntry/(double)entries_ped*100 << "\% processed" << flush;
         
         (apv_raw_ped->fChain)->GetEntry(iEntry);
-        
         write_pedsrsFec.clear();
         write_pedsrsChip.clear();
         write_pedsrsChan.clear();
@@ -546,17 +469,10 @@ int main(int argc, char *argv[]){
             write_pedped_stdev.push_back(apv_raw_ped->ped_stdev->at(j));
             write_pedped_sigma.push_back(apv_raw_ped->ped_sigma->at(j));
         }
-        
         aux_ped->Fill();
     }
     
-    
-    
-    
-    
-    
     if(cleaning){
-        
         ntuple->cd();
         TDirectory *target = gDirectory;
         target->cd();
@@ -566,6 +482,5 @@ int main(int argc, char *argv[]){
         ntuple->Write();
         ntuple->Close();
     }
-    
        
 } //end of run function

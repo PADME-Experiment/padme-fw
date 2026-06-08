@@ -210,52 +210,137 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   return kTRUE;
 }
 
+void MMCluster::SimpleFitWithDz(vector<int> plane, vector<double>vhits, vector<double>zhits, double dz, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout, double* coszout, double* chi2out, double *dz_fitout) {
+
+  int npts = zhits.size();
+  double very_wrong = -999;
+
+  if(npts<1) {
+    *v_avgout  = very_wrong;
+    *z_avgout  = very_wrong;
+    *mt_avgout = very_wrong;
+    *ct_avgout = very_wrong;
+    *cosvout   = very_wrong;
+    *coszout   = very_wrong;
+    *chi2out   = very_wrong;
+    *dz_fitout = very_wrong;
+    return;
+  }
+
+  double chi2_min = 1000000;
+  double dz_fit = dz;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
+
+  vector<double> zhits_corr;
+
+  double range = 25; 
+  if(CALIBRATION) range = 500;
+  
+  for(int step=0; step<2*(int)range; step++) {
+    zhits_corr.clear();
+    
+    double dz_scan = step - range;
+
+    double dz_step = dz + dz_scan;
+    
+    for(int h=0; h<npts; h++) {
+      double z_hit_corr = zhits.at(h); 
+      if(plane.at(h) == 0) z_hit_corr -= dz_step;
+      else                 z_hit_corr += dz_step;
+      zhits_corr.push_back(z_hit_corr);
+    }
+    
+    if(zhits_corr.size() != zhits.size()) {
+      std::cerr<<"WRONG SIZE"<<std::endl;
+      *v_avgout  = very_wrong;
+      *z_avgout  = very_wrong;
+      *mt_avgout = very_wrong;
+      *ct_avgout = very_wrong;
+      *cosvout   = very_wrong;
+      *coszout   = very_wrong;
+      *chi2out   = very_wrong;
+      *dz_fitout = very_wrong;
+      return;
+    }
+
+    evaluateStraightLineTwoD(vhits,zhits_corr, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+
+    if(!CALIBRATION) chi2 += (dz_scan)*(dz_scan)/144.;
+
+    //std::cout<<"chi2: "<<chi2<<" dz_scan: "<<dz_scan<<" z_first: "<<zhits_corr.at(0)<<" z_last: "<<zhits_corr.at((int)zhits_corr.size()-1)<<std::endl; 
+    
+    if(chi2 < chi2_min) {
+      chi2_min = chi2;
+      dz_fit = dz_scan;
+    }
+  }
+
+    
+  zhits_corr.clear();
+  
+  *v_avgout  = v_avg;
+  *z_avgout  = z_avg;
+  *mt_avgout = mt_avg;
+  *ct_avgout = ct_avg;
+  *cosvout   = cosv;
+  *coszout   = cosz;
+  *chi2out   = chi2_min;
+  *dz_fitout = dz_fit;
+}
 
 bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal) {
   MMchInfo chinfoThis =  fMMHitsInClu.at(0)->GetMMchInfo();
   double dz = GeneralInfo::GetInstance()->GetMMECALdz(chinfoThis.view, xEcal, yEcal, tEcal);
 
+  std::cout<<"dz-dzEcal: "<<dz-(tEcal+440)*GeneralInfo::GetInstance()->GetMMDriftVelocity()<<" xEcal: "<<xEcal<<" yEcal: "<<yEcal<<" view: "<<chinfoThis.view<<" quad: "<<chinfoThis.quad<<std::endl;
+  
   vector<double> zhits, vhits;
   vector<MMSoftHit*> hitArray;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2,dz_fit;
+  vector<int> planes;
+  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
     hitArray.push_back(fMMHitsInClu.at(i));
-    double z_hit_corr = fMMHitsInClu.at(i)->GetZfromTime(1.);
-    if(fMMHitsInClu.at(i)->GetMMchInfo().plane == 0) z_hit_corr -= dz;
-    else z_hit_corr += dz;
-    zhits.push_back(z_hit_corr);
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
     vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
- 
+    planes.push_back(fMMHitsInClu.at(i)->GetMMchInfo().plane);
   }
-  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
-  evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+  
+  SimpleFitWithDz(planes, vhits, zhits, dz, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2, &dz_fit);
+  if(chinfoThis.view == 0 && chinfoThis.quad == 1) std::cout<<"dz_fit-dz: "<<dz_fit-dz<<std::endl;
 
-  for(int h=0; h<10; h++) {
-    
-    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)zhits.size()-2);
+  if(!CALIBRATION) {
+    for(int h=0; h<10; h++) {
+      
+      double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)zhits.size()-2);
+      
+      double res_m2_max = -1;
+      int i_max = 0;
+      for(int r=0; r<(int)zhits.size(); r++) {
+	double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+	if(planes.at(r) == 0) z_hit -= (dz + dz_fit);
+	else                  z_hit += (dz + dz_fit);
 
-    double res_m2_max = -1;
-    int i_max = 0;
-    for(int r=0; r<(int)zhits.size(); r++) {
-      double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
-      double v_hit = vhits.at(r);
-      
-      double v_reco = mt_avg * z_hit + ct_avg;
-      double v_res2 = (v_hit - v_reco)*(v_hit - v_reco);
-      
-      if(v_res2 > res_m2_max) {
-	res_m2_max = v_res2;
-	i_max = r;
+	double v_hit = vhits.at(r);
+	
+	double v_reco = mt_avg * z_hit + ct_avg;
+	double v_res2 = (v_hit - v_reco)*(v_hit - v_reco);
+	
+	if(v_res2 > res_m2_max) {
+	  res_m2_max = v_res2;
+	  i_max = r;
+	}
       }
-    }
-    
-    if(pchi2 < 0.05 && zhits.size() > 4) {
-      zhits.erase(zhits.begin()+i_max);
-      vhits.erase(vhits.begin()+i_max);
-      hitArray.erase(hitArray.begin()+i_max);
       
-      //std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
-      
-      evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+      if(pchi2 < 0.05 && zhits.size() > 4) {
+	zhits.erase(zhits.begin()+i_max);
+	vhits.erase(vhits.begin()+i_max);
+	hitArray.erase(hitArray.begin()+i_max);
+	
+	//std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
+	
+	SimpleFitWithDz(planes, vhits, zhits, dz, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2, &dz_fit);
+      }
     }
   }
   
@@ -267,6 +352,8 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
   vector<TVector3> residues;
   for(int r=0; r<Nhit; r++) {
     double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    if(planes.at(r) == 0) z_hit -= (dz + dz_fit);
+    else                  z_hit += (dz + dz_fit);
     double v_hit = vhits.at(r);
     
     double v_reco = mt_avg * z_hit + ct_avg;
@@ -297,6 +384,7 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
     fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
     fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
   }
+  fTracos.pars[4] = dz_fit;
   
   // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
   int reverseTrack = 1;

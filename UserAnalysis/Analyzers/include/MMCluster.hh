@@ -11,7 +11,7 @@
 #define IPSINCUT 0.05 //Run IV 
 //#define IPSINCUT 0.2  //BField on
 
-#define CALIBRATION true
+#define CALIBRATION false
 #define IPMODE false
 
 struct MMTracklet{
@@ -71,6 +71,7 @@ public:
   
 private:
   void evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double* chi2);
+  void SimpleFitWithDz(vector<int> plane, vector<double>vhits, vector<double>zhits, double dz, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout, double* coszout, double* chi2out, double *dz_fitout);
   
   
   Int_t fIpmode; // 0/1 if the ip connection is enfored/not

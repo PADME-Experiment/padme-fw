@@ -1,4 +1,4 @@
-#//
+//
 // Management of Event-level information
 //
 #include "GeneralInfo.hh"
@@ -104,7 +104,9 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fMMXZRotationAngle = 0.5/180*TMath::Pi(); //from report 02/16
   fMMYZRotationAngle = 0.1/180*TMath::Pi(); //from report 02/16
   
-  fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE 
+  //fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE
+  //fMMDriftVelocity   = 0.1002; //mm/ns --> COSMICI
+  fMMDriftVelocity   = 0.095; //mm/ns 
   
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
@@ -342,19 +344,56 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
 }
 
 double GeneralInfo::GetMMECALdz(int view, double xECal, double yECal, double tECal) {
-  double offsetdDZvsXY[2][4] = {
-    -8.8, 3., 14.3, 1.6,  //Ddz vs Y offset
-    10., 9., 10., 10.};   //Ddz vs X offset
+
+  //---------------------- OLD ------------------------------------------------------------
+  // double offsetdDZvsXY[2][4] = {           //DAL FIT DI TOM
+  //  -8.8, 3., 14.3, 1.6,  //Ddz vs Y offset
+  //  10., 9., 10., 10.};   //Ddz vs X offset
+
+  
+  /*double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    -14.2, 37.0, 22.5, -7.1,  //Ddz vs Y offset
+    10.0, -10.7, 16.7, -3.3};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    -3.8, 0.0, 2.0, -5.5,  //Ddz vs Y offset
+    -5.0, -9.8, 1.9, 6.7};   //Ddz vs X offset
+  */
+
+  double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    0.,20.,20.,0.,  //Ddz vs Y offset
+    10.,5.,15.,7.};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  
+  
+  
+  /*
+    double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  */
+  
   double timeOffset = 440;
   
   int quad = 0;
   if(xECal<0 && yECal>0) quad = 1;
   if(xECal>0 && yECal>0) quad = 2;
   if(xECal>0 && yECal<0) quad = 3;
+
+
+  double Zoffset;
+  if(view == 1) Zoffset = offsetdDZvsXY[view][quad] + slopedDZvsXY[view][quad]/100*xECal;
+  else          Zoffset = offsetdDZvsXY[view][quad] + slopedDZvsXY[view][quad]/100*yECal;
   
   double dz;
-  
-  dz = (tECal+timeOffset)*fMMDriftVelocity + offsetdDZvsXY[view][quad];
+  dz = (tECal+timeOffset)*fMMDriftVelocity + Zoffset;
  
   return dz;
 }

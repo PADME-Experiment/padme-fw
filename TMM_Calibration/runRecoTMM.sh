@@ -11,10 +11,10 @@
   DetRunID="$2"
   MaxEvents="${3:-0}"
 
-  CalibrationPath="/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/TMM_Calibration"
+  CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration"
   FileList="${CalibrationPath}/TMMFileList/run${PadmeRunID}.list"
   OutputDir="${CalibrationPath}/outputTMM"
-  OutputFile="${OutputDir}/Calibration_TMM_run${PadmeRunID}_doubleG.root"
+  OutputFile="${OutputDir}/Calibration_TMM_run${PadmeRunID}_3sSel_FitSlicesFull.root"
 
   echo
   echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"
@@ -25,7 +25,7 @@
   echo
 
   if [[ ! -s "${FileList}" ]]; then
-    echo "ERROR: input file list does not exist or is empty: ${FileList}"
+    # echo "ERROR: input file list does not exist or is empty: ${FileList}"
     return 1 2>/dev/null || exit 1
   fi
 

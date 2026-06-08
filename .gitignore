@@ -6,6 +6,7 @@
 *.so
 *.ccd
 *.exe
+*.list
 *.pyc
 *.dump
 *.root
@@ -39,3 +40,6 @@ bin/
 *.pcm
 *.dylib
 *.exe
+*.P
+*.F
+

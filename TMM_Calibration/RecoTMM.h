@@ -190,24 +190,36 @@ public :
    TH1F *hBeamFull[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
 
    // FitSlicesY() histograms
+   TH1D *hAmpslice[TMMCH_N_Readout] = {0};
    TH1D *hMeanslice[TMMCH_N_Readout] = {0};
+   TH1D *hSigmaslice[TMMCH_N_Readout] = {0};
+   TH1D *hAmpsliceFull[TMMCH_N_Readout] = {0};
    TH1D *hMeansliceFull[TMMCH_N_Readout] = {0};
+   TH1D *hSigmasliceFull[TMMCH_N_Readout] = {0};
 
    //calibrated histograms
    TH2F *hqmaxstrip_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    TH1F *hBeam_cal[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted (selected strips)
    TH1F *hBeamFull_cal[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
+   // calibrated histograms after threshold selection
+   TH2F *hqmaxstrip_cal3s[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
+   TH2F *hqmaxstripFull_cal3s[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
+   TH1F *hBeam_cal3s[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted (selected strips)
+   TH1F *hBeamFull_cal3s[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
 
    ////// GRAPHS //////
    // event by event graphs
    TGraphErrors *g_BeamSpot[TMMCH_N_Readout] = {0};   //Beam spot over events
    TGraphErrors *g_BeamSpread[TMMCH_N_Readout] = {0}; //Beam spread over events
    TGraphErrors *g_BeamCharge[TMMCH_N_Readout] = {0}; //Beam charge over events
+   
 
    //TGraphs for strip calibration
    TGraphErrors *g_FitFullDiff[TMMCH_N_Readout] = {0}; // to identify possible dead strips
    TGraphErrors *g_FitFullRatio[TMMCH_N_Readout] = {0}; // to define calibration constants
+   TGraphErrors *g_FitFullDiff3s[TMMCH_N_Readout] = {0}; // to identify possible dead strips
+   TGraphErrors *g_FitFullRatio3s[TMMCH_N_Readout] = {0}; // to define calibration constants after threshold selection
 
 };
 

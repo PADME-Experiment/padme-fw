@@ -22,11 +22,30 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   //needed for MC
 
   fADCUnitToCharge = fConfig->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
-  fHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
-  fHitChargeSaturation = fConfig->GetParOrDefault("RECO","HitChargeSaturation",4000);  //ADC counts  
+  fDefaultHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
+  fDefaultHitChargeSaturation = fConfig->GetParOrDefault("RECO","HitChargeSaturation",4000);  //ADC counts  
   fTimeTau = fConfig->GetParOrDefault("RECO","TimeTau",50.);  //ns  
   fAPVTimeBin = fConfig->GetParOrDefault("RECO","APVTimeBin",25.);  //ns  
+  fAPVChThresholdFile = (std::string)fConfig->GetParOrDefault("RECO","APVChannelThreshold","APVChThreshold.txt");
 
+  //read APV channel thresholds and saturation values from file
+  std::ifstream ThreFile;  
+  ThreFile.open(Form("config/Calibration/%s", fAPVChThresholdFile.c_str()));
+  std::string line;
+  Int_t brdid, chid, lowthre, saturation;
+  if(ThreFile.is_open()){
+    while(getline(ThreFile,line)){
+      std::stringstream(line) >> brdid >> chid >> lowthre >> saturation;
+      fAPVChLowThresholdMap[std::make_pair(brdid,chid)] = lowthre;
+      fAPVChSaturationMap[std::make_pair(brdid,chid)] = saturation;
+      std::cout << "MMReconstruction::MMReconstruction - APV channel  threshold file: read threshold " << lowthre << " and saturation " << saturation << " for board " << brdid << " channel " << chid << std::endl;
+
+    }
+  }else{
+    std::cout << "********* MMReconstruction::MMReconstruction - WARNING: cannot open APV channel threshold file " << fAPVChThresholdFile << ". Using default values for all channels: threshold " << fDefaultHitChargeThreshold << " and saturation *********** " << fDefaultHitChargeSaturation << std::endl;
+    // fAPVChLowThresholdMap[std::make_pair(brdid,chid)] = fDefaultHitChargeThreshold;
+    // fAPVChSaturationMap[std::make_pair(brdid,chid)] = fDefaultHitChargeSaturation;
+  }
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
 //  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
@@ -80,14 +99,18 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
   //fill the hit vector from MC digis
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       TMCVDigi* digi = tEvent->Digi(i); 
-      if(digi->GetEnergy()/fADCUnitToCharge<fHitChargeThreshold) continue; // zero suppression //should be channel based
-      // //saturation ??
-      if(digi->GetEnergy()/fADCUnitToCharge>fHitChargeSaturation) continue; // saturation
       //std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
       int brdNum = digi->GetChannelId()/1000; //first decode from MC saving format: channelid is encoded as (boardNum*1000 + channelNum) 
       int chNum = digi->GetChannelId()%1000;
       // then coded with Reco nomenclature, so that we're able to use directly ComputePosition 
       if(brdNum%2==1) chNum -= 256; // even boards have channel number 256-511, odd boards have channel number 0-255
+      Double_t HitChargeThreshold = fAPVChLowThresholdMap[std::make_pair(brdNum,chNum)];
+      Double_t HitChargeSaturation = fAPVChSaturationMap[std::make_pair(brdNum,chNum)];
+      //std::cout<<HitChargeThreshold<<" "<<HitChargeSaturation<<std::endl;
+      if(HitChargeSaturation==0) HitChargeSaturation = fDefaultHitChargeSaturation; // if saturation value is not set for this channel, use default
+      if(HitChargeThreshold==0) HitChargeThreshold = fDefaultHitChargeThreshold; // if threshold value is not set for this channel, use default
+      if(digi->GetEnergy()/fADCUnitToCharge<HitChargeThreshold) continue; // zero suppression //should be channel based 
+      if(digi->GetEnergy()/fADCUnitToCharge>HitChargeSaturation) continue; // saturation
       chNum |= (brdNum << 8);
 
       TRecoVHit *Hit = new TRecoVHit();

@@ -37,12 +37,15 @@ private:
   void NoiseFinder(TMMRawEvent*);
   //cfg file settings
   Double_t fADCUnitToCharge; // electrons / adccount
-  Double_t fHitChargeThreshold; // ADC counts
-  Double_t fHitChargeSaturation; // ADC counts
+  Double_t fDefaultHitChargeThreshold; // ADC counts
+  Double_t fDefaultHitChargeSaturation; // ADC counts
   Double_t fTimeTau; // ns
   Double_t fAPVTimeBin; // ns
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
+  std::string fAPVChThresholdFile;
+  std::map < std::pair<int,int>,double> fAPVChLowThresholdMap;
+  std::map < std::pair<int,int>,double> fAPVChSaturationMap;
 
 
   // Results of pedestal and total charge evaluation

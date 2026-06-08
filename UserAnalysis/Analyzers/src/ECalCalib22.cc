@@ -45,7 +45,7 @@ Bool_t ECalCalib22::Init(Bool_t fHistoModeVal, TString InputHistofileVal)
   if (fVerbose)
     printf("---> Initializing ECalCalib22\n");
   int iChNum = 0;
-  TString inputfilename = "../PadmeReco/config/Calibration/ECalEnergyCalibration_6.dat";
+  TString inputfilename = "../PadmeReco/config/Calibration/ECalEnergyCalibration_8_0.dat";
   ifstream InFile(inputfilename.Data());
 
   if (!InFile.is_open())

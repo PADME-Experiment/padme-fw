@@ -2017,8 +2017,8 @@ Bool_t ECalSel::InitHistos()
     for (int i = 0; i < NSlicesE; i++)
     {
       PhiFullProbeSlice.push_back(fhSvcVal->BookHistoList("ECalSel", Form("ECal_TP_DPHIAbs_probe_slice_%i", i), 600, 0., 2 * TMath::Pi()));
-      fhSvcVal->BookHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", i), 30, -TMath::Pi(), TMath::Pi(), 400, -400, 400);
-      fhSvcVal->BookHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_probe_slice_%i", i), 30, -TMath::Pi(), TMath::Pi(), 400, -400, 400);
+      fhSvcVal->BookHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", i), 30, -TMath::Pi(), TMath::Pi(), 600, -400, 400);
+      fhSvcVal->BookHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_probe_slice_%i", i), 30, -TMath::Pi(), TMath::Pi(), 600, -400, 400);
       fhSvcVal->BookHisto2List("ECalSel", Form("ECal_TP_DPhivsPhiExp_probe_slice_%i", i), 30, -TMath::Pi(), TMath::Pi(), 600, 0., 2 * TMath::Pi());
     }
   }
@@ -2341,7 +2341,7 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
     gEffvsE[ig] = new TGraphErrors(NSlicesE);
     gEffvsE[ig]->SetName(Form("gEffvsE_PhiFixed_%i", ig));
   }
-  double Edown = fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
+  double Edown = fGeneralInfo->GetEnergyMin(); //fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
   TString sliceOutname;
   TString dataType;
   if (fGeneralInfo->isMC() == true)
@@ -2459,9 +2459,11 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
         continue;
       DenTemp = expGaus->GetParameter(2);
       EffPhi = NumTemp / expGaus->GetParameter(2);
-      double c1 = (1 / DenTemp) * (1 / DenTemp) * errDen * errDen;
-      double c2 = (NumTemp / (DenTemp * DenTemp)) * (NumTemp / (DenTemp * DenTemp)) * errNum * errNum;
-      Double_t errEffPhi = TMath::Sqrt(c1 + c2);
+      
+      Double_t errEffPhi = std::sqrt(
+      std::pow(errNum / DenTemp, 2) +
+      std::pow(NumTemp * errDen /
+              (DenTemp * DenTemp), 2));
       std::cout << " Slice Phi: " << iPhi << " Num: " << NumPhi << " errNum: " << errNum << " Den: " << DenPhi << " P2: " << expGaus->GetParameter(2) << " errDen: "<<errDen<< " Ratio: " << DenPhi / expGaus->GetParameter(2) << " Eff: " << EffPhi << " errEff: " << errEffPhi << std::endl;
       EffGraphPhi->SetPoint(iPhi, (PhiDown + (iPhi + 0.5) * spacingPhi), EffPhi);
       EffGraphPhi->SetPointError(iPhi, 0.5 * spacingPhi, errEffPhi);
@@ -2494,7 +2496,7 @@ Bool_t ECalSel::FitTagProbeEff()
   Double_t EnergyVal = 0.;
   TH1D *PhiFullProbe;
 
-  double Edown = fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
+  double Edown = fGeneralInfo->GetEnergyMin(); //fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
 
   TString sliceOutname;
   TString dataType;
@@ -2622,32 +2624,33 @@ Bool_t ECalSel::FitTagProbeEff()
     funcBkgProbe->SetParameter(3, fSigmaDPhi);
 
     PhiFullProbeSlice[iSlice]->Fit(funcBkgProbe, "REMQ");
-    TF1 *funcBkgProbe_pol0 = new TF1("funcBkgProbe_pol0", "pol0", 2, 4.5);
-    funcBkgProbe_pol0->SetParameter(0, funcBkgProbe->GetParameter(0));
+    // TF1 *funcBkgProbe_pol0 = new TF1("funcBkgProbe_pol0", "pol0", 2, 4.5);
+    // funcBkgProbe_pol0->SetParameter(0, funcBkgProbe->GetParameter(0));
 
     // controlla il taglio
 
     PhiFullProbeSlice[iSlice]->GetXaxis()->SetRangeUser(fMeanDPhi - fSigmaCut * fSigmaDPhi, fMeanDPhi + fSigmaCut * fSigmaDPhi);
     PhiFullProbeSlice[iSlice]->SetName(Form("PhiFullProbe_signal_%i", iSlice));
 
-    Double_t BkgProbe = (Double_t)(funcBkgProbe_pol0->Integral(fMeanDPhi - fSigmaCut * fSigmaDPhi, fMeanDPhi + fSigmaCut * fSigmaDPhi)) / PhiFullProbeSlice[iSlice]->GetBinWidth(1);
+    //Double_t BkgProbe = (Double_t)(funcBkgProbe_pol0->Integral(fMeanDPhi - fSigmaCut * fSigmaDPhi, fMeanDPhi + fSigmaCut * fSigmaDPhi)) / PhiFullProbeSlice[iSlice]->GetBinWidth(1);
     PhiFullProbeSlice[iSlice]->Write();
 
     // new part
 
-    EofProbe_cut->GetXaxis()->SetRangeUser(Edown + (spacing * (iSlice)), Edown + (spacing * (iSlice + 1)));
-    TH1D *ProYProbe = (TH1D *)EofProbe_cut->ProjectionY();
-    ProYProbe->SetName(Form("FitProbe_slice_%i", iSlice));
-    ProYProbe->Write();
-    TH1D *ProbeNoBackgroud = new TH1D(Form("FitProbeNoBackgroud_%i", iSlice), Form("FitProbeNoBackgroud_%i", iSlice), 400, -400, 400);
-    for (int iBin = 0; iBin < ProYTag->GetNbinsX(); iBin++)
-    {
-      ProbeNoBackgroud->SetBinContent(iBin, ProYProbe->GetBinContent(iBin));
+    // EofProbe_cut->GetXaxis()->SetRangeUser(Edown + (spacing * (iSlice)), Edown + (spacing * (iSlice + 1)));
+    // TH1D *ProYProbe = (TH1D *)EofProbe_cut->ProjectionY();
+    // ProYProbe->SetName(Form("FitProbe_slice_%i", iSlice));
+    // ProYProbe->Write();
+    // TH1D *ProbeNoBackgroud = new TH1D(Form("FitProbeNoBackgroud_%i", iSlice), Form("FitProbeNoBackgroud_%i", iSlice), 400, -400, 400);
+    // for (int iBin = 0; iBin < ProYTag->GetNbinsX(); iBin++)
+    // { std::cout<<ProYTag->GetNbinsX()<<std::endl;
+    //   ProbeNoBackgroud->SetBinContent(iBin, ProYProbe->GetBinContent(iBin));
 
-    }
-    ProbeNoBackgroud->Write();
+    // }
+    // ProbeNoBackgroud->Write();
     Double_t errNum; // DA SISTEMARE QUA
-    Double_t NumTemp = (Double_t)ProbeNoBackgroud->IntegralAndError(0, 800, errNum) - BkgProbe;
+    Double_t NumTemp = (Double_t)PhiFullProbeSlice[iSlice]->Integral();// - BkgProbe;
+    errNum = TMath::Sqrt(NumTemp);
     NumE = NumTemp;
     if (std::isnan(NumTemp))
       continue;
@@ -2655,9 +2658,7 @@ Bool_t ECalSel::FitTagProbeEff()
     sumNum += NumTemp*errNum;
 
     EffE = NumTemp / DenTemp;
-    double c1 = (1 / DenTemp) * (1 / DenTemp) * errDen * errDen;
-    double c2 = (NumTemp / (DenTemp * DenTemp)) * (NumTemp / (DenTemp * DenTemp)) * errNum * errNum;
-    Double_t errEffE = TMath::Sqrt(c1 + c2);
+    double errEffE = std::sqrt(std::pow(errNum / DenTemp, 2) +std::pow(NumTemp * errDen /(DenTemp * DenTemp), 2));
     EffWeight += EffE/(errEffE*errEffE);
     errEffWeight += 1/(errEffE*errEffE);
     OneOverrEffWeightSq+=1/(errEffE*errEffE);

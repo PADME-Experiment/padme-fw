@@ -59,7 +59,7 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fPeriodStartTime = 174000000;
     fBeamMomentum = 268.94;
     fZTarg = -732.47;
-    fZECal = 2577.77+6.5*11.2; //front face of ECAL allinamento + 6.5*X0, X0=11.2 mm, from 2024 survey
+    fZECal = 2577.77+6.5*11.2+100; //front face of ECAL allinamento + 6.5*X0, X0=11.2 mm, from 2024 survey
     fDisplacementXECal = 3.41; 
     fDisplacementYECal = -1.46; 
   }
@@ -104,9 +104,13 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fMMXZRotationAngle = 0.5/180*TMath::Pi(); //from report 02/16
   fMMYZRotationAngle = 0.1/180*TMath::Pi(); //from report 02/16
   
-  //fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE
+  fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE
   //fMMDriftVelocity   = 0.1002; //mm/ns --> COSMICI
-  fMMDriftVelocity   = 0.095; //mm/ns 
+  //fMMDriftVelocity   = 0.095; //mm/ns
+
+  fMMResV = 3*fMMStripPitch/TMath::Sqrt(12);
+  fMMResZ = 3*10*fMMDriftVelocity; //5*fMMDriftVelocity;
+  
   
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;

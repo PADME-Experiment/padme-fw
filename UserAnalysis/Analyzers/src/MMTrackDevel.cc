@@ -17,6 +17,7 @@ MMTrackDevel* MMTrackDevel::GetInstance(){
 }
 
 MMTrackDevel::~MMTrackDevel(){
+  fvTracks.clear();
   delete fCfgParser;
 }
 
@@ -35,7 +36,7 @@ Bool_t MMTrackDevel::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStr
   InputHistofile = InputHistofileVal;
   fEventCounter = 0;
   InitHistos(fNRun);
-
+ 
   //  fevent=0;
   //ftree = new TTree("ftree","MMTrackDevelNtuple");
   //ftree->Branch("fevent",fevent,"fevent/I");
@@ -105,6 +106,9 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_5hit_clu0"),100,0,1,500,-10,10);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_67hit_clu0"),100,0,1,500,-10,10);
 
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Nholes_vs_pchi2_3hit_clu0"),100,0,1,2,0,2);
+  fHS->BookHisto2List("MMTrackDevel",Form("MM_Holes_position_vs_Nhit_clu0"),10,0,10,640,-320,320);
+  
   fHS->BookHisto2List("MMTrackDevel",Form("MM_NHitsPerAPV_vs_TrackMatchedCode"),2,-0.5,1.5,129,-0.5,128.5);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dyECAL_vs_dxECAL_clu0"),300,-300,300,300,-300,300);
   fHS->BookHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_singleALL_clu0"),50,0,1,300,-300,300);
@@ -130,9 +134,15 @@ Bool_t MMTrackDevel::InitHistos(Int_t nRun){
   for (int view = 0; view<2; view++){
     TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(view);
     for(int plane = 0; plane<2; plane++) {
-      for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_P%dQ%d_clu0",viewlabel.Data(),plane,quad),700,-350,350,640,-320,320); 
+      for (int quad = 0; quad<4; quad++) {
+	fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_P%dQ%d_clu0",viewlabel.Data(),plane,quad),700,-350,350,640,-320,320);
+	fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMIP_vs_%s_P%dQ%d_clu0",viewlabel.Data(),plane,quad),700,-350,350,640,-320,320); 
+      }
     }
-    for (int quad = 0; quad<4; quad++) fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_Q%d_clu1",viewlabel.Data(),quad),700,-350,350,640,-320,320); 
+    for (int quad = 0; quad<4; quad++) {
+      fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMIP_vs_%s_Q%d_clu1",viewlabel.Data(),quad),700,-350,350,640,-320,320);
+      fHS->BookHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_Q%d_clu1",viewlabel.Data(),quad),700,-350,350,640,-320,320); 
+    }
   }
   
   
@@ -297,6 +307,7 @@ Bool_t MMTrackDevel::Process(){
 
     vector<TVector3> residuals = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetTracklet().vres;
     //std::cout<<"residual size: "<<residuals.size()<<" hit size: "<<Nhit<<std::endl;
+    double vmax = -999, vmin = 999;
     for(int i=0; i<(int) residuals.size(); i++) {
       fHS->FillHisto2List("MMTrackDevel",Form("MM_Vres_vs_Nhit_clu0_Q%d",quad),Nhit,residuals.at(i)[1-view],1.);
 
@@ -305,8 +316,18 @@ Bool_t MMTrackDevel::Process(){
       if(Nhit == 5) fHS->FillHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_5hit_clu0"),pchi2,residuals.at(i)[1-view],1.);
       if(Nhit >= 6) fHS->FillHisto2List("MMTrackDevel",Form("MM_Vres_vs_pchi2_67hit_clu0"),pchi2,residuals.at(i)[1-view],1.);
 
+      
+      double v_hit;
+      if(view == 1) v_hit = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(i)->GetPosition().X();
+      else          v_hit = fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(i)->GetPosition().Y();
+      if(v_hit > vmax) vmax = v_hit;
+      if(v_hit < vmin) vmin = v_hit;
     }
-    
+    int nholes = (vmax-vmin)/GeneralInfo::GetInstance()->GetMMStripPitch()-Nhit;
+    if(Nhit == 3) {
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_Nholes_vs_pchi2_3hit_clu0"),pchi2,nholes,1.);
+    }
+    if(nholes>0) fHS->FillHistoList("MMTrackDevel",Form("MM_Holes_position_vs_Nhit_clu0"),Nhit,vmax);
     //    if (Nhit < 3) continue;
     for(int ih=0; ih< Nhit; ih++) {
       MMSoftHit* hitnow = ((MMSoftHit*) fMMClusteringInstance->GetMMCluster(iclu,0,0)->GetHit(ih));
@@ -316,6 +337,66 @@ Bool_t MMTrackDevel::Process(){
     }
   }
 
+
+  //BEST TRACK FINDER
+  MMTrack best_tra0[4][2];
+  MMTrack best_tra1[4][2];
+  double pchi2_best0[4][2] = {{-999,-999},{-999,-999},{-999,-999},{-999,-999}};
+  double pchi2_best1[4][2] = {{-999,-999},{-999,-999},{-999,-999},{-999,-999}};
+  
+  for(int itra0=0; itra0<(int) fMMClusteringInstance->GetMMClusterLength(0,0); itra0++) {
+    int quad = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
+    int view = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().view;
+    MMTracklet tracklet = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet();
+    
+    int nhit_tmp = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
+    if (nhit_tmp < 3) continue; //only consider tracks with 3+ hits
+
+    double chi2_tmp = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2;
+    double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,nhit_tmp-2);
+
+    if(pchi2_tmp > pchi2_best0[quad][view]) {
+      pchi2_best0[quad][view] = pchi2_tmp;
+      best_tra0[quad][view].quad = quad;
+      best_tra0[quad][view].view = view;
+      best_tra0[quad][view].level = 0;
+      best_tra0[quad][view].tracklet = tracklet;
+    }
+  }
+
+  for(int itra1=0; itra1<(int) fMMClusteringInstance->GetMMClusterLength(0,1); itra1++) {
+    int quad = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetHit(0)->GetMMchInfo().quad;
+    int view = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetHit(0)->GetMMchInfo().view;
+    MMTracklet tracklet = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetTracklet();
+    
+    int nhit_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetHitsVectorSize();
+
+    double chi2_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetTracklet().chi2;
+    double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,1); //chi2 done at the moment with slope
+
+    if(pchi2_tmp > pchi2_best1[quad][view]) {
+      pchi2_best1[quad][view] = pchi2_tmp;
+      best_tra1[quad][view].quad = quad;
+      best_tra1[quad][view].view = view;
+      best_tra1[quad][view].level = 1;
+      best_tra1[quad][view].tracklet = tracklet;
+    }
+  }
+
+  for(int qd=0; qd<4; qd++) {
+    for(int vw=0; vw<2; vw++) {
+      if(best_tra0[qd][vw].quad > -1 && best_tra1[qd][vw].quad > -1) {
+	fvTracks.push_back(&best_tra1[qd][vw]);
+      }
+      else if(best_tra0[qd][vw].quad > -1) {
+	fvTracks.push_back(&best_tra0[qd][vw]);
+      }
+      else std::cerr<<"[BEST TRACK FINDER] ci sta qualche problema"<<std::endl;
+    }
+  }
+  
+
+  
   // Variable for response evaluation. For any given Ecal cluster, provides a response code:
   // 0    -> no track-Ecal matching
   // bit0 -> Yview matching
@@ -460,13 +541,14 @@ Bool_t MMTrackDevel::Process(){
     double t_Ecal = tempClu->GetTime();
     double z_Ecal = GeneralInfo::GetInstance()->GetCOG().Z(); //factor +6.5*11 in GeneralInfo
     double E_Ecal = tempClu->GetEnergy();
-    
+
+    double z_IP = GeneralInfo::GetInstance()->GetTargetPos().Z();
     // loop over level-zero tracks, find the best levelzero for each view
     //double pchi2bestPair = -999;
     //double dv_MMEcalbestPair[2] = {-999,-999};
     
     double pchi2best0[2][2] = {{-999, -999},{-999, -999}};
-    double dv_MMEcalbest0[2][2] = {{-999, -999},{-999, -999}};
+    double dv_MMEcalbest0[2][2] = {{-999, -999},{-999, -999}}, dv_MMIPbest0[2][2]={{-999,-999},{-999,-999}};
     double pchi2best_wrong0[2][2] = {{-999, -999},{-999, -999}};
     double dv_MMEcalbest_wrong0[2][2] = {{-999, -999},{-999, -999}};
     int itrack0_good[2][2] = {{-999, -999},{-999, -999}}, itrack0_wrong[2][2] = {{-999, -999},{-999, -999}};
@@ -483,39 +565,54 @@ Bool_t MMTrackDevel::Process(){
       int view0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().view;
       int plane0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().plane;
       	
-      if(x_Ecal*signsQuadX[quad0] > 0 && y_Ecal*signsQuadY[quad0] > 0) { //matching ECal clu position with MM quad 
-	double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
-	TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
-	double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
+      if(x_Ecal*signsQuadX[quad0] > 0 && y_Ecal*signsQuadY[quad0] > 0) { //matching ECal clu position with MM quad
+	if(fMMClusteringInstance->GetMMCluster(itra0,0,0)->L0SimpleFitWithClusterTime(x_Ecal,y_Ecal,t_Ecal)) {
+	  double dz = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().pars[4];
+	  std::cout<<"LvL 0 dz: "<<dz<<std::endl;
+	  double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
 
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_singleALL_clu0"),pchi2_tmp0,dv0,1.);
-	
-	if(pchi2best0[plane0][view0] < pchi2_tmp0) {
-	  pchi2best0[plane0][view0] = pchi2_tmp0;
-	  dv_MMEcalbest0[plane0][view0] = dv0;
-	  itrack0_good[plane0][view0] = itra0;
+	  TVector3 MMposAtIP0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_IP);//tempClu->GetPosition().Z());
+	  double dv_ip0 = MMposAtIP0[1-view0] - GeneralInfo::GetInstance()->GetTargetPos()[1-view0];
 
-	  quad_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
-	  Nhit_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
-	  slope_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().slope;
-	  inter_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().inter;
+	  //fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().RefitWithTarget();
+
+	  TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
+	  double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
+	  
+	  fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_singleALL_clu0"),pchi2_tmp0,dv0,1.);
+	  
+	  if(pchi2best0[plane0][view0] < pchi2_tmp0) {
+	    pchi2best0[plane0][view0] = pchi2_tmp0;
+	    dv_MMEcalbest0[plane0][view0] = dv0;
+	    itrack0_good[plane0][view0] = itra0;
+	    
+	    quad_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
+	    Nhit_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
+	    slope_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().slope;
+	    inter_track0_good[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().inter;
+
+	    dv_MMIPbest0[plane0][view0] = dv_ip0;
+	  }
 	}
       }
       
       if((view0 == 0 && x_Ecal*signsQuadX[quad0] < 0 && y_Ecal*signsQuadY[quad0] > 0)||(view0 == 1 && x_Ecal*signsQuadX[quad0] > 0 && y_Ecal*signsQuadY[quad0] < 0)) { //Y or X view wrong quad
-	double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
-	TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
-	double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
-
-	if(pchi2best_wrong0[plane0][view0] < pchi2_tmp0) {
-	  pchi2best_wrong0[plane0][view0] = pchi2_tmp0;
-	  dv_MMEcalbest_wrong0[plane0][view0] = dv0;
-	  itrack0_wrong[plane0][view0] = itra0;
-
-	  quad_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
-	  Nhit_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
-	  slope_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().slope;
-	  inter_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().inter;
+	if(fMMClusteringInstance->GetMMCluster(itra0,0,0)->L0SimpleFitWithClusterTime(x_Ecal,y_Ecal,t_Ecal)) {
+	  double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
+	  //fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().RefitWithTarget();
+	  TVector3 MMposAtEcal0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
+	  double dv0 = MMposAtEcal0[1-view0] - tempClu->GetPosition()[1-view0];
+	  
+	  if(pchi2best_wrong0[plane0][view0] < pchi2_tmp0) {
+	    pchi2best_wrong0[plane0][view0] = pchi2_tmp0;
+	    dv_MMEcalbest_wrong0[plane0][view0] = dv0;
+	    itrack0_wrong[plane0][view0] = itra0;
+	    
+	    quad_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHit(0)->GetMMchInfo().quad;
+	    Nhit_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetHitsVectorSize();
+	    slope_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().slope;
+	    inter_track0_wrong[plane0][view0] = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().inter;
+	  }
 	}
       }
 
@@ -557,7 +654,8 @@ Bool_t MMTrackDevel::Process(){
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_3h_P%dV%s_clu0",pl,viewlabel.Data()),pchi2best0[pl][vw],dv_MMEcalbest0[pl][vw],1.);
 	fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_wrong_3h_P%dV%s_clu0",pl,viewlabel.Data()),pchi2best_wrong0[pl][vw],dv_MMEcalbest_wrong0[pl][vw],1.);
 
-	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_P%dQ%d_clu0",viewlabel.Data(),pl,quad_track0_good[pl][vw]),dv_MMEcalbest0[pl][vw],tempClu->GetPosition()[1-vw],1); 
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_P%dQ%d_clu0",viewlabel.Data(),pl,quad_track0_good[pl][vw]),tempClu->GetPosition()[1-vw],dv_MMEcalbest0[pl][vw],1.);
+	fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMIP_vs_%s_P%dQ%d_clu0",viewlabel.Data(),pl,quad_track0_good[pl][vw]),tempClu->GetPosition()[1-vw],dv_MMIPbest0[pl][vw],1.); 
       }
     }
     
@@ -566,7 +664,7 @@ Bool_t MMTrackDevel::Process(){
 
     // loop over level-one tracks
     
-    double dv_MMEcal[2] = {-999, -999}, dv_MMEcal_wrong[2] = {-999,-999};
+    double dv_MMEcal[2] = {-999, -999}, dv_MMEcal_wrong[2] = {-999,-999}, dv_MMIP[2] = {-999,-999};
     double pchi2[2] = {-999, -999}, pchi2_wrong[2] = {-999,-999};
     int itrack_good[2] = {-999, -999}, itrack_wrong[2] = {-999, -999};  
     int quad_track1_good[2] = {-999,-999}, quad_track1_wrong[2] = {-999,-999};
@@ -590,7 +688,11 @@ Bool_t MMTrackDevel::Process(){
 	  double chi2_simple = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().chi2;
 	  
 	  fHS->FillHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_simplefit_Q%dV%s",quad,viewlabel.Data()),Nhit_true_simple,ROOT::Math::chisquared_cdf_c(chi2_simple, Nhit_true_simple-3),1.);
-	  
+
+	  TVector3 MMposAtIP = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().ExtrapolationAtZ(z_IP);//tempClu->GetPosition().Z());
+	  double dv_ip = MMposAtIP[1-view] - GeneralInfo::GetInstance()->GetTargetPos()[1-view];
+
+	  //fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().RefitWithTarget();
 	  TVector3 MMposAtEcal_simple = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
 	  
 	  
@@ -608,6 +710,8 @@ Bool_t MMTrackDevel::Process(){
 	    Nhit_track1_good[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetHitsHRVectorSize();
 	    slope_track1_good[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().slope;
 	    inter_track1_good[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().inter;
+
+	    dv_MMIP[view] = dv_ip;
 	  } 
 	}
       }
@@ -621,15 +725,16 @@ Bool_t MMTrackDevel::Process(){
 	  int Nhit_true_simple = (int) residuals_simple.size();
 	  double chi2_simple = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().chi2;
 	  
+	  //fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().RefitWithTarget();
 	  TVector3 MMposAtEcal_simple = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().ExtrapolationAtZ(z_Ecal);//tempClu->GetPosition().Z());
 	  
 	  
 	  if(pchi2_wrong[view] < ROOT::Math::chisquared_cdf_c(chi2_simple, Nhit_true_simple-2)) {
 	    pchi2_wrong[view] = ROOT::Math::chisquared_cdf_c(chi2_simple, Nhit_true_simple-2);
 	    dv_MMEcal_wrong[view] = MMposAtEcal_simple[1-view] - tempClu->GetPosition()[1-view];
-
+	    
 	    itrack_wrong[view] = itra;
-
+	    
 	    quad_track1_wrong[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetHitHR(0)->GetMMchInfo().quad;
 	    Nhit_track1_wrong[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetHitsHRVectorSize();
 	    slope_track1_wrong[view] = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().slope;
@@ -647,8 +752,12 @@ Bool_t MMTrackDevel::Process(){
       fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_right_V%s_clu1",viewlabel.Data()),pchi2[vw],dv_MMEcal[vw],1.);
       fHS->FillHisto2List("MMTrackDevel",Form("MM_dVMMECAL_vs_pchi2_wrong_V%s_clu1",viewlabel.Data()),pchi2_wrong[vw],dv_MMEcal_wrong[vw],1.);
 
-      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_Q%d_clu1",viewlabel.Data(),quad_track1_good[vw]),dv_MMEcal[vw],tempClu->GetPosition()[1-vw],1); 
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMECAL_vs_%s_Q%d_clu1",viewlabel.Data(),quad_track1_good[vw]),tempClu->GetPosition()[1-vw],dv_MMEcal[vw],1.);
+      fHS->FillHisto2List("MMTrackDevel",Form("MM_ECAL_dVMMIP_vs_%s_Q%d_clu1",viewlabel.Data(),quad_track1_good[vw]),tempClu->GetPosition()[1-vw],dv_MMIP[vw],1.); 
     }
+
+
+    
 
     
     //------------------------------COUTTONE PER TREE---------------------------

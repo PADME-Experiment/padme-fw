@@ -103,7 +103,9 @@ public:
   inline double GetMMXZRotationAngle() const {return fMMXZRotationAngle;}
   inline double GetMMYZRotationAngle() const {return fMMYZRotationAngle;}
   inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
-
+  inline double GetMMResV() const {return fMMResV;} //mm
+  inline double GetMMResZ() const {return fMMResZ;} //mm
+  
   double GetMMECALdz(int view, double xECal, double yECal, double tECal);
   
   MMchInfo DecodeMMChannel(int);
@@ -200,6 +202,10 @@ private:
   double fMMYZRotationAngle;
   
   double fMMDriftVelocity; //mm/ns
+
+  double fMMResV;
+  double fMMResZ;
+  
   TString fMMViewLabel[2]; // labels vs view
 };
 #endif

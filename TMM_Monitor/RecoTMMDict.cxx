@@ -55,7 +55,7 @@ namespace ROOT {
       ::RecoTMM *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::RecoTMM));
       static ::ROOT::TGenericClassInfo 
-         instance("RecoTMM", "RecoTMM.h", 61,
+         instance("RecoTMM", "RecoTMM.h", 77,
                   typeid(::RecoTMM), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &RecoTMM_Dictionary, isa_proxy, 4,
                   sizeof(::RecoTMM) );
@@ -553,6 +553,201 @@ namespace ROOT {
 } // end of namespace ROOT for class vector<char>
 
 namespace ROOT {
+   static TClass *vectorlETH2FmUgR_Dictionary();
+   static void vectorlETH2FmUgR_TClassManip(TClass*);
+   static void *new_vectorlETH2FmUgR(void *p = nullptr);
+   static void *newArray_vectorlETH2FmUgR(Long_t size, void *p);
+   static void delete_vectorlETH2FmUgR(void *p);
+   static void deleteArray_vectorlETH2FmUgR(void *p);
+   static void destruct_vectorlETH2FmUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TH2F*>*)
+   {
+      vector<TH2F*> *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TH2F*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TH2F*>", -2, "vector", 389,
+                  typeid(vector<TH2F*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETH2FmUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TH2F*>) );
+      instance.SetNew(&new_vectorlETH2FmUgR);
+      instance.SetNewArray(&newArray_vectorlETH2FmUgR);
+      instance.SetDelete(&delete_vectorlETH2FmUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETH2FmUgR);
+      instance.SetDestructor(&destruct_vectorlETH2FmUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TH2F*> >()));
+
+      instance.AdoptAlternate(::ROOT::AddClassAlternate("vector<TH2F*>","std::vector<TH2F*, std::allocator<TH2F*> >"));
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const vector<TH2F*>*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETH2FmUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const vector<TH2F*>*>(nullptr))->GetClass();
+      vectorlETH2FmUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETH2FmUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETH2FmUgR(void *p) {
+      return  p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TH2F*> : new vector<TH2F*>;
+   }
+   static void *newArray_vectorlETH2FmUgR(Long_t nElements, void *p) {
+      return p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TH2F*>[nElements] : new vector<TH2F*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETH2FmUgR(void *p) {
+      delete (static_cast<vector<TH2F*>*>(p));
+   }
+   static void deleteArray_vectorlETH2FmUgR(void *p) {
+      delete [] (static_cast<vector<TH2F*>*>(p));
+   }
+   static void destruct_vectorlETH2FmUgR(void *p) {
+      typedef vector<TH2F*> current_t;
+      (static_cast<current_t*>(p))->~current_t();
+   }
+} // end of namespace ROOT for class vector<TH2F*>
+
+namespace ROOT {
+   static TClass *vectorlETH1DmUgR_Dictionary();
+   static void vectorlETH1DmUgR_TClassManip(TClass*);
+   static void *new_vectorlETH1DmUgR(void *p = nullptr);
+   static void *newArray_vectorlETH1DmUgR(Long_t size, void *p);
+   static void delete_vectorlETH1DmUgR(void *p);
+   static void deleteArray_vectorlETH1DmUgR(void *p);
+   static void destruct_vectorlETH1DmUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TH1D*>*)
+   {
+      vector<TH1D*> *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TH1D*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TH1D*>", -2, "vector", 389,
+                  typeid(vector<TH1D*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETH1DmUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TH1D*>) );
+      instance.SetNew(&new_vectorlETH1DmUgR);
+      instance.SetNewArray(&newArray_vectorlETH1DmUgR);
+      instance.SetDelete(&delete_vectorlETH1DmUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETH1DmUgR);
+      instance.SetDestructor(&destruct_vectorlETH1DmUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TH1D*> >()));
+
+      instance.AdoptAlternate(::ROOT::AddClassAlternate("vector<TH1D*>","std::vector<TH1D*, std::allocator<TH1D*> >"));
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const vector<TH1D*>*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETH1DmUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const vector<TH1D*>*>(nullptr))->GetClass();
+      vectorlETH1DmUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETH1DmUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETH1DmUgR(void *p) {
+      return  p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TH1D*> : new vector<TH1D*>;
+   }
+   static void *newArray_vectorlETH1DmUgR(Long_t nElements, void *p) {
+      return p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TH1D*>[nElements] : new vector<TH1D*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETH1DmUgR(void *p) {
+      delete (static_cast<vector<TH1D*>*>(p));
+   }
+   static void deleteArray_vectorlETH1DmUgR(void *p) {
+      delete [] (static_cast<vector<TH1D*>*>(p));
+   }
+   static void destruct_vectorlETH1DmUgR(void *p) {
+      typedef vector<TH1D*> current_t;
+      (static_cast<current_t*>(p))->~current_t();
+   }
+} // end of namespace ROOT for class vector<TH1D*>
+
+namespace ROOT {
+   static TClass *vectorlETGraphErrorsmUgR_Dictionary();
+   static void vectorlETGraphErrorsmUgR_TClassManip(TClass*);
+   static void *new_vectorlETGraphErrorsmUgR(void *p = nullptr);
+   static void *newArray_vectorlETGraphErrorsmUgR(Long_t size, void *p);
+   static void delete_vectorlETGraphErrorsmUgR(void *p);
+   static void deleteArray_vectorlETGraphErrorsmUgR(void *p);
+   static void destruct_vectorlETGraphErrorsmUgR(void *p);
+
+   // Function generating the singleton type initializer
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TGraphErrors*>*)
+   {
+      vector<TGraphErrors*> *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TGraphErrors*>));
+      static ::ROOT::TGenericClassInfo 
+         instance("vector<TGraphErrors*>", -2, "vector", 389,
+                  typeid(vector<TGraphErrors*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlETGraphErrorsmUgR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<TGraphErrors*>) );
+      instance.SetNew(&new_vectorlETGraphErrorsmUgR);
+      instance.SetNewArray(&newArray_vectorlETGraphErrorsmUgR);
+      instance.SetDelete(&delete_vectorlETGraphErrorsmUgR);
+      instance.SetDeleteArray(&deleteArray_vectorlETGraphErrorsmUgR);
+      instance.SetDestructor(&destruct_vectorlETGraphErrorsmUgR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TGraphErrors*> >()));
+
+      instance.AdoptAlternate(::ROOT::AddClassAlternate("vector<TGraphErrors*>","std::vector<TGraphErrors*, std::allocator<TGraphErrors*> >"));
+      return &instance;
+   }
+   // Static variable to force the class initialization
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const vector<TGraphErrors*>*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+
+   // Dictionary for non-ClassDef classes
+   static TClass *vectorlETGraphErrorsmUgR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const vector<TGraphErrors*>*>(nullptr))->GetClass();
+      vectorlETGraphErrorsmUgR_TClassManip(theClass);
+   return theClass;
+   }
+
+   static void vectorlETGraphErrorsmUgR_TClassManip(TClass* ){
+   }
+
+} // end of namespace ROOT
+
+namespace ROOT {
+   // Wrappers around operator new
+   static void *new_vectorlETGraphErrorsmUgR(void *p) {
+      return  p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TGraphErrors*> : new vector<TGraphErrors*>;
+   }
+   static void *newArray_vectorlETGraphErrorsmUgR(Long_t nElements, void *p) {
+      return p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TGraphErrors*>[nElements] : new vector<TGraphErrors*>[nElements];
+   }
+   // Wrapper around operator delete
+   static void delete_vectorlETGraphErrorsmUgR(void *p) {
+      delete (static_cast<vector<TGraphErrors*>*>(p));
+   }
+   static void deleteArray_vectorlETGraphErrorsmUgR(void *p) {
+      delete [] (static_cast<vector<TGraphErrors*>*>(p));
+   }
+   static void destruct_vectorlETGraphErrorsmUgR(void *p) {
+      typedef vector<TGraphErrors*> current_t;
+      (static_cast<current_t*>(p))->~current_t();
+   }
+} // end of namespace ROOT for class vector<TGraphErrors*>
+
+namespace ROOT {
    static TClass *vectorlETF1mUgR_Dictionary();
    static void vectorlETF1mUgR_TClassManip(TClass*);
    static void *new_vectorlETF1mUgR(void *p = nullptr);
@@ -625,7 +820,7 @@ nullptr
     };
     static const char* includePaths[] = {
 "/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.34.04/x86_64-almalinux9.5-gcc115-opt/include/",
-"/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/",
+"/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

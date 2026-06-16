@@ -11,7 +11,6 @@
 #include <fstream>
 #include <iomanip>
 #include <TGraphErrors.h>
-
 using namespace std;
 
 const double APV_BOUNDARY = 14.25; // mm
@@ -96,7 +95,7 @@ APVCalib FitOneAPV(TH2 *h2, TString tag)
     ip++;
   }
 
-  TF1 *f = new TF1(Form("fit_%s", tag.Data()), fitf, 80., 270, 5);
+  TF1 *f = new TF1(Form("fit_%s", tag.Data()), fitf, 90., 260, 5);
 
   f->SetParNames(
     "A_APV2",
@@ -192,7 +191,7 @@ void FitAPVEqualisation(
   const TString inputFileName,
   const int RunID)
 {
-  TString path = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/";
+  TString path = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/TMM_monitor/outputTMM/";
   TFile *fin = TFile::Open((path + inputFileName).Data(), "READ");
 
   if (!fin || fin->IsZombie()) {
@@ -200,8 +199,8 @@ void FitAPVEqualisation(
     return;
   }
 
-  TH2 *h2x = (TH2*)fin->Get("Raw/hqmaxstrip0");
-  TH2 *h2y = (TH2*)fin->Get("Raw/hqmaxstrip1");
+  TH2 *h2x = (TH2*)fin->Get("hqmaxstrip0");
+  TH2 *h2y = (TH2*)fin->Get("hqmaxstrip1");
 
   if (!h2x) {
     cout << "ERROR: cannot find X histogram " << endl;

@@ -305,86 +305,90 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
   // ------------------------------------------------------------
   for(int l = 0; l < TMMCH_N_Readout; l++) {
     //event by event th1
-    hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%d", l), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstrip[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    // hqmaxstrip[l] = new TH2F(Form("hqmaxstrip% s", tmm_tag[l]), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2, 1000, 0, 2500);
+    hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%s", tmm_tag[l]), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstrip[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstrip[l]->SetYTitle("q_{max} [ADC counts]");
 
-    hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%d", l), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstripFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    // hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l]), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2, 1000, 0, 2500);
+    hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l]), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstripFull[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstripFull[l]->SetYTitle("q_{max} [ADC counts]");
 
-    hBeam[l] = new TH1F(Form("hBeam%d", l), TString("x_{strip} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeam[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    // hBeam[l] = new TH1F(Form("hBeam%s", tmm_tag[l]), TString("x_{strip} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2);
+    hBeam[l] = new TH1F(Form("hBeam%s", tmm_tag[l]), TString("x_{strip} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeam[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeam[l]->SetYTitle("# entries");
 
-    hBeamFull[l] = new TH1F(Form("hBeamFull%d", l), TString("x_{strip} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeamFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    // hBeamFull[l] = new TH1F(Form("hBeamFull%s", tmm_tag[l]), TString("x_{strip} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2);
+    hBeamFull[l] = new TH1F(Form("hBeamFull%s", tmm_tag[l]), TString("x_{strip} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeamFull[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeamFull[l]->SetYTitle("# entries");
 
     // FitSlicesY() histograms
-    hAmpslice[l] = new TH1D(Form("hAmpslice%d", l), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hAmpslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hAmpslice[l] = new TH1D(Form("hAmpslice%s", tmm_tag[l]), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hAmpslice[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hAmpslice[l]->SetYTitle("AMP (q_{max} [ADC counts])");
 
-    hMeanslice[l] = new TH1D(Form("hMeanslice%d", l), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hMeanslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hMeanslice[l] = new TH1D(Form("hMeanslice%s", tmm_tag[l]), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hMeanslice[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hMeanslice[l]->SetYTitle("q_{max} [ADC counts]");
 
-    hSigmaslice[l] = new TH1D(Form("hSigmaslice%d", l), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hSigmaslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hSigmaslice[l] = new TH1D(Form("hSigmaslice%s", tmm_tag[l]), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hSigmaslice[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hSigmaslice[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
     
-    hAmpsliceFull[l] = new TH1D(Form("hAmpsliceFull%d", l), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hAmpsliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hAmpsliceFull[l] = new TH1D(Form("hAmpsliceFull%s", tmm_tag[l]), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hAmpsliceFull[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hAmpsliceFull[l]->SetYTitle("AMP (q_{max} [ADC counts])");
 
-    hMeansliceFull[l] = new TH1D(Form("hMeansliceFull%d", l), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hMeansliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hMeansliceFull[l] = new TH1D(Form("hMeansliceFull%s", tmm_tag[l]), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hMeansliceFull[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hMeansliceFull[l]->SetYTitle("q_{max} [ADC counts]");
 
-    hSigmasliceFull[l] = new TH1D(Form("hSigmasliceFull%d", l), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hSigmasliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hSigmasliceFull[l] = new TH1D(Form("hSigmasliceFull%s", tmm_tag[l]), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hSigmasliceFull[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hSigmasliceFull[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
 
     //calibrated plots
-    hqmaxstrip_cal[l] = new TH2F(Form("hqmaxstrip_cal%d", l), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstrip_cal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hqmaxstrip_cal[l] = new TH2F(Form("hqmaxstrip_cal%s", tmm_tag[l]), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstrip_cal[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstrip_cal[l]->SetYTitle("q_{max} calib [ADC counts]");
 
-    hqmaxstripFull_cal[l] = new TH2F(Form("hqmaxstripFull_cal%d", l), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstripFull_cal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hqmaxstripFull_cal[l] = new TH2F(Form("hqmaxstripFull_cal%s", tmm_tag[l]), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstripFull_cal[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstripFull_cal[l]->SetYTitle("q_{max} calib [ADC counts]");
 
-    hBeam_cal[l] = new TH1F(Form("hBeam_cal%d", l), TString("x_{strip-calib} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeam_cal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hBeam_cal[l] = new TH1F(Form("hBeam_cal%s", tmm_tag[l]), TString("x_{strip-calib} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeam_cal[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeam_cal[l]->SetYTitle("# entries");
 
-    hBeamFull_cal[l] = new TH1F(Form("hBeamFull_cal%d", l), TString("x_{strip-calib} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeamFull_cal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hBeamFull_cal[l] = new TH1F(Form("hBeamFull_cal%s", tmm_tag[l]), TString("x_{strip-calib} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeamFull_cal[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeamFull_cal[l]->SetYTitle("# entries");
 
-    hqmaxstrip_cal3s[l] = new TH2F(Form("hqmaxstrip_cal3s%d", l), TString("3Sigma threshold selection q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstrip_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hqmaxstrip_cal3s[l] = new TH2F(Form("hqmaxstrip_cal3s%s", tmm_tag[l]), TString("3Sigma threshold selection q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstrip_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstrip_cal3s[l]->SetYTitle("q_{max} calib [ADC counts]");
 
-    hqmaxstripFull_cal3s[l] = new TH2F(Form("hqmaxstripFull_cal3s%d", l), TString("3Sigma threshold selection q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstripFull_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hqmaxstripFull_cal3s[l] = new TH2F(Form("hqmaxstripFull_cal3s%s", tmm_tag[l]), TString("3Sigma threshold selection q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstripFull_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hqmaxstripFull_cal3s[l]->SetYTitle("q_{max} calib [ADC counts]");
 
-    hBeam_cal3s[l] = new TH1F(Form("hBeam_cal3s%d", l), TString("3Sigma threshold selection x_{strip-calib} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeam_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hBeam_cal3s[l] = new TH1F(Form("hBeam_cal3s%s", tmm_tag[l]), TString("3Sigma threshold selection x_{strip-calib} charge weighted [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeam_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeam_cal3s[l]->SetYTitle("# entries");
 
-    hBeamFull_cal3s[l] = new TH1F(Form("hBeamFull_cal3s%d", l), TString("3Sigma threshold selection x_{strip-calib} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
-    hBeamFull_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hBeamFull_cal3s[l] = new TH1F(Form("hBeamFull_cal3s%s", tmm_tag[l]), TString("3Sigma threshold selection x_{strip-calib} charge weighted full [") + tmm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5);
+    hBeamFull_cal3s[l]->SetXTitle(TString(tmm_tag[l]+" strip").Data());
     hBeamFull_cal3s[l]->SetYTitle("# entries");
 
     // event by event tgrapherrors
     g_BeamSpot[l] = new TGraphErrors();
-    TGraphAttribute(g_BeamSpot[l], Form("g_BeamSpot_%s", tmm_tag[l].Data()), "entry", "x_{Beam} [mm]", 20, kBlue + l);
+    TGraphAttribute(g_BeamSpot[l], Form("g_BeamSpot_%s", tmm_tag[l].Data()), "entry", "x_{Beam} strip", 20, kBlue + l);
 
     g_BeamSpread[l] = new TGraphErrors();
-    TGraphAttribute(g_BeamSpread[l], Form("g_BeamSpread_%s", tmm_tag[l].Data()), "entry", "rms_{Beam} [mm]", 21, kRed + l);
+    TGraphAttribute(g_BeamSpread[l], Form("g_BeamSpread_%s", tmm_tag[l].Data()), "entry", "rms_{Beam} strip", 21, kRed + l);
 
     g_BeamCharge[l] = new TGraphErrors();
     TGraphAttribute(g_BeamCharge[l], Form("g_BeamCharge_%s", tmm_tag[l].Data()), "entry", "q_{Beam} [ADC counts]", 22, kGreen + 2 + l);
@@ -524,18 +528,18 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
     // fit slices on both the q_strip vs x_strip histograms
     hqmaxstrip[iR]->FitSlicesY();
     // cout << "DEBUG: fit slice DONE on hqmaxstrip" << endl;
-    TH1D *h_Aslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%i_0",iR));
-    TH1D *h_muslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%i_1",iR));
-    TH1D *h_sigmaslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%i_2",iR));
+    TH1D *h_Aslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%s_0", tmm_tag[iR]));
+    TH1D *h_muslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%s_1", tmm_tag[iR]));
+    TH1D *h_sigmaslice = (TH1D*)gDirectory->Get(Form("hqmaxstrip%s_2", tmm_tag[iR]));
     hAmpslice[iR] = (TH1D*)h_Aslice->Clone();
     hMeanslice[iR] = (TH1D*)h_muslice->Clone();
     hSigmaslice[iR] = (TH1D*)h_sigmaslice->Clone();
    
     hqmaxstripFull[iR]->FitSlicesY();
     // cout << "DEBUG: fit slice DONE on hqmaxstripFull" << endl;
-    TH1D *h_AsliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%i_0",iR));
-    TH1D *h_musliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%i_1",iR));
-    TH1D *h_sigmasliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%i_2",iR));
+    TH1D *h_AsliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%s_0", tmm_tag[iR]));
+    TH1D *h_musliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%s_1", tmm_tag[iR]));
+    TH1D *h_sigmasliceFull = (TH1D*)gDirectory->Get(Form("hqmaxstripFull%s_2", tmm_tag[iR]));
     hAmpsliceFull[iR] = (TH1D*)h_AsliceFull->Clone();
     hMeansliceFull[iR] = (TH1D*)h_musliceFull->Clone();
     hSigmasliceFull[iR] = (TH1D*)h_sigmasliceFull->Clone();
@@ -546,8 +550,8 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
 
     // simple gaussian prefit to get initial parameters 
     TF1 *gaus = new TF1("gaus", "gaus", xmin, xmax);
-    // h_muslice->Fit(gaus, "R");
-    h_musliceFull->Fit(gaus, "R"); // attempt with hqmaxstripFull to evaluate systematic due to the procedure
+    h_muslice->Fit(gaus, "R");
+    // h_musliceFull->Fit(gaus, "R"); // attempt with hqmaxstripFull to evaluate systematic due to the procedure
     double A0 = gaus->GetParameter(0);
     double mu0 = gaus->GetParameter(1);
     double rms0 = gaus->GetParameter(2);
@@ -555,7 +559,7 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
 
     cout << "Initial fit parameters -> " << tmm_tag[iR] << "-strips: A0=" << A0 << ", mu0=" << mu0 << ", rms0=" << rms0 << endl;
 
-    f.push_back(new TF1(Form("f_%d", iR), "[0]*exp(-0.5*((x-[1])/[2])^2) + [3]*exp(-0.5*((x-[1])/[4])^2)", xmin, xmax));
+    f.push_back(new TF1(Form("f_%s", tmm_tag[iR]), "[0]*exp(-0.5*((x-[1])/[2])^2) + [3]*exp(-0.5*((x-[1])/[4])^2)", xmin, xmax));
     // 2 gaussians: core + wider tails
     f.at(iR)->SetParNames("A_1", "mean", "s_1", "A_2", "s_2");
     f.at(iR)->SetParameters(A0/2, mu0, rms0, A0, rms0/2); 
@@ -567,8 +571,8 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
     f.at(iR)->SetParLimits(4, 0.0, 3.0 * xmax); // sigma 2
   
     // fit
-    // h_muslice->Fit(f.at(iR), "R");
-    h_musliceFull->Fit(f.at(iR), "R"); // attempt with hqmaxstripFull to evaluate systematic due to the procedure
+    h_muslice->Fit(f.at(iR), "R");
+    // h_musliceFull->Fit(f.at(iR), "R"); // attempt with hqmaxstripFull to evaluate systematic due to the procedure
     // cout << "DEBUG: fit on each slice done" << endl;
     double d = 0;
     double r = 0;
@@ -691,10 +695,8 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
       }
 
       double chargecorrection = 1;
-      // double chargecorrection_3s = 1;
       if(x_strip>20 && x_strip<340){
         chargecorrection = g_FitFullRatio[iReadout_new]->Eval(x_strip);
-        // chargecorrection_3s = g_FitFullRatio3s[iReadout_new]->Eval(x_strip);
         // cout << "chargecorrection = " << chargecorrection << " - channel = " << channel << endl;
       }
 
@@ -738,7 +740,7 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
       hBeamFull_cal3s[iR]->SetBinError(bx, hBeamFull_cal[iR]->GetBinError(bx));
     }
   }
-
+ 
   // ------------------------------------------------------------
   // Global summary
   // ------------------------------------------------------------
@@ -775,8 +777,6 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList) {
     x_global_rms[0], err_x_global_rms[0],
     x_global_rms[1], err_x_global_rms[1]
   );
-
-  // cout << "DEBUG: Finished updating summary text file" << endl;
 
   // ------------------------------------------------------------
   // Write output ROOT file

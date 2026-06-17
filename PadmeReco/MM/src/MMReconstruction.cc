@@ -20,6 +20,7 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   fGeometry = new MMGeometry();
   fClusterization = new MMClusterization();
   //needed for MC
+  r = new TRandom2();
 
   fADCUnitToCharge = fConfig->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
   fDefaultHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
@@ -115,7 +116,9 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
 
       TRecoVHit *Hit = new TRecoVHit();
       Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
-      Hit->SetTime(digi->GetTime()); // ns to be smeared
+      Double_t sigma = fTimeTau/5;//sqrt(12); // sigma of the time smearing
+      Double_t DetTime=r->Gaus(0.,sigma); //ns
+      Hit->SetTime(digi->GetTime()+DetTime); // ns to be smeared
       double QtoMaxConv = (1./fADCUnitToCharge)*27*pow(TMath::E(),-3)*(fAPVTimeBin/fTimeTau)/6; // conversion factor from charge to maximum of the shaper output, for a given time binning and shaper time constant. N.B. assumes that the shaper output is sampled at its maximum.
       Hit->SetEnergy(digi->GetEnergy()*QtoMaxConv); // ADC
       Hits.push_back(Hit);

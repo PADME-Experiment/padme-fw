@@ -53,6 +53,7 @@ public:
   double GetBeamStart(){return fBeamStart;}
   inline TVector3 GetTargetPos() const {return fRTarg;}
   inline TVector3 GetCOG() const {return fCOGAtECal;}
+  inline TVector3 GetCOGForMM() const {return TVector3(fCOGAtECal.X(), fCOGAtECal.Y(), fZCogforMM);}
   inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
   inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
   inline int GetPeriod(){return fPeriod;}
@@ -165,6 +166,7 @@ private:
 
   double fZTarg;
   double fZECal;
+  double fZCogforMM;
   double fDisplacementXECal;
   double fDisplacementYECal;
 

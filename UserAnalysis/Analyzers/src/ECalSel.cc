@@ -398,13 +398,13 @@ Int_t ECalSel::OneClusTagAndProbeSel()
   TLorentzVector labMomenta[2];
   TLorentzVector labMomentaCM[2];
   // loop on clusters
-  std::vector<double> rangeE;
-  double EVal = fGeneralInfo->GetEnergyMin();
-  for (int isli = 0; isli < NSlicesE; isli++)
-  {
-    rangeE.push_back(EVal);
-    EVal = EVal + spacing;
-  }
+  // std::vector<double> rangeE;
+  // double EVal = fGeneralInfo->GetEnergyMin();
+  // for (int isli = 0; isli < NSlicesE; isli++)
+  // {
+  //   rangeE.push_back(EVal);
+  //   EVal = EVal + spacing;
+  // }
 
   int nOld = fECalEvents.size();
 
@@ -427,13 +427,14 @@ Int_t ECalSel::OneClusTagAndProbeSel()
     double cosq = cluMom.Dot(fGeneralInfo->GetBoost()) / (cluMom.Mag() * fGeneralInfo->GetBoost().Mag());
     // expected energies in the lab frame
     double pg = 0.5 * fGeneralInfo->GetSqrts() / sqrt(1. - cosq * cosq + pow(fGeneralInfo->GetGam() * cosq, 2) - 2. * fGeneralInfo->GetBG() * fGeneralInfo->GetGam() * cosq + pow(fGeneralInfo->GetBG(), 2));
+    // std::cout << "Expected photon energy ECALSEL h1: " << h1<<" "<<pg << std::endl;
 
     cluMom *= pg;
     TVector3 otherCluMom = fGeneralInfo->GetBoost();
     otherCluMom *= (-fGeneralInfo->GetBeamEnergy());
     otherCluMom += cluMom;
+    //fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEVsE_noSel"), pg, cluEnergy[0] - pg, 1.);
 
-    fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEVsE_noSel"), pg, cluEnergy[0] - pg, 1.);
     labMomenta[0].SetVectM(cluMom, 0.); // define a photon-like tlorentzVector
     labMomentaCM[0].SetVectM(labMomenta[0].Vect(), 0);
     labMomentaCM[0].Boost(-fGeneralInfo->GetBoost());
@@ -463,12 +464,10 @@ Int_t ECalSel::OneClusTagAndProbeSel()
     // if (icellYh2 > 26) continue; //magnet shadow for the 2nd clu
     // if (icellYh2 < 3) continue; //magnet shadow for the 2nd clu
 
-    Double_t Eup = fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMin();
-    Double_t Edown = fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
+    Double_t Eup = fGeneralInfo->GetEnergyMax();//fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMin();
+    Double_t Edown = fGeneralInfo->GetEnergyMin();//fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
     Int_t iSlice = (fGeneralInfo->GetBeamEnergy() - pg - Edown) / spacing;
-    if (iSlice >= 0 && iSlice <= (Eup - Edown) / spacing)
-      fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice), PhiExpProbe, cluEnergy[0] - pg, 1.);
-
+    
     if (cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMin())
       continue; // cluster should be within the radius range of the 2gamma cluster pair
     if (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMax())
@@ -514,7 +513,13 @@ Int_t ECalSel::OneClusTagAndProbeSel()
       }
       fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_TP_DEVsE_NOcut_tag_%s", processTag.Data()), fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.);
     }
-    fhSvcVal->FillHisto2List("ECalSel", "ECal_TP_DEVsE_NOcut_tag", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.); // da mettere quello in phi
+    if ((iSlice >= 0 && iSlice <=(Eup - Edown) / spacing) && (fGeneralInfo->GetBeamEnergy() - pg > Edown && fGeneralInfo->GetBeamEnergy() - pg < Eup)){
+      //std::cout<<"Eprobe: "<<fGeneralInfo->GetBeamEnergy()-pg<<" pg "<<" Edown: "<<Edown<<" Eup: "<<Eup<<" iSlice: "<<iSlice<<" lowerbound:"<<Edown + (spacing * (iSlice))<<" upperbound:"<<Edown + (spacing * (iSlice + 1))<<std::endl;
+        //fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEVsE_noSel"), pg, cluEnergy[0] - pg, 1.);
+        fhSvcVal->FillHisto2List("ECalSel", "ECal_TP_DEVsE_NOcut_tag", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.); // da mettere quello in phi
+
+        fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice), PhiExpProbe, cluEnergy[0] - pg, 1.);
+    }
 
     if (cluEnergy[0] - pg > 100)
     {
@@ -536,6 +541,7 @@ Int_t ECalSel::OneClusTagAndProbeSel()
     int isPaired = -1; // look for an additional cluster from the same interaction
     int npaired = 0;
     int h2;
+
     for (h2 = 0; h2 < fECal_clEvent->GetNElements(); ++h2)
     {
       if (h1 == h2)
@@ -615,8 +621,7 @@ Int_t ECalSel::OneClusTagAndProbeSel()
             TVector3 DiffInOut = mcOPartIn->GetMomentum() - ((mcOPartOut_1->GetMomentum()) + (mcOPartOut_0->GetMomentum()));
             fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_TP_DiffInOut_PtvsPz_%s", processTag.Data()), DiffInOut.Perp(), DiffInOut.Z(), 1.);
           }
-
-          if (iSlice >= 0 && iSlice <= (Eup - Edown) / spacing)
+          if ((iSlice >= 0 && iSlice <=(Eup - Edown) / spacing) && (fGeneralInfo->GetBeamEnergy() - pg > Edown && fGeneralInfo->GetBeamEnergy() - pg < Eup))
           {
             fhSvcVal->FillHistoList("ECalSel", Form("ECal_TP_DPHIAbs_probe_slice_%i", iSlice), fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()), 1.);
             fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DPhivsPhiExp_probe_slice_%i", iSlice), PhiExpProbe, fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()), 1.);
@@ -627,15 +632,15 @@ Int_t ECalSel::OneClusTagAndProbeSel()
             if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED) && fMCTruthECal->GetVtxFromCluID(h1) > 0)
               fhSvcVal->FillHisto2List("ECalSelMCTruth", Form("ECal_TP_PxvsPy_Probe_%s", processTag.Data()), labMomenta[0].X() + labMomenta[1].X(), labMomenta[0].Y() + labMomenta[1].Y(), 1.);
 
-            if (iSlice >= 0 && iSlice <= (Eup - Edown) / spacing)
-            {
-              fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_probe_slice_%i", iSlice), PhiExpProbe, cluEnergy[0] - pg, 1.);
+            if ((iSlice >= 0 && iSlice <=(Eup - Edown) / spacing) && (fGeneralInfo->GetBeamEnergy() - pg > Edown && fGeneralInfo->GetBeamEnergy() - pg < Eup))
+            {   fhSvcVal->FillHisto2List("ECalSel", "ECal_TP_DEVsE_cut_probe", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[1] - pg2, 1.);
+
+                fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEvsPhiExp_probe_slice_%i", iSlice), PhiExpProbe, cluEnergy[1] - pg2, 1.);
             }
             fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DE_Probe"), fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[1] - pg2, 1.);
             fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DTHEVsDPHIAbs_probe"),
                                      fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),
                                      labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
-            fhSvcVal->FillHisto2List("ECalSel", "ECal_TP_DEVsE_cut_probe", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[1] - pg2, 1.);
 
             if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
             {
@@ -2439,7 +2444,11 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
 
       ProYProbe->Fit(funcBkgProbe, "REMQ");
       ProYProbe->Write();
-
+      ProbeSlicevsPhi[iSlice]->GetXaxis()->SetRangeUser(PhiDown + iPhi * spacingPhi, PhiDown + (iPhi + 1) * spacingPhi);
+      
+      TH1D *ProYProbe_Energy = (TH1D *)ProbeSlicevsPhi[iSlice]->ProjectionY();
+      ProYProbe_Energy->SetName(Form("ProYProbe_Energy_%i_%i", iSlice, iPhi));
+      ProYProbe_Energy->Write();
       TF1 *funcBkgProbe_pol0 = new TF1("funcBkgProbe_pol0", "pol0", 2, 4.5);
       funcBkgProbe_pol0->SetParameter(0, funcBkgProbe->GetParameter(0));
 
@@ -2452,7 +2461,8 @@ Bool_t ECalSel::FitTagProbeEffvsPhi()
       ProYProbe->Write();
 
       Double_t errNum;                                                                                                                                                                  // DA SISTEMARE QUA
-      Double_t NumTemp = (Double_t)ProYProbe->IntegralAndError(ProYProbe->FindBin(fMeanDPhi - fSigmaCut * fSigmaDPhi), ProYProbe->FindBin(fMeanDPhi + fSigmaCut * fSigmaDPhi), errNum); //-BkgProbe;
+      Double_t NumTemp = (Double_t)ProYProbe_Energy->Integral(); //-BkgProbe;
+      //Double_t NumTemp = (Double_t)ProYProbe->IntegralAndError(ProYProbe->FindBin(fMeanDPhi - fSigmaCut * fSigmaDPhi), ProYProbe->FindBin(fMeanDPhi + fSigmaCut * fSigmaDPhi), errNum); //-BkgProbe;
       errNum = TMath::Sqrt(NumTemp);
       NumPhi = NumTemp;
       if (std::isnan(NumTemp))
@@ -2496,7 +2506,7 @@ Bool_t ECalSel::FitTagProbeEff()
   Double_t EnergyVal = 0.;
   TH1D *PhiFullProbe;
 
-  double Edown = fGeneralInfo->GetEnergyMin(); //fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
+  double Edown = fGeneralInfo->GetEnergyMin();//fGeneralInfo->GetBeamEnergy() - fGeneralInfo->GetEnergyMax();
 
   TString sliceOutname;
   TString dataType;
@@ -2637,10 +2647,10 @@ Bool_t ECalSel::FitTagProbeEff()
 
     // new part
 
-    // EofProbe_cut->GetXaxis()->SetRangeUser(Edown + (spacing * (iSlice)), Edown + (spacing * (iSlice + 1)));
-    // TH1D *ProYProbe = (TH1D *)EofProbe_cut->ProjectionY();
-    // ProYProbe->SetName(Form("FitProbe_slice_%i", iSlice));
-    // ProYProbe->Write();
+    EofProbe_cut->GetXaxis()->SetRangeUser(Edown + (spacing * (iSlice)), Edown + (spacing * (iSlice + 1)));
+    TH1D *ProYProbe = (TH1D *)EofProbe_cut->ProjectionY();
+    ProYProbe->SetName(Form("FitProbe_slice_%i", iSlice));
+    ProYProbe->Write();
     // TH1D *ProbeNoBackgroud = new TH1D(Form("FitProbeNoBackgroud_%i", iSlice), Form("FitProbeNoBackgroud_%i", iSlice), 400, -400, 400);
     // for (int iBin = 0; iBin < ProYTag->GetNbinsX(); iBin++)
     // { std::cout<<ProYTag->GetNbinsX()<<std::endl;

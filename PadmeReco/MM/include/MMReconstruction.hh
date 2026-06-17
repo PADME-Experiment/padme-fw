@@ -10,6 +10,7 @@
 #include "DigitizerChannelMM.hh"
 #include "PadmeVReconstruction.hh"
 #include "MMGeometry.hh"
+#include "TRandom2.h"
 
 class MMReconstruction : public PadmeVReconstruction
 {
@@ -46,6 +47,7 @@ private:
   std::string fAPVChThresholdFile;
   std::map < std::pair<int,int>,double> fAPVChLowThresholdMap;
   std::map < std::pair<int,int>,double> fAPVChSaturationMap;
+  TRandom2 *r;
 
 
   // Results of pedestal and total charge evaluation

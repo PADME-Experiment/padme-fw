@@ -21,6 +21,7 @@ class MCTruth;
 class MCTruthECal;
 class DataQuality;
 class MMTrackDevel;
+class MMFindBestTrack;
 
 class UserAnalysis {
 
@@ -62,6 +63,7 @@ private:
   ECalCalib* fECalCalib;
   DataQuality *fDataQuality;
   MMTrackDevel *fMMTrackDevel;
+  MMFindBestTrack *fMMFindBestTrack;
 
 
   bool fETagHitsAvail;

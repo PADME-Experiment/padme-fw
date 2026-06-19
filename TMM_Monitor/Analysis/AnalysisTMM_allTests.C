@@ -61,6 +61,7 @@ struct SliceFitResult {
 };
 
 struct ObservableResult {
+  double entries = 0.;
   double charge = 0.;
   double chargeErr = 0.;
   double meanCharge = 0.;
@@ -70,6 +71,10 @@ struct ObservableResult {
   double spotErrCons = 0.;
   double width = 0.;
   double widthErr = 0.;
+  double widthCore = 0.;
+  double widthCoreErr = 0.;
+  double widthTail = 0.;
+  double widthTailErr = 0.;
   double widthSingleCore = 0.;
   double widthSingleCoreErr = 0.;
 };
@@ -215,6 +220,18 @@ void ExtractDoubleGaussianObservables(TF1 *f, TH1D *h, ObservableResult &obs)
   obs.spot = mu;
   obs.spotErr = eMu;
 
+  if (s1 <= s2) {
+    obs.widthCore = s1;
+    obs.widthCoreErr = eS1;
+    obs.widthTail = s2;
+    obs.widthTailErr = eS2;
+  } else {
+    obs.widthCore = s2;
+    obs.widthCoreErr = eS2;
+    obs.widthTail = s1;
+    obs.widthTailErr = eS1;
+  }
+
   obs.charge = NEvtBLOCKS * f->Integral(xmin, xmax) / binWidth;
   obs.chargeErr = sqrt(NEvtBLOCKS * max(0.0, obs.charge));
   obs.meanCharge = f->Integral(xmin, xmax) / binWidth;
@@ -285,6 +302,7 @@ ObservableResult ComputeObservables(TH2F *h2, TString tag)
     err_mean_charge = sqrt(max(0.0, variance) / NEvtBLOCKS);
   }
 
+  obs.entries = entries;
   obs.charge = charge;
   obs.chargeErr = err_charge;
   obs.meanCharge = mean_charge; 
@@ -343,15 +361,18 @@ void TGraphAttributePair(TGraphErrors *g[2], TString baseName, TString view, TSt
   TGraphAttribute(g[1], Form("g_Block%sFitSlices_%s", baseName.Data(), view.Data()), "block", ytitle, markerstyle, color);
 }
 
-void FillGraphPair(TGraphErrors *gSpot[2], TGraphErrors *gWidth[2], TGraphErrors *gSingleWidthCore[2], TGraphErrors *gCharge[2], TGraphErrors *gMeanQ[2], int ip, int iblk, const vector<ObservableResult> obs[2])
+void FillGraphPair(TGraphErrors *gNentries[2], TGraphErrors *gSpot[2], TGraphErrors *gWidth[2], TGraphErrors *gWidthCore[2], TGraphErrors *gWidthTail[2], TGraphErrors *gSingleWidthCore[2], TGraphErrors *gCharge[2], TGraphErrors *gMeanQ[2], int ip, int iblk, const vector<ObservableResult> obs[2])
 {
   for (int im = 0; im < 2; ++im) {
     if (obs[im].empty()) continue;
 
     const ObservableResult &o = obs[im].back();
 
+    AddGraphPoint(gNentries[im],        ip, iblk, o.entries,         0);
     AddGraphPoint(gSpot[im],            ip, iblk, o.spot,            o.spotErr);
     AddGraphPoint(gWidth[im],           ip, iblk, o.width,           o.widthErr);
+    AddGraphPoint(gWidthCore[im],       ip, iblk, o.widthCore,       o.widthCoreErr);
+    AddGraphPoint(gWidthTail[im],       ip, iblk, o.widthTail,       o.widthTailErr);
     AddGraphPoint(gSingleWidthCore[im], ip, iblk, o.widthSingleCore, o.widthSingleCoreErr);
     AddGraphPoint(gCharge[im],          ip, iblk, o.charge,          o.chargeErr);
     AddGraphPoint(gMeanQ[im],           ip, iblk, o.meanCharge,      o.meanChargeErr);
@@ -364,15 +385,18 @@ void WriteGraphPair(TGraphErrors *g[2])
   if (g[1]) g[1]->Write();
 }
 
-void WriteMeasurementGraphs(TDirectory *dir, TGraphErrors *gSpot[TMMCH_N_Readout][2], TGraphErrors *gWidth[TMMCH_N_Readout][2], TGraphErrors *gSingleWidthCore[TMMCH_N_Readout][2], TGraphErrors *gCharge[TMMCH_N_Readout][2], TGraphErrors *gMeanQ[TMMCH_N_Readout][2])
+void WriteMeasurementGraphs(TDirectory *dir, TGraphErrors *gNentries[TMMCH_N_Readout][2], TGraphErrors *gSpot[TMMCH_N_Readout][2], TGraphErrors *gWidth[TMMCH_N_Readout][2], TGraphErrors *gWidthCore[TMMCH_N_Readout][2], TGraphErrors *gWidthTail[TMMCH_N_Readout][2], TGraphErrors *gSingleWidthCore[TMMCH_N_Readout][2], TGraphErrors *gCharge[TMMCH_N_Readout][2], TGraphErrors *gMeanQ[TMMCH_N_Readout][2])
 {
   if (!dir) return;
 
   dir->cd();
 
   for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
+    gNentries[iv][0]->Write();
     WriteGraphPair(gSpot[iv]);
     WriteGraphPair(gWidth[iv]);
+    gWidthCore[iv][1]->Write();
+    gWidthTail[iv][1]->Write();
     gSingleWidthCore[iv][1]->Write();
     WriteGraphPair(gCharge[iv]);
     WriteGraphPair(gMeanQ[iv]);
@@ -382,6 +406,7 @@ void WriteMeasurementGraphs(TDirectory *dir, TGraphErrors *gSpot[TMMCH_N_Readout
 ObservableResult DoObsRatio(ObservableResult obs_tot, vector<ObservableResult> obs_block, int iblk){
   ObservableResult obsratio;
       
+  obsratio.entries = 0.;
   obsratio.charge = fabs(obs_tot.charge)>0 ? obs_block.at(iblk).charge/obs_tot.charge : -99;
   obsratio.chargeErr = 0.;
   obsratio.meanCharge = fabs(obs_tot.meanCharge)>0 ? obs_block.at(iblk).meanCharge/obs_tot.meanCharge : -99;
@@ -391,6 +416,10 @@ ObservableResult DoObsRatio(ObservableResult obs_tot, vector<ObservableResult> o
   obsratio.spotErrCons = 0.;
   obsratio.width = fabs(obs_tot.width)>0 ? obs_block.at(iblk).width/obs_tot.width : -99;
   obsratio.widthErr = 0.;
+  obsratio.widthCore = fabs(obs_tot.widthCore)>0 ? obs_block.at(iblk).widthCore/obs_tot.widthCore : -99;
+  obsratio.widthCoreErr = 0.;
+  obsratio.widthTail = fabs(obs_tot.widthTail)>0 ? obs_block.at(iblk).widthTail/obs_tot.widthTail : -99;
+  obsratio.widthTailErr = 0.;
   obsratio.widthSingleCore = fabs(obs_tot.widthSingleCore)>0 ? obs_block.at(iblk).widthSingleCore/obs_tot.widthSingleCore : -99;
   obsratio.widthSingleCoreErr = 0.;
 
@@ -408,8 +437,11 @@ void PrintObservableResult(const TString &label, const ObservableResult obs[2])
     TString method = (im == 0) ? "Direct" : "FitSlicesY";
 
     cout << "  Method: " << method << endl;
+    cout << "    nentries          = " << obs[im].entries  << endl;
     cout << "    spot              = " << obs[im].spot << " +/- " << obs[im].spotErr << endl;
     cout << "    width             = " << obs[im].width << " +/- " << obs[im].widthErr << endl;
+    cout << "    widthCore         = " << obs[im].widthCore << " +/- " << obs[im].widthCoreErr << endl;
+    cout << "    widthTail         = " << obs[im].widthTail << " +/- " << obs[im].widthTailErr << endl;
     cout << "    widthSingleCore   = " << obs[im].widthSingleCore << " +/- " << obs[im].widthSingleCoreErr << endl;
     cout << "    charge            = " << obs[im].charge << " +/- " << obs[im].chargeErr << endl;
     cout << "    meanCharge        = " << obs[im].meanCharge << " +/- " << obs[im].meanChargeErr << endl;
@@ -429,7 +461,7 @@ void AnalysisTMM(const char *InputFileName)
   TString inName = gSystem->BaseName(InputFileName);
   inName.ReplaceAll(".root", "");
 
-  TString outName = Form("NEW_AnalysisTMM_%s.root", inName.Data());
+  TString outName = Form("AnalysisTMM_%s.root", inName.Data());
 
   TFile *fout = TFile::Open(outName, "RECREATE");
   TDirectory *dGraphsOut = fout->mkdir("Graphs");
@@ -443,13 +475,18 @@ void AnalysisTMM(const char *InputFileName)
 
   TDirectory *dGraphsRawOut             = dGraphsOut->mkdir("Raw");
   TDirectory *dGraphsCalibOut           = dGraphsOut->mkdir("Calib");
+  TDirectory *dGraphsCalib3sOut         = dGraphsOut->mkdir("Calib3s");
   TDirectory *dGraphsCalibOverallOut    = dGraphsOut->mkdir("CalibOverall");
+  TDirectory *dGraphsCalib3sOverallOut  = dGraphsOut->mkdir("Calib3sOverall");
   TDirectory *dRatioOut                 = dGraphsOut->mkdir("Ratio");
   TDirectory *dRatioRawOut              = dRatioOut->mkdir("Raw");
   TDirectory *dRatioCalibOut            = dRatioOut->mkdir("Calib");
+  TDirectory *dRatioCalib3sOut          = dRatioOut->mkdir("Calib3s");
   TDirectory *dRatioCalibOverallOut     = dRatioOut->mkdir("CalibOverall");
+  TDirectory *dRatioCalib3sOverallOut   = dRatioOut->mkdir("Calib3sOverall");
 
-  if (!dGraphsRawOut || !dGraphsCalibOut || !dGraphsCalibOverallOut ) {
+  if (!dGraphsRawOut || !dGraphsCalibOut || !dGraphsCalib3sOut ||
+      !dGraphsCalibOverallOut || !dGraphsCalib3sOverallOut) {
     cerr << "ERROR: cannot create/get Graphs subdirectories" << endl;
     fout->Close();
     fin->Close();
@@ -475,7 +512,7 @@ void AnalysisTMM(const char *InputFileName)
   // ============================================================
 
   // prepare the overall structs for the results
-  ObservableResult RawObs[TMMCH_N_Readout][2], CalibObs[TMMCH_N_Readout][2];
+  ObservableResult RawObs[TMMCH_N_Readout][2], CalibObs[TMMCH_N_Readout][2], Calib3sObs[TMMCH_N_Readout][2];
   
   for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
     TString v = views[iv];
@@ -490,6 +527,10 @@ void AnalysisTMM(const char *InputFileName)
       TH2F *h2CalibOverall = GetH2F(dOverlallInCalib, Form("hqmaxstripFull_cal%s", v.Data()));
       CalibObs[iv][0] = ComputeObservables(h2CalibOverall, v);
       CalibObs[iv][1] = ComputeObservablesFitSlice(h2CalibOverall, v);    
+
+      TH2F *h2Calib3sOverall = GetH2F(dOverlallInCalib, Form("hqmaxstripFull_cal3s%s", v.Data()));
+      Calib3sObs[iv][0] = ComputeObservables(h2Calib3sOverall, v);
+      Calib3sObs[iv][1] = ComputeObservablesFitSlice(h2Calib3sOverall, v);    
     }
 
     cout << "===================================================" << endl;
@@ -498,6 +539,7 @@ void AnalysisTMM(const char *InputFileName)
 
     PrintObservableResult("Raw observables", RawObs[iv]);
     PrintObservableResult("Calib observables", CalibObs[iv]);
+    PrintObservableResult("Calib3s observables", Calib3sObs[iv]);
 
     cout << "===================================================" << endl;
     cout << endl;
@@ -512,75 +554,156 @@ void AnalysisTMM(const char *InputFileName)
   // ============================================================
 
   //prepare TGraphs and struct for the block analysis (runs over possible analysis methods)
+  TGraphErrors *gNentriesRaw[TMMCH_N_Readout][2];
   TGraphErrors *gSpotRaw[TMMCH_N_Readout][2];
   TGraphErrors *gWidthRaw[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreRaw[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailRaw[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreRaw[TMMCH_N_Readout][2];
   TGraphErrors *gChargeRaw[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQRaw[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalib[TMMCH_N_Readout][2];
   TGraphErrors *gSpotCalib[TMMCH_N_Readout][2];
   TGraphErrors *gWidthCalib[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalib[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalib[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreCalib[TMMCH_N_Readout][2];
   TGraphErrors *gChargeCalib[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQCalib[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gSpotCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gSingleWidthCoreCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gChargeCalib3s[TMMCH_N_Readout][2];
+  TGraphErrors *gMeanQCalib3s[TMMCH_N_Readout][2];
+
+  TGraphErrors *gNentriesCalibOverall[TMMCH_N_Readout][2];
   TGraphErrors *gSpotCalibOverall[TMMCH_N_Readout][2];
   TGraphErrors *gWidthCalibOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalibOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalibOverall[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreCalibOverall[TMMCH_N_Readout][2];
   TGraphErrors *gChargeCalibOverall[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQCalibOverall[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gSpotCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gSingleWidthCoreCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gChargeCalib3sOverall[TMMCH_N_Readout][2];
+  TGraphErrors *gMeanQCalib3sOverall[TMMCH_N_Readout][2];
+
   vector <ObservableResult> BlockRawObs[TMMCH_N_Readout][2];
-  vector <ObservableResult> BlockCalibObs[TMMCH_N_Readout][2];
-  vector <ObservableResult> BlockCalibOverallObs[TMMCH_N_Readout][2];
+  vector <ObservableResult> BlockCalibObs[TMMCH_N_Readout][2], BlockCalib3sObs[TMMCH_N_Readout][2];
+  vector <ObservableResult> BlockCalibOverallObs[TMMCH_N_Readout][2], BlockCalib3sOverallObs[TMMCH_N_Readout][2];
 
   vector<int> blocks = FindBlockNumbers(dBlocksIn);
-  cout << "### NBlocks to be analysed =  " << blocks.size() << endl;
+  cout << "DEBUG: found " << blocks.size() << " blocks" << endl;
   
   for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
     TString v = views[iv];
 
+    InitGraphPair(gNentriesRaw[iv]);
     InitGraphPair(gSpotRaw[iv]);
     InitGraphPair(gWidthRaw[iv]);
+    InitGraphPair(gWidthCoreRaw[iv]);
+    InitGraphPair(gWidthTailRaw[iv]);
     InitGraphPair(gSingleWidthCoreRaw[iv]);
     InitGraphPair(gChargeRaw[iv]);
     InitGraphPair(gMeanQRaw[iv]);
 
+    InitGraphPair(gNentriesCalib[iv]);
     InitGraphPair(gSpotCalib[iv]);
     InitGraphPair(gWidthCalib[iv]);
+    InitGraphPair(gWidthCoreCalib[iv]);
+    InitGraphPair(gWidthTailCalib[iv]);
     InitGraphPair(gSingleWidthCoreCalib[iv]);
     InitGraphPair(gChargeCalib[iv]);
     InitGraphPair(gMeanQCalib[iv]);
 
+    InitGraphPair(gNentriesCalib3s[iv]);
+    InitGraphPair(gSpotCalib3s[iv]);
+    InitGraphPair(gWidthCalib3s[iv]);
+    InitGraphPair(gWidthCoreCalib3s[iv]);
+    InitGraphPair(gWidthTailCalib3s[iv]);
+    InitGraphPair(gSingleWidthCoreCalib3s[iv]);
+    InitGraphPair(gChargeCalib3s[iv]);
+    InitGraphPair(gMeanQCalib3s[iv]);
+
+    InitGraphPair(gNentriesCalibOverall[iv]);
     InitGraphPair(gSpotCalibOverall[iv]);
     InitGraphPair(gWidthCalibOverall[iv]);
+    InitGraphPair(gWidthCoreCalibOverall[iv]);
+    InitGraphPair(gWidthTailCalibOverall[iv]);
     InitGraphPair(gSingleWidthCoreCalibOverall[iv]);
     InitGraphPair(gChargeCalibOverall[iv]);
     InitGraphPair(gMeanQCalibOverall[iv]);
 
+    InitGraphPair(gNentriesCalib3sOverall[iv]);
+    InitGraphPair(gSpotCalib3sOverall[iv]);
+    InitGraphPair(gWidthCalib3sOverall[iv]);
+    InitGraphPair(gWidthCoreCalib3sOverall[iv]);
+    InitGraphPair(gWidthTailCalib3sOverall[iv]);
+    InitGraphPair(gSingleWidthCoreCalib3sOverall[iv]);
+    InitGraphPair(gChargeCalib3sOverall[iv]);
+    InitGraphPair(gMeanQCalib3sOverall[iv]);
+
+    TGraphAttributePair(gNentriesRaw[iv],        "NentriesRaw",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotRaw[iv],            "BeamSpotRaw",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthRaw[iv],           "BeamSpreadRaw",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreRaw[iv],       "BeamCoreWidthRaw",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailRaw[iv],       "BeamTailWidthRaw",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreRaw[iv], "SingleCoreWidthRaw", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeRaw[iv],          "BeamChargeRaw",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQRaw[iv],           "MeanChargeRaw",      v, "mean charge/event",       20, iv + 1);
 
+    TGraphAttributePair(gNentriesCalib[iv],        "NentriesCalib",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotCalib[iv],            "BeamSpotCalib",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthCalib[iv],           "BeamSpreadCalib",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalib[iv],       "BeamCoreWidthCalib",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalib[iv],       "BeamTailWidthCalib",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreCalib[iv], "SingleCoreWidthCalib", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeCalib[iv],          "BeamChargeCalib",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQCalib[iv],           "MeanChargeCalib",      v, "mean charge/event",       20, iv + 1);
 
+    TGraphAttributePair(gNentriesCalib3s[iv],        "NentriesCalib3s",        v, "number of entries",       20, iv + 1);
+    TGraphAttributePair(gSpotCalib3s[iv],            "BeamSpotCalib3s",        v, "beam spot [strip]",       20, iv + 1);
+    TGraphAttributePair(gWidthCalib3s[iv],           "BeamSpreadCalib3s",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalib3s[iv],       "BeamCoreWidthCalib3s",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalib3s[iv],       "BeamTailWidthCalib3s",   v, "tail width [strip]",      20, iv + 1);
+    TGraphAttributePair(gSingleWidthCoreCalib3s[iv], "SingleCoreWidthCalib3s", v, "single-core width [strip]", 20, iv + 1);
+    TGraphAttributePair(gChargeCalib3s[iv],          "BeamChargeCalib3s",      v, "integrated charge",       20, iv + 1);
+    TGraphAttributePair(gMeanQCalib3s[iv],           "MeanChargeCalib3s",      v, "mean charge/event",       20, iv + 1);
+
+    TGraphAttributePair(gNentriesCalibOverall[iv],        "NentriesCalibOverall",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotCalibOverall[iv],            "BeamSpotCalibOverall",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthCalibOverall[iv],           "BeamSpreadCalibOverall",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalibOverall[iv],       "BeamCoreWidthCalibOverall",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalibOverall[iv],       "BeamTailWidthCalibOverall",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreCalibOverall[iv], "SingleCoreWidthCalibOverall", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeCalibOverall[iv],          "BeamChargeCalibOverall",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQCalibOverall[iv],           "MeanChargeCalibOverall",      v, "mean charge/event",       20, iv + 1);
+
+    TGraphAttributePair(gNentriesCalib3sOverall[iv],        "NentriesCalib3sOverall",        v, "number of entries",       20, iv + 1);
+    TGraphAttributePair(gSpotCalib3sOverall[iv],            "BeamSpotCalib3sOverall",        v, "beam spot [strip]",       20, iv + 1);
+    TGraphAttributePair(gWidthCalib3sOverall[iv],           "BeamSpreadCalib3sOverall",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalib3sOverall[iv],       "BeamCoreWidthCalib3sOverall",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalib3sOverall[iv],       "BeamTailWidthCalib3sOverall",   v, "tail width [strip]",      20, iv + 1);
+    TGraphAttributePair(gSingleWidthCoreCalib3sOverall[iv], "SingleCoreWidthCalib3sOverall", v, "single-core width [strip]", 20, iv + 1);
+    TGraphAttributePair(gChargeCalib3sOverall[iv],          "BeamChargeCalib3sOverall",      v, "integrated charge",       20, iv + 1);
+    TGraphAttributePair(gMeanQCalib3sOverall[iv],           "MeanChargeCalib3sOverall",      v, "mean charge/event",       20, iv + 1);
   }
 
   for (size_t i = 0; i < blocks.size(); ++i) {
 
     const int iblk = blocks[i];
-    cout << "Processing block: " << blocks[i] << endl;
+    cout << "DEBUG: iblk = " << iblk << endl;
     TDirectory *dBIn = (TDirectory*)dBlocksIn->Get(Form("block_%04d", iblk));
     if (!dBIn) {
       cerr << "WARNING: missing input block directory block_" << setw(4) << setfill('0') << iblk << setfill(' ') << endl;
@@ -616,7 +739,9 @@ void AnalysisTMM(const char *InputFileName)
 
       TH2F *h2RawBlock = GetH2F(dBRawIn, Form("hBlockqmaxstripFull%s_block%04d", v.Data(), iblk));
       TH2F *h2CalBlock = GetH2F(dBCalIn,Form("hBlockqmaxstripFull_cal%s_block%04d", v.Data(), iblk));
+      TH2F *h2Cal3sBlock = GetH2F(dBCalIn,Form("hBlockqmaxstripFull_cal3s%s_block%04d", v.Data(), iblk));
       TH2F *h2CalOverallBlock = GetH2F(dBCalOvIn,Form("hBlockqmaxstripFull_Overallcal%s_block%04d", v.Data(), iblk));
+      TH2F *h2Cal3sOverallBlock = GetH2F(dBCalOvIn,Form("hBlockqmaxstripFull_Overallcal3s%s_block%04d", v.Data(), iblk));
 
       BlockRawObs[iv][0].push_back(ComputeObservables(h2RawBlock, v));
       BlockRawObs[iv][1].push_back(ComputeObservablesFitSlice(h2RawBlock, v));
@@ -624,33 +749,60 @@ void AnalysisTMM(const char *InputFileName)
       BlockCalibObs[iv][0].push_back(ComputeObservables(h2CalBlock, v));
       BlockCalibObs[iv][1].push_back(ComputeObservablesFitSlice(h2CalBlock, v));
 
+      BlockCalib3sObs[iv][0].push_back(ComputeObservables(h2Cal3sBlock, v));
+      BlockCalib3sObs[iv][1].push_back(ComputeObservablesFitSlice(h2Cal3sBlock, v));
+
       BlockCalibOverallObs[iv][0].push_back(ComputeObservables(h2CalOverallBlock, v));
       BlockCalibOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2CalOverallBlock, v));
+
+      BlockCalib3sOverallObs[iv][0].push_back(ComputeObservables(h2Cal3sOverallBlock, v));
+      BlockCalib3sOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2Cal3sOverallBlock, v));
 
       dBlocksOut->cd();
       WriteSliceFit(h2RawBlock, Form("Raw_%s_block%04d", v.Data(), iblk), dBlocksRawOut);
       WriteSliceFit(h2CalBlock, Form("Calib_%s_block%04d", v.Data(), iblk), dBlocksCalOut);
+      WriteSliceFit(h2Cal3sBlock, Form("Calib3s_%s_block%04d", v.Data(), iblk), dBlocksCalOut);
       WriteSliceFit(h2CalOverallBlock, Form("CalibOverall_%s_block%04d", v.Data(), iblk), dBlocksCalOverallOut);
+      WriteSliceFit(h2Cal3sOverallBlock, Form("Calib3sOverall_%s_block%04d", v.Data(), iblk), dBlocksCalOverallOut);
 
-      FillGraphPair(gSpotRaw[iv],
-          gWidthRaw[iv], gSingleWidthCoreRaw[iv],
+      FillGraphPair(gNentriesRaw[iv],
+          gSpotRaw[iv],
+          gWidthRaw[iv], gWidthCoreRaw[iv], gWidthTailRaw[iv], gSingleWidthCoreRaw[iv],
           gChargeRaw[iv], gMeanQRaw[iv],
           i, iblk,
           BlockRawObs[iv]
       );
 
-      FillGraphPair(gSpotCalib[iv],
-          gWidthCalib[iv], gSingleWidthCoreCalib[iv],
+      FillGraphPair(gNentriesCalib[iv],
+          gSpotCalib[iv],
+          gWidthCalib[iv], gWidthCoreCalib[iv], gWidthTailCalib[iv], gSingleWidthCoreCalib[iv],
           gChargeCalib[iv], gMeanQCalib[iv],
           i, iblk,
           BlockCalibObs[iv]
       );
 
-      FillGraphPair(gSpotCalibOverall[iv],
-          gWidthCalibOverall[iv], gSingleWidthCoreCalibOverall[iv],
+      FillGraphPair(gNentriesCalib3s[iv],
+          gSpotCalib3s[iv],
+          gWidthCalib3s[iv], gWidthCoreCalib3s[iv], gWidthTailCalib3s[iv], gSingleWidthCoreCalib3s[iv],
+          gChargeCalib3s[iv], gMeanQCalib3s[iv],
+          i, iblk,
+          BlockCalib3sObs[iv]
+      );
+
+      FillGraphPair(gNentriesCalibOverall[iv],
+          gSpotCalibOverall[iv],
+          gWidthCalibOverall[iv], gWidthCoreCalibOverall[iv], gWidthTailCalibOverall[iv], gSingleWidthCoreCalibOverall[iv],
           gChargeCalibOverall[iv], gMeanQCalibOverall[iv],
           i, iblk,
           BlockCalibOverallObs[iv]
+      );
+
+      FillGraphPair(gNentriesCalib3sOverall[iv],
+          gSpotCalib3sOverall[iv],
+          gWidthCalib3sOverall[iv], gWidthCoreCalib3sOverall[iv], gWidthTailCalib3sOverall[iv], gSingleWidthCoreCalib3sOverall[iv],
+          gChargeCalib3sOverall[iv], gMeanQCalib3sOverall[iv],
+          i, iblk,
+          BlockCalib3sOverallObs[iv]
       );
     }
   }
@@ -660,65 +812,148 @@ void AnalysisTMM(const char *InputFileName)
   // TMultiGraph to se by eye the effect of the calibration
   // afterwards --> systematics evaluation
 
+  TGraphErrors *gNentriesRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSpotRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gWidthRawRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreRawRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gChargeRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQRawRatio[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalibRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSpotCalibRatio[TMMCH_N_Readout][2];
   TGraphErrors *gWidthCalibRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalibRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalibRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreCalibRatio[TMMCH_N_Readout][2];
   TGraphErrors *gChargeCalibRatio[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQCalibRatio[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gSpotCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gSingleWidthCoreCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gChargeCalib3sRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gMeanQCalib3sRatio[TMMCH_N_Readout][2];
+
+  TGraphErrors *gNentriesCalibOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSpotCalibOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gWidthCalibOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalibOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalibOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreCalibOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gChargeCalibOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gMeanQCalibOverallRatio[TMMCH_N_Readout][2];
 
+  TGraphErrors *gNentriesCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gSpotCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthCoreCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gWidthTailCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gSingleWidthCoreCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gChargeCalib3sOverallRatio[TMMCH_N_Readout][2];
+  TGraphErrors *gMeanQCalib3sOverallRatio[TMMCH_N_Readout][2];
+  
   vector<ObservableResult> ObsRawRatio[TMMCH_N_Readout][2];
   vector<ObservableResult> ObsCalibRatio[TMMCH_N_Readout][2];
+  vector<ObservableResult> ObsCalib3sRatio[TMMCH_N_Readout][2];
   vector<ObservableResult> ObsCalibOverallRatio[TMMCH_N_Readout][2];
+  vector<ObservableResult> ObsCalib3sOverallRatio[TMMCH_N_Readout][2];
   for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
     TString v = views[iv];
 
+    InitGraphPair(gNentriesRawRatio[iv]);
     InitGraphPair(gSpotRawRatio[iv]);
     InitGraphPair(gWidthRawRatio[iv]);
+    InitGraphPair(gWidthCoreRawRatio[iv]);
+    InitGraphPair(gWidthTailRawRatio[iv]);
     InitGraphPair(gSingleWidthCoreRawRatio[iv]);
     InitGraphPair(gChargeRawRatio[iv]);
     InitGraphPair(gMeanQRawRatio[iv]);
 
+    InitGraphPair(gNentriesCalibRatio[iv]);
     InitGraphPair(gSpotCalibRatio[iv]);
     InitGraphPair(gWidthCalibRatio[iv]);
+    InitGraphPair(gWidthCoreCalibRatio[iv]);
+    InitGraphPair(gWidthTailCalibRatio[iv]);
     InitGraphPair(gSingleWidthCoreCalibRatio[iv]);
     InitGraphPair(gChargeCalibRatio[iv]);
     InitGraphPair(gMeanQCalibRatio[iv]);
 
+    InitGraphPair(gNentriesCalib3sRatio[iv]);
+    InitGraphPair(gSpotCalib3sRatio[iv]);
+    InitGraphPair(gWidthCalib3sRatio[iv]);
+    InitGraphPair(gWidthCoreCalib3sRatio[iv]);
+    InitGraphPair(gWidthTailCalib3sRatio[iv]);
+    InitGraphPair(gSingleWidthCoreCalib3sRatio[iv]);
+    InitGraphPair(gChargeCalib3sRatio[iv]);
+    InitGraphPair(gMeanQCalib3sRatio[iv]);
+
+    InitGraphPair(gNentriesCalibOverallRatio[iv]);
     InitGraphPair(gSpotCalibOverallRatio[iv]);
     InitGraphPair(gWidthCalibOverallRatio[iv]);
+    InitGraphPair(gWidthCoreCalibOverallRatio[iv]);
+    InitGraphPair(gWidthTailCalibOverallRatio[iv]);
     InitGraphPair(gSingleWidthCoreCalibOverallRatio[iv]);
     InitGraphPair(gChargeCalibOverallRatio[iv]);
     InitGraphPair(gMeanQCalibOverallRatio[iv]);
 
+    InitGraphPair(gNentriesCalib3sOverallRatio[iv]);
+    InitGraphPair(gSpotCalib3sOverallRatio[iv]);
+    InitGraphPair(gWidthCalib3sOverallRatio[iv]);
+    InitGraphPair(gWidthCoreCalib3sOverallRatio[iv]);
+    InitGraphPair(gWidthTailCalib3sOverallRatio[iv]);
+    InitGraphPair(gSingleWidthCoreCalib3sOverallRatio[iv]);
+    InitGraphPair(gChargeCalib3sOverallRatio[iv]);
+    InitGraphPair(gMeanQCalib3sOverallRatio[iv]);
+
+    TGraphAttributePair(gNentriesRawRatio[iv],        "NentriesRawRatio",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotRawRatio[iv],            "BeamSpotRawRatio",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthRawRatio[iv],           "BeamSpreadRawRatio",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreRawRatio[iv],       "BeamCoreWidthRawRatio",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailRawRatio[iv],       "BeamTailWidthRawRatio",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreRawRatio[iv], "SingleCoreWidthRawRatio", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeRawRatio[iv],          "BeamChargeRawRatio",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQRawRatio[iv],           "MeanChargeRawRatio",      v, "mean charge/event",       20, iv + 1);
 
+    TGraphAttributePair(gNentriesCalibRatio[iv],        "NentriesCalibRatio",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotCalibRatio[iv],            "BeamSpotCalibRatio",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthCalibRatio[iv],           "BeamSpreadCalibRatio",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalibRatio[iv],       "BeamCoreWidthCalibRatio",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalibRatio[iv],       "BeamTailWidthCalibRatio",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreCalibRatio[iv], "SingleCoreWidthCalibRatio", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeCalibRatio[iv],          "BeamChargeCalibRatio",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQCalibRatio[iv],           "MeanChargeCalibRatio",      v, "mean charge/event",       20, iv + 1);
 
+    TGraphAttributePair(gNentriesCalib3sRatio[iv],        "NentriesCalib3sRatio",        v, "number of entries",       20, iv + 1);
+    TGraphAttributePair(gSpotCalib3sRatio[iv],            "BeamSpotCalib3sRatio",        v, "beam spot [strip]",       20, iv + 1);
+    TGraphAttributePair(gWidthCalib3sRatio[iv],           "BeamSpreadCalib3sRatio",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalib3sRatio[iv],       "BeamCoreWidthCalib3sRatio",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalib3sRatio[iv],       "BeamTailWidthCalib3sRatio",   v, "tail width [strip]",      20, iv + 1);
+    TGraphAttributePair(gSingleWidthCoreCalib3sRatio[iv], "SingleCoreWidthCalib3sRatio", v, "single-core width [strip]", 20, iv + 1);
+    TGraphAttributePair(gChargeCalib3sRatio[iv],          "BeamChargeCalib3sRatio",      v, "integrated charge",       20, iv + 1);
+    TGraphAttributePair(gMeanQCalib3sRatio[iv],           "MeanChargeCalib3sRatio",      v, "mean charge/event",       20, iv + 1);
+
+    TGraphAttributePair(gNentriesCalibOverallRatio[iv],        "NentriesCalibOverallRatio",        v, "number of entries",       20, iv + 1);
     TGraphAttributePair(gSpotCalibOverallRatio[iv],            "BeamSpotCalibOverallRatio",        v, "beam spot [strip]",       20, iv + 1);
     TGraphAttributePair(gWidthCalibOverallRatio[iv],           "BeamSpreadCalibOverallRatio",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalibOverallRatio[iv],       "BeamCoreWidthCalibOverallRatio",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalibOverallRatio[iv],       "BeamTailWidthCalibOverallRatio",   v, "tail width [strip]",      20, iv + 1);
     TGraphAttributePair(gSingleWidthCoreCalibOverallRatio[iv], "SingleCoreWidthCalibOverallRatio", v, "single-core width [strip]", 20, iv + 1);
     TGraphAttributePair(gChargeCalibOverallRatio[iv],          "BeamChargeCalibOverallRatio",      v, "integrated charge",       20, iv + 1);
     TGraphAttributePair(gMeanQCalibOverallRatio[iv],           "MeanChargeCalibOverallRatio",      v, "mean charge/event",       20, iv + 1);
+
+    TGraphAttributePair(gNentriesCalib3sOverallRatio[iv],        "NentriesCalib3sOverallRatio",        v, "number of entries",       20, iv + 1);
+    TGraphAttributePair(gSpotCalib3sOverallRatio[iv],            "BeamSpotCalib3sOverallRatio",        v, "beam spot [strip]",       20, iv + 1);
+    TGraphAttributePair(gWidthCalib3sOverallRatio[iv],           "BeamSpreadCalib3sOverallRatio",      v, "beam width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthCoreCalib3sOverallRatio[iv],       "BeamCoreWidthCalib3sOverallRatio",   v, "core width [strip]",      20, iv + 1);
+    TGraphAttributePair(gWidthTailCalib3sOverallRatio[iv],       "BeamTailWidthCalib3sOverallRatio",   v, "tail width [strip]",      20, iv + 1);
+    TGraphAttributePair(gSingleWidthCoreCalib3sOverallRatio[iv], "SingleCoreWidthCalib3sOverallRatio", v, "single-core width [strip]", 20, iv + 1);
+    TGraphAttributePair(gChargeCalib3sOverallRatio[iv],          "BeamChargeCalib3sOverallRatio",      v, "integrated charge",       20, iv + 1);
+    TGraphAttributePair(gMeanQCalib3sOverallRatio[iv],           "MeanChargeCalib3sOverallRatio",      v, "mean charge/event",       20, iv + 1);
 
   }
 
@@ -732,28 +967,51 @@ void AnalysisTMM(const char *InputFileName)
       ObsRawRatio[iv][1].push_back(DoObsRatio(RawObs[iv][1], BlockRawObs[iv][1], iblk));
       ObsCalibRatio[iv][0].push_back(DoObsRatio(CalibObs[iv][0], BlockCalibObs[iv][0], iblk));
       ObsCalibRatio[iv][1].push_back(DoObsRatio(CalibObs[iv][1], BlockCalibObs[iv][1], iblk));
+      ObsCalib3sRatio[iv][0].push_back(DoObsRatio(Calib3sObs[iv][0], BlockCalib3sObs[iv][0], iblk));
+      ObsCalib3sRatio[iv][1].push_back(DoObsRatio(Calib3sObs[iv][1], BlockCalib3sObs[iv][1], iblk));
       ObsCalibOverallRatio[iv][0].push_back(DoObsRatio(CalibObs[iv][0], BlockCalibOverallObs[iv][0], iblk));
       ObsCalibOverallRatio[iv][1].push_back(DoObsRatio(CalibObs[iv][1], BlockCalibOverallObs[iv][1], iblk));
-      
-      FillGraphPair(gSpotRawRatio[iv],
-          gWidthRawRatio[iv], gSingleWidthCoreRawRatio[iv],
+      ObsCalib3sOverallRatio[iv][0].push_back(DoObsRatio(Calib3sObs[iv][0], BlockCalib3sOverallObs[iv][0], iblk));
+      ObsCalib3sOverallRatio[iv][1].push_back(DoObsRatio(Calib3sObs[iv][1], BlockCalib3sOverallObs[iv][1], iblk));
+
+      FillGraphPair(gNentriesRawRatio[iv],
+          gSpotRawRatio[iv],
+          gWidthRawRatio[iv], gWidthCoreRawRatio[iv], gWidthTailRawRatio[iv], gSingleWidthCoreRawRatio[iv],
           gChargeRawRatio[iv], gMeanQRawRatio[iv],
           i, iblk,
           ObsRawRatio[iv]
       );
 
-      FillGraphPair(gSpotCalibRatio[iv],
-          gWidthCalibRatio[iv], gSingleWidthCoreCalibRatio[iv],
+      FillGraphPair(gNentriesCalibRatio[iv],
+          gSpotCalibRatio[iv],
+          gWidthCalibRatio[iv], gWidthCoreCalibRatio[iv], gWidthTailCalibRatio[iv], gSingleWidthCoreCalibRatio[iv],
           gChargeCalibRatio[iv], gMeanQCalibRatio[iv],
           i, iblk,
           ObsCalibRatio[iv]
       );
+
+      FillGraphPair(gNentriesCalib3sRatio[iv],
+          gSpotCalib3sRatio[iv],
+          gWidthCalib3sRatio[iv], gWidthCoreCalib3sRatio[iv], gWidthTailCalib3sRatio[iv], gSingleWidthCoreCalib3sRatio[iv],
+          gChargeCalib3sRatio[iv], gMeanQCalib3sRatio[iv],
+          i, iblk,
+          ObsCalib3sRatio[iv]
+      );
       
-      FillGraphPair(gSpotCalibOverallRatio[iv],
-          gWidthCalibOverallRatio[iv], gSingleWidthCoreCalibOverallRatio[iv],
+      FillGraphPair(gNentriesCalibOverallRatio[iv],
+          gSpotCalibOverallRatio[iv],
+          gWidthCalibOverallRatio[iv], gWidthCoreCalibOverallRatio[iv], gWidthTailCalibOverallRatio[iv], gSingleWidthCoreCalibOverallRatio[iv],
           gChargeCalibOverallRatio[iv], gMeanQCalibOverallRatio[iv],
           i, iblk,
           ObsCalibOverallRatio[iv]
+      );
+
+      FillGraphPair(gNentriesCalib3sOverallRatio[iv],
+          gSpotCalib3sOverallRatio[iv],
+          gWidthCalib3sOverallRatio[iv], gWidthCoreCalib3sOverallRatio[iv], gWidthTailCalib3sOverallRatio[iv], gSingleWidthCoreCalib3sOverallRatio[iv],
+          gChargeCalib3sOverallRatio[iv], gMeanQCalib3sOverallRatio[iv],
+          i, iblk,
+          ObsCalib3sOverallRatio[iv]
       );
     
     }
@@ -764,8 +1022,11 @@ void AnalysisTMM(const char *InputFileName)
 
   WriteMeasurementGraphs(
     dGraphsRawOut,
+    gNentriesRaw,
     gSpotRaw,
     gWidthRaw,
+    gWidthCoreRaw,
+    gWidthTailRaw,
     gSingleWidthCoreRaw,
     gChargeRaw,
     gMeanQRaw
@@ -773,47 +1034,110 @@ void AnalysisTMM(const char *InputFileName)
 
   WriteMeasurementGraphs(
     dGraphsCalibOut,
+    gNentriesCalib,
     gSpotCalib,
     gWidthCalib,
+    gWidthCoreCalib,
+    gWidthTailCalib,
     gSingleWidthCoreCalib,
     gChargeCalib,
     gMeanQCalib
   );
 
   WriteMeasurementGraphs(
+    dGraphsCalib3sOut,
+    gNentriesCalib3s,
+    gSpotCalib3s,
+    gWidthCalib3s,
+    gWidthCoreCalib3s,
+    gWidthTailCalib3s,
+    gSingleWidthCoreCalib3s,
+    gChargeCalib3s,
+    gMeanQCalib3s
+  );
+
+  WriteMeasurementGraphs(
     dGraphsCalibOverallOut,
+    gNentriesCalibOverall,
     gSpotCalibOverall,
     gWidthCalibOverall,
+    gWidthCoreCalibOverall,
+    gWidthTailCalibOverall,
     gSingleWidthCoreCalibOverall,
     gChargeCalibOverall,
     gMeanQCalibOverall
   );
 
   WriteMeasurementGraphs(
-    dRatioRawOut,
-    gSpotRawRatio,
-    gWidthRawRatio,
-    gSingleWidthCoreRawRatio,
-    gChargeRawRatio,
-    gMeanQRawRatio
+    dGraphsCalib3sOverallOut,
+    gNentriesCalib3sOverall,
+    gSpotCalib3sOverall,
+    gWidthCalib3sOverall,
+    gWidthCoreCalib3sOverall,
+    gWidthTailCalib3sOverall,
+    gSingleWidthCoreCalib3sOverall,
+    gChargeCalib3sOverall,
+    gMeanQCalib3sOverall
   );
+
+WriteMeasurementGraphs(
+  dRatioRawOut,
+  gNentriesRawRatio,
+  gSpotRawRatio,
+  gWidthRawRatio,
+  gWidthCoreRawRatio,
+  gWidthTailRawRatio,
+  gSingleWidthCoreRawRatio,
+  gChargeRawRatio,
+  gMeanQRawRatio
+);
 
   WriteMeasurementGraphs(
     dRatioCalibOut,
+    gNentriesCalibRatio,
     gSpotCalibRatio,
     gWidthCalibRatio,
+    gWidthCoreCalibRatio,
+    gWidthTailCalibRatio,
     gSingleWidthCoreCalibRatio,
     gChargeCalibRatio,
     gMeanQCalibRatio
   );
 
   WriteMeasurementGraphs(
+    dRatioCalib3sOut,
+    gNentriesCalib3sRatio,
+    gSpotCalib3sRatio,
+    gWidthCalib3sRatio,
+    gWidthCoreCalib3sRatio,
+    gWidthTailCalib3sRatio,
+    gSingleWidthCoreCalib3sRatio,
+    gChargeCalib3sRatio,
+    gMeanQCalib3sRatio
+  );
+
+  WriteMeasurementGraphs(
     dRatioCalibOverallOut,
+    gNentriesCalibOverallRatio,
     gSpotCalibOverallRatio,
     gWidthCalibOverallRatio,
+    gWidthCoreCalibOverallRatio,
+    gWidthTailCalibOverallRatio,
     gSingleWidthCoreCalibOverallRatio,
     gChargeCalibOverallRatio,
     gMeanQCalibOverallRatio
+  );
+
+  WriteMeasurementGraphs(
+    dRatioCalib3sOverallOut,
+    gNentriesCalib3sOverallRatio,
+    gSpotCalib3sOverallRatio,
+    gWidthCalib3sOverallRatio,
+    gWidthCoreCalib3sOverallRatio,
+    gWidthTailCalib3sOverallRatio,
+    gSingleWidthCoreCalib3sOverallRatio,
+    gChargeCalib3sOverallRatio,
+    gMeanQCalib3sOverallRatio
   );
 
   // fout->Write();

@@ -15,7 +15,7 @@ NevtBlock="${4:-10000}"
 MonitorPath="/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor"
 FileList="${MonitorPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${MonitorPath}/outputTMM"
-OutputFile="${OutputDir}/Monitor_TMM_run${PadmeRunID}_prova.root"
+OutputFile="${OutputDir}/Monitor_TMM_run${PadmeRunID}_prova3e5.root"
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

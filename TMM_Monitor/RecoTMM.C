@@ -395,10 +395,10 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     TGraphAttribute(g_FitFullDiff3s[l], Form("g_FitFullDiff3s%s", tmm_tag[l].Data()), Form("%s strip", tmm_tag[l].Data()), "Q_{maxbin} - EvalFit [ADC counts]", 22, kBlack);
 
     g_FitFullRatio[l] = new TGraphErrors();
-    TGraphAttribute(g_FitFullRatio[l], Form("g_FitFullRatio%s", tmm_tag[l].Data()), Form("%s strip", tmm_tag[l].Data()), "Q_{maxbin} / EvalFit", 22, kBlack);
+    TGraphAttribute(g_FitFullRatio[l], Form("g_FitFullRatio%s", tmm_tag[l].Data()), Form("%s strip", tmm_tag[l].Data()), "EvalFit / Q_{maxbin}", 22, kBlack);
   
     g_FitFullRatio3s[l] = new TGraphErrors();
-    TGraphAttribute(g_FitFullRatio3s[l], Form("g_FitFullRatio3s%s", tmm_tag[l].Data()), Form("%s strip", tmm_tag[l].Data()), "Q_{maxbin} / EvalFit", 22, kBlack);
+    TGraphAttribute(g_FitFullRatio3s[l], Form("g_FitFullRatio3s%s", tmm_tag[l].Data()), Form("%s strip", tmm_tag[l].Data()), "EvalFit / Q_{maxbin}", 22, kBlack);
   }
 
   // ------------------------------------------------------------
@@ -497,10 +497,10 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
         TGraphAttribute(g_BlockFitFullDiff3s[l].back(), Form("g_BlockFitFullDiff3s%s", tmm_tag[l].Data()), "strip", "Q_{maxbin} - EvalFit [ADC counts]", 22, kBlack);
 
         g_BlockFitFullRatio[l].push_back(new TGraphErrors());
-        TGraphAttribute(g_BlockFitFullRatio[l].back(), Form("g_BlockFitFullRatio%s", tmm_tag[l].Data()), "strip", "Q_{maxbin} / EvalFit", 22, kBlack);
+        TGraphAttribute(g_BlockFitFullRatio[l].back(), Form("g_BlockFitFullRatio%s", tmm_tag[l].Data()), "strip", "EvalFit / Q_{maxbin}", 22, kBlack);
       
         g_BlockFitFullRatio3s[l].push_back(new TGraphErrors());
-        TGraphAttribute(g_BlockFitFullRatio3s[l].back(), Form("g_BlockFitFullRatio3s%s", tmm_tag[l].Data()), "strip", "Q_{maxbin} / EvalFit", 22, kBlack);
+        TGraphAttribute(g_BlockFitFullRatio3s[l].back(), Form("g_BlockFitFullRatio3s%s", tmm_tag[l].Data()), "strip", "EvalFit / Q_{maxbin}", 22, kBlack);
   
       }
     }

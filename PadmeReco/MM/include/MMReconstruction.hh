@@ -10,6 +10,7 @@
 #include "DigitizerChannelMM.hh"
 #include "PadmeVReconstruction.hh"
 #include "MMGeometry.hh"
+#include "TRandom2.h"
 
 class MMReconstruction : public PadmeVReconstruction
 {
@@ -20,6 +21,7 @@ public:
   ~MMReconstruction();
 
   void ProcessEvent(TRawEvent*, TMMRawEvent*);
+  void ProcessEvent(TMCVEvent*, TMCEvent*);
   virtual void HistoInit();
 
   Bool_t MMFound()     { return fMMFound; }
@@ -34,8 +36,18 @@ private:
   void ComputeTotalCharge(Short_t*);
   void ComputeBunchLength(Short_t*);
   void NoiseFinder(TMMRawEvent*);
+  //cfg file settings
+  Double_t fADCUnitToCharge; // electrons / adccount
+  Double_t fDefaultHitChargeThreshold; // ADC counts
+  Double_t fDefaultHitChargeSaturation; // ADC counts
+  Double_t fTimeTau; // ns
+  Double_t fAPVTimeBin; // ns
   // Flag to signal if MM was found in this event
   Bool_t fMMFound;
+  std::string fAPVChThresholdFile;
+  std::map < std::pair<int,int>,double> fAPVChLowThresholdMap;
+  std::map < std::pair<int,int>,double> fAPVChSaturationMap;
+  TRandom2 *r;
 
 
   // Results of pedestal and total charge evaluation

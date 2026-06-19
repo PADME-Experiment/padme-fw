@@ -75,12 +75,22 @@ Bool_t MMClustering::InitHistos(){
 void MMClustering::Clear() {
   for(Int_t ipmode=0; ipmode<IPMODES; ipmode++) {
     for(Int_t clumode=0; clumode<CLUSTERMODES; clumode++) {
-      fMMClusters[ipmode][clumode].clear();
-      fMergedMMClusters[ipmode][clumode].clear();
-      fIndicesOfMergedClusters[ipmode][clumode].clear();
+		for(UInt_t i=0; i<fMMClusters[ipmode][clumode].size(); i++){
+			delete fMMClusters[ipmode][clumode].at(i);
+		}
+    	fMMClusters[ipmode][clumode].clear();
+    	fMergedMMClusters[ipmode][clumode].clear();
+		for (auto it = begin (fIndicesOfMergedClusters[ipmode][clumode]); it != end (fIndicesOfMergedClusters[ipmode][clumode]); ++it) {
+      		it->clear();
+	    }
     }
   }
-  fMMSoftHits.clear();
+  
+	for(UInt_t i=0; i<fMMSoftHits.size(); i++){
+		delete fMMSoftHits.at(i);
+	}
+	fMMSoftHits.clear();
+ 
 }
 
 void MMClustering::Print() {

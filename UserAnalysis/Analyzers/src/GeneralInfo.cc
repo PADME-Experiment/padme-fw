@@ -1,4 +1,4 @@
-#//
+//
 // Management of Event-level information
 //
 #include "GeneralInfo.hh"
@@ -27,6 +27,7 @@ GeneralInfo::~GeneralInfo(){}
 Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fRecoEvent = event->RecoEvent;
   fDBRunNumber = DBRunNumber;
+  fisMC = fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
 
   Int_t trueRunNumber=0;
   fDBRunNumber==0 ? trueRunNumber= fRecoEvent->GetRunNumber(): trueRunNumber=fDBRunNumber;
@@ -41,6 +42,9 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     fBeamMomentum = 428.48;   // MeV, DHSTB02 energy for 30339
     fZECal = 2508.31;       // mm,  = 2550.51 - 230./2. + 6.5*X0, X0=11.2 mm: should override what's in the reco
     fZTarg = -1028;
+    fDisplacementXECal = 3.14; 
+    fDisplacementYECal = 3.86; 
+
    }
   else if(trueRunNumber < 60000){
     fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
@@ -48,14 +52,19 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
     //fZECal = 2508.31 + 175.650 ; // mm, relative offset from 2022 survey: average of 176.9 and 174.4
     fZECal = 2612.4 ; // front face of ECAL (crystal front) from MC Detector setup 40, no shower max, ok for positrons
     fZTarg = -1028; 
+    fDisplacementXECal = 3.41; 
+    fDisplacementYECal = 3.86; 
+
    }
   else if(trueRunNumber > 80000){
     fPeriodStartTime = 174000000;
     fBeamMomentum = 268.94;
     fZTarg = -732.47;
-    fZECal = 2577.77; //2326.5 Carbon fiber window + 20 cm estimate of chamber+ecal cup	
-   }
-
+    fZECal = 2577.77+6.5*11.2; //front face of ECAL allinamento + 6.5*X0, X0=11.2 mm, from 2024 survey
+    fZCogforMM = (fisMC)? fZECal: fZECal+100;
+    fDisplacementXECal = 3.41; 
+    fDisplacementYECal = -1.46; 
+  }
   // default start and stop time of runs
   fRunStartTime = 0;
   fRunStopTime = 1;
@@ -97,7 +106,13 @@ Bool_t GeneralInfo::Init(PadmeAnalysisEvent* event, Int_t DBRunNumber){
   fMMXZRotationAngle = 0.5/180*TMath::Pi(); //from report 02/16
   fMMYZRotationAngle = 0.1/180*TMath::Pi(); //from report 02/16
   
-  fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE 
+  fMMDriftVelocity   = 0.105; //mm/ns --> DA RICALIBRARE
+  //fMMDriftVelocity   = 0.1002; //mm/ns --> COSMICI
+  //fMMDriftVelocity   = 0.095; //mm/ns
+
+  fMMResV = 3*fMMStripPitch/TMath::Sqrt(12);
+  fMMResZ = 3*10*fMMDriftVelocity; //5*fMMDriftVelocity;
+  
   
   fIsEnergyAvailable = kFALSE;
   fIsTargetAvgAvailable = kFALSE;
@@ -246,7 +261,16 @@ void GeneralInfo::RetrieveDBInfo(int runID){
     //   fPeriodStartTime = 1664807042;    // sec, first good run of 2022 run, 50151 
     //   fZECal = 2508.31 + 175.650; // mm, from 2022 survey: average of 176.9 and 174.4
     // }
-
+    if(runID > 80000){
+        fECalFlag = fOfflineServerDB->getecalflag(runID);
+        fIsecalflagAvailable = fOfflineServerDB->isECalFlagAvailable(runID);
+        fTargetFlag = fOfflineServerDB->gettargetflag(runID);
+        fIstargetflagAvailable = fOfflineServerDB->isTargetFlagAvailable(runID);
+        if(runID > 90000){
+          fBField = fOfflineServerDB->getBField(runID);
+          fIsBFieldAvailable = fOfflineServerDB->isBFieldAvailable(runID);
+        }
+    }
     fXTarg = fOfflineServerDB->getTargetXAvg(runID);
     fYTarg = fOfflineServerDB->getTargetYAvg(runID);
     fIsTargetAvgAvailable = fOfflineServerDB->isTargetAvgAvailable(runID);
@@ -326,19 +350,56 @@ MMchInfo GeneralInfo::DecodeMMChannel(int chId){
 }
 
 double GeneralInfo::GetMMECALdz(int view, double xECal, double yECal, double tECal) {
-  double offsetdDZvsXY[2][4] = {
-    -8.8, 3., 14.3, 1.6,  //Ddz vs Y offset
-    10., 9., 10., 10.};   //Ddz vs X offset
+
+  //---------------------- OLD ------------------------------------------------------------
+  // double offsetdDZvsXY[2][4] = {           //DAL FIT DI TOM
+  //  -8.8, 3., 14.3, 1.6,  //Ddz vs Y offset
+  //  10., 9., 10., 10.};   //Ddz vs X offset
+
+  
+  /*double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    -14.2, 37.0, 22.5, -7.1,  //Ddz vs Y offset
+    10.0, -10.7, 16.7, -3.3};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    -3.8, 0.0, 2.0, -5.5,  //Ddz vs Y offset
+    -5.0, -9.8, 1.9, 6.7};   //Ddz vs X offset
+  */
+
+  double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    0.,20.,20.,0.,  //Ddz vs Y offset
+    10.,5.,15.,7.};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  
+  
+  
+  /*
+    double offsetdDZvsXY[2][4] = {           //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  
+  double slopedDZvsXY[2][4] = {            //DALLA PECIONATA
+    0.,0.,0.,0.,  //Ddz vs Y offset
+    0.,0.,0.,0.};   //Ddz vs X offset
+  */
+  
   double timeOffset = 440;
   
   int quad = 0;
   if(xECal<0 && yECal>0) quad = 1;
   if(xECal>0 && yECal>0) quad = 2;
   if(xECal>0 && yECal<0) quad = 3;
+
+
+  double Zoffset;
+  if(view == 1) Zoffset = offsetdDZvsXY[view][quad] + slopedDZvsXY[view][quad]/100*xECal;
+  else          Zoffset = offsetdDZvsXY[view][quad] + slopedDZvsXY[view][quad]/100*yECal;
   
   double dz;
-  
-  dz = (tECal+timeOffset)*fMMDriftVelocity + offsetdDZvsXY[view][quad];
- 
+  dz = (tECal+timeOffset)*fMMDriftVelocity + Zoffset;
+  if(fisMC) dz =0;
   return dz;
 }

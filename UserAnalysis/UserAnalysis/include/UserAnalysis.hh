@@ -13,6 +13,7 @@ class Is22GGAnalysis;
 class Is3GAnalysis;
 class GeneralInfo;
 class ECalSel;
+class TagAndProbe;
 class ECalETagMatching;
 class ETagAn;
 class ETagAnalysis;
@@ -20,6 +21,7 @@ class MCTruth;
 class MCTruthECal;
 class DataQuality;
 class MMTrackDevel;
+class MMFindBestTrack;
 
 class UserAnalysis {
 
@@ -51,6 +53,7 @@ private:
   Is3GAnalysis* fIs3GAnalysis;
   GeneralInfo* fGeneralInfo;
   ECalSel* fECalSel;
+  TagAndProbe* fTagAndProbe;
   ECalCalib22 *fECalCalib22;
   ETagAn* fETagAn;
   ECalETagMatching* fECalETagMatching;
@@ -60,6 +63,7 @@ private:
   ECalCalib* fECalCalib;
   DataQuality *fDataQuality;
   MMTrackDevel *fMMTrackDevel;
+  MMFindBestTrack *fMMFindBestTrack;
 
 
   bool fETagHitsAvail;

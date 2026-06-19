@@ -11,6 +11,7 @@
 *.root
 *.pcm
 *.heprep
+*.save
 run_*
 PersistencyDict.cc
 PersistencyDict.h

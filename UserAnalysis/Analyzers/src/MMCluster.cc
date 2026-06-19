@@ -7,6 +7,7 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
   fClumode = clumode;
 
   fMMHitsInClu.clear();
+  fMMHitsInClu_HR.clear();
   
   fSeedSlope = -999;
   for(Int_t h=0; h<2; h++) {
@@ -30,6 +31,7 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
 
 MMCluster::~MMCluster() {
   fMMHitsInClu.clear();
+  fMMHitsInClu_HR.clear();
   fTracos.vres.clear();
 }
 
@@ -41,6 +43,12 @@ void MMCluster::Print() {
     std::cout<<"\t\t";
     fMMHitsInClu.at(h)->Print();
   }
+  std::cout<<"\t Hits belonging to cluster after Hit Rejection (lvl1): "<<std::endl;
+  for(Int_t h=0; h<(int) fMMHitsInClu_HR.size(); h++) {
+    std::cout<<"\t\t";
+    fMMHitsInClu_HR.at(h)->Print();
+  }
+  
   std::cout<<"\t Slope of the first doublet (cluster seed): "<<fSeedSlope<<std::endl; 
   std::cout<<"\t IP phase angle: "<<fIPPhaseAngle<<std::endl;
 
@@ -163,6 +171,9 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   }
 
   // success
+  fMMHitsInClu_HR.clear();
+  for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
+  hitArray.clear();
   
   fTracos.chi2 = result.MinFcnValue();
   for (int i=0; i<5; i++) fTracos.pars[i] = result.GetParams()[i];
@@ -199,62 +210,164 @@ bool MMCluster::FitWithClusterTime(double xEcal, double yEcal, double tEcal){
   return kTRUE;
 }
 
+void MMCluster::SimpleFitWithDz(vector<int> plane, vector<double>vhits, vector<double>zhits, double dz, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout, double* coszout, double* chi2out, double *dz_fitout) {
+
+  int npts = zhits.size();
+  double very_wrong = -999;
+
+  if(npts<1) {
+    *v_avgout  = very_wrong;
+    *z_avgout  = very_wrong;
+    *mt_avgout = very_wrong;
+    *ct_avgout = very_wrong;
+    *cosvout   = very_wrong;
+    *coszout   = very_wrong;
+    *chi2out   = very_wrong;
+    *dz_fitout = very_wrong;
+    return;
+  }
+
+  double chi2_min = 1000000;
+  double dz_fit = dz;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
+
+  vector<double> zhits_corr;
+
+  double range = 25; 
+  if(CALIBRATION) range = 500;
+  
+  for(int step=0; step<2*(int)range; step++) {
+    zhits_corr.clear();
+    
+    double dz_scan = step - range;
+
+    double dz_step = dz + dz_scan;
+    
+    for(int h=0; h<npts; h++) {
+      double z_hit_corr = zhits.at(h); 
+      if(plane.at(h) == 0) z_hit_corr -= dz_step;
+      else                 z_hit_corr += dz_step;
+      zhits_corr.push_back(z_hit_corr);
+    }
+    
+    if(zhits_corr.size() != zhits.size()) {
+      std::cerr<<"WRONG SIZE"<<std::endl;
+      *v_avgout  = very_wrong;
+      *z_avgout  = very_wrong;
+      *mt_avgout = very_wrong;
+      *ct_avgout = very_wrong;
+      *cosvout   = very_wrong;
+      *coszout   = very_wrong;
+      *chi2out   = very_wrong;
+      *dz_fitout = very_wrong;
+      return;
+    }
+
+    evaluateStraightLineTwoD(vhits,zhits_corr, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+
+    if(!CALIBRATION) chi2 += (dz_scan)*(dz_scan)/144.;
+    if(IPMODE) {
+      double z_IP = GeneralInfo::GetInstance()->GetTargetPos().Z()-GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+      double v_IP = GeneralInfo::GetInstance()->GetTargetPos().X();
+      
+      double v_ext = mt_avg*z_IP + ct_avg;
+      double BeamSpot = 1.; //DA METTERE IN GENERAL INFO!!!!
+      
+      chi2 += (v_ext-v_IP)*(v_ext-v_IP)/(BeamSpot*BeamSpot);
+    }
+	//std::cout<<"chi2: "<<chi2<<" dz_scan: "<<dz_scan<<" z_first: "<<zhits_corr.at(0)<<" z_last: "<<zhits_corr.at((int)zhits_corr.size()-1)<<std::endl; 
+    
+    if(chi2 < chi2_min) {
+      chi2_min = chi2;
+      dz_fit = dz_scan;
+    }
+  }
+
+    
+  zhits_corr.clear();
+  
+  *v_avgout  = v_avg;
+  *z_avgout  = z_avg;
+  *mt_avgout = mt_avg;
+  *ct_avgout = ct_avg;
+  *cosvout   = cosv;
+  *coszout   = cosz;
+  *chi2out   = chi2_min;
+  *dz_fitout = dz_fit;
+}
 
 bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal) {
   MMchInfo chinfoThis =  fMMHitsInClu.at(0)->GetMMchInfo();
   double dz = GeneralInfo::GetInstance()->GetMMECALdz(chinfoThis.view, xEcal, yEcal, tEcal);
 
-  vector<double> zhits, vhits;  
+  //std::cout<<"dz-dzEcal: "<<dz-(tEcal+440)*GeneralInfo::GetInstance()->GetMMDriftVelocity()<<" xEcal: "<<xEcal<<" yEcal: "<<yEcal<<" view: "<<chinfoThis.view<<" quad: "<<chinfoThis.quad<<std::endl;
+  
+  vector<double> zhits, vhits;
+  vector<MMSoftHit*> hitArray;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2,dz_fit;
+  vector<int> planes;
+  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
-    double z_hit_corr = fMMHitsInClu.at(i)->GetZfromTime(1.);
-    if(fMMHitsInClu.at(i)->GetMMchInfo().plane == 0) z_hit_corr -= dz;
-    else z_hit_corr += dz;
-    zhits.push_back(z_hit_corr);
+    hitArray.push_back(fMMHitsInClu.at(i));
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
     vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
- 
+    planes.push_back(fMMHitsInClu.at(i)->GetMMchInfo().plane);
   }
-  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
-  evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+  
+  SimpleFitWithDz(planes, vhits, zhits, dz, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2, &dz_fit);
+  //if(chinfoThis.view == 0 && chinfoThis.quad == 1) std::cout<<"dz_fit-dz: "<<dz_fit-dz<<std::endl;
 
-  for(int h=0; h<10; h++) {
-    
-    double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)zhits.size()-2);
+  if(!CALIBRATION) {
+    for(int h=0; h<10; h++) {
+      
+      double pchi2 = ROOT::Math::chisquared_cdf_c(chi2, (int)zhits.size()-2);
+      
+      double res_m2_max = -1;
+      int i_max = 0;
+      for(int r=0; r<(int)zhits.size(); r++) {
+	double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+	if(planes.at(r) == 0) z_hit -= (dz + dz_fit);
+	else                  z_hit += (dz + dz_fit);
 
-    double res_m2_max = -1;
-    int i_max = 0;
-    for(int r=0; r<(int)zhits.size(); r++) {
-      double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
-      double v_hit = vhits.at(r);
+	double v_hit = vhits.at(r);
+	
+	double v_reco = mt_avg * z_hit + ct_avg;
+	double v_res2 = (v_hit - v_reco)*(v_hit - v_reco);
+	
+	if(v_res2 > res_m2_max) {
+	  res_m2_max = v_res2;
+	  i_max = r;
+	}
+      }
       
-      double v_reco = mt_avg * z_hit + ct_avg;
-      double v_res2 = (v_hit - v_reco)*(v_hit - v_reco);
-      
-      if(v_res2 > res_m2_max) {
-	res_m2_max = v_res2;
-	i_max = r;
+      if(pchi2 < 0.05 && zhits.size() > 4) {
+	zhits.erase(zhits.begin()+i_max);
+	vhits.erase(vhits.begin()+i_max);
+	hitArray.erase(hitArray.begin()+i_max);
+	
+	//std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
+	
+	SimpleFitWithDz(planes, vhits, zhits, dz, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2, &dz_fit);
       }
     }
-    
-    if(pchi2 < 0.05 && zhits.size() > 4) {
-      zhits.erase(zhits.begin()+i_max);
-      vhits.erase(vhits.begin()+i_max);
-      
-      std::cout<<"it: "<<h<<" ENTRATO: "<<zhits.size()<<std::endl;
-      
-      evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
-    }
-  }  
-
+  }
+  
+  fMMHitsInClu_HR.clear();
+  for(int i=0; i<(int) hitArray.size(); i++) fMMHitsInClu_HR.push_back(hitArray.at(i));
+  hitArray.clear();
+  
   int Nhit = zhits.size();
   vector<TVector3> residues;
   for(int r=0; r<Nhit; r++) {
     double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    if(planes.at(r) == 0) z_hit -= (dz + dz_fit);
+    else                  z_hit += (dz + dz_fit);
     double v_hit = vhits.at(r);
     
     double v_reco = mt_avg * z_hit + ct_avg;
     double z_reco = -999;
     if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-    else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
+    //else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
     
     TVector3 res;
     res[1-chinfoThis.view] = v_hit - v_reco;
@@ -279,6 +392,7 @@ bool MMCluster::SimpleFitWithClusterTime(double xEcal, double yEcal, double tEca
     fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
     fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
   }
+  fTracos.pars[4] = dz_fit;
   
   // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
   int reverseTrack = 1;
@@ -309,6 +423,10 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
   if (TMath::Abs(dslope) > dslopeMAX) return kFALSE;
 
+  double slope1 = fTracos.slope;
+  double slope2 = inputclus->GetTracklet().slope;
+  double slope_avg = 0.5*(slope1 + slope2);
+  
   // success: update the cluster
   for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
     fMMHitsInClu.push_back(inputclus->GetHit(i));
@@ -317,7 +435,7 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
   
   for (int i=0; i<5; i++) fTracos.pars[i] = 0.5*(fTracos.pars[i] + inputclus->GetTracklet().pars[i]);
-  fTracos.slope = 0.5*(fTracos.slope + inputclus->GetTracklet().slope);
+  fTracos.slope = slope_avg;
   fTracos.inter = 0.5*(fTracos.inter + inputclus->GetTracklet().inter);
   
   double cosv = fTracos.slope/TMath::Sqrt(1+fTracos.slope*fTracos.slope);
@@ -336,6 +454,12 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   double ravg_minus_target_norm = TMath::Sqrt(ravg_minus_target[0]*ravg_minus_target[0]+ravg_minus_target[1]*ravg_minus_target[1]);
   for (int q=0; q<2; q++) ravg_minus_target[q] /= ravg_minus_target_norm;
   fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];    
+
+  //chi2 before fit for the best track L1 selection  
+  double chi2_tmp = (slope1 - slope_avg)*(slope1 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
+  chi2_tmp += (slope2 - slope_avg)*(slope2 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
+  fTracos.chi2 = chi2_tmp;
+  
   
   return kTRUE;
 }
@@ -421,6 +545,7 @@ void MMCluster::setAdditionalPoint(double x, double y, double z){ // used to ins
 
 bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters, with / without ip constraint
   const int maxholes=2;
+  
   if(fMMHitsInClu.size() == 0) {
     fMMHitsInClu.push_back(softhit);
     fNHitsPerPlane[softhit->GetMMchInfo().plane]++;
@@ -438,7 +563,8 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   vector<double> zhits, vhits;  
   for (int i=0; i<(int)fMMHitsInClu.size(); i++){
     //    zhits.push_back(fMMHitsInClu.at(i)->GetPosition().Z());
-    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
+    double z_hit = fMMHitsInClu.at(i)->GetZfromTime(1.);
+    zhits.push_back(z_hit);
     vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
     //std::cout<<"pippo"<<std::endl;
   }
@@ -503,7 +629,7 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
     double v_reco = mt_avg * z_hit + ct_avg;
     double z_reco = -999;
     if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-    else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
+    //else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
     
     TVector3 res;
     res[1-softhit->GetMMchInfo().view] = v_hit - v_reco;
@@ -525,6 +651,80 @@ bool MMCluster::AddHit(MMSoftHit* softhit) { // specific of level-zero clusters,
   return kTRUE;
   
 }
+
+bool MMCluster::L0SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal) {
+  MMchInfo chinfoThis = fMMHitsInClu.at(0)->GetMMchInfo();
+  int plane = chinfoThis.plane;
+  int view = chinfoThis.view;
+  double dz = GeneralInfo::GetInstance()->GetMMECALdz(view, xEcal, yEcal, tEcal);
+
+  vector<double> vhits, zhits;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2;
+
+  for (int i=0; i<(int)fMMHitsInClu.size(); i++){
+    double z_hit = fMMHitsInClu.at(i)->GetZfromTime(1.);
+    
+    if(plane == 0) z_hit -= dz;
+    else           z_hit += dz;
+    
+    zhits.push_back(z_hit);
+    vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-view]); // view == 1 corresponds to Xview
+  }
+
+  evaluateStraightLineTwoD(vhits,zhits, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2); // add quality control?
+  
+  fTracos.slope = mt_avg;
+  fTracos.inter = ct_avg;
+  // evaluate intercepts at the two planes
+  for(Int_t pl = 0; pl<2; pl++) {
+    double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;
+    fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
+    fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
+  }
+  fTracos.pars[4] = dz;
+  
+  // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
+  int reverseTrack = 1;
+  if (cosz < 0) reverseTrack = -1;
+  fTracos.lambda[1-fMMHitsInClu.at(0)->GetMMchInfo().view] = reverseTrack*cosv;
+  fTracos.lambda[fMMHitsInClu.at(0)->GetMMchInfo().view] = 0; 
+  fTracos.lambda.SetZ(reverseTrack*cosz);
+  fTracos.chi2 = chi2;
+
+
+  int Nhit = zhits.size();
+  vector<TVector3> residues;
+  for(int r=0; r<Nhit; r++) {
+    double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    double v_hit = vhits.at(r);
+    
+    double v_reco = mt_avg * z_hit + ct_avg;
+    double z_reco = -999;
+    if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
+    //else std::cerr<<"[AddHit] AIUTO SLOPE NULLA!!!!"<<std::endl;
+    
+    TVector3 res;
+    res[1-view] = v_hit - v_reco;
+    res[view] = 0;
+    res.SetZ(z_hit - z_reco);
+    residues.push_back(res);
+  }
+  
+  fTracos.vres.clear();
+  int vres_size = residues.size();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = residues.at(i);
+    fTracos.vres.push_back(res);
+  }
+  
+  //std::cout<<"New Hit Added!\n\t";
+  //softhit->Print();
+
+  return kTRUE;
+  
+  
+}
+
 
 void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits, double* v_avgout, double* z_avgout, double* mt_avgout, double* ct_avgout,double* cosvout,double* coszout, double*chi2out){
   double very_small = 1e-15;
@@ -559,8 +759,8 @@ void MMCluster::evaluateStraightLineTwoD(vector<double>vhits,vector<double>zhits
     z_rms2 = very_small;
   }
 
-  double err_v = 3*GeneralInfo::GetInstance()->GetMMStripPitch()/TMath::Sqrt(12);
-  double err_z = 3*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
+  double err_v = GeneralInfo::GetInstance()->GetMMResV();
+  double err_z = GeneralInfo::GetInstance()->GetMMResZ();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
   
   double mt_avg = (zv_avg - z_avg*v_avg)/(z_rms2);
   double ct_tmp = v_avg - mt_avg*z_avg; // intercept at 0 PADME reference frame
@@ -603,8 +803,8 @@ bool MMCluster::HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double
 bool MMCluster::HitRejectionAlgorithm() {
   bool hit_rejected_flag = kFALSE;
 
-  double err_v = 3*GeneralInfo::GetInstance()->GetMMStripPitch()/TMath::Sqrt(12);
-  double err_z = 3*10*GeneralInfo::GetInstance()->GetMMDriftVelocity();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
+  double err_v = GeneralInfo::GetInstance()->GetMMResV();
+  double err_z = GeneralInfo::GetInstance()->GetMMResZ();//5.*0.105;// z = hit->GetTime()*0.105, here consider deltaT = 20 ns
 
   int Nhit = fMMHitsInClu.size();
   int plane = fMMHitsInClu.at(0)->GetMMchInfo().plane;
@@ -724,8 +924,7 @@ bool MMCluster::HitRejectionAlgorithm() {
       double v_reco = mt_avg * z_hit + ct_avg;
       double z_reco = -999;
       if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
-      else std::cerr<<"[HitRejectionAlgorithm] AIUTO SLOPE NULLA!!!!"<<std::endl;
-      
+      //else std::cerr<<"[HitRejectionAlgorithm] AIUTO SLOPE NULLA!!!!"<<std::endl;
       TVector3 res;
       res[1-view] = v_hit - v_reco;
       res[view] = 0;

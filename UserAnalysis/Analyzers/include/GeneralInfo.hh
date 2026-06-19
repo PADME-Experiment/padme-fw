@@ -53,13 +53,16 @@ public:
   double GetBeamStart(){return fBeamStart;}
   inline TVector3 GetTargetPos() const {return fRTarg;}
   inline TVector3 GetCOG() const {return fCOGAtECal;}
+  inline TVector3 GetCOGForMM() const {return TVector3(fCOGAtECal.X(), fCOGAtECal.Y(), fZCogforMM);}
   inline double GetCalibEnergyFactor(){return fCalibEnergyFactor;}
   inline double GetCalibTimeEnergyFactor(){return fCalibTimeEnergyFactor;}
   inline int GetPeriod(){return fPeriod;}
   inline double GetLGCorr(){return fLGCorr;}
   inline double GetQuadrantTemperature(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTemperature[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
   inline double GetQuadrantTempCorr(int quad){if (quad < 0 || quad > 3) {return 0;} return fQuadrantTempCorr[quad];} // TL, TR, BR, BL [seen from ECAL FRONT!]
-
+  inline Int_t GetECalFlag(){return fECalFlag;}
+  inline Int_t GetTargetFlag(){return fTargetFlag;}
+  inline double GetBField(){return fBField;}
   // methods giving availability of original information
 
   bool IsEnergyAvailable(){return fIsEnergyAvailable;}
@@ -87,7 +90,8 @@ public:
   inline double GetGlobalTimeESlope() const { return fGlobalTimeESlope;} //default time-energy slope
   inline double GetGlobalBunchTimeStart() const { return fGlobalBunchTimeStart;} // default bunch time start
   inline double GetGlobalBunchTimeLength() const { return fGlobalBunchTimeLength;} // default bunch time length
-  
+  inline double GetDisplacementXECal() const {return fDisplacementXECal;}
+  inline double GetDisplacementYECal() const {return fDisplacementYECal;}
   inline Bool_t isMC() const { return fisMC;} // default bunch time length
 
   inline double GetMMStripPitch() const {return fMMStripPitch;} // mm
@@ -100,7 +104,9 @@ public:
   inline double GetMMXZRotationAngle() const {return fMMXZRotationAngle;}
   inline double GetMMYZRotationAngle() const {return fMMYZRotationAngle;}
   inline double GetMMDriftVelocity() const {return fMMDriftVelocity;}
-
+  inline double GetMMResV() const {return fMMResV;} //mm
+  inline double GetMMResZ() const {return fMMResZ;} //mm
+  
   double GetMMECALdz(int view, double xECal, double yECal, double tECal);
   
   MMchInfo DecodeMMChannel(int);
@@ -138,6 +144,9 @@ private:
   double fLGCorr;
   double fQuadrantTemperature[4];
   double fQuadrantTempCorr[4];
+  Int_t fECalFlag;
+  Int_t fTargetFlag;
+  double fBField;
 
   // availability of original information
 
@@ -150,10 +159,16 @@ private:
   bool fIsTemperatureAvailable;
   bool fIsPeriodAvailable;
   bool fIsLGCorrAvailable;
+  bool fIsecalflagAvailable;
+  bool fIstargetflagAvailable;
+  bool fIsBFieldAvailable;
   // global quantities
 
   double fZTarg;
   double fZECal;
+  double fZCogforMM;
+  double fDisplacementXECal;
+  double fDisplacementYECal;
 
   TVector3 fRTarg;
   TVector3 fCOGAtECal;
@@ -189,6 +204,10 @@ private:
   double fMMYZRotationAngle;
   
   double fMMDriftVelocity; //mm/ns
+
+  double fMMResV;
+  double fMMResZ;
+  
   TString fMMViewLabel[2]; // labels vs view
 };
 #endif

@@ -22,8 +22,9 @@
 #define kTemperature 9 // bit to define availability of run quadrant-wise temperatures
 #define kPeriod 10
 #define kLGCorr 11
-
-
+#define kTargetflag 12
+#define kEcalflag 13
+#define kBField 14
 struct RunInfo{
   int RunID;
   long long int runStartTime; //run start time in seconds UTC
@@ -46,6 +47,9 @@ struct RunInfo{
   float errCOGX, errCOGY, newTargX, newTargY, errnewTargX, errnewTargY, sigmaDPhi, errsigmaDPhi, sigmaDTheta, errsigmaDTheta, sigmaCOGX, errsigmaCOGX, sigmaCOGY, errsigmaCOGY, E1E2, errE1E2, dt, errdt, sigmaE1E2, errsigmaE1E2, dsigmadt, errsigmadt;
   int period;
   float LGCorr;
+  int targetflag;
+  int ecalflag;
+  float BField;
 };
   
 class OfflineServer
@@ -78,6 +82,11 @@ public:
   float getQuadrantTempCorr(int runID, int quad){if (runIndex[runID] == -1 || quad < 0 || quad > 3) {return 0;} return runInfos.at(runIndex[runID]).quadrantTempCorr[quad];} //a.u.
   int getPeriod(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).period;} //a.u.
   float getLGCorr(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).LGCorr;} //a.u.
+  int getecalflag(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).ecalflag;} //a.u.
+  int gettargetflag(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).targetflag;} //a.u.
+  int getBField(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).BField;} //T.
+
+
 
   bool isTimeAvailable(int runID){       if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTimeBit);} 
   bool isEnergyAvailable(int runID){     if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEnergy);} 
@@ -91,7 +100,11 @@ public:
   bool isTemperatureAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTemperature);}
   bool isPeriodAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kPeriod);}
   bool isLGCorrAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kLGCorr);}
+  bool isTargetFlagAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kTargetflag);}
+  bool isECalFlagAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kEcalflag);}
+  bool isBFieldAvailable(int runID)    {if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).retrieveStatus & (1<<kBField);}
   
+
 private:
   int* runIndex; // array to pass from RunID to the index of the vector of runInfo structures
   std::vector<RunInfo> runInfos; // vector of runInfo structures

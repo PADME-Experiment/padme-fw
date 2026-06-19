@@ -46,7 +46,7 @@ class MMSoftHit {
   void SetIsolLevel(Int_t IsolLevel) {fIsolLevel = IsolLevel;}
   void SetCluPtr(Int_t CluPtr, Int_t ipmode, Int_t clumode) {fCluPtr[ipmode][clumode] = CluPtr;}
   
- protected:
+ private:
 
   Int_t    fChannelId;// from TRecoVHit: 4bits for bdid | 8 bits for chid [bdid = 0--15, chid = 0--255]
   TVector3 fPosition; // from TRecoVHit: x,y,z

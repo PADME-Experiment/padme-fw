@@ -15,11 +15,13 @@ MMSoftHit::MMSoftHit() {
   }
 }
 
-MMSoftHit::~MMSoftHit() {};
+MMSoftHit::~MMSoftHit() {
+  fmmi = {}; 
+};
 
 void MMSoftHit::CopyHit(TRecoVHit *Hit) {
   fChannelId = Hit->GetChannelId(); //TODO forse getter bdid, view, quad, plane 
-  fPosition = Hit->GetPosition();
+  fPosition.SetXYZ(Hit->GetPosition().X(), Hit->GetPosition().Y(), Hit->GetPosition().Z());
   fEnergy = Hit->GetEnergy();
   fTime = Hit->GetTime();
 

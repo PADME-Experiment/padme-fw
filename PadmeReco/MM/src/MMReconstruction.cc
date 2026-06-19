@@ -19,6 +19,34 @@ MMReconstruction::MMReconstruction(TFile* HistoFile, TString ConfigFileName)
   fChannelReco = new DigitizerChannelMM();
   fGeometry = new MMGeometry();
   fClusterization = new MMClusterization();
+  //needed for MC
+  r = new TRandom2();
+
+  fADCUnitToCharge = fConfig->GetParOrDefault("RECO","ADCUnitToCharge",300.); // electrons / adccount
+  fDefaultHitChargeThreshold = fConfig->GetParOrDefault("RECO","HitChargeThreshold",100);  // ADC counts
+  fDefaultHitChargeSaturation = fConfig->GetParOrDefault("RECO","HitChargeSaturation",4000);  //ADC counts  
+  fTimeTau = fConfig->GetParOrDefault("RECO","TimeTau",50.);  //ns  
+  fAPVTimeBin = fConfig->GetParOrDefault("RECO","APVTimeBin",25.);  //ns  
+  fAPVChThresholdFile = (std::string)fConfig->GetParOrDefault("RECO","APVChannelThreshold","APVChThreshold.txt");
+
+  //read APV channel thresholds and saturation values from file
+  std::ifstream ThreFile;  
+  ThreFile.open(Form("config/Calibration/%s", fAPVChThresholdFile.c_str()));
+  std::string line;
+  Int_t brdid, chid, lowthre, saturation;
+  if(ThreFile.is_open()){
+    while(getline(ThreFile,line)){
+      std::stringstream(line) >> brdid >> chid >> lowthre >> saturation;
+      fAPVChLowThresholdMap[std::make_pair(brdid,chid)] = lowthre;
+      fAPVChSaturationMap[std::make_pair(brdid,chid)] = saturation;
+      std::cout << "MMReconstruction::MMReconstruction - APV channel  threshold file: read threshold " << lowthre << " and saturation " << saturation << " for board " << brdid << " channel " << chid << std::endl;
+
+    }
+  }else{
+    std::cout << "********* MMReconstruction::MMReconstruction - WARNING: cannot open APV channel threshold file " << fAPVChThresholdFile << ". Using default values for all channels: threshold " << fDefaultHitChargeThreshold << " and saturation *********** " << fDefaultHitChargeSaturation << std::endl;
+    // fAPVChLowThresholdMap[std::make_pair(brdid,chid)] = fDefaultHitChargeThreshold;
+    // fAPVChSaturationMap[std::make_pair(brdid,chid)] = fDefaultHitChargeSaturation;
+  }
   // Get pedestal and charge reconstruction parameters from config file
 //  fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
 //  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
@@ -64,6 +92,44 @@ void MMReconstruction::HistoInit()
     AddHisto(histoname.Data(),new TH2F(histoname.Data(),"BoardSN vs sample",27,0,27,128,0,128));
   }
   fEventCounter = 0;
+}
+
+void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
+  ClearHits();
+  vector<TRecoVHit *> &Hits  = GetRecoHits();
+  //fill the hit vector from MC digis
+  for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      TMCVDigi* digi = tEvent->Digi(i); 
+      //std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
+      int brdNum = digi->GetChannelId()/1000; //first decode from MC saving format: channelid is encoded as (boardNum*1000 + channelNum) 
+      int chNum = digi->GetChannelId()%1000;
+      // then coded with Reco nomenclature, so that we're able to use directly ComputePosition 
+      if(brdNum%2==1) chNum -= 256; // even boards have channel number 256-511, odd boards have channel number 0-255
+      Double_t HitChargeThreshold = fAPVChLowThresholdMap[std::make_pair(brdNum,chNum)];
+      Double_t HitChargeSaturation = fAPVChSaturationMap[std::make_pair(brdNum,chNum)];
+      //std::cout<<HitChargeThreshold<<" "<<HitChargeSaturation<<std::endl;
+      if(HitChargeSaturation==0) HitChargeSaturation = fDefaultHitChargeSaturation; // if saturation value is not set for this channel, use default
+      if(HitChargeThreshold==0) HitChargeThreshold = fDefaultHitChargeThreshold; // if threshold value is not set for this channel, use default
+      if(digi->GetEnergy()/fADCUnitToCharge<HitChargeThreshold) continue; // zero suppression //should be channel based 
+      if(digi->GetEnergy()/fADCUnitToCharge>HitChargeSaturation) continue; // saturation
+      chNum |= (brdNum << 8);
+
+      TRecoVHit *Hit = new TRecoVHit();
+      Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
+      Double_t sigma = fTimeTau/5;//sqrt(12); // sigma of the time smearing
+      Double_t DetTime=r->Gaus(0.,sigma); //ns
+      Hit->SetTime(digi->GetTime()+DetTime); // ns to be smeared
+      double QtoMaxConv = (1./fADCUnitToCharge)*27*pow(TMath::E(),-3)*(fAPVTimeBin/fTimeTau)/6; // conversion factor from charge to maximum of the shaper output, for a given time binning and shaper time constant. N.B. assumes that the shaper output is sampled at its maximum.
+      Hit->SetEnergy(digi->GetEnergy()*QtoMaxConv); // ADC
+      Hits.push_back(Hit);
+    } //pile-up of digis is alreadt handled in the digi creation --> confirmed by Occupancy plots
+    //ready to evaluate positions from the channelID and then clusterize
+    if(fGeometry)  fGeometry->ComputePositions(GetRecoHits());
+    //position to be smeared 
+    // 
+     // from Hits to Clusters
+    ClearClusters();
+    if (fClusterization) BuildClusters();
 }
 
 void MMReconstruction::ProcessEvent(TRawEvent* rawEv, TMMRawEvent* MMRawEv){

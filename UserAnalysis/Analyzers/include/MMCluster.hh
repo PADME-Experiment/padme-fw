@@ -15,7 +15,7 @@
 #define CALIBRATION false
 #define IPMODE false
 
-struct MMTracklet{
+struct MMTracklet{           //NOTE THAT PARS[4] è dZ!!!!
   Double_t slope; // dv/dz
   Double_t inter; // v at mesh plane
   Double_t errSlope = 0.010; //mrad
@@ -94,6 +94,7 @@ public:
   bool AddHit(MMSoftHit* softhit); // ONLY USED AT LEVEL ZERO
   bool L0SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal);
   bool MergeAcrossPlanes(MMCluster* inputclus); // If possible, merge present cluster with given input cluster
+  bool MergeAcrossPlanesWithdZ(MMCluster* inputclus); //Use dZ for matching
   bool SimpleFitWithClusterTime(double xEcal, double yEcal, double tEcal);
   bool FitWithClusterTime(double xEcal, double yEcal, double tEcal); // re-fit level-1 cluster with fixed DZ
   //bool HitRejectionAlgorithm(double v_new_hit, double z_new_hit, double mt_avg, double ct_avg);

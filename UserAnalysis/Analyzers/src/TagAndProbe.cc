@@ -102,6 +102,9 @@ Bool_t TagAndProbe::InitHistos()
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DTHEVsDPHIAbs_probe_nocut"),600, 0, 2*TMath::Pi(), 600, 0, 2*TMath::Pi());
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_Cat1vs2"),6, -0.5, 5.5, 6, -0.5, 5.5);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_globalCatvsDE"), 600,-300, 300, 7, -1.5, 5.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl0"), 600, -300, 300,600, -600, 600);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl1"), 600, -300, 300,600, -600, 600);
+
 
   for(int iSlice = 0; iSlice < fNSlicesE; iSlice++) {
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice),600, -TMath::Pi(), TMath::Pi(), 600,-300, 300);
@@ -212,6 +215,7 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 
       int nTracksInQuadOther = 0;
       int nTracksInPosInQuadOther = 0;
+
       Double_t dROld = -999;
       for (auto it = begin (trackvect); it != end (trackvect); ++it) {
         MMBestTrack* track = *it;
@@ -222,6 +226,8 @@ Int_t TagAndProbe::TagAndProbeSelection(){
               
         TVector3 extPos = track->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z());
         double dR = (extPos[1-track->view] - cluPos[0][1-track->view]);
+        fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d",track->level), cluEnergy[0] - pg, dR, 1.);
+
         if(nTracksInQuad==2){
           fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdRold"), dROld, dR, 1.);
         }

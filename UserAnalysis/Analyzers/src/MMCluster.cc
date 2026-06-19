@@ -281,6 +281,7 @@ void MMCluster::SimpleFitWithDz(vector<int> plane, vector<double>vhits, vector<d
       chi2_min = chi2;
       dz_fit = dz_scan;
     }
+    //dz_fit to be compared to t_ecal
   }
 
     
@@ -463,7 +464,10 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   
   return kTRUE;
 }
-
+////// TO BE IMPLEMENTED
+bool MergeAcrossPlanesWithdZ(MMCluster* inputclus){ ////// TO BE IMPLEMENTED //uguale a MergeAcrossPlanes fino a riga 458 poi chiamare SimpleFitWithDz con gli stessi input usati in SimpleFitWithClu, RICORDARSI DI FILLARE fTracos.pars[4] con dZ!!!!}
+  return kTRUE;
+}
 
 void MMCluster::InitFit(vector<MMSoftHit*> hitArray, double x, double y, double z){ // probably will need to pass errors as well
   InitFit(hitArray);

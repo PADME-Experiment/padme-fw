@@ -82,7 +82,7 @@ Bool_t MMFindBestTrack::Process(){
   }
 
   for(int qd=0; qd<4; qd++) {
-    for(int vw=0; vw<2; vw++) {
+    for(int vw=0; vw<2; vw++) { ////// TO BE IMPLEMENTED //provare a uscire con più tracce per vista, prendere dZ dal tracklet -->pars[4]
       if(best_tra1[qd][vw].quad > -1) {
         MMBestTrack *bt = new MMBestTrack();
         bt->quad = qd;
@@ -104,7 +104,7 @@ Bool_t MMFindBestTrack::Process(){
         //std::cout<<"Track extrapolation LV1: "<<fvTracks.back()->view<<" quad: "<<fvTracks.back()->quad<<"tracklet slope:  "<<fvTracks.back()->tracklet.slope<<"tracklet inter: "<<fvTracks.back()->tracklet.inter<<std::endl;
 
       }
-      else if(best_tra0[qd][vw].quad > -1) {
+      else if(best_tra0[qd][vw].quad > -1) { 
 
 	    MMBestTrack *bt = new MMBestTrack();
         bt->quad = qd;

@@ -58,22 +58,6 @@ using namespace std;
 
 #define TMMCH_N_Readout 2
 
-struct SliceFitResult {
-  TH1D *amp = nullptr;
-  TH1D *mean = nullptr;
-  TH1D *sigma = nullptr;
-};
-
-// struct BeamFitSummary {
-//   bool   valid       = false;
-//   double charge      = 0.;
-//   double err_charge  = 0.;
-//   double position    = 0.;
-//   double err_position= 0.;
-//   double spread      = 0.;
-//   double err_spread  = 0.;
-// };
-
 class RecoTMM {
 public :
    TChain         *fTree;      //! pointer to the analyzed TTree
@@ -82,7 +66,7 @@ public :
    int            RunID = 0;
    int            DetRunID = 0;
    int            maxEvents=0;
-   TString        outputFileName = "Monitor_TMM.root";
+   TString        outputFileName = "Calibration_TMM.root";
    
    // Branches declaration 
    ULong64_t       evt;
@@ -120,7 +104,7 @@ public :
    TBranch         *b_max_q;   //!
    TBranch         *b_t_max_q;   //!
   
-   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="Monitor_TMM.root");   
+   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="Calibration_TMM.root");   
    virtual ~RecoTMM();
    // virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
@@ -131,14 +115,11 @@ public :
    virtual void     StripFinder(int &iReadout, int &iStrip);
    virtual void     CoordinateFinder(int iStrip, const vector<short> &camp, int &iReadout, double &x_strip, double &q_strip);
    virtual void     GlobalCoordinate(int iReadout, double &x_strip);
-   // virtual void     UpdateSummaryTxt(TString filename, int RunID, double qx, double err_qx, double qy, double err_qy, double x, double err_x, double y, double err_y, double sigmax, double err_sigmax, double sigmay, double err_sigmay);
-   virtual void     LoopFileList(TObjArray &inputFileNameList, int NevtBlock=10000);
-   virtual void     BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphErrors *gRatio, TGraphErrors *gDiff, TGraphErrors *gRatio3s, TGraphErrors *gDiff3s, vector<bool> &pass3s);
-   virtual void     FillBlockGraphsFromSlices(int iReadout, vector<vector<bool>> &Blockpass3s);
-   
-   virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
-   // virtual BeamFitSummary AnalyzeMeanSlice(TH1D *hMean, TString name, TF1 **fitOut = nullptr);
-   virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax);
+   virtual void     ComputeBeamSpot(int iReadout, double &x_spot, double &x_rms, double &q_beam);
+   virtual void     ComputeBeamSpotFromVectors(vector<double> &x_vec, vector<double> &q_vec, double &x_spot, double &x_rms, double &q_beam);
+   virtual void     ComputeBeamStatsFromVectors(vector<double> &x_vec, vector<double> &q_vec, double &x_spot, double &err_x_spot, double &x_rms, double &err_x_rms, double &q_beam, double &err_q_beam);   
+   virtual void     UpdateSummaryTxt(TString filename, int RunID, double qx, double err_qx, double qy, double err_qy, double x, double err_x, double y, double err_y, double sigmax, double err_sigmax, double sigmay, double err_sigmay);
+   virtual void     LoopFileList(TObjArray &inputFileNameList);
    
    ///////ENVIROMENT VARIABLES//////
    TString tmm_tag[TMMCH_N_Readout] = {"X", "Y"};
@@ -185,13 +166,13 @@ public :
    // float APV3_fqy = 1;
 
    // run 677
-   // float APV1_fqx = 1*0.569244*0.999954; // APV equalization performed twice on run677 21.05.26 - to be repeated on other runs
-   // float APV2_fqx = 1;                   // checking for stability run-by-run
-   // float APV3_fqx = 1*0.422527*0.99999; 
+   float APV1_fqx = 1*0.569244*0.999954; // APV equalization performed twice on run677 21.05.26 - to be repeated on other runs
+   float APV2_fqx = 1;                   // checking for stability run-by-run
+   float APV3_fqx = 1*0.422527*0.99999; 
 
-   // float APV1_fqy = 1*0.564602*1.00291;
-   // float APV2_fqy = 1;
-   // float APV3_fqy = 1*0.930592*1.00401;
+   float APV1_fqy = 1*0.564602*1.00291;
+   float APV2_fqy = 1;
+   float APV3_fqy = 1*0.930592*1.00401;
 
    // run 534
    // float APV1_fqx = 1*0.501387*1.00069;
@@ -210,15 +191,16 @@ public :
    // float APV1_fqy = 1*0.473443*1.00146;
    // float APV2_fqy = 1;
    // float APV3_fqy = 1*0.917013*1.00216;
-
-   // first mean values between 677-534-415 --> to be optimised
-   float APV1_fqx = 1*0.53563955; 
-   float APV2_fqx = 1;                   
-   float APV3_fqx = 1*0.38476545; 
-
-   float APV1_fqy = 1*0.50290015;
-   float APV2_fqy = 1;
-   float APV3_fqy = 1*0.88373339;
+  
+   //hit vectors
+   vector<double> x_mean[TMMCH_N_Readout];
+   vector<double> q_mean[TMMCH_N_Readout];
+   double x_spot[TMMCH_N_Readout];
+   double rms[TMMCH_N_Readout];
+   double q_beam[TMMCH_N_Readout];
+   double err_x_spot[TMMCH_N_Readout];
+   double err_x_rms[TMMCH_N_Readout];
+   double err_q_beam[TMMCH_N_Readout];
 
    // strip calibration vectors
    vector<double> FitFullDiff[TMMCH_N_Readout];
@@ -226,17 +208,15 @@ public :
 
    // tf1 di fit
    vector<TF1*> f;
-
-   // blocks of events for beam spot stability monitoring
-   // int NevtBlock = 1000;
-   
   
    /////// HISTOGRAMS //////
-   // event based histograms
+   // event by event histograms
    TH2F *hqmaxstrip[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
-   
-   // event based FitSlicesY() histograms
+   TH1F *hBeam[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted (selected strips)
+   TH1F *hBeamFull[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
+
+   // FitSlicesY() histograms
    TH1D *hAmpslice[TMMCH_N_Readout] = {0};
    TH1D *hMeanslice[TMMCH_N_Readout] = {0};
    TH1D *hSigmaslice[TMMCH_N_Readout] = {0};
@@ -244,56 +224,28 @@ public :
    TH1D *hMeansliceFull[TMMCH_N_Readout] = {0};
    TH1D *hSigmasliceFull[TMMCH_N_Readout] = {0};
 
-   // block based histograms
-   vector<TH2F*> hBlockqmaxstrip[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull[TMMCH_N_Readout]; //qmax vs xstrip distribution
-    
-   // block based FitSlicesY() histograms
-   vector<TH1D*> hBlockAmpslice[TMMCH_N_Readout]; // amplitude slices
-   vector<TH1D*> hBlockMeanslice[TMMCH_N_Readout]; // mean slices
-   vector<TH1D*> hBlockSigmaslice[TMMCH_N_Readout]; // sigma slices
-   vector<TH1D*> hBlockAmpsliceFull[TMMCH_N_Readout]; // amplitude slices (full)
-   vector<TH1D*> hBlockMeansliceFull[TMMCH_N_Readout]; // mean slices (full)
-   vector<TH1D*> hBlockSigmasliceFull[TMMCH_N_Readout]; // sigma slices (full)
-
-   // event based calibrated histograms
+   //calibrated histograms
    TH2F *hqmaxstrip_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
-   // event based calibrated histograms after threshold selection
+   TH1F *hBeam_cal[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted (selected strips)
+   TH1F *hBeamFull_cal[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
+   // calibrated histograms after threshold selection
    TH2F *hqmaxstrip_cal3s[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull_cal3s[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
-   
-   // block based calibrated histograms
-   vector<TH2F*> hBlockqmaxstrip_cal[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_cal[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   // block based calibrated histograms after threshold selection
-   vector<TH2F*> hBlockqmaxstrip_cal3s[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_cal3s[TMMCH_N_Readout]; //qmax vs xstrip distribution
+   TH1F *hBeam_cal3s[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted (selected strips)
+   TH1F *hBeamFull_cal3s[TMMCH_N_Readout] = {0}; //xstrip distribution charge weighted
 
-   // block based calibrated histograms - overlall calibration
-   vector<TH2F*> hBlockqmaxstrip_Overallcal[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_Overallcal[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   // block based calibrated histograms after threshold selection
-   vector<TH2F*> hBlockqmaxstrip_Overallcal3s[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_Overallcal3s[TMMCH_N_Readout]; //qmax vs xstrip distribution
-   
    ////// GRAPHS //////
-   // block based graphs
-   TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout] = {0};  //Beam spot over blocks of events for stability monitoring
-   TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0}; //Beam spread over blocks of events for stability monitoring
-   TGraphErrors *g_BlockBeamCharge[TMMCH_N_Readout] = {0}; //Beam charge over blocks of events for stability monitoring
+   // event by event graphs
+   TGraphErrors *g_BeamSpot[TMMCH_N_Readout] = {0};   //Beam spot over events
+   TGraphErrors *g_BeamSpread[TMMCH_N_Readout] = {0}; //Beam spread over events
+   TGraphErrors *g_BeamCharge[TMMCH_N_Readout] = {0}; //Beam charge over events
 
    //TGraphs for strip calibration
    TGraphErrors *g_FitFullDiff[TMMCH_N_Readout] = {0}; // to identify possible dead strips
    TGraphErrors *g_FitFullRatio[TMMCH_N_Readout] = {0}; // to define calibration constants
    TGraphErrors *g_FitFullDiff3s[TMMCH_N_Readout] = {0}; // to identify possible dead strips
    TGraphErrors *g_FitFullRatio3s[TMMCH_N_Readout] = {0}; // to define calibration constants after threshold selection
-
-   //block based TGraphs for strip calibration
-   vector<TGraphErrors*> g_BlockFitFullDiff[TMMCH_N_Readout]; // to identify possible dead strips
-   vector<TGraphErrors*> g_BlockFitFullRatio[TMMCH_N_Readout]; // to define calibration constants
-   vector<TGraphErrors*> g_BlockFitFullDiff3s[TMMCH_N_Readout]; // to identify possible dead strips
-   vector<TGraphErrors*> g_BlockFitFullRatio3s[TMMCH_N_Readout]; // to define calibration constants after threshold selection
 
 };
 
@@ -380,11 +332,6 @@ Long64_t RecoTMM::LoadTree(Long64_t entry)
 
    Long64_t centry = fTree->LoadTree(entry);
    if (centry < 0) return centry;
-
-   // if (fTree->GetTreeNumber() != fCurrent) {
-   //    fCurrent = fTree->GetTreeNumber();
-   //    Notify();
-   // }
 
    return centry;
 }

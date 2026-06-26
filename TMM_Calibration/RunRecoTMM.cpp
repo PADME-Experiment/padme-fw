@@ -4,8 +4,10 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TString.h"
+
 #include <sys/stat.h>
 #include <unistd.h>
+
 #include <cstdlib>
 #include <cstdio>
 #include <fstream>
@@ -44,6 +46,7 @@ void PrintUsage(const char* progname)
   cout << "  -n <N>        Maximum number of events to reconstruct. Default: 0 = all." << endl;
   cout << "  -r <RunID>    PADME run ID, used as label/output metadata." << endl;
   cout << "  -d <DetRunID> Detector run ID, used as label/output metadata." << endl;
+  cout << "  -b <NBlock>   Block size in events. Default: 10000." << endl;
   cout << endl;
 }
 
@@ -55,13 +58,14 @@ int main(int argc, char* argv[])
   int RunID = 0;
   int DetRunID = 0;
   int maxEvents = 0;
+  int NevtBlock = 10000;
 
   TString inputFileName;
   TString outputFileName = "Calibration_TMM.root";
 
   TObjArray inputFileNameList;
 
-  while ((opt = getopt(argc, argv, "i:l:o:n:r:d:")) != -1) {
+  while ((opt = getopt(argc, argv, "i:l:o:n:r:d:b:")) != -1) {
 
     switch (opt) {
 
@@ -139,6 +143,16 @@ int main(int argc, char* argv[])
         break;
       }
 
+      case 'b': {
+        NevtBlock = atoi(optarg);
+        if (NevtBlock <= 0) {
+          cerr << "ERROR: NevtBlock must be > 0" << endl;
+          return 1;
+        }
+        cout << "Block size set to: "<< NevtBlock << " events" << endl;
+        break;
+      }
+
       default: {
         PrintUsage(argv[0]);
         return 1;
@@ -169,12 +183,13 @@ int main(int argc, char* argv[])
   cout << "RunID          = " << RunID << endl;
   cout << "DetRunID       = " << DetRunID << endl;
   cout << "maxEvents      = " << maxEvents << endl;
+  cout << "NevtBlock      = " << NevtBlock << endl;
   cout << "outputFileName = " << outputFileName << endl;
   cout << endl;
 
   {
     RecoTMM reco(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName);
-    reco.LoopFileList(inputFileNameList);    
+    reco.LoopFileList(inputFileNameList, NevtBlock);    
   }
 
   cout << endl;

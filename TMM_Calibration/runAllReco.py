@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# Script per lanciare in batch più job di RecoTMM
+# Legge da un file di testo la lista dei job (PadmeRunID, DetRunID, MaxEvents, NevtBlock) e lancia uno script bash per ciascuno
+# Limita il numero di job paralleli a un valore specificato (default: numero di core CPU)
+# Crea una directory di lavoro e una di log per ciascun job, con file di log dedicato
+# Tiene traccia dei PID dei processi lanciati in un file di testo
+
+#MARCO --> DA RIVEDERE!
+
 import os
 import sys
 import time

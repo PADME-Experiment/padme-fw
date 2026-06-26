@@ -1,0 +1,2 @@
+2026-05-15 18:27:54.014593  PID=321108  padme677_det388  log=/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/TMM_monitor/logs_reco_20260515_182749/padme677_det388_20260515_182753.log
+2026-05-15 18:27:54.030893  PID=321110  padme534_det255  log=/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/TMM_monitor/logs_reco_20260515_182749/padme534_det255_20260515_182754.log

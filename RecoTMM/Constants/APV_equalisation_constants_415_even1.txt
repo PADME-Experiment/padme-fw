@@ -1,0 +1,3 @@
+# APV fine equalisation constants
+#RunID,APV1_fqx,APV2_fqx,APV3_fqx,APV1_fqy,APV2_fqy,APV3_fqy
+415,1.00007855,1.00000000,1.00027399,1.00145571,1.00000000,1.00216258

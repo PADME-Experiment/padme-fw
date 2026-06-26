@@ -65,7 +65,12 @@ Bool_t ECalCalib::Process(PadmeAnalysisEvent* event){
 
   fNPairs = NClusterPairSimpleSelection();
   CorrectETimeSlope(0); //fill plots before and after time-energy slope correction
-  CorrectEScale(1); // fill plots before and after energy scale correction      
+  if(fCfgParser->HasConfig("ECAL","ApplyEnergyScaleCorrection")) {
+    TString cfgvalue = TString(fCfgParser->GetSingleArg("ECAL","ApplyEnergyScaleCorrection"));
+    if(cfgvalue == "1") CorrectEScale(1); // fill plots before and after energy scale correction
+    else                CorrectEScale(0);
+  }
+  
 
   return true;
 }

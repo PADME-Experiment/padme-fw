@@ -12,6 +12,7 @@ struct MMTrack{
   int quad  = -999;   //0,1,2,3
   int level = -999;  //0 -> one segment per plane, 1-> two segments per plane
 
+  int nhit  = -999;
   MMTracklet tracklet;
 
   void Initialize() {
@@ -26,12 +27,14 @@ struct MMBestTrack{
   int view  = -999;   //y=0, x=1
   int quad  = -999;   //0,1,2,3
   int level = -999;  //0 -> one segment per plane, 1-> two segments per plane
+  int nhit  = -999;
   Double_t slope; // dv/dz
   Double_t inter; // v at mesh plane
   Double_t errSlope = 0.010; //mrad
   Double_t errInter = 0.300; //mm
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
   Double_t chi2IP;
+  Double_t pchi2;
   Double_t pars[5];// x0,y0,x1,y1,dz: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
   TVector3 lambda; // cosines of track directions
   vector<TVector3> vres; //vector of residuals

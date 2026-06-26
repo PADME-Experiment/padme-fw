@@ -613,7 +613,7 @@ Bool_t MMTrackDevel::Process(){
       if(x_Ecal*signsQuadX[quad0] > 0 && y_Ecal*signsQuadY[quad0] > 0) { //matching ECal clu position with MM quad
 	if(fMMClusteringInstance->GetMMCluster(itra0,0,0)->L0SimpleFitWithClusterTime(x_Ecal,y_Ecal,t_Ecal)) {
 	  double dz = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().pars[4];
-	  std::cout<<"LvL 0 dz: "<<dz<<std::endl;
+	  //std::cout<<"LvL 0 dz: "<<dz<<std::endl;
 	  double pchi2_tmp0 = ROOT::Math::chisquared_cdf_c(fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().chi2,nhit_tmp0-2);
 
 	  TVector3 MMposAtIP0 = fMMClusteringInstance->GetMMCluster(itra0,0,0)->GetTracklet().ExtrapolationAtZ(z_IP);//tempClu->GetPosition().Z());

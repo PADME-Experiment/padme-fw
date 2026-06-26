@@ -192,7 +192,8 @@ void MMClustering::Clusterize() {
     for (int j=i+1; j<(int) fMMClusters[0][0].size(); j++){ 
       if (fMergedMMClusters[0][0].at(j)) continue;
       
-      if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) { //TO BE IMPLEMENTED //NON CHIAMARE MERGE ACROSS PLANES MA MergeAcrossPlanesWithDz almeno quando passa per FindBestTrack --> clustering alternativo?
+      //if (new_clu->MergeAcrossPlanes(fMMClusters[0][0].at(j))) { //TO BE IMPLEMENTED //NON CHIAMARE MERGE ACROSS PLANES MA MergeAcrossPlanesWithDz almeno quando passa per FindBestTrack --> clustering alternativo?
+      if (new_clu->MergeAcrossPlanesWithdZ(fMMClusters[0][0].at(j))) { //TO BE IMPLEMENTED //NON CHIAMARE MERGE ACROSS PLANES MA MergeAcrossPlanesWithDz almeno quando passa per FindBestTrack --> clustering alternativo?
 	fMMClusters[0][1].push_back(new_clu);
 	fMergedMMClusters[0][0].at(i) = kTRUE; // store the cluster-merged flag
 	fMergedMMClusters[0][0].at(j) = kTRUE; // store the cluster-merged flag

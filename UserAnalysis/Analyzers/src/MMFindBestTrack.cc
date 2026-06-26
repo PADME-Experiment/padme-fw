@@ -58,6 +58,7 @@ Bool_t MMFindBestTrack::Process(){
       best_tra0[quad][view].quad = quad;
       best_tra0[quad][view].view = view;
       best_tra0[quad][view].level = 0;
+      best_tra0[quad][view].nhit = nhit_tmp;
       best_tra0[quad][view].tracklet = tracklet;
     }
   }
@@ -70,13 +71,14 @@ Bool_t MMFindBestTrack::Process(){
     int nhit_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetHitsVectorSize();
 
     double chi2_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetTracklet().chi2;
-    double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,1); //chi2 done at the moment with slope
+    double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,nhit_tmp-3); //chi2 done at the moment with slope
 
     if(pchi2_tmp > pchi2_best1[quad][view]) {
       pchi2_best1[quad][view] = pchi2_tmp;
       best_tra1[quad][view].quad = quad;
       best_tra1[quad][view].view = view;
       best_tra1[quad][view].level = 1;
+      best_tra1[quad][view].nhit = nhit_tmp;
       best_tra1[quad][view].tracklet = tracklet;
     }
   }
@@ -88,10 +90,12 @@ Bool_t MMFindBestTrack::Process(){
         bt->quad = qd;
         bt->view = vw;
         bt->level = 1;
-        bt->slope = best_tra1[qd][vw].tracklet.slope;
+	bt->nhit = best_tra1[qd][vw].nhit;
+	bt->slope = best_tra1[qd][vw].tracklet.slope;
         bt->inter = best_tra1[qd][vw].tracklet.inter;
         bt->chi2 = best_tra1[qd][vw].tracklet.chi2;
         bt->chi2IP = best_tra1[qd][vw].tracklet.chi2IP;
+	bt->pchi2 = pchi2_best1[qd][vw];
         for(int ipar=0; ipar<5; ipar++){
           bt->pars[ipar] = best_tra1[qd][vw].tracklet.pars[ipar];
         }
@@ -110,10 +114,12 @@ Bool_t MMFindBestTrack::Process(){
         bt->quad = qd;
         bt->view = vw;
         bt->level = 0;
+	bt->nhit = best_tra0[qd][vw].nhit;
         bt->slope = best_tra0[qd][vw].tracklet.slope;
         bt->inter = best_tra0[qd][vw].tracklet.inter;
         bt->chi2 = best_tra0[qd][vw].tracklet.chi2;
         bt->chi2IP = best_tra0[qd][vw].tracklet.chi2IP;
+	bt->pchi2 = pchi2_best0[qd][vw];
         for(int ipar=0; ipar<5; ipar++){
           bt->pars[ipar] = best_tra0[qd][vw].tracklet.pars[ipar];
         }        

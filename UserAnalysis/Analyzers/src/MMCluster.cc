@@ -461,11 +461,95 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   chi2_tmp += (slope2 - slope_avg)*(slope2 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
   fTracos.chi2 = chi2_tmp;
   
-  
   return kTRUE;
 }
+
 ////// TO BE IMPLEMENTED
-bool MergeAcrossPlanesWithdZ(MMCluster* inputclus){ ////// TO BE IMPLEMENTED //uguale a MergeAcrossPlanes fino a riga 458 poi chiamare SimpleFitWithDz con gli stessi input usati in SimpleFitWithClu, RICORDARSI DI FILLARE fTracos.pars[4] con dZ!!!!}
+bool MMCluster::MergeAcrossPlanesWithdZ(MMCluster* inputclus){ ////// TO BE IMPLEMENTED //uguale a MergeAcrossPlanes fino a riga 458 poi chiamare SimpleFitWithDz con gli stessi input usati in SimpleFitWithClu, RICORDARSI DI FILLARE fTracos.pars[4] con dZ!!!!}
+  MMchInfo chinfoThis = fMMHitsInClu.at(0)->GetMMchInfo();
+  MMchInfo chinfoThat = inputclus->GetHit(0)->GetMMchInfo();
+  // want to merge clusters of the same view and quadrant, across different planes
+  if (chinfoThis.plane == chinfoThat.plane) return kFALSE;
+  if (chinfoThis.view  != chinfoThat.view) return kFALSE;
+  if (chinfoThis.quad  != chinfoThat.quad) return kFALSE;
+  
+  const double dvAtMeshMax = 5; // mm
+  const double dslopeMAX = 0.040; //old 0.025 
+  // check the dv at the mesh between the two clusters
+  double dv = fTracos.inter - inputclus->GetTracklet().inter;  
+  double dslope = fTracos.slope - inputclus->GetTracklet().slope;  
+  if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
+  if (TMath::Abs(dslope) > dslopeMAX) return kFALSE;
+  
+  // success: update the cluster
+  for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
+    fMMHitsInClu.push_back(inputclus->GetHit(i));
+  }
+  int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
+  fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
+  
+  double dz = 0; //                                                                   TO BE CHANGED!!!!!!!!!!!!!
+  
+  vector<double> zhits, vhits;
+  double v_avg,z_avg,mt_avg,ct_avg,cosv,cosz,chi2,dz_fit;
+  vector<int> planes;
+  
+  for (int i=0; i<(int)fMMHitsInClu.size(); i++){
+    zhits.push_back(fMMHitsInClu.at(i)->GetZfromTime(1.));
+    vhits.push_back(fMMHitsInClu.at(i)->GetPosition()[1-fMMHitsInClu.at(i)->GetMMchInfo().view]); // view == 1 corresponds to Xview
+    planes.push_back(fMMHitsInClu.at(i)->GetMMchInfo().plane);
+  }
+  
+  SimpleFitWithDz(planes, vhits, zhits, dz, &v_avg, &z_avg, &mt_avg, &ct_avg, &cosv, &cosz, &chi2, &dz_fit);
+  
+  int Nhit = zhits.size();
+  vector<TVector3> residues;
+  for(int r=0; r<Nhit; r++) {
+    double z_hit = zhits.at(r) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2);
+    if(planes.at(r) == 0) z_hit -= (dz + dz_fit);
+    else                  z_hit += (dz + dz_fit);
+    double v_hit = vhits.at(r);
+    
+    double v_reco = mt_avg * z_hit + ct_avg;
+    double z_reco = -999;
+    if(fabs(mt_avg)>1e-5) z_reco = (v_hit - ct_avg)/mt_avg;
+    //else std::cerr<<"[SimpleFitWithClusterTime] AIUTO SLOPE NEGATIVA!!!!"<<std::endl;
+    
+    TVector3 res;
+    res[1-chinfoThis.view] = v_hit - v_reco;
+    res[chinfoThis.view] = 0;
+    res.SetZ(z_hit - z_reco);
+    residues.push_back(res);
+  }
+  
+  fTracos.vres.clear();
+  int vres_size = residues.size();
+  for(int i=0; i<vres_size; i++) {
+    TVector3 res = residues.at(i);
+    fTracos.vres.push_back(res);
+  }
+  
+  
+  fTracos.slope = mt_avg;
+  fTracos.inter = ct_avg;
+  // evaluate intercepts at the two planes
+  for(Int_t pl = 0; pl<2; pl++) {
+    double v_pl = mt_avg*(GeneralInfo::GetInstance()->GetMMPosPlaneZ(pl) - GeneralInfo::GetInstance()->GetMMPosPlaneZ(2)) + ct_avg;
+    fTracos.pars[2*pl+1-fMMHitsInClu.at(0)->GetMMchInfo().view] = v_pl; // fit quantity: for view=0 i.e. Yview, pars 1,3
+    fTracos.pars[2*pl+fMMHitsInClu.at(0)->GetMMchInfo().view] = fMMHitsInClu.at(0)->GetPosition()[fMMHitsInClu.at(0)->GetMMchInfo().view]; // for view=0, it's the X of the hit (center point)
+  }
+  fTracos.pars[4] = dz_fit;
+  
+  // since the hits are not sorted in Z, impose that the track in output is always outgoing from the target (cosz > 0)
+  int reverseTrack = 1;
+  if (cosz < 0) reverseTrack = -1;
+  fTracos.lambda[1-fMMHitsInClu.at(0)->GetMMchInfo().view] = reverseTrack*cosv;
+  fTracos.lambda[fMMHitsInClu.at(0)->GetMMchInfo().view] = 0; 
+  fTracos.lambda.SetZ(reverseTrack*cosz);
+
+
+  fTracos.chi2 = chi2;
+  
   return kTRUE;
 }
 

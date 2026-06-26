@@ -89,22 +89,27 @@ Bool_t TagAndProbe::InitHistos()
   int  fNYBins = (fYMax - fYMin) / fYW;
 
   fhSvcVal->CreateList("TagAndProbe");
-	fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_NOcut_tag",400, 0, 400, 600,-300, 300); // da mettere quello in phi
-	fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_NOcut_probe",400, 0, 400, 600,-300, 300); // da mettere quello in phi
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_NOcut_tag",400, 0, 400, 600,-300, 300); // da mettere quello in phi
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_NOcut_probe",400, 0, 400, 600,-300, 300); // da mettere quello in phi
   fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEvsE_probe",400, 0, 400, 600,-300, 300); // da mettere quello in phi
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dRvsDE_tag"),600, -300, 300,600, -600, 600);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dRvsdRold"),600, -600, 600,600, -600, 600);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dRvsDE_probe"),600, -300, 300,600, -600, 600);
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CatvsDE"),600,-300, 300, 6, -0.5, 5.5);
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CatvOthersDE"),600,-300, 300, 6, -0.5, 5.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CatvsDE"),600,-300, 300, 7, -0.5, 6.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CatvOthersDE"),600,-300, 300, 7, -0.5, 6.5);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_VvsQ"),4, -0.5, 3.5, 600, -600, 600);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_VextvsQ"),4, -0.5, 3.5, 600, -600, 600);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DTHEVsDPHIAbs_probe_nocut"),600, 0, 2*TMath::Pi(), 600, 0, 2*TMath::Pi());
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_Cat1vs2"),6, -0.5, 5.5, 6, -0.5, 5.5);
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_globalCatvsDE"), 600,-300, 300, 7, -1.5, 5.5);
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl0"), 600, -300, 300,600, -600, 600);
-  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl1"), 600, -300, 300,600, -600, 600);
-
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_Cat1vs2"),7, -0.5, 6.5, 7, -0.5, 6.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_globalCatvsDE"), 600,-300, 300, 8, -1.5, 6.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl0_TAG"), 600, -300, 300,600, -600, 600);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl1_TAG"), 600, -300, 300,600, -600, 600);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl0_PROBE"), 600, -300, 300,600, -600, 600);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl1_PROBE"), 600, -300, 300,600, -600, 600);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl0_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl0_PROBE"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_PROBE"), 50,0,1,600,-300,300);
 
   for(int iSlice = 0; iSlice < fNSlicesE; iSlice++) {
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice),600, -TMath::Pi(), TMath::Pi(), 600,-300, 300);
@@ -209,7 +214,7 @@ Int_t TagAndProbe::TagAndProbeSelection(){
     if(fUseMM){ ////// TO BE IMPLEMENTED //provare a uscire con più cluster per vista, aggiungere dZ nel tracklet e in best fit
       vector<MMBestTrack*> trackvect =fMMFindBestTrack->GetVectorTracks();
       //std::cout<<"Number of tracks in the event: "<<trackvect.size()<<std::endl;
-
+      
       int nTracksInQuad = 0;
       int nTracksInPosInQuad = 0;
 
@@ -218,15 +223,20 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 
       Double_t dROld = -999;
       for (auto it = begin (trackvect); it != end (trackvect); ++it) {
-        MMBestTrack* track = *it;
-        //std::cout<<"Track extrapolation TAG AND PROBE: clu quad: "<<quad<<" track quad: "<<track->quad<<" track view: "<<track->view<<" tracklet slope:  "<<track->slope<<"tracklet inter: "<<track->inter<<std::endl;
-
+	MMBestTrack* track = *it;
+        //std::cout<<"Track extrapolation TAG AND PROBE: clu quad: "<<quad<<" track quad: "<<track->quad<<" track view: "<<track->view<<" tracklet slope:  "<<track->slope<<"tracklet inter: "<<track->inter<<std::endl;	
+	
         if(track->quad != quad) continue;
-        nTracksInQuad++;
               
         TVector3 extPos = track->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z());
         double dR = (extPos[1-track->view] - cluPos[0][1-track->view]);
-        fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d",track->level), cluEnergy[0] - pg, dR, 1.);
+
+	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl%d_TAG",track->level), track->pchi2, dR, 1.);
+
+	if(track->pchi2 < 0.5) continue;
+	nTracksInQuad++;
+	
+	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d_TAG",track->level), cluEnergy[0] - pg, dR, 1.);
 
         if(nTracksInQuad==2){
           fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdRold"), dROld, dR, 1.);
@@ -240,10 +250,20 @@ Int_t TagAndProbe::TagAndProbeSelection(){
         MMBestTrack* track2 = *it2;
         if(track2->quad != quadOther) continue;
       
-        nTracksInQuadOther++;
+        
         TVector3 extPos2 = track2->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z());
         double dR2 = (extPos2[1-track2->view] - ExpPosProbe[1-track2->view]);
-        if(fabs(dR2+5) < (33)) { //TO BE CHANGED !!!!!
+
+	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl%d_PROBE",track2->level), track2->pchi2, dR2, 1.);
+	
+	if(track2->pchi2 < 0.5) continue;
+	nTracksInQuadOther++;
+
+	if(nTracksInPosInQuad > 0) {
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d_PROBE",track2->level), cluEnergy[0] - pg, dR2, 1.);
+	}
+	
+	if(fabs(dR2+5) < (33)) { //TO BE CHANGED !!!!!
           nTracksInPosInQuadOther++;
         }
       }
@@ -269,7 +289,8 @@ Int_t TagAndProbe::TagAndProbeSelection(){
       else if(nTracksInQuadOther == 2 && nTracksInPosInQuadOther == 0) CategoryOther = 5;
 
       int globalCat=-1; //no track reconstructed
-      if(nTracksInPosInQuad>0 && nTracksInPosInQuadOther>0) globalCat=2; // both tag and probe have a track in Position
+      if(nTracksInPosInQuad==2 && nTracksInPosInQuadOther==2) globalCat=6; // both tag and probe have two track in Position
+      else if(nTracksInPosInQuad>0 && nTracksInPosInQuadOther>0) globalCat=2; // both tag and probe have a track in Position
       else if(nTracksInPosInQuad>0 && nTracksInPosInQuadOther==0) globalCat=1; //only tag has the track in Position
       else if(nTracksInPosInQuad==0 && nTracksInPosInQuadOther>0) globalCat=3; //only probe has the track in Position
       else if((nTracksInPosInQuad==0 && nTracksInPosInQuadOther==0)  && (nTracksInQuad>0 || nTracksInQuadOther>0)) globalCat=0; //both do not have tracks in position but there are recontructed tracks in either the tag or probe quadrant

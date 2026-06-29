@@ -55,7 +55,7 @@ namespace ROOT {
       ::RecoTMM *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::RecoTMM));
       static ::ROOT::TGenericClassInfo 
-         instance("RecoTMM", "RecoTMM.h", 78,
+         instance("RecoTMM", "RecoTMM.h", 69,
                   typeid(::RecoTMM), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &RecoTMM_Dictionary, isa_proxy, 4,
                   sizeof(::RecoTMM) );
@@ -820,7 +820,7 @@ nullptr
     };
     static const char* includePaths[] = {
 "/cvmfs/sft.cern.ch/lcg/app/releases/ROOT/6.34.04/x86_64-almalinux9.5-gcc115-opt/include/",
-"/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/",
+"/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/",
 nullptr
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

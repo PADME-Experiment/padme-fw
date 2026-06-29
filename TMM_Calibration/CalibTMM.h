@@ -225,6 +225,10 @@ public :
    float APV2_fqy = 1;
    float APV3_fqy = 1*0.88373339;
 
+   // fit and integration boundaries --> in terms of strip ID
+   double StripMin = 20.;
+   double StripMax = 340.;
+
    // strip calibration vectors
    vector<double> FitFullDiff[TMMCH_N_Readout];
    vector<double> FitFullRatio[TMMCH_N_Readout];

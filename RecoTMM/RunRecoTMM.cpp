@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
   int NevtBlock = 10000;
 
   TString inputFileName;
-  TString outputFileName = "Calibration_TMM.root";
+  TString outputFileName = "RecoTMM_run0000000.root";
 
   TObjArray inputFileNameList;
 

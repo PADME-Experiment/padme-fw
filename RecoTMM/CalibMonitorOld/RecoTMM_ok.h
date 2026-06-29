@@ -66,18 +66,25 @@ struct SliceFitResult {
   TH1D *chi2 = nullptr;  
 };
 
+// struct BeamFitSummary {
+//   bool   valid       = false;
+//   double charge      = 0.;
+//   double err_charge  = 0.;
+//   double position    = 0.;
+//   double err_position= 0.;
+//   double spread      = 0.;
+//   double err_spread  = 0.;
+// };
+
 class RecoTMM {
 public :
    TChain         *fTree;      //! pointer to the analyzed TTree
+   // Int_t          fCurrent;    //! current Tree number in a TTree
    Bool_t         fOwnChain;   //! true if this class created the TTree
    int            RunID = 0;
    int            DetRunID = 0;
    int            maxEvents=0;
    TString        outputFileName = "RecoTMM.root";
-
-   // Path to external calibration constants (mode 2 in overall, mode 2 in block view).
-   // Settable from outside before LoopFileList; falls back to the historical default.
-   TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibration_run677_CalibrationConstant.txt";
    
    // Branches declaration 
    ULong64_t       evt;
@@ -117,15 +124,14 @@ public :
   
    RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="Monitor_TMM.root");   
    virtual ~RecoTMM();
+   // virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
    virtual void     Init(TChain *tree);
    virtual bool     Notify();
    
    virtual void     StripFinder(int &iReadout, int &iStrip);
-   // CoordinateFinder also exposes the (remapped) local strip ID via iStripLocal,
-   // so calibration arrays indexed by strip number can be used unambiguously.
-   virtual void     CoordinateFinder(int iStrip, const vector<short> &camp, int &iReadout, double &x_strip, double &q_strip, int &iStripLocal);
+   virtual void     CoordinateFinder(int iStrip, const vector<short> &camp, int &iReadout, double &x_strip, double &q_strip);
    virtual void     GlobalCoordinate(int iReadout, double &x_strip);
    virtual void     LoopFileList(TObjArray &inputFileNameList, int NevtBlock=10000);
    virtual bool     LoadCalibrationConstants(const string &filename);
@@ -142,26 +148,72 @@ public :
    
    static const int MAXSTRIP = 358;
    const int maxStripApv = 128;                                                                                      
-   // xmax = maxStripApv*pitch = 32 mm is wrong for the FULL detector axis
-   float xFullmm = MAXSTRIP * pitch;   // 358 * 0.250 = 89.5 mm
-   
+   float xmax = maxStripApv*pitch;
+
    double d_firstcross_lastcross_strips = 89.262; //mm
-   double X_metrology_corr = 2.770; //mm
-   double Y_metrology_corr = -1.229; //mm
-   double Theta_metrology_corr = 0.01658949417; //rad
-   double GLOBAL_X_TRANSLATION = - (d_firstcross_lastcross_strips/2 + X_metrology_corr + cos(Theta_metrology_corr)); //mm
-   double GLOBAL_Y_TRANSLATION = - (d_firstcross_lastcross_strips/2 - Y_metrology_corr + sin(Theta_metrology_corr)); //mm
+   double X_metrology_corr = 2.770; //mm, to be added to the x coordinate to match the metrology measurements
+   double Y_metrology_corr = -1.229; //mm, to be added to the y coordinate to match the metrology measurements
+   double Theta_metrology_corr = 0.01658949417; //rad, to be added to the angle between X and Y to match the metrology measurements (not yet implemented)
+   double GLOBAL_X_TRANSLATION = - (d_firstcross_lastcross_strips/2 + X_metrology_corr + cos(Theta_metrology_corr)); //mm // added x traslation METROLOGY
+   double GLOBAL_Y_TRANSLATION = - (d_firstcross_lastcross_strips/2 - Y_metrology_corr + sin(Theta_metrology_corr)); //mm // added y traslation METROLOGY
+   // double GLOBAL_X_TRANSLATION = - (d_firstcross_lastcross_strips/2); //mm 
+   // double GLOBAL_Y_TRANSLATION = - (d_firstcross_lastcross_strips/2); //mm 
 
    //POSITION REFERENCE POINT 1  
-   double xP1_cad = 101.074, yP1_cad = 129.949;
-   double xP1_met = 101.69 , yP1_met = 130.26;
+   double xP1_cad = 101.074, yP1_cad = 129.949; //mm    CAD MEASUREMENTs
+   double xP1_met = 101.69 , yP1_met = 130.26;  //mm    METROLOGY MEASUREMENTs (Report PADME 23-05-2025)
    //POSITION REFERENCE POINT 2
-   double xP2_cad = 127.174, yP2_cad = -98.791;
-   double xP2_med = 131.48 , yP2_med = -97.78;
+   double xP2_cad = 127.174, yP2_cad = -98.791; //mm    CAD MEASUREMENTs
+   double xP2_med = 131.48 , yP2_med = -97.78;  //mm    METROLOGY MEASUREMENTs (Report PADME 23-05-2025)
    
-   float clock = 25., ncamp=27;
+   float clock = 25., ncamp=27; //with the 675ns time window (for the 450 one ncamp is 18)
 
-   // first mean values between 677-534-415
+   // prima calibrazione APV da ripetere in principio Run-per-Run
+   // float APV1_fqx = 0.6355*0.8710; 
+   // float APV2_fqx = 1;
+   // float APV3_fqx = 0.3194*0.8261;
+
+   // float APV1_fqy = 0.7271*0.9437;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 0.9104*0.9574;
+
+   // raw apv - no calibration
+   // float APV1_fqx = 1; 
+   // float APV2_fqx = 1;
+   // float APV3_fqx = 1;
+
+   // float APV1_fqy = 1;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 1;
+
+   // run 677
+   // float APV1_fqx = 1*0.569244*0.999954; // APV equalization performed twice on run677 21.05.26 - to be repeated on other runs
+   // float APV2_fqx = 1;                   // checking for stability run-by-run
+   // float APV3_fqx = 1*0.422527*0.99999; 
+
+   // float APV1_fqy = 1*0.564602*1.00291;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 1*0.930592*1.00401;
+
+   // run 534
+   // float APV1_fqx = 1*0.501387*1.00069;
+   // float APV2_fqx = 1;
+   // float APV3_fqx = 1*0.39038*1.00047;
+   
+   // float APV1_fqy = 1*0.466846*1.00316;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 1*0.794514*1.00424;
+
+   // run 415
+   // float APV1_fqx = 1*0.535925*1.00008;
+   // float APV2_fqx = 1;
+   // float APV3_fqx = 1*0.341118*1.00027;
+
+   // float APV1_fqy = 1*0.473443*1.00146;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 1*0.917013*1.00216;
+
+   // first mean values between 677-534-415 --> to be optimised
    float APV1_fqx = 1*0.53563955; 
    float APV2_fqx = 1;                   
    float APV3_fqx = 1*0.38476545; 
@@ -174,7 +226,7 @@ public :
    double StripMin = 20.;
    double StripMax = 340.;
 
-   //vector collecting calibration constants from outside (external txt)
+   //vector collecting calibration constants from outside
    double XcalibConst[MAXSTRIP];
    double XcalibErr[MAXSTRIP];
 
@@ -189,69 +241,59 @@ public :
    vector<TF1*> f;
   
    /////// HISTOGRAMS //////
-   // ---- Overall, event based ----
-   // Mode 1: RAW
-   TH2F *hqmaxstrip[TMMCH_N_Readout]      = {0}; //qmax vs xstrip (even strips only)
-   TH2F *hqmaxstripFull[TMMCH_N_Readout]  = {0}; //qmax vs xstrip (all strips)
-
-   // Mode 2: external txt calibration
-   TH2F *hqmaxstrip_extcal[TMMCH_N_Readout]     = {0};
-   TH2F *hqmaxstripFull_extcal[TMMCH_N_Readout] = {0};
-
-   // Mode 3: run-based overall calibration (from g_RawCalibFullRatio)
-   TH2F *hqmaxstrip_runcal[TMMCH_N_Readout]     = {0};
-   TH2F *hqmaxstripFull_runcal[TMMCH_N_Readout] = {0};
+   // event based histograms
+   TH2F *hqmaxstrip[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
+   TH2F *hqmaxstripFull[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
    
    // event based FitSlicesY() histograms
-   TH1D *hAmpslice[TMMCH_N_Readout]        = {0};
-   TH1D *hMeanslice[TMMCH_N_Readout]       = {0};
-   TH1D *hSigmaslice[TMMCH_N_Readout]      = {0};
-   TH1D *hChi2slice[TMMCH_N_Readout]       = {0};
-   TH1D *hAmpsliceFull[TMMCH_N_Readout]    = {0};
-   TH1D *hMeansliceFull[TMMCH_N_Readout]   = {0};
-   TH1D *hSigmasliceFull[TMMCH_N_Readout]  = {0};
-   TH1D *hChi2sliceFull[TMMCH_N_Readout]   = {0};
+   TH1D *hAmpslice[TMMCH_N_Readout] = {0};
+   TH1D *hMeanslice[TMMCH_N_Readout] = {0};
+   TH1D *hSigmaslice[TMMCH_N_Readout] = {0};
+   TH1D *hChi2slice[TMMCH_N_Readout] = {0};
+   TH1D *hAmpsliceFull[TMMCH_N_Readout] = {0};
+   TH1D *hMeansliceFull[TMMCH_N_Readout] = {0};
+   TH1D *hSigmasliceFull[TMMCH_N_Readout] = {0};
+   TH1D *hChi2sliceFull[TMMCH_N_Readout] = {0};
 
-   // ---- Block based ----
-   // Mode 1: RAW
-   vector<TH2F*> hBlockqmaxstrip[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull[TMMCH_N_Readout];
+   // block based histograms
+   vector<TH2F*> hBlockqmaxstrip[TMMCH_N_Readout]; //qmax vs xstrip distribution
+   vector<TH2F*> hBlockqmaxstripFull[TMMCH_N_Readout]; //qmax vs xstrip distribution
     
-   // FitSlicesY() per block
-   vector<TH1D*> hBlockAmpslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockMeanslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockSigmaslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockChi2slice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockAmpsliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockMeansliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockSigmasliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockChi2sliceFull[TMMCH_N_Readout];
+   // block based FitSlicesY() histograms
+   vector<TH1D*> hBlockAmpslice[TMMCH_N_Readout]; // amplitude slices
+   vector<TH1D*> hBlockMeanslice[TMMCH_N_Readout]; // mean slices
+   vector<TH1D*> hBlockSigmaslice[TMMCH_N_Readout]; // sigma slices
+   vector<TH1D*> hBlockChi2slice[TMMCH_N_Readout]; // sigma slices
+   vector<TH1D*> hBlockAmpsliceFull[TMMCH_N_Readout]; // amplitude slices (full)
+   vector<TH1D*> hBlockMeansliceFull[TMMCH_N_Readout]; // mean slices (full)
+   vector<TH1D*> hBlockSigmasliceFull[TMMCH_N_Readout]; // sigma slices (full)
+   vector<TH1D*> hBlockChi2sliceFull[TMMCH_N_Readout]; // sigma slices
 
-   // Mode 2 (block): external txt calibration
-   vector<TH2F*> hBlockqmaxstrip_extcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_extcal[TMMCH_N_Readout];
-
-   // Mode 3 (block): overall run-based calibration (same graph used in overall mode 3)
-   vector<TH2F*> hBlockqmaxstrip_runcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_runcal[TMMCH_N_Readout];
-
-   // Mode 4 (block): per-block calibration (from g_BlockRawCalibFullRatio)
-   vector<TH2F*> hBlockqmaxstrip_blockcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_blockcal[TMMCH_N_Readout];
+   // event based calibrated histograms
+   TH2F *hqmaxstrip_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
+   TH2F *hqmaxstripFull_cal[TMMCH_N_Readout] = {0}; //qmax vs xstrip distribution
+   
+   // block based calibrated histograms
+   vector<TH2F*> hBlockqmaxstrip_cal[TMMCH_N_Readout]; //qmax vs xstrip distribution
+   vector<TH2F*> hBlockqmaxstripFull_cal[TMMCH_N_Readout]; //qmax vs xstrip distribution
+   
+   // block based calibrated histograms - overlall calibration
+   vector<TH2F*> hBlockqmaxstrip_Overallcal[TMMCH_N_Readout]; //qmax vs xstrip distribution
+   vector<TH2F*> hBlockqmaxstripFull_Overallcal[TMMCH_N_Readout]; //qmax vs xstrip distribution
    
    ////// GRAPHS //////
    // block based graphs
-   TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout]   = {0};
-   TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0};
-   TGraphErrors *g_BlockBeamCharge[TMMCH_N_Readout] = {0};
+   TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout] = {0};  //Beam spot over blocks of events for stability monitoring
+   TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0}; //Beam spread over blocks of events for stability monitoring
+   TGraphErrors *g_BlockBeamCharge[TMMCH_N_Readout] = {0}; //Beam charge over blocks of events for stability monitoring
 
-   //TGraphs for strip calibration (overall run-based)
-   TGraphErrors *g_RawCalibFullDiff[TMMCH_N_Readout]  = {0};
-   TGraphErrors *g_RawCalibFullRatio[TMMCH_N_Readout] = {0};
+   //TGraphs for strip calibration
+   TGraphErrors *g_RawCalibFullDiff[TMMCH_N_Readout] = {0}; // to identify possible dead strips
+   TGraphErrors *g_RawCalibFullRatio[TMMCH_N_Readout] = {0}; // to define calibration constants
    
-   //block based TGraphs for strip calibration (per-block)
-   vector<TGraphErrors*> g_BlockRawCalibFullDiff[TMMCH_N_Readout];
-   vector<TGraphErrors*> g_BlockRawCalibFullRatio[TMMCH_N_Readout];
+   //block based TGraphs for strip calibration
+   vector<TGraphErrors*> g_BlockRawCalibFullDiff[TMMCH_N_Readout]; // to identify possible dead strips
+   vector<TGraphErrors*> g_BlockRawCalibFullRatio[TMMCH_N_Readout]; // to define calibration constants
 
 };
 
@@ -264,6 +306,7 @@ RecoTMM::RecoTMM(TObjArray *inputFileNameList,
                  int maxEvents,
                  TString outputFileName) :
    fTree(0),
+   // fCurrent(-1),
    fOwnChain(kFALSE),
    RunID(RunID),
    DetRunID(DetRunID),
@@ -326,6 +369,7 @@ RecoTMM::~RecoTMM()
 
 Int_t RecoTMM::GetEntry(Long64_t entry)
 {
+// Read contents of entry.
    if (!fTree) return 0;
    return fTree->GetEntry(entry);
 }
@@ -337,11 +381,19 @@ Long64_t RecoTMM::LoadTree(Long64_t entry)
    Long64_t centry = fTree->LoadTree(entry);
    if (centry < 0) return centry;
 
+   // if (fTree->GetTreeNumber() != fCurrent) {
+   //    fCurrent = fTree->GetTreeNumber();
+   //    Notify();
+   // }
+
    return centry;
 }
 
 void RecoTMM::Init(TChain *tree)
 {
+   //cout << "DEBUG Init: start" << endl;
+
+   // Object pointers
    srsFec    = 0;
    srsChip   = 0;
    srsChan   = 0;
@@ -356,7 +408,9 @@ void RecoTMM::Init(TChain *tree)
    if (!tree) return;
 
    fTree = tree;
+   // fCurrent = -1;
 
+   // Keep all branches available
    fTree->SetBranchStatus("*", 1);
 
    fTree->SetBranchAddress("evt",             &evt,             &b_evt);
@@ -378,10 +432,18 @@ void RecoTMM::Init(TChain *tree)
    fTree->SetBranchAddress("t_max_q",         &t_max_q,         &b_t_max_q);
 
    Notify();
+
+   // cout << "DEBUG Init: done" << endl;
 }
 
 bool RecoTMM::Notify()
 {
+   // The Notify() function is called when a new file is opened. This
+   // can be either for a new TTree in a TChain or when when a new TTree
+   // is started when using PROOF. It is normally not necessary to make changes
+   // to the generated code, but the routine can be extended by the
+   // user if needed. The return value is currently not used.
+
    return true;
 }
 

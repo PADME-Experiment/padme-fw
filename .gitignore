@@ -43,3 +43,8 @@ bin/
 *.P
 *.F
 
+# directory with trash (Marco)
+/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/OldCalibration/*
+/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/CalibMonitorOld/*
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/OldCalibration/*
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/CalibMonitorOld/*

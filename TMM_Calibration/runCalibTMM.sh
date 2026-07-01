@@ -10,13 +10,12 @@ fi
 PadmeRunID="$1"
 DetRunID="$2"
 MaxEvents="${3:-0}"
-NevtBlock="${4:-10000}"
+NevtBlock="${4:-1000}"
 
 CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration"
 FileList="${CalibrationPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${CalibrationPath}/outputTMM"
-# OutputFile="${OutputDir}/TMMCalibration_run${PadmeRunID}"
-OutputFile="stupido"
+OutputFile="${OutputDir}/TMMCalibration_run${PadmeRunID}"
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

@@ -144,6 +144,10 @@ public :
 
    virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
    virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
+
+   virtual double   VoigtIntegralPDF(double *x, double *par);
+   virtual TF1*     FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
+
    
    ///////ENVIROMENT VARIABLES//////
    TString tmm_tag[TMMCH_N_Readout] = {"X", "Y"};

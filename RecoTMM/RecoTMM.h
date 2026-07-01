@@ -135,7 +135,9 @@ public :
 
    virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
    virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
-   
+   virtual double   VoigtIntegralPDF(double *x, double *par);
+   virtual TF1*     FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
+
    ///////ENVIROMENT VARIABLES//////
    TString tmm_tag[TMMCH_N_Readout] = {"X", "Y"};
    float pitch = 0.250; //mm
@@ -161,7 +163,7 @@ public :
    
    float clock = 25., ncamp=27;
 
-   // first mean values between 677-534-415
+   // // first mean values between 677-534-415
    float APV1_fqx = 1*0.53563955; 
    float APV2_fqx = 1;                   
    float APV3_fqx = 1*0.38476545; 
@@ -169,6 +171,15 @@ public :
    float APV1_fqy = 1*0.50290015;
    float APV2_fqy = 1;
    float APV3_fqy = 1*0.88373339;
+
+   // run 534
+   // float APV1_fqx = 1*0.501387*1.00069;
+   // float APV2_fqx = 1;
+   // float APV3_fqx = 1*0.39038*1.00047;
+   
+   // float APV1_fqy = 1*0.466846*1.00316;
+   // float APV2_fqy = 1;
+   // float APV3_fqy = 1*0.794514*1.00424;
 
    // fit and integration boundaries --> in terms of strip ID
    double StripMin = 20.;

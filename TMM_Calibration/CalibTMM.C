@@ -247,6 +247,112 @@ TF1* CalibTMM::FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax
   return fit;
 }
 
+double CalibTMM::VoigtIntegralPDF(double *x, double *par){
+  const double I     = par[0];          // total integral
+  const double mu    = par[1];
+  const double sigma = fabs(par[2]);    // Gaussian sigma
+  const double gamma = fabs(par[3]);    // Lorentzian width
+
+  if (sigma <= 0. || gamma <= 0.) return 0.;
+
+  return I * TMath::Voigt(x[0] - mu, sigma, gamma);
+}
+
+TF1* CalibTMM::FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult){
+  fitResult = TFitResultPtr();
+
+  if (!h) {
+    cerr << "ERROR: FitVoigt received null histogram: " << name << endl;
+    return nullptr;
+  }
+  if (h->GetEntries() <= 0 || h->Integral() <= 0.) {
+    cerr << "WARNING: FitVoigt skipped empty histogram: " << h->GetName() << " view = " << name << endl;
+    return nullptr;
+  }
+  if (xmax <= xmin) {
+    cerr << "ERROR: FitVoigt invalid fit range for " << h->GetName() << " tag = " << name << " xmin = " << xmin << " xmax = " << xmax << endl;
+    return nullptr;
+  }
+
+  const int maxBin = h->GetMaximumBin();
+  const double maxContent = h->GetBinContent(maxBin);
+  if (maxContent <= 0.) {
+    cerr << "WARNING: FitVoigt skipped histogram with non-positive maximum: " << h->GetName() << " view = " << name << endl;
+    return nullptr;
+  }
+
+  TF1 *prefit = new TF1(Form("prefitVoigt_%s", name.Data()), "gaus", xmin, xmax);
+  TFitResultPtr prefitResult = h->Fit(prefit, "RQS0");
+
+  double amp0 = prefit->GetParameter(0);
+  double mu0  = prefit->GetParameter(1);
+  double s0   = fabs(prefit->GetParameter(2));
+
+  if ((int)prefitResult != 0) {
+    cerr << "WARNING: Gaussian prefit failed for " << h->GetName() << " view = " << name << " status = " << (int)prefitResult << ". Using histogram maximum/RMS seeds." << endl;
+    amp0 = maxContent;
+    mu0  = h->GetBinCenter(maxBin);
+    s0   = h->GetRMS();
+  }
+
+  if (amp0 <= 0.) amp0 = maxContent;
+  if (mu0 < xmin || mu0 > xmax) mu0 = h->GetBinCenter(maxBin);
+  if (s0 <= 0.) s0 = 0.1 * (xmax - xmin);
+
+  const double xrange = xmax - xmin;
+  if (s0 <= 0. || xrange <= 0.) {
+    cerr << "ERROR: FitVoigt invalid seed/range for " << h->GetName() << " tag = " << name << " s0 = " << s0 << " xrange = " << xrange << endl;
+    delete prefit;
+    return nullptr;
+  }
+
+  const double area0 = max(1.0, amp0 * sqrt(2. * TMath::Pi()) * s0);
+
+  TF1 *fit = new TF1(Form("fVoigt_%s", name.Data()), this, &CalibTMM::VoigtIntegralPDF, xmin, xmax, 4, "CalibTMM", "VoigtIntegralPDF");
+  fit->SetParNames("I", "mean", "sigmaG", "gammaL");
+
+  const double I_low = 0.;
+  const double I_up  = max(1.0, 10. * area0);
+
+  const double s_low = 1e-3;
+  const double s_up  = max(2. * s_low, 0.5 * xrange);
+
+  const double g_low = 1e-4;
+  const double g_up  = max(2. * g_low, 0.5 * xrange);
+
+  double I_0 = ClampToLimits(area0,      I_low, I_up);
+  double s_0 = ClampToLimits(s0,         s_low, s_up);
+  double g_0 = ClampToLimits(0.3 * s0,   g_low, g_up);
+  double mu_0 = ClampToLimits(mu0,       xmin,  xmax);
+
+  fit->SetParameters(I_0, mu_0, s_0, g_0);
+
+  fit->SetParLimits(0, I_low, I_up);
+  fit->SetParLimits(1, xmin, xmax);
+  fit->SetParLimits(2, s_low, s_up);
+  fit->SetParLimits(3, g_low, g_up);
+
+  fitResult = h->Fit(fit, "RQS");
+
+  if (!fitResult.Get()) {
+    cerr << "WARNING: Voigt fit returned null result for " << h->GetName() << " view = " << name << endl;
+    delete prefit; delete fit;
+    fitResult = TFitResultPtr();
+    return nullptr;
+  }
+
+  const int status    = (int)fitResult;
+  const int covStatus = fitResult->CovMatrixStatus();
+  const bool accepted = IsFitAccepted(fitResult, 1, 2);
+
+  if (!accepted) {
+    cerr << "WARNING: Voigt fit NOT accepted for " << h->GetName() << " view = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid() << endl;
+  }
+
+  delete prefit;
+  return fit;
+}
+
 void CalibTMM::BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphErrors *gRatio, TGraphErrors *gDiff){
   
   for (int bx = 1; bx <= hMeanFull->GetNbinsX(); bx++) {
@@ -272,6 +378,71 @@ void CalibTMM::BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraph
   }
 }
 
+// void CalibTMM::FillBlockGraphsFromSlices(int iR){
+
+//   for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
+
+//     SliceFitResult s = RunFitSlicesY(hBlockqmaxstrip[iR][ib], Form("%s_block%zu", tmm_tag[iR].Data(), ib) );
+
+//     hBlockAmpslice[iR][ib]   = s.amp;
+//     hBlockMeanslice[iR][ib]  = s.mean;
+//     hBlockSigmaslice[iR][ib] = s.sigma;
+//     hBlockChi2slice[iR][ib]  = s.chi2;
+
+//     SliceFitResult sFull = RunFitSlicesY(hBlockqmaxstripFull[iR][ib], Form("%s_block%zu_full", tmm_tag[iR].Data(), ib));
+
+//     hBlockAmpsliceFull[iR][ib]   = sFull.amp;
+//     hBlockMeansliceFull[iR][ib]  = sFull.mean;
+//     hBlockSigmasliceFull[iR][ib] = sFull.sigma;
+//     hBlockChi2sliceFull[iR][ib]  = sFull.chi2;
+
+//     if (!s.mean) continue;
+    
+//     TFitResultPtr fitResult;
+//     TF1 *fb = FitDoubleGaussian(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), 20., 340., fitResult);
+    
+//     if (!fb || !fitResult.Get()) {
+//       cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
+//       continue;
+//     }
+
+//     double A1 = fb->GetParameter(0);
+//     double mu = fb->GetParameter(1);
+//     double s1 = fabs(fb->GetParameter(2));
+//     double A2 = fb->GetParameter(3);
+//     double s2 = fabs(fb->GetParameter(4));
+
+//     double e_mu = fb->GetParError(1);
+
+//     double norm = A1 + A2;
+//     if (norm <= 0) continue;
+
+//     double sigma_eff = sqrt((A1*s1*s1 + A2*s2*s2) / norm);
+//     double charge_proxy = A1 * s1 * sqrt(2. * TMath::Pi()) + A2 * s2 * sqrt(2. * TMath::Pi());
+//     double xblock = ib;
+
+//     int p0 = g_BlockBeamSpot[iR]->GetN();
+//     g_BlockBeamSpot[iR]->SetPoint(p0, xblock, mu);
+//     g_BlockBeamSpot[iR]->SetPointError(p0, 0., e_mu);
+
+//     int p1 = g_BlockBeamSpread[iR]->GetN();
+//     g_BlockBeamSpread[iR]->SetPoint(p1, xblock, sigma_eff);
+//     g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0); //errors randomly selected
+
+//     int p2 = g_BlockBeamCharge[iR]->GetN();
+//     g_BlockBeamCharge[iR]->SetPoint(p2, xblock, charge_proxy);
+//     g_BlockBeamCharge[iR]->SetPointError(p2, 0., sqrt(charge_proxy)); //errors randomly selected
+
+//     BuildFitRatio(
+//       hBlockMeansliceFull[iR][ib],
+//       hBlockSigmasliceFull[iR][ib],
+//       fb,
+//       g_BlockFitFullRatio[iR][ib],
+//       g_BlockFitFullDiff[iR][ib]
+//     );
+//   }
+// }
+
 void CalibTMM::FillBlockGraphsFromSlices(int iR){
 
   for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
@@ -293,26 +464,30 @@ void CalibTMM::FillBlockGraphsFromSlices(int iR){
     if (!s.mean) continue;
     
     TFitResultPtr fitResult;
-    TF1 *fb = FitDoubleGaussian(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), 20., 340., fitResult);
-    
+    TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), 20., 340., fitResult);
+
     if (!fb || !fitResult.Get()) {
       cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
       continue;
     }
 
-    double A1 = fb->GetParameter(0);
-    double mu = fb->GetParameter(1);
-    double s1 = fabs(fb->GetParameter(2));
-    double A2 = fb->GetParameter(3);
-    double s2 = fabs(fb->GetParameter(4));
+    const double I     = fb->GetParameter(0);
+    const double mu    = fb->GetParameter(1);
+    const double sigma = fabs(fb->GetParameter(2));
+    const double gamma = fabs(fb->GetParameter(3));
 
-    double e_mu = fb->GetParError(1);
+    const double e_mu = fb->GetParError(1);
+    const double e_I  = fb->GetParError(0);
 
-    double norm = A1 + A2;
-    if (norm <= 0) continue;
+    // Voigt spread: Olivero-Longbothum FWHM converted to sigma-equivalent.
+    const double fG = 2.354820045 * sigma;
+    const double fL = 2.0 * gamma;
+    const double fV = 0.5346 * fL + sqrt(0.2166 * fL * fL + fG * fG);
+    const double sigma_eff = fV / 2.354820045;
 
-    double sigma_eff = sqrt((A1*s1*s1 + A2*s2*s2) / norm);
-    double charge_proxy = A1 * s1 * sqrt(2. * TMath::Pi()) + A2 * s2 * sqrt(2. * TMath::Pi());
+    // Charge proxy: for the Voigt, the integral parameter I is the total area.
+    const double charge_proxy = I;
+
     double xblock = ib;
 
     int p0 = g_BlockBeamSpot[iR]->GetN();
@@ -321,11 +496,11 @@ void CalibTMM::FillBlockGraphsFromSlices(int iR){
 
     int p1 = g_BlockBeamSpread[iR]->GetN();
     g_BlockBeamSpread[iR]->SetPoint(p1, xblock, sigma_eff);
-    g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0); //errors randomly selected
+    g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0.);
 
     int p2 = g_BlockBeamCharge[iR]->GetN();
     g_BlockBeamCharge[iR]->SetPoint(p2, xblock, charge_proxy);
-    g_BlockBeamCharge[iR]->SetPointError(p2, 0., sqrt(charge_proxy)); //errors randomly selected
+    g_BlockBeamCharge[iR]->SetPointError(p2, 0., e_I > 0. ? e_I : sqrt(max(1.0, charge_proxy)));
 
     BuildFitRatio(
       hBlockMeansliceFull[iR][ib],
@@ -727,7 +902,10 @@ void CalibTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     
     TFitResultPtr fitResult;
 
-    TF1 *fit = FitDoubleGaussian(hMeanslice[iR], tmm_tag[iR], StripMin, StripMax, fitResult);
+    // TF1 *fit = FitDoubleGaussian(hMeanslice[iR], tmm_tag[iR], StripMin, StripMax, fitResult);
+
+    TF1 *fit = FitVoigt(hMeanslice[iR], tmm_tag[iR], StripMin, StripMax, fitResult);
+
 
     if (!fit || !fitResult.Get()) {
       cerr << "WARNING: overall fit failed for readout=" << tmm_tag[iR] << endl;

@@ -15,7 +15,8 @@ NevtBlock="${4:-10000}"
 CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM"
 FileList="${CalibrationPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${CalibrationPath}/outputTMM"
-OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+# OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+OutputFile="${OutputDir}/VOIGTtest.root"
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

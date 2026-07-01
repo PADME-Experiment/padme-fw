@@ -188,6 +188,11 @@ SliceFitResult RecoTMM::RunFitSlicesY(TH2F *H, TString tag){
   SliceFitResult out;
   if (!H) return out;
 
+  TString oldName = H->GetName();
+  TString uniqueName = Form("%s_%s", oldName.Data(), tag.Data());
+
+  H->SetName(uniqueName);
+
   H->FitSlicesY();
   TH1D *h0 = (TH1D*)gDirectory->Get(Form("%s_0", H->GetName()));
   TH1D *h1 = (TH1D*)gDirectory->Get(Form("%s_1", H->GetName()));
@@ -196,7 +201,8 @@ SliceFitResult RecoTMM::RunFitSlicesY(TH2F *H, TString tag){
 
   if (!h0 || !h1 || !h2 || !h3) {
     cerr << "ERROR: FitSlicesY failed for " << H->GetName() << endl;
-    return out;
+    H->SetName(oldName);
+    return out; 
   }
 
   out.amp   = (TH1D*)h0->Clone(Form("hAmpSlice_%s", tag.Data()));
@@ -209,9 +215,15 @@ SliceFitResult RecoTMM::RunFitSlicesY(TH2F *H, TString tag){
   out.sigma->SetDirectory(0);
   out.chi2->SetDirectory(0);
 
+  gDirectory->Delete(Form("%s_0;*",    H->GetName()));
+  gDirectory->Delete(Form("%s_1;*",    H->GetName()));
+  gDirectory->Delete(Form("%s_2;*",    H->GetName()));
+  gDirectory->Delete(Form("%s_chi2;*", H->GetName()));
+
+  H->SetName(oldName);
+
   return out;
 }
-
 
 bool RecoTMM::IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted, int minCovMatrixStatusAccepted){
   if (!fitResult.Get()) return false;
@@ -224,6 +236,224 @@ bool RecoTMM::IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted, i
   if (covStatus < minCovMatrixStatusAccepted) return false;
 
   return true;
+}
+
+// double RecoTMM::VoigtIntegralPDF(double *x, double *par){
+//   const double I     = par[0];          // total integral
+//   const double mu    = par[1];
+//   const double sigma = fabs(par[2]);    // Gaussian sigma
+//   const double gamma = fabs(par[3]);    // Lorentzian width
+
+//   if (sigma <= 0. || gamma <= 0.) return 0.;
+
+//   return I * TMath::Voigt(x[0] - mu, sigma, gamma);
+// }
+
+double RecoTMM::VoigtIntegralPDF(double *x, double *par){
+  const double I      = par[0];          // total integral
+  const double mu     = par[1];
+  const double sigmaG = fabs(par[2]);    // Gaussian sigma
+  const double gammaL = fabs(par[3]);    // Lorentzian HWHM
+
+  if (I <= 0.) return 0.;
+  if (sigmaG <= 0.) return 0.;
+  if (gammaL <= 0.) return 0.;
+
+  const double xx = x[0] - mu;
+
+  // Gaussian FWHM
+  const double kFWHM = 2. * sqrt(2. * log(2.));
+  const double fG = kFWHM * sigmaG;
+
+  // Lorentzian FWHM
+  const double fL = 2. * gammaL;
+
+  // Olivero-Longbothum approximation for the Voigt FWHM
+  const double fV = 0.5346 * fL + sqrt(0.2166 * pow(fL, 2) + pow(fG, 2));
+
+  if (fV <= 0.) return 0.;
+
+  // Pseudo-Voigt mixing fraction
+  const double r = fL / fV;
+
+  double eta = 1.36603 * r - 0.47719 * pow(r, 2) + 0.11116 * pow(r, 3);
+
+  eta = ClampToLimits(eta, 0., 1.);
+
+  // Pseudo-Voigt uses Gaussian and Lorentzian with same FWHM = fV
+  const double sigmaPV = fV / kFWHM;
+  const double gammaPV = fV / 2.;
+
+  if (sigmaPV <= 0.) return 0.;
+  if (gammaPV <= 0.) return 0.;
+
+  // Unit-area Gaussian
+  const double G = 1. / (sqrt(2. * TMath::Pi()) * sigmaPV) * exp(-0.5 * pow(xx / sigmaPV, 2));
+
+  // Unit-area Lorentzian
+  const double L = (1. / TMath::Pi()) * gammaPV / (pow(xx, 2) + pow(gammaPV, 2));
+
+  // Integral-normalized pseudo-Voigt
+  return I * ((1. - eta) * G + eta * L);
+}
+
+// TF1* RecoTMM::FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult){
+//   if (!h) return nullptr;
+
+//   TF1 *prefit = new TF1(Form("prefitVoigt_%s", name.Data()), "gaus", xmin, xmax);
+//   h->Fit(prefit, "RQ0");
+
+//   double amp0 = prefit->GetParameter(0);
+//   double mu0  = prefit->GetParameter(1);
+//   double s0   = fabs(prefit->GetParameter(2));
+
+//   if (amp0 <= 0.) amp0 = h->GetMaximum();
+//   if (mu0 < xmin || mu0 > xmax) mu0 = h->GetBinCenter(h->GetMaximumBin());
+//   if (s0 <= 0.) s0 = 0.1 * (xmax - xmin);
+
+//   const double area0 = amp0 * sqrt(2. * TMath::Pi()) * s0;
+//   const double xrange = xmax - xmin;
+
+//   TF1 *fit = new TF1(Form("fVoigt_%s", name.Data()), VoigtIntegralPDF, xmin, xmax, 4);
+//   fit->SetParNames("I", "mean", "sigmaG", "gammaL");
+
+//   const double I_low = 0.;
+//   const double I_up  = max(1.0, 10. * area0);
+
+//   const double s_low = 0.1;
+//   const double s_up  = max(2. * s_low, xrange);
+
+//   const double g_low = 0.001;
+//   const double g_up  = max(2. * g_low, xrange);
+
+//   double I_0 = ClampToLimits(area0, I_low, I_up);
+//   double s_0 = ClampToLimits(s0, s_low, s_up);
+//   double g_0 = ClampToLimits(0.5 * s0, g_low, g_up);
+
+//   fit->SetParameters(I_0, mu0, s_0, g_0);
+
+//   fit->SetParLimits(0, I_low, I_up);
+//   fit->SetParLimits(1, xmin, xmax);
+//   fit->SetParLimits(2, s_low, s_up);
+//   fit->SetParLimits(3, g_low, g_up);
+
+//   fitResult = h->Fit(fit, "RQS");
+
+//   delete prefit;
+//   return fit;
+// }
+
+TF1* RecoTMM::FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult){
+  fitResult = TFitResultPtr();
+
+  if (!h) {
+    cerr << "ERROR: FitVoigt received null histogram: " << name << endl;
+    return nullptr;
+  }
+
+  if (h->GetEntries() <= 0 || h->Integral() <= 0.) {
+    cerr << "WARNING: FitVoigt skipped empty histogram: " << h->GetName() << " view = " << name << endl;
+    return nullptr;
+  }
+
+  if (xmax <= xmin) {
+    cerr << "ERROR: FitVoigt invalid fit range for " << h->GetName() << " tag = " << name << " xmin = " << xmin << " xmax = " << xmax << endl;
+    return nullptr;
+  }
+
+  const int maxBin = h->GetMaximumBin();
+  const double maxContent = h->GetBinContent(maxBin);
+
+  if (maxContent <= 0.) {
+    cerr << "WARNING: FitVoigt skipped histogram with non-positive maximum: " << h->GetName() << " view = " << name << endl;
+    return nullptr;
+  }
+
+  TF1 *prefit = new TF1( Form("prefitVoigt_%s", name.Data()), "gaus", xmin, xmax);
+  TFitResultPtr prefitResult = h->Fit(prefit, "RQS0");
+
+  double amp0 = prefit->GetParameter(0);
+  double mu0  = prefit->GetParameter(1);
+  double s0   = fabs(prefit->GetParameter(2));
+
+  cout << "DEBUG: FitVoigt prefit results for " << h->GetName() << " view = " << name << " : amp0 = " << amp0 << ", mu0 = " << mu0 << ", s0 = " << s0 << endl;
+
+  if ((int)prefitResult != 0) {
+    cerr << "WARNING: Gaussian prefit failed for " << h->GetName() << " view = " << name << " status = " << (int)prefitResult << ". Using histogram maximum/RMS seeds." << endl;
+    amp0 = maxContent;
+    mu0  = h->GetBinCenter(maxBin);
+    s0   = h->GetRMS();
+  }
+
+  if (amp0 <= 0.) amp0 = maxContent;
+  if (mu0 < xmin || mu0 > xmax) mu0 = h->GetBinCenter(maxBin);
+  if (s0 <= 0.) s0 = 0.1 * (xmax - xmin);
+
+  const double xrange = xmax - xmin;
+
+  if (s0 <= 0. || xrange <= 0.) {
+    cerr << "ERROR: FitVoigt invalid seed/range for " << h->GetName() << " tag = " << name << " s0 = " << s0 << " xrange = " << xrange << endl;
+    delete prefit;
+    return nullptr;
+  }
+
+  const double area0 = max(1.0, amp0 * sqrt(2. * TMath::Pi()) * s0);
+
+  TF1 *fit = new TF1(Form("fVoigt_%s", name.Data()), this, &RecoTMM::VoigtIntegralPDF, xmin, xmax, 4, "RecoTMM", "VoigtIntegralPDF");
+
+  fit->SetParNames("I", "mean", "sigmaG", "gammaL");
+
+  const double I_low = 0.;
+  const double I_up  = max(1.0, 10. * area0);
+
+  const double s_low = 0.1;
+  const double s_up  = max(2. * s_low, xrange);
+
+  const double g_low = 0.001;
+  const double g_up  = max(2. * g_low, xrange);
+
+  double I_0 = ClampToLimits(area0, I_low, I_up);
+  double mu_0 = ClampToLimits(mu0, xmin, xmax);
+  double s_0 = ClampToLimits(s0, s_low, s_up);
+  double g_0 = ClampToLimits(0.5 * s0, g_low, g_up);
+
+  fit->SetParameters(I_0, mu_0, s_0, g_0);
+
+  fit->SetParLimits(0, I_low, I_up);
+  fit->SetParLimits(1, xmin, xmax);
+  fit->SetParLimits(2, s_low, s_up);
+  fit->SetParLimits(3, g_low, g_up);
+
+  fitResult = h->Fit(fit, "RQS");
+
+  if (!fitResult.Get()) {
+    cerr << "WARNING: Voigt fit returned null result for " << h->GetName() << " view = " << name << endl;
+    delete prefit;
+    delete fit;
+    fitResult = TFitResultPtr();
+    return nullptr;
+  }
+
+  const int status = (int)fitResult;
+  const int covStatus = fitResult->CovMatrixStatus();
+
+  const bool accepted = IsFitAccepted(fitResult, 1, 2);
+
+  if (!accepted) {
+    cerr << "WARNING: Voigt fit NOT accepted for " << h->GetName() << " view = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid() << endl;
+  }
+  else {
+    if (status == 1) {
+      cerr << "WARNING: Voigt fit accepted with status = 1 for " << h->GetName() << " view = " << name << " ; covariance matrix may be non-ideal" << endl;
+    }
+
+    if (covStatus == 2) {
+      cerr << "WARNING: Voigt covariance matrix accepted with CovMatrixStatus = 2 for " << h->GetName() << " view = " << name << " ; forced positive definite covariance" << endl;
+    }
+  }
+
+  delete prefit;
+  return fit;
 }
 
 TF1* RecoTMM::FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult){
@@ -259,6 +489,8 @@ TF1* RecoTMM::FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax,
   double amp0 = prefit->GetParameter(0);
   double mu0  = prefit->GetParameter(1);
   double s0   = fabs(prefit->GetParameter(2));
+
+  cout << "DEBUG: FitDoubleGaussian prefit results for " << h->GetName() << " view = " << name << " : amp0 = " << amp0 << ", mu0 = " << mu0 << ", s0 = " << s0 << endl;
 
   if ((int)prefitResult != 0) {
     cerr << "WARNING: Gaussian prefit failed for " << h->GetName() << " view =" << name << " status =" << (int)prefitResult << ". Using histogram maximum/RMS seeds." << endl;
@@ -366,6 +598,76 @@ void RecoTMM::BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphE
   }
 }
 
+// void RecoTMM::FillBlockGraphsFromSlices(int iR){
+
+//   for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
+
+//     SliceFitResult s = RunFitSlicesY(hBlockqmaxstrip[iR][ib], Form("%s_block%zu", tmm_tag[iR].Data(), ib) );
+
+//     hBlockAmpslice[iR][ib]   = s.amp;
+//     hBlockMeanslice[iR][ib]  = s.mean;
+//     hBlockSigmaslice[iR][ib] = s.sigma;
+//     hBlockChi2slice[iR][ib]  = s.chi2;
+
+//     SliceFitResult sFull = RunFitSlicesY(hBlockqmaxstripFull[iR][ib], Form("%s_block%zu_full", tmm_tag[iR].Data(), ib));
+
+//     hBlockAmpsliceFull[iR][ib]   = sFull.amp;
+//     hBlockMeansliceFull[iR][ib]  = sFull.mean;
+//     hBlockSigmasliceFull[iR][ib] = sFull.sigma;
+//     hBlockChi2sliceFull[iR][ib]  = sFull.chi2;
+
+//     if (!s.mean) continue;
+    
+//     TFitResultPtr fitResult;
+//     double xini = StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
+//     double xfin = StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
+
+//     cout << "DEBUG: Fitting block " << ib << " for readout " << tmm_tag[iR] << " in range [" << xini << ", " << xfin << "]" << endl;
+    
+//     TF1 *fb = FitDoubleGaussian(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), xini, xfin, fitResult);
+    
+//     if (!fb || !fitResult.Get()) {
+//       cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
+//       continue;
+//     }
+
+//     double A1 = fb->GetParameter(0);
+//     double mu = fb->GetParameter(1);
+//     double s1 = fabs(fb->GetParameter(2));
+//     double A2 = fb->GetParameter(3);
+//     double s2 = fabs(fb->GetParameter(4));
+
+//     double e_mu = fb->GetParError(1);
+
+//     double norm = A1 + A2;
+//     if (norm <= 0) continue;
+
+//     double sigma_eff = sqrt((A1*s1*s1 + A2*s2*s2) / norm);
+//     double charge_proxy = A1 * s1 * sqrt(2. * TMath::Pi()) + A2 * s2 * sqrt(2. * TMath::Pi());
+//     double xblock = ib;
+
+//     int p0 = g_BlockBeamSpot[iR]->GetN();
+//     g_BlockBeamSpot[iR]->SetPoint(p0, xblock, mu);
+//     g_BlockBeamSpot[iR]->SetPointError(p0, 0., e_mu);
+
+//     int p1 = g_BlockBeamSpread[iR]->GetN();
+//     g_BlockBeamSpread[iR]->SetPoint(p1, xblock, sigma_eff);
+//     g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0);
+
+//     int p2 = g_BlockBeamCharge[iR]->GetN();
+//     g_BlockBeamCharge[iR]->SetPoint(p2, xblock, charge_proxy);
+//     g_BlockBeamCharge[iR]->SetPointError(p2, 0., sqrt(charge_proxy));
+
+//     BuildFitRatio(
+//       hBlockMeansliceFull[iR][ib],
+//       hBlockSigmasliceFull[iR][ib],
+//       fb,
+//       g_BlockRawCalibFullRatio[iR][ib],
+//       g_BlockRawCalibFullDiff[iR][ib]
+//     );
+//   }
+// }
+
 void RecoTMM::FillBlockGraphsFromSlices(int iR){
 
   for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
@@ -390,26 +692,27 @@ void RecoTMM::FillBlockGraphsFromSlices(int iR){
     double xini = StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
     double xfin = StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
 
-    TF1 *fb = FitDoubleGaussian(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), xini, xfin, fitResult);
+    cout << "DEBUG: Fitting block " << ib << " for readout " << tmm_tag[iR] << " in range [" << xini << ", " << xfin << "]" << endl;
+    
+    TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), xini, xfin, fitResult);
     
     if (!fb || !fitResult.Get()) {
       cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
       continue;
     }
 
-    double A1 = fb->GetParameter(0);
+    double I = fb->GetParameter(0);
     double mu = fb->GetParameter(1);
     double s1 = fabs(fb->GetParameter(2));
-    double A2 = fb->GetParameter(3);
-    double s2 = fabs(fb->GetParameter(4));
+    double s2 = fabs(fb->GetParameter(3));
 
     double e_mu = fb->GetParError(1);
 
-    double norm = A1 + A2;
+    double norm = I;
     if (norm <= 0) continue;
 
-    double sigma_eff = sqrt((A1*s1*s1 + A2*s2*s2) / norm);
-    double charge_proxy = A1 * s1 * sqrt(2. * TMath::Pi()) + A2 * s2 * sqrt(2. * TMath::Pi());
+    double sigma_eff = sqrt(s1*s1 + s2*s2);
+    double charge_proxy = I;
     double xblock = ib;
 
     int p0 = g_BlockBeamSpot[iR]->GetN();
@@ -433,6 +736,7 @@ void RecoTMM::FillBlockGraphsFromSlices(int iR){
     );
   }
 }
+
 
 void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
@@ -741,7 +1045,14 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     hChi2sliceFull[iR]  = full.chi2;
 
     TFitResultPtr fitResultOverall;
-    TF1 *fit = FitDoubleGaussian(
+    // TF1 *fit = FitDoubleGaussian(
+    //   hMeanslice[iR], tmm_tag[iR],
+    //   StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION),
+    //   StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION),
+    //   fitResultOverall
+    // );
+
+    TF1 *fit = FitVoigt(
       hMeanslice[iR], tmm_tag[iR],
       StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION),
       StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION),

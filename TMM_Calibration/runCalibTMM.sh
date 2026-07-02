@@ -15,7 +15,7 @@ NevtBlock="${4:-1000}"
 CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration"
 FileList="${CalibrationPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${CalibrationPath}/outputTMM"
-OutputFile="${OutputDir}/TMMCalibration_run${PadmeRunID}"
+OutputFile="${OutputDir}/TMMCalibrationVoigt_run${PadmeRunID}"
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

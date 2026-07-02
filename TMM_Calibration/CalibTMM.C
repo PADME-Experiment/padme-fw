@@ -219,7 +219,7 @@ TF1* CalibTMM::FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax
   fitResult = h->Fit(fit, "RQS");
 
   if (!fitResult.Get()) {
-    cerr << "WARNING: Double Gaussian fit returned null result for " << h->GetName() << " view = " << namev<< endl;
+    cerr << "WARNING: Double Gaussian fit returned null result for " << h->GetName() << " view = " << name << endl;
     delete prefit;
     delete fit;
     fitResult = TFitResultPtr();

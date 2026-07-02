@@ -416,7 +416,7 @@ bool TargetChargePosition(int runNumber, const string &filePathPattern, RunEvent
     double qLG, dqLG;
 
     int chunk = 0;
-    static int NCHUNKS = 100; // number of blocks to average over
+    static int NCHUNKS = 10; // number of blocks to average over
 
     for(Long64_t ev=0; ev<nentries; ev++){
         t->GetEntry(ev);
@@ -803,22 +803,21 @@ int main(int argc, char** argv) {
 
     double ecalib = 298.5; // MeV
 
-    string calibFile = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/TargetCalibrationConst_NewCharge2.txt";
+    // string calibFile = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/TargetCalibrationConst_NewCharge2.txt";
+    string calibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/TargetCalibrationConst_NewCharge2.txt";
     bool calibLoaded = LoadCalibrationConstants(calibFile);
     if (!calibLoaded) {
         cerr << "Calibration constants missing — continuing with unity gains!" << endl;
     }
     
-    // string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputReco_Scan1_Scan2_NewCharge/Reco_run_00%d.root";
-    // string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputReco_Run4/Reco_run_00%d.root";
-    string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputNewReco_100files/Reco_run_00%d.root";
     // string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputReco_NewRun4_100files/Reco_run_00%d.root";
+    string rootPattern = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/outputReco/Reco_run_00%d.root";
 
     // defining the output txt file
-    // ofstream OutputTxt(Form("/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i_NewRun4_100files.txt", runNumber));
-    ofstream OutputTxt(Form("/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i_NewReco_100files.txt", runNumber));
+    // ofstream OutputTxt(Form("/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i_NewReco_100files.txt", runNumber));
+    ofstream OutputTxt(Form("/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i.txt", runNumber));
     // defining the output root file
-    TString outputFileName = "outputCalibration/Run4Monitor/TargetAnalysis_run_00" + to_string(runNumber) + "_NewReco_100files.root";
+    TString outputFileName = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/NUOVO_run_00" + to_string(runNumber) + ".root";
     TFile* histoFile = new TFile(outputFileName,"RECREATE");
     if(!histoFile) {
         fprintf(stderr,"ERROR - Cannot create output file %s\n",outputFileName.Data());
@@ -1176,10 +1175,10 @@ int main(int argc, char** argv) {
         // Calculating totals and ratios for the entire run - reconstructed X calibrated charge
         double QXTot_cal = QXTarTot_cal[0] + QXTarTot_cal[1] + QXTarTot_cal[2];
         double QXTot_cal_err = sqrt( pow(QXTarTot_cal_err[0],2) + pow(QXTarTot_cal_err[1],2) + pow(QXTarTot_cal_err[2],2) );
-        double QXratio_cal= QXTot_cal/QLGtot;
-        double QXratio_cal_err = QXratio_cal * sqrt(pow(QXTot_cal_err/QXTot_cal,2) + pow(QLGtot_err/QLGtot,2));
-        double QXratio_cal_ECorr = QXratio_cal * (ebeam / ecalib);
-        double QXratio_cal_ECorr_err = QXratio_cal_ECorr * sqrt(pow(QXTot_cal_err/QXTot_cal,2) + pow(QLGtot_err/QLGtot,2));
+        double QXLGratio_cal = QXTot_cal/QLGtot;
+        double QXLGratio_cal_err = QXLGratio_cal * sqrt(pow(QXTot_cal_err/QXTot_cal,2) + pow(QLGtot_err/QLGtot,2));
+        double QXLGratio_cal_ECorr = QXLGratio_cal * (ebeam / ecalib);
+        double QXLGratio_cal_ECorr_err = QXLGratio_cal_ECorr * sqrt(pow(QXTot_cal_err/QXTot_cal,2) + pow(QLGtot_err/QLGtot,2));
 
         // Calculating totals and ratios for the entire run - fitted X and Y raw and X calibrated charge
         double QXRatio_fitted_raw = cXTot_raw[0]/QLGtot;
@@ -1248,13 +1247,13 @@ int main(int argc, char** argv) {
         TGraphErrors *gYR_fitted_raw = new TGraphErrors(1, &ebeam, &QYRatio_fitted_raw, &eexx, &QYRatio_fitted_raw_err);
         TGraphErrors *gRY_raw = new TGraphErrors(1, &ebeam, &QYratio_raw, &eexx, &QYratio_raw_err);
         TGraphErrors *gXR_fitted_cal = new TGraphErrors(1, &ebeam, &QXRatio_fitted_cal, &eexx, &QXRatio_fitted_cal_err);
-        TGraphErrors *gRX_cal = new TGraphErrors(1, &ebeam, &QXratio_cal, &eexx, &QXratio_cal_err);
+        TGraphErrors *gRX_cal = new TGraphErrors(1, &ebeam, &QXLGratio_cal, &eexx, &QXLGratio_cal_err);
         // ratios beam energy corrected - entire run
         TGraphErrors *gRX_raw_ECorr = new TGraphErrors(1, &ebeam, &QXratio_raw_ECorr, &eexx, &QXratio_raw_ECorr_err);
         TGraphErrors *gXR_fitted_raw_ECorr = new TGraphErrors(1, &ebeam, &QXRatio_fitted_raw_ECorr, &eexx, &QXRatio_fitted_raw_ECorr_err);
         TGraphErrors *gRY_raw_ECorr = new TGraphErrors(1, &ebeam, &QYratio_raw_ECorr, &eexx, &QYratio_raw_ECorr_err);
         TGraphErrors *gYR_fitted_raw_ECorr = new TGraphErrors(1, &ebeam, &QYRatio_fitted_raw_ECorr, &eexx, &QYRatio_fitted_raw_ECorr_err);
-        TGraphErrors *gRX_cal_ECorr = new TGraphErrors(1, &ebeam, &QXratio_cal_ECorr, &eexx, &QXratio_cal_ECorr_err);
+        TGraphErrors *gRX_cal_ECorr = new TGraphErrors(1, &ebeam, &QXLGratio_cal_ECorr, &eexx, &QXLGratio_cal_ECorr_err);
         TGraphErrors *gXR_fitted_cal_ECorr = new TGraphErrors(1, &ebeam, &QXRatio_fitted_cal_ECorr, &eexx, &QXRatio_fitted_cal_ECorr_err);
 
         // Set graph attributes
@@ -1354,6 +1353,47 @@ int main(int argc, char** argv) {
         TGraphAttribute(gYR_fitted_raw_ECorr, "gYR_fitted_raw_ECorr", "E_{beam} [MeV]", "Q_{Y-Tar}/Q_{LG} Fitted Raw ECorr", 20, kGreen+2);
         TGraphAttribute(gXR_fitted_cal_ECorr, "gXR_fitted_cal_ECorr", "E_{beam} [MeV]", "Q_{X-Tar}/Q_{LG} Fitted Cal ECorr", 20, kBlue+2);
 
+
+        //adding plots for stability charge variations studies
+        TF1 *p0LG = new TF1("p0LG", "pol0", 0, 100);
+        TF1 *p0Xcal = new TF1("p0Xcal", "pol0", 0, 100);
+        TF1 *p0Xraw = new TF1("p0Xraw", "pol0", 0, 100); 
+        TF1 *p0TarLGRatio = new TF1("p0TarLGRatio", "pol0", 0, 100);
+        gQLG->Fit("p0LG", "QR");
+        gQXTot_target_cal->Fit("p0Xcal", "QR");
+        gQXTot_target_raw->Fit("p0Xraw", "QR");
+        gQXratio_cal->Fit("p0TarLGRatio", "QR");
+
+        // TGraphErrors *gQLGNorm = new TGraphErrors(Nfits, idx.data(), LGQ.data()/p0LG->GetParameter(0), nullptr, (QLGtot_err_data.data()/p0LG->GetParameter(0) + LGQ.data()*p0LG->GetParError(0)/pow(p0LG->GetParameter(0),2)));
+        // TGraphErrors *gQX_calNorm = new TGraphErrors(Nfits, idx.data(), QXTot_target_cal.data()/p0Xcal->GetParameter(0), nullptr, (QXTot_target_cal_err.data()/p0Xcal->GetParameter(0) + QXTot_target_cal.data()*p0Xcal->GetParError(0)/pow(p0Xcal->GetParameter(0),2)));
+        // TGraphErrors *gQX_raw_Norm = new TGraphErrors(Nfits, idx.data(), QXTot_target_raw.data()/p0Xraw->GetParameter(0), nullptr, (QXTot_target_raw_err.data()/p0Xraw->GetParameter(0) + QXTot_target_raw.data()*p0Xraw->GetParError(0)/pow(p0Xraw->GetParameter(0),2)));
+        // TGraphErrors *gQXLGRatio_Norm = new TGraphErrors(Nfits, idx.data(), QXratio_cal.data()/p0TarLGRatio->GetParameter(0), nullptr, (QXratio_cal_err.data()/p0TarLGRatio->GetParameter(0) + QXratio_cal.data()*p0TarLGRatio->GetParError(0)/pow(p0TarLGRatio->GetParameter(0),2)));
+
+        TGraphErrors *gQLGNorm = new TGraphErrors(Nfits);
+        TGraphErrors *gQX_calNorm = new TGraphErrors(Nfits);
+        TGraphErrors *gQX_raw_Norm = new TGraphErrors(Nfits);
+        TGraphErrors *gQXLGRatio_Norm = new TGraphErrors(Nfits);
+
+        for(int i = 0; i < Nfits; i++){
+            gQLGNorm->SetPoint(i, idx[i], LGQ[i]/p0LG->GetParameter(0));
+            gQLGNorm->SetPointError(i, 0, err_LGQ[i]/p0LG->GetParameter(0));
+            // gQLGNorm->SetPointError(i, 0, (err_LGQ[i]/p0LG->GetParameter(0) + LGQ[i]*p0LG->GetParError(0)/pow(p0LG->GetParameter(0),2)));
+            gQX_calNorm->SetPoint(i, idx[i], QXTot_target_cal[i]/p0Xcal->GetParameter(0));
+            gQX_calNorm->SetPointError(i, 0, QXTot_target_cal_err[i]/p0Xcal->GetParameter(0));
+            // gQX_calNorm->SetPointError(i, 0, (QXTot_target_cal_err[i]/p0Xcal->GetParameter(0) + QXTot_target_cal[i]*p0Xcal->GetParError(0)/pow(p0Xcal->GetParameter(0),2)));
+            gQX_raw_Norm->SetPoint(i, idx[i], QXTot_target_raw[i]/p0Xraw->GetParameter(0));
+            gQX_raw_Norm->SetPointError(i, 0, QXTot_target_raw_err[i]/p0Xraw->GetParameter(0));
+            // gQX_raw_Norm->SetPointError(i, 0, (QXTot_target_raw_err[i]/p0Xraw->GetParameter(0) + QXTot_target_raw[i]*p0Xraw->GetParError(0)/pow(p0Xraw->GetParameter(0),2)));
+            gQXLGRatio_Norm->SetPoint(i, idx[i], QXratio_cal[i]/p0TarLGRatio->GetParameter(0));
+            gQXLGRatio_Norm->SetPointError(i, 0, QXratio_cal_err[i]/p0TarLGRatio->GetParameter(0));
+            // gQXLGRatio_Norm->SetPointError(i, 0, (QXratio_cal_err[i]/p0TarLGRatio->GetParameter(0) + QXratio_cal[i]*p0TarLGRatio->GetParError(0)/pow(p0TarLGRatio->GetParameter(0),2)));
+        }
+        
+        TGraphAttribute(gQLGNorm, "Q_{LG}/<Q_{LG}>", "Period (200s)", "Q_{LG}/<Q_{LG}>", 20, kBlue+2);
+        TGraphAttribute(gQX_calNorm, "Q_{X-Tar}/<Q_{X-Tar}> Calib", "Period (200s)", "Q_{X-Tar}/<Q_{X-Tar}> Calib", 20, kBlue+2);
+        TGraphAttribute(gQX_raw_Norm, "Q_{X-Tar}/<Q_{X-Tar}> Raw", "Period (200s)", "Q_{X-Tar}/<Q_{X-Tar}> Raw", 20, kBlue+2);
+        TGraphAttribute(gQXLGRatio_Norm, "Q_{X-Tar}/Q_{LG} / <Q_{X-Tar}/Q_{LG}>", "Period (200s)", "Q_{X-Tar}/Q_{LG} / <Q_{X-Tar}/Q_{LG}>", 20, kBlue+2);
+
         histoFile->cd();
         TDirectory *distrDir = histoFile->mkdir("distributions");
         TDirectory *trendsDir = histoFile->mkdir("trends");
@@ -1410,6 +1450,10 @@ int main(int argc, char** argv) {
         gChargeXratio_raw_ECorr->Write();
         gChargeYratio_raw_ECorr->Write();
         gChargeXratio_cal_ECorr->Write();
+        gQLGNorm->Write();
+        gQX_calNorm->Write();
+        gQX_raw_Norm->Write();
+        gQXLGRatio_Norm->Write();
 
         histoFile->cd();
         distrDir->cd();
@@ -1485,7 +1529,7 @@ int main(int argc, char** argv) {
         OutputTxt << "X cal: " << cXTot_cal[1] << " +/- " << cXTot_cal_err[1] << " mm" << endl;
         OutputTxt << "sigmaX cal: " << cXTot_cal[2] << " +/- " << cXTot_cal_err[2] << " mm" << endl;
         OutputTxt << "QXtot/QLG raw: " << QXratio_raw << " +/- " << QXratio_raw_err << endl;
-        OutputTxt << "QXtot/QLG cal: " << QXratio_cal << " +/- " << QXratio_cal_err << endl;
+        OutputTxt << "QXtot/QLG cal: " << QXLGratio_cal << " +/- " << QXLGratio_cal_err << endl;
         OutputTxt << "QXtot/QLG fitted raw: " << QXRatio_fitted_raw << " +/- " << QXRatio_fitted_raw_err << endl;
         OutputTxt << "QXtot/QLG fitted cal: " << QXRatio_fitted_cal << " +/- " << QXRatio_fitted_cal_err << endl;
         OutputTxt << "QYtot/QLG raw: " << QYratio_raw << " +/- " << QYratio_raw_err << endl;

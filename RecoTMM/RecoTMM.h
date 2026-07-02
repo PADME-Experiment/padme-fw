@@ -77,7 +77,8 @@ public :
 
    // Path to external calibration constants (mode 2 in overall, mode 2 in block view).
    // Settable from outside before LoopFileList; falls back to the historical default.
-   TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibration_run677_CalibrationConstant.txt";
+   // TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibration_run677_CalibrationConstant.txt";
+   TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibrationVoigt_run677_CalibrationConstant.txt";
    
    // Branches declaration 
    ULong64_t       evt;

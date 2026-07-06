@@ -12,33 +12,3 @@ one can execute in the same way we do for the full PADME framework, using list, 
 
 
 
-////////usage of merge raw
-
-fRunName = "";
-  fChamberRunName = ""; - 
-  fEventsPerFile = 1000;
-  fDataDirectory = "rawdata";
-  fChamberDataDirectory = "mmchdata";
-  fNumberOfEventsToSkip = 0;
-  fOutputDirectory = "watchdir";
-  fTrendDirectory = "trend";
-  fTmpDirectory = "tmp";
-  fConfigFile = "config/OnlineMonitor.cfg";
-  fStopFile = "run/OnlineMonitor.stop";
-  fEndRunFile = "run/OnlineMonitor.endrun";
-  fNumberOfStreams = 1;
-  fNumberOfEventsToProcess = 0;
-  fFollowMode = false;
-  fResumeMode = false;
-  fDebugScale = 100;
-  fVerbose = 0;
-
-
-
-   void SetRunNumber(Int_t r) { fRunNumber = r; }
-  Int_t GetRunNumber() { return fRunNumber; }
-
-
-  void SetDataDirectory (Int_t r) { fRunNumber = r; }. --> root::....  fino a rawdata 
-
-  

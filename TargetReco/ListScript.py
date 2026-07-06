@@ -2,11 +2,13 @@ import os
 import glob
 
 # Base directory where all run folders are stored
-base_directory = "/data9Vd1/padme/mancinima/Target_Run4"
+# base_directory = "/data9Vd1/padme/mancinima/Target_Run4"
+base_directory = "/data9Vd1/padme/leonardi/padme/daq/2025/rawfile/"
 
 # List of run numbers to process
-# run_numbers = [str(i) for i in range(318, 301)] #add more runs as needed
-run_numbers = [646, 647, 649, 650] #add more runs as needed
+# run_numbers = [str(i) for i in range(318, 301)] #add more runs as needed 
+# run_numbers = [646, 647, 649, 650] #add more runs as needed
+run_numbers = [357]
 
 for run_number in run_numbers:
     # Search for the directory that matches "run_0000{run_number}_*"

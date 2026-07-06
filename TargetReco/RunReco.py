@@ -9,7 +9,7 @@ RED   = "\033[91m"
 YELLOW= "\033[93m"
 RESET = "\033[0m"
 
-EXECUTABLE = "./TargetRun4_OnResonance.exe" #"./TargetRun4_OnResonance_old.exe"
+EXECUTABLE = "./RecoTarget.exe" #"./TargetRun4_OnResonance_old.exe"
 LIST_DIR   = "ListDir"
 OUTPUT_DIR = "./outputReco"
 
@@ -91,7 +91,7 @@ def main():
                 # background mode
                 log_file = os.path.join(OUTPUT_DIR, f"logs/run_{runid}.log")
                 os.makedirs(os.path.dirname(log_file), exist_ok=True)
-                cmd_str = f"nohup {'taskset -c '+str(core) if core else ''} {EXECUTABLE} -l {LIST_DIR}/run_00{runid}_500files.list -o {OUTPUT_DIR}/Reco_run_00{runid}.root > {log_file} 2>&1 & echo $!"
+                cmd_str = f"nohup {'taskset -c '+str(core) if core else ''} {EXECUTABLE} -l {LIST_DIR}/rawmerged_reco_{runid}.list -o {OUTPUT_DIR}/Reco_run_00{runid}.root > {log_file} 2>&1 & echo $!"
                 pid_bytes = subprocess.check_output(cmd_str, shell=True, universal_newlines=True)
                 pid = pid_bytes.strip()
                 print(f"{GREEN}Launched run {runid} PID={pid} log={log_file}{RESET}")

@@ -26,31 +26,6 @@
 #include <iostream>
 #include <cmath>
 
-bool ECalSel::isinTCUT(const std::vector<Point> &polygon, const Point &p)
-{
-  int n = polygon.size();
-  int count = 0;
-  // double inf = 1e9;
-
-  for (int i = 0; i < n; i++)
-  {
-    Point p1 = polygon[i];
-    Point p2 = polygon[(i + 1) % n];
-
-    // Check if the ray intersects with the edge of the polygon
-    if (p.y > std::min(p1.y, p2.y) && p.y <= std::max(p1.y, p2.y) &&
-        p.x <= std::max(p1.x, p2.x))
-    {
-      double xinters = (p.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
-      if (p1.x == p2.x || p.x <= xinters)
-      {
-	count++;
-      }
-    }
-  }
-
-  return (count % 2 != 0);
-}
 
 ECalSel *ECalSel::fInstance = 0;
 ECalSel *ECalSel::GetInstance()
@@ -79,6 +54,13 @@ ECalSel::ECalSel()
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
   fcfgPath = TString(fCfgParser->GetSingleArg("ECAL", "TPPath"));
   fFillLocalHistograms = false;
+  fApplyDataQuality = false;
+  TString cfgvalue = TString(fCfgParser->GetSingleArg("GENERAL", "ApplyDataQuality"));
+    if (cfgvalue.CompareTo("1") == 0)
+      fApplyDataQuality = true;
+    else
+      fApplyDataQuality = false;
+
 }
 
 ECalSel::~ECalSel() {}
@@ -106,6 +88,10 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent *event, Bool_t fHistoModeVal, TString In
     TObjArray *txRun = InputHistofileName.Tokenize(".");
     fNRun = ((TObjString *)(txRun->At(0)))->String() + "." + ((TObjString *)(txRun->At(1)))->String();
     // fNRun = ((TObjString *)(txRun->At(0)))->String(); //OCCHIO
+  }else{
+    int runnum = fGeneralInfo->GetRunNumberFromDB();
+    fNRun = Form("%d",runnum);
+    std::cout << "ECalSel: Run number from event: " << fNRun.Data() << std::endl;
   }
   // binning of theta vs phi to retrieve independently the beam direction
 
@@ -133,7 +119,7 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent *event, Bool_t fHistoModeVal, TString In
   fYMax = 21. * (14 + 0.5);
   fYW = 21; // mm
   fNYBins = (fYMax - fYMin) / fYW;
-  fApplyCorrection = true;
+  fApplyCorrection = false;
   if (fCfgParser->HasConfig("ECAL", "ApplyEfficiencyCorrection") && fCfgParser->HasConfig("ECAL", "EffCorrectionPath"))
   {
     TString cfgvalue = TString(fCfgParser->GetSingleArg("ECAL", "ApplyEfficiencyCorrection"));
@@ -183,6 +169,26 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent *event, Bool_t fHistoModeVal, TString In
     else
     {
       std::cout << "ECalSel *WARNING* Cannot divide two TGraphs with different number of points, weights will be set to 1" << std::endl;
+    }
+  }
+
+  if(fApplyDataQuality){
+    TString DQPath = TString(fCfgParser->GetSingleArg("GENERAL", "DQPath"));
+    std::ifstream infile(Form("%s/tobecut_%s.txt", DQPath.Data(), fNRun.Data())); //not sure is handling merged runs correctly, but for now it is ok since we are not merging runs from reco level
+    
+    TString name;
+    int run, bin;
+    long long tStart, tStop;
+    double sigma;
+    std::cout << "******** DATA QUALITY APPLIED: Reading bad time intervals from file: " << Form("%s/tobecut_%s.txt", DQPath.Data(), fNRun.Data()) << std::endl;
+    while (infile >> run >>name >> bin >> tStart >> tStop >> sigma) {
+        //std::cout<<run<<bin<<tStart<<tStop<<sigma<<std::endl;
+        // If the file contains multiple runs
+        if (run != atoi(fNRun.Data())){
+            std::cout << "ECalSel: Warning - Run number in bad intervals file (" << run << ") does not match current run number (" << fNRun.Data() << "). Skipping this entry." << std::endl;
+            continue;
+        }
+        fBadIntervals.push_back({tStart, tStop});
     }
   }
 
@@ -249,10 +255,24 @@ Bool_t ECalSel::Process()
   fFillCalibHistograms = false;
   fECalEvents.clear();
   fSigmaCut = 3.;
-  double fDQValue = 1.;//0.47;
   int NAvg = 200;
+  long long t = (long long)fEvent->RecoEvent->GetEventTime().GetSec();
+
+  bool reject = false;
+  if(fApplyDataQuality){
+    for (const auto &interval : fBadIntervals) {
+        if (t >= interval.tStart && t < interval.tStop) {
+            reject = true;
+            break;
+        }
+    }
+
+    if (reject)
+        { std::cout << "ECalSel: Event rejected due to bad time interval. Event time: " << t << std::endl;
+          return false;
+        }
+  }
   Bool_t isMC = fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED);
-  Bool_t DQratio = true;
   if(!isMC){
     double hitsum =0;
     for (int hit = 0; hit < fECal_hitEvent->GetNHits(); ++hit){
@@ -272,13 +292,11 @@ Bool_t ECalSel::Process()
       NPoTAvg =0;
       QLGAvg =0;
     }
-
-   if(HitAvgEn/NPoTAvg > fDQValue) DQratio= false; //NOT CORRECTED BY MAUROS
   }
   if (isMC)
     NSignalBhabha();
 
-  if (isMC || (trigMask & (1 << 0) || !DQratio ))
+  if (isMC || trigMask & (1 << 0))
   {
 
     // DataQuality();

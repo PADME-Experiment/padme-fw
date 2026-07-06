@@ -15,6 +15,8 @@ struct observable{
   Double_t* valueSquareSumCoarse; // sum of the squared value vs time [coarse bin]
   Int_t* nCounts; // number vs time
   Int_t* nCountsCoarse; // number vs time [coarse bin]
+  Double_t reject_above;
+  Double_t reject_below;
 };
 
 class DataQuality {
@@ -43,14 +45,14 @@ private:
   TString fNRunString;
   Bool_t InitHistos(Int_t);
   static DataQuality* fInstance;
-  Bool_t fApplyQualityCheck;
+  Int_t fApplyDataQuality; // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
   Bool_t fHistoMode;
   TString InputHistofile;
   TString InputHistofileName;
   Int_t fSafety;
   Int_t fVerbose;
-  Double_t freject_above= 0.8;
-  Double_t freject_below= 0.4;
+  Double_t freject_above= 1.1;//0.8;
+  Double_t freject_below= 0.95;//0.4;
 
   PadmeAnalysisEvent* fEvent;
   utl::ConfigParser* fCfgParser;

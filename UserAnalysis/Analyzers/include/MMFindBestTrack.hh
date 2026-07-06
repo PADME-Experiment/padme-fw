@@ -32,6 +32,8 @@ struct MMBestTrack{
   Double_t inter; // v at mesh plane
   Double_t errSlope = 0.010; //mrad
   Double_t errInter = 0.300; //mm
+  Double_t slope_lvl0[2];
+  Double_t inter_lvl0[2];
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
   Double_t chi2IP;
   Double_t pchi2;

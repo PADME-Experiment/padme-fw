@@ -56,8 +56,7 @@ Bool_t TagAndProbe::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString In
   fHistoMode = HistoMode;
 
   fNSlicesE = 1 + (Int_t)(fGeneralInfo->GetEnergyMax() - fGeneralInfo->GetEnergyMin()) / spacing;
-  
-  
+
   //PRENDE VARIABILI SELEZIONE DA ECALSEL (TAGLI THETA - PHI)
   InitHistos();
 
@@ -108,9 +107,61 @@ Bool_t TagAndProbe::InitHistos()
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl1_PROBE"), 600, -300, 300,600, -600, 600);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl0_TAG"), 50,0,1,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_TAG"), 50,0,1,600,-300,300);
+
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_TAG"), 200,-5,5, 600,-300,300);
+  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_TAG"), 50,0,1,600,-300,300);
+  
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_3hit_lvl0_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl0_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5phit_lvl0_TAG"), 50,0,1,600,-300,300);
+
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_ov_TAG"), 50,0,1,600,-300,300);
+  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_ov_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_ov_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_ov_TAG"), 50,0,1,600,-300,300);
+  
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_3hit_lvl0_ov_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl0_ov_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5phit_lvl0_ov_TAG"), 50,0,1,600,-300,300);
+
+  
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl0_PROBE"), 50,0,1,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_PROBE"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_PROBE"), 200,-5,5,600,-300,300);
+  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_PROBE"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_PROBE"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_PROBE"), 50,0,1,600,-300,300);
 
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_TAG"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_TAG"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl1_TAG"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_6ph_lvl1_TAG"),600,-300,300,50,0,1);
+
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_PROBE"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_PROBE"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl1_PROBE"),600,-300,300,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_6ph_lvl1_PROBE"),600,-300,300,50,0,1);
+
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_TAG_PROBE"),600,-300,300,100,0,2);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_QualityvsDE_TAG_PROBE"),600,-300,300,25,-0.5,24.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_QualityNewvsDE_PROBE"),600,-300,300,2,-0.5,1.5);
+
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQTAG",400, 0, 400, 600,-300, 300); // da mettere quello in phi
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQPROBE",400, 0, 400, 600,-300, 300); // da mettere quello in phi
+  
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PChi2vsNhit_lvl1"), 3,3.5,6.5,50,0,1);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PChi2vsNhit_lvl0"), 3,2.5,5.5,50,0,1);
+  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dVvsdTheta_fromlvl0_lvl1"),600,-0.05,0.05,600,-5,5);
+  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dVvsdTheta_fromlvl0_dRmatched_lvl1_TAG"),300,-0.05,0.05,600,-5,5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dRvsdTheta_fromlvl0_lvl1"),300,-0.05,0.05,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dRvsdV_fromlvl0_lvl1"),600,-5,5,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_TAG"),600,-300,300,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_PROBE"),600,-300,300,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZTAGvsdZPROBE"),600,-300,300,600,-300,300);
+  
+  
   for(int iSlice = 0; iSlice < fNSlicesE; iSlice++) {
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice),600, -TMath::Pi(), TMath::Pi(), 600,-300, 300);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DEvsE_probe_slice_%i", iSlice),400, 0, 400, 600,-300, 300);
@@ -123,6 +174,16 @@ Bool_t TagAndProbe::InitHistos()
   return true;
 }
 
+Double_t TagAndProbe::PurityFunc(Double_t x, Double_t y, Double_t *p) {
+  
+  double sigY = TMath::Exp(-0.5*(y-p[2])*(y-p[2])/(p[3]*p[3]));
+  double bkgY = TMath::Exp(-0.5*(y-p[4])*(y-p[4])/(p[5]*p[5]));
+  
+  double sigX = TMath::Exp(p[6]*x);
+  double bkgX = TMath::Exp(-p[7]*x);
+
+  return p[0]*sigX*sigY/(p[0]*sigX*sigY + p[1]*bkgX*bkgY);
+}
 
 
 Int_t TagAndProbe::TagAndProbeSelection(){
@@ -220,7 +281,17 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 
       int nTracksInQuadOther = 0;
       int nTracksInPosInQuadOther = 0;
+      
+      
+      double purity_TAG = -999;
+      double purity_PROBE = -999;
+      double pars_3h_lvl0[8] = {7.56008, 58.3746, -1.2901, 7.28396, 16.0513, 105.037, 3.37634, 0.263186};
+      double pars_4h_lvl0[8] = {0.0265705, 92.0291, -1.24075, 6.90274, 19.2264, 104.307, 8.19723, 1.84315};
+      double pars_5h_lvl1[8] = {18.5897, 34.5641, 0.906092, 11.324, 5.74614, 87.1964, 2.09614, 0.914284};
+      double pars_6ph_lvl1[8] = {204.73, 306.454, 1.26521, 11.1982, 4.69843, 99.2033, -0.781994, 4.14681};
 
+      
+      int first_view = -999;
       Double_t dROld = -999;
       for (auto it = begin (trackvect); it != end (trackvect); ++it) {
 	MMBestTrack* track = *it;
@@ -230,22 +301,92 @@ Int_t TagAndProbe::TagAndProbeSelection(){
               
         TVector3 extPos = track->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z());
         double dR = (extPos[1-track->view] - cluPos[0][1-track->view]);
-
+	double dV = -999;
+	double dTheta = -999;
+	
 	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl%d_TAG",track->level), track->pchi2, dR, 1.);
+	
+	if(track->level == 1) {
+	  dV = track->inter_lvl0[0] - track->inter_lvl0[1];
+	  dTheta = TMath::ATan(track->slope_lvl0[0]) - TMath::ATan(track->slope_lvl0[1]);
+	  //fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dVvsdTheta_fromlvl0_lvl1"),dTheta,dV);
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdTheta_fromlvl0_lvl1"),dTheta,dR);
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdV_fromlvl0_lvl1"),dV,dR);
 
-	if(track->pchi2 < 0.5) continue;
+	  if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_TAG"), dV, dR, 1.);
+	  //if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), track->pchi2, dR, 1.);
+	  if(track->nhit == 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_TAG"), track->pchi2, dR, 1.);
+	  if(track->nhit > 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_TAG"), track->pchi2, dR, 1.);
+	  
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PChi2vsNhit_lvl1"), track->nhit, track->pchi2, 1.);
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_TAG"),cluEnergy[0] - pg,track->pars[4]-(cluTime[0]+440)*GeneralInfo::GetInstance()->GetMMDriftVelocity());  //TIME OFFSET HARDCODED
+	}
+	else { //track->level == 0
+	  if(track->nhit == 3) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_3hit_lvl0_TAG"), track->pchi2, dR, 1.);
+	  if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl0_TAG"), track->pchi2, dR, 1.);
+	  if(track->nhit > 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5phit_lvl0_TAG"), track->pchi2, dR, 1.);
+	  
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PChi2vsNhit_lvl0"), track->nhit, track->pchi2, 1.);
+	  
+	}
+	
+	if(track->pchi2 < 0.6) continue;
 	nTracksInQuad++;
+
+	double purity = -999;
+	if(track->level == 0) {
+	  if(track->nhit == 3) { 
+	    purity = PurityFunc(track->pchi2,dR,pars_3h_lvl0);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_TAG"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	  if(track->nhit == 4) {
+	    purity = PurityFunc(track->pchi2,dR,pars_4h_lvl0);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_TAG"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	}
+	else { //track->level == 1
+	  if(track->nhit == 5) {
+	    purity = PurityFunc(track->pchi2,dR,pars_5h_lvl1);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl1_TAG"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	  if(track->nhit > 5) {
+	    purity = PurityFunc(track->pchi2,dR,pars_6ph_lvl1);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_6ph_lvl1_TAG"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	}
+
+	if(purity > purity_TAG) purity_TAG = purity;
+
 	
 	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d_TAG",track->level), cluEnergy[0] - pg, dR, 1.);
 
         if(nTracksInQuad==2){
           fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdRold"), dROld, dR, 1.);
         }
-        if(fabs(dR+2.41) < (20)) { //TO BE CHANGED !!!!!
-          nTracksInPosInQuad++;
-        }
-        dROld= dR;
+	
+	if(fabs(dR+2.41) < (20)) { //TO BE CHANGED !!!!!
+	  
+	  //if(track->level == 1) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dVvsdTheta_fromlvl0_dRmatched_lvl1_TAG"),dTheta,dV);
+	  nTracksInPosInQuad++;
+	  if(nTracksInPosInQuad == 1) first_view = track->view;
+	}
+        dROld = dR;
+	if(nTracksInPosInQuad>0 && first_view != track->view) {
+	  if(track->level == 1) {
+	    if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_ov_TAG"), dV, dR, 1.);
+	    //if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_ov_TAG"), track->pchi2, dR, 1.);
+	    if(track->nhit == 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_ov_TAG"), track->pchi2, dR, 1.);
+	    if(track->nhit > 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_ov_TAG"), track->pchi2, dR, 1.);
+	  }
+	  else {// track->level == 0
+	    if(track->nhit == 3) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_3hit_lvl0_ov_TAG"), track->pchi2, dR, 1.);
+	    if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl0_ov_TAG"), track->pchi2, dR, 1.);
+	    if(track->nhit > 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5phit_lvl0_ov_TAG"), track->pchi2, dR, 1.);
+	    
+	  }
+	}
       }
+      
       for (auto it2 = begin (trackvect); it2 != end (trackvect); ++it2) {
         MMBestTrack* track2 = *it2;
         if(track2->quad != quadOther) continue;
@@ -256,7 +397,45 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 
 	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl%d_PROBE",track2->level), track2->pchi2, dR2, 1.);
 	
-	if(track2->pchi2 < 0.5) continue;
+	if(track2->level == 1) {
+	  double dV = track2->inter_lvl0[0] - track2->inter_lvl0[1];
+	  double dTheta = TMath::ATan(track2->slope_lvl0[0]) - TMath::ATan(track2->slope_lvl0[1]);
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dVvsdTheta_fromlvl0_lvl1"),dTheta,dV);
+	  
+	  if(track2->nhit == 4 && track2->pchi2>0.6) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_PROBE"), dV, dR2, 1.);
+	  //if(track2->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_PROBE"), track2->pchi2, dR2, 1.);
+	  if(track2->nhit == 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_PROBE"), track2->pchi2, dR2, 1.);
+	  if(track2->nhit >5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_PROBE"), track2->pchi2, dR2, 1.);
+	  
+	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_PROBE"),cluEnergy[0] - pg, track2->pars[4]-(cluTime[0]+440)*GeneralInfo::GetInstance()->GetMMDriftVelocity());  //TIME OFFSET HARDCODED
+	}
+	
+	if(track2->pchi2 < 0.6) continue;
+
+	double purity = -999;
+	if(track2->level == 0) {
+	  if(track2->nhit == 3) { 
+	    purity = PurityFunc(track2->pchi2,dR2,pars_3h_lvl0);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_PROBE"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	  if(track2->nhit == 4) {
+	    purity = PurityFunc(track2->pchi2,dR2,pars_4h_lvl0);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_PROBE"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	}
+	else { //track2->level == 1
+	  if(track2->nhit == 5) {
+	    purity = PurityFunc(track2->pchi2,dR2,pars_5h_lvl1);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl1_PROBE"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	  if(track2->nhit > 5) {
+	    purity = PurityFunc(track2->pchi2,dR2,pars_6ph_lvl1);
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_6ph_lvl1_PROBE"),cluEnergy[0] - pg, purity, 1.);
+	  }
+	}
+
+	if(purity > purity_PROBE) purity_PROBE = purity;
+	
 	nTracksInQuadOther++;
 
 	if(nTracksInPosInQuad > 0) {
@@ -267,11 +446,35 @@ Int_t TagAndProbe::TagAndProbeSelection(){
           nTracksInPosInQuadOther++;
         }
       }
-    //casi
+      
+      if(purity_TAG > 0.1 && purity_PROBE > 0.1) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_TAG_PROBE"),cluEnergy[0] - pg, purity_TAG + purity_PROBE, 1.);
+      //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
+      //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
+      // 0.02 < purity_TAG < 0.2    --> quality_bin_TAG = 2
+      //  0.2 < purity_TAG < 0.6    --> quality_bin_TAG = 3
+      //  0.6 < purity_TAG < 1      --> quality_bin_TAG = 4
+      //        purity_PROBE < 0      --> quality_bin_PROBE = 0 (no track considered)
+      //    0 < purity_PROBE < 0.02   --> quality_bin_PROBE = 1 (bad purity)
+      // 0.02 < purity_PROBE < 0.2    --> quality_bin_PROBE = 2
+      //  0.2 < purity_PROBE < 0.6    --> quality_bin_PROBE = 3
+      //  0.6 < purity_PROBE < 1      --> quality_bin_PROBE = 4
+      int quality = QualityBin(purity_TAG,0)+5*QualityBin(purity_PROBE,1);
+      fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_QualityvsDE_TAG_PROBE"),cluEnergy[0] - pg, quality, 1.);
+      
+      if(QualityBin(purity_TAG,0) == 4) fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQTAG", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.); // da mettere quello in phi
+      int qualitynew = 0;
+      if(quality > 19) {
+	qualitynew = 1;
+	fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQPROBE", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.); // da mettere quello in phi
+      }
+      fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_QualityNewvsDE_PROBE"),cluEnergy[0] - pg, qualitynew, 1.);
 
-    // 0  1-in pos   1-non in pos  2 una in una no  2 entrambe in pos 2 nessuna in pos
-    // 0  1           2              3              4                 5
-
+      
+      //casi
+      
+      // 0  1-in pos   1-non in pos  2 una in una no  2 entrambe in pos 2 nessuna in pos
+      // 0  1           2              3              4                 5
+      
       int Category =-1;
       if(nTracksInQuad == 0) Category = 0;
       else if(nTracksInQuad == 1 && nTracksInPosInQuad == 1) Category = 1;

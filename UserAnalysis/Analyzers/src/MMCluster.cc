@@ -22,6 +22,10 @@ MMCluster::MMCluster(Int_t ipmode, Int_t clumode) {
     fTracos.pars[p] = -9999;
   }
   fTracos.lambda = {-9999,-9999,-9999};
+  fTracos.slope_lvl0[0] = -999;
+  fTracos.slope_lvl0[1] = -999;
+  fTracos.inter_lvl0[0] = -999;
+  fTracos.inter_lvl0[1] = -999;
   fTracos.vres.clear();
     
   fIPPhaseAngle = -9999;
@@ -427,11 +431,17 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   double slope1 = fTracos.slope;
   double slope2 = inputclus->GetTracklet().slope;
   double slope_avg = 0.5*(slope1 + slope2);
+
+  fTracos.slope_lvl0[0] = fTracos.slope;
+  fTracos.slope_lvl0[1] = inputclus->GetTracklet().slope;
+  fTracos.inter_lvl0[0] = fTracos.inter;
+  fTracos.inter_lvl0[1] = inputclus->GetTracklet().inter;
   
   // success: update the cluster
   for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
     fMMHitsInClu.push_back(inputclus->GetHit(i));
   }
+  int plane = chinfoThis.plane;
   int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
   fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
   
@@ -457,9 +467,28 @@ bool MMCluster::MergeAcrossPlanes(MMCluster* inputclus){
   fIPPhaseAngle = lambda_hits[0]*ravg_minus_target[1]-lambda_hits[1]*ravg_minus_target[0];    
 
   //chi2 before fit for the best track L1 selection  
-  double chi2_tmp = (slope1 - slope_avg)*(slope1 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
-  chi2_tmp += (slope2 - slope_avg)*(slope2 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
-  fTracos.chi2 = chi2_tmp;
+  double chi2 = (slope1 - slope_avg)*(slope1 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
+  chi2 += (slope2 - slope_avg)*(slope2 - slope_avg)/(0.010*0.010); //ERRORE SU ANGOLO DA CAMBIARE, o per lo meno da standardizzare insomma
+  
+  //std::cout<<"N hit plane: "<<fNHitsPerPlane[plane]<<" N hit otherplane: "<<fNHitsPerPlane[otherplane]<<std::endl;
+  if(fNHitsPerPlane[plane] == 2 && fNHitsPerPlane[otherplane] == 2) {
+    fTracos.chi2 = chi2;
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(chi2,1); //4 hits and 3 parameters
+    //std::cout<<"pchi2 4hit: "<<fTracos.pchi2<<std::endl;
+  }
+  else if(fNHitsPerPlane[plane] == 2 && fNHitsPerPlane[otherplane] > 2) {
+    fTracos.chi2 = inputclus->GetTracklet().chi2;
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(inputclus->GetTracklet().chi2,fNHitsPerPlane[otherplane]-2);
+  }
+  else if(fNHitsPerPlane[plane] > 2 && fNHitsPerPlane[otherplane] == 2) {
+    //keeping chi2 of imported clu 0
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(fTracos.chi2,fNHitsPerPlane[plane]-2);
+  }
+  else  {
+    double chi2_tmp = fTracos.chi2;
+    fTracos.chi2 = 0.5*(chi2_tmp+inputclus->GetTracklet().chi2);
+    fTracos.pchi2 = 0.5*(ROOT::Math::chisquared_cdf_c(chi2_tmp,fNHitsPerPlane[plane]-2) + ROOT::Math::chisquared_cdf_c(inputclus->GetTracklet().chi2,fNHitsPerPlane[otherplane]-2));
+  }
   
   return kTRUE;
 }
@@ -480,11 +509,21 @@ bool MMCluster::MergeAcrossPlanesWithdZ(MMCluster* inputclus){ ////// TO BE IMPL
   double dslope = fTracos.slope - inputclus->GetTracklet().slope;  
   if (TMath::Abs(dv) > dvAtMeshMax) return kFALSE;
   if (TMath::Abs(dslope) > dslopeMAX) return kFALSE;
+
+
+  fTracos.slope_lvl0[0] = fTracos.slope;
+  fTracos.slope_lvl0[1] = inputclus->GetTracklet().slope;
+  fTracos.inter_lvl0[0] = fTracos.inter;
+  fTracos.inter_lvl0[1] = inputclus->GetTracklet().inter;
   
+  int NHitInClu = fMMHitsInClu.size();
+  fNHitsPerPlane[chinfoThis.plane] = NHitInClu;
+    
   // success: update the cluster
   for (Int_t i= 0; i<(int)inputclus->GetHitsVectorSize(); i++) {
     fMMHitsInClu.push_back(inputclus->GetHit(i));
   }
+  int plane = chinfoThis.plane;
   int otherplane = inputclus->GetHit(0)->GetMMchInfo().plane;
   fNHitsPerPlane[otherplane] = inputclus->GetNHitsPerPlane(otherplane);
   
@@ -548,8 +587,25 @@ bool MMCluster::MergeAcrossPlanesWithdZ(MMCluster* inputclus){ ////// TO BE IMPL
   fTracos.lambda.SetZ(reverseTrack*cosz);
 
 
-  fTracos.chi2 = chi2;
-  
+  //std::cout<<"N hit plane: "<<fNHitsPerPlane[plane]<<" N hit otherplane: "<<fNHitsPerPlane[otherplane]<<std::endl;
+  if(fNHitsPerPlane[plane] == 2 && fNHitsPerPlane[otherplane] == 2) {
+    fTracos.chi2 = chi2;
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(chi2,1); //4 hits and 3 parameters
+    //std::cout<<"pchi2 4hit: "<<fTracos.pchi2<<std::endl;
+  }
+  else if(fNHitsPerPlane[plane] == 2 && fNHitsPerPlane[otherplane] > 2) {
+    fTracos.chi2 = inputclus->GetTracklet().chi2;
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(inputclus->GetTracklet().chi2,fNHitsPerPlane[otherplane]-2);
+  }
+  else if(fNHitsPerPlane[plane] > 2 && fNHitsPerPlane[otherplane] == 2) {
+    //keeping chi2 of imported clu 0
+    fTracos.pchi2 = ROOT::Math::chisquared_cdf_c(fTracos.chi2,fNHitsPerPlane[plane]-2);
+  }
+  else  {
+    double chi2_tmp = fTracos.chi2;
+    fTracos.chi2 = 0.5*(chi2_tmp+inputclus->GetTracklet().chi2);
+    fTracos.pchi2 = 0.5*(ROOT::Math::chisquared_cdf_c(chi2_tmp,fNHitsPerPlane[plane]-2) + ROOT::Math::chisquared_cdf_c(inputclus->GetTracklet().chi2,fNHitsPerPlane[otherplane]-2));
+  }
   return kTRUE;
 }
 

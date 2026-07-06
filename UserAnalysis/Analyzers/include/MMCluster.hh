@@ -20,8 +20,11 @@ struct MMTracklet{           //NOTE THAT PARS[4] è dZ!!!!
   Double_t inter; // v at mesh plane
   Double_t errSlope = 0.010; //mrad
   Double_t errInter = 0.300; //mm
+  Double_t slope_lvl0[2];
+  Double_t inter_lvl0[2];
   Double_t chi2;  // if fit is done, otherwise it is a nominal value [-999]
   Double_t chi2IP;
+  Double_t pchi2;
   Double_t pars[5];// x0,y0,x1,y1,dz: for mode = 0, fit x0,x1 or y0,y1 depending on the view and fix the other pair of parameters
   TVector3 lambda; // cosines of track directions
   vector<TVector3> vres; //vector of residuals

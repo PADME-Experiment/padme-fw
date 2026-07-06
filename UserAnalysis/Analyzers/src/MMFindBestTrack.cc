@@ -71,8 +71,9 @@ Bool_t MMFindBestTrack::Process(){
     int nhit_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetHitsVectorSize();
 
     double chi2_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetTracklet().chi2;
-    double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,nhit_tmp-3); //chi2 done at the moment with slope
-
+    //double pchi2_tmp = ROOT::Math::chisquared_cdf_c(chi2_tmp,nhit_tmp-3); //chi2 done at the moment with slope
+    double pchi2_tmp = fMMClusteringInstance->GetMMCluster(itra1,0,1)->GetTracklet().pchi2;
+      
     if(pchi2_tmp > pchi2_best1[quad][view]) {
       pchi2_best1[quad][view] = pchi2_tmp;
       best_tra1[quad][view].quad = quad;
@@ -96,6 +97,10 @@ Bool_t MMFindBestTrack::Process(){
         bt->chi2 = best_tra1[qd][vw].tracklet.chi2;
         bt->chi2IP = best_tra1[qd][vw].tracklet.chi2IP;
 	bt->pchi2 = pchi2_best1[qd][vw];
+	bt->slope_lvl0[0] = best_tra1[qd][vw].tracklet.slope_lvl0[0];
+	bt->slope_lvl0[1] = best_tra1[qd][vw].tracklet.slope_lvl0[1];
+	bt->inter_lvl0[0] = best_tra1[qd][vw].tracklet.inter_lvl0[0];
+	bt->inter_lvl0[1] = best_tra1[qd][vw].tracklet.inter_lvl0[1]; 
         for(int ipar=0; ipar<5; ipar++){
           bt->pars[ipar] = best_tra1[qd][vw].tracklet.pars[ipar];
         }

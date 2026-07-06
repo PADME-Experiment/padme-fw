@@ -65,6 +65,35 @@ private:
   MMFindBestTrack* fMMFindBestTrack;
   NPoTAnalysis* fNPoTAnalysis;
 
+  Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
+  Int_t QualityBin(Double_t purity, Int_t type) {
+    //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
+    //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
+    // 0.02 < purity_TAG < 0.2    --> quality_bin_TAG = 2
+    //  0.2 < purity_TAG < 0.6    --> quality_bin_TAG = 3
+    //  0.6 < purity_TAG < 1    --> quality_bin_TAG = 4
+    //        purity_PROBE < 0      --> quality_bin_PROBE = 0 (no track considered)
+    //    0 < purity_PROBE < 0.02   --> quality_bin_PROBE = 1 (bad purity)
+    // 0.02 < purity_PROBE < 0.2    --> quality_bin_PROBE = 2
+    //  0.2 < purity_PROBE < 0.6    --> quality_bin_PROBE = 3
+    //  0.6 < purity_PROBE < 1    --> quality_bin_PROBE = 4
+    
+    if(type == 0) { //TAG
+      if(purity < 0)     return 0;
+      if(purity < 0.02)  return 1;
+      if(purity < 0.2)   return 2;
+      if(purity < 0.6)   return 3;
+      return 4;
+    }
+    else { //PROBE
+      if(purity < 0)     return 0;
+      if(purity < 0.02)  return 1;
+      if(purity < 0.2)   return 2;
+      if(purity < 0.6)   return 3;
+      return 4;
+    }
+  };
+  
 public:
   //virtual Bool_t Init(PadmeAnalysisEvent* event);
   virtual Bool_t Init(PadmeAnalysisEvent* event,Bool_t fHistoMode,TString InputHistofile);

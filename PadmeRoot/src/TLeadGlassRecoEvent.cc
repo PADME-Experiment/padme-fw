@@ -19,7 +19,6 @@ void TLeadGlassRecoEvent::Clear()
   fLGStartIndexCell = 0;
   fLGTotalCharge = 0.;
   fLGTotalCharge_v2 = 0.;
-  fLGTotalChargeWPed = 0.;
   fLGTotalEnergy = 0.;
   fLGNPoTs = 0.;
   fLGBunchLength = 0.;

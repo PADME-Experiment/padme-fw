@@ -39,7 +39,6 @@ void LeadGlass2RecoRootIO::SaveEvent()
     ((TLeadGlass2RecoEvent*)fEvent)->SetStartIndexCell(fLGReco->GetStartIndexCell(1));
     ((TLeadGlass2RecoEvent*)fEvent)->SetTotalCharge(fLGReco->GetCharge(1));
     ((TLeadGlass2RecoEvent*)fEvent)->SetTotalChargeV2(fLGReco->GetChargeV2(1));
-    ((TLeadGlass2RecoEvent*)fEvent)->SetTotalChargeWPed(fLGReco->GetChargeWPed(1));
     ((TLeadGlass2RecoEvent*)fEvent)->SetTotalEnergy(fLGReco->GetEnergy(1));
     ((TLeadGlass2RecoEvent*)fEvent)->SetNPoTs(0);
     ((TLeadGlass2RecoEvent*)fEvent)->SetBunchLength(0.);

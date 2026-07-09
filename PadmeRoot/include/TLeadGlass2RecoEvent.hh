@@ -33,9 +33,6 @@ public:
   void SetTotalChargeV2(Double_t c) { fLGTotalCharge_v2= c; }
   Double_t GetTotalChargeV2(UChar_t lg) { return fLGTotalCharge_v2; }  
   
-  void SetTotalChargeWPed(Double_t c) { fLGTotalChargeWPed = c; }
-  Double_t GetTotalChargeWPed(UChar_t lg) { return fLGTotalChargeWPed; }
-
   void SetTotalEnergy(Double_t e) { fLGTotalEnergy = e; }
   Double_t GetTotalEnergy(UChar_t lg) { return fLGTotalEnergy; }
 
@@ -59,7 +56,6 @@ private:
 
   Double_t fLGTotalCharge;
   Double_t fLGTotalCharge_v2;
-  Double_t fLGTotalChargeWPed;
   Double_t fLGTotalEnergy;
   Double_t fLGNPoTs;
   Double_t fLGBunchLength;

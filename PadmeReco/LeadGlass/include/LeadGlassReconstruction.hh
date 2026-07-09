@@ -33,7 +33,6 @@ public:
   Int_t GetStartIndexCell(UChar_t leadglassID) { return fLGStartIndexCell[leadglassID];    }
   Double_t GetCharge(UChar_t leadglassID)      { return fLGCharge[leadglassID];    }
   Double_t GetChargeV2(UChar_t leadglassID)      { return fLGCharge_v2[leadglassID];    }
-  Double_t GetChargeWPed(UChar_t leadglassID)  { return fLGChargeWPed[leadglassID];    }
   Double_t GetEnergy(UChar_t leadglassID)      { return fLGEnergy[leadglassID];    }
   Double_t GetNPoTs()       { return fLGNPoTs;     }
   Double_t GetBunchLength() { return fBunchLength; }
@@ -73,7 +72,6 @@ private:
   Int_t fLGStartIndexCell[N_LEADGLASS]; // Index of signal start
   Double_t fLGCharge[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
   Double_t fLGCharge_v2[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd
-  Double_t fLGChargeWPed[N_LEADGLASS];   // Total charge between fSignalSamplesStart and fSignalSamplesEnd without Pedestal substraction
 
   // Calibration parameter to convert Total Charge to Total Energy
   Double_t fChargeToEnergy;

@@ -24,6 +24,7 @@
 #include "DetectorConstruction.hh"
 #include "MCTruthManager.hh"
 #include "TVector3.h"
+#include "TMath.h"
 #include "TLorentzVector.h"
 BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
  :fDetector(myDC)
@@ -198,6 +199,9 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
     fHistoManager->FillHisto(3,fPositron.t);
     fHistoManager->FillHisto(4,fPositron.t);
     fHistoManager->FillHisto(5,GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.)));
+
+    //fHistoManager->FillHisto(200,));
+
     // G4cout<<"ddd "<<GetGammaAngle(G4ThreeVector(fPositron.p.x(),fPositron.p.y(),fPositron.p.z()),G4ThreeVector(0.,0.,1.))<<G4endl;
     //    G4cout<<"Beam position "<<G4ThreeVector(fPositron.pos.x(),fPositron.pos.y(),fPositron.pos.z())<<G4endl;
     // Add primary vertex to event
@@ -297,11 +301,13 @@ void BeamGenerator::GeneratePrimaryPositron()
 //    G4ThreeVector spot_pos(G4RandGauss::shoot(bpar->GetBeamSpotX(),bpar->GetBeamSpotSpreadX()),
 //			   G4RandGauss::shoot(bpar->GetBeamSpotY(),bpar->GetBeamSpotSpreadY()),
 //			   bpar->GetBeamSpotZ());
-    G4ThreeVector spot_pos(G4RandGauss::shoot(beam_dir.x()/beam_dir.z()*(bpar->GetBeamSpotZ()-fPositron.pos.z()),bpar->GetBeamSpotSpreadX()),
-			   G4RandGauss::shoot(beam_dir.y()/beam_dir.z()*(bpar->GetBeamSpotZ()-fPositron.pos.z()),bpar->GetBeamSpotSpreadY()),
+    G4ThreeVector spot_pos(G4RandGauss::shoot(fPositron.pos.x()+beam_dir.x()/beam_dir.z()*(bpar->GetBeamSpotZ()-fPositron.pos.z()),bpar->GetBeamSpotSpreadX()),
+			   G4RandGauss::shoot(fPositron.pos.y()+beam_dir.y()/beam_dir.z()*(bpar->GetBeamSpotZ()-fPositron.pos.z()),bpar->GetBeamSpotSpreadY()),
 			   bpar->GetBeamSpotZ());
     part_dir = spot_pos-part_pos;
     part_dir *= (1./part_dir.mag());
+    //std::cout <<"aaaaaa "<<part_dir.x()<<" "<<TMath::Sin(TMath::ATan(part_dir.x()/part_dir.z()))<<" "<< part_dir.y()<<" "<<TMath::Sin(TMath::ATan(part_dir.y()/part_dir.z()))<< std::endl;
+    //std::cout <<"aaaaaa "<<spot_pos.x()<<" "<<part_dir.x()/part_dir.z()<<" "<<spot_pos.y()<<" "<<part_dir.y()/part_dir.z()<< std::endl;
 
   } else {
 

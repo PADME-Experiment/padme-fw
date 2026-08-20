@@ -37,7 +37,7 @@ void MMDigitizer::InitializeAmplificationFluctuation(){
         
         // Initialize function according to parameters fitted from real data
         // coming from may 2024 Test Beam at LNF 
-        ampl_dist = new TF1("AmplificationFluctuation", "landau", 1, 2600*300);  // [0, 2500] Charge in ADC Counts
+        ampl_dist = new TF1("AmplificationFluctuation", "landau", 1, 2500*300);  // [0, 2500] Charge in ADC Counts
         ampl_dist->SetParameter(0, 0.0134);
         ampl_dist->SetParameter(1, 10000.);
         ampl_dist->SetParameter(2, 800.);

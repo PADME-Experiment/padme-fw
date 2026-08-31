@@ -6,7 +6,7 @@
 //   - added digis to output structure
 //
 // --------------------------------------------------------------
-
+ 
 #include "ECalRootIO.hh"
 
 #include <sstream>

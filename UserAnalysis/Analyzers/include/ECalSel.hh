@@ -157,6 +157,8 @@ private:
   double fSafeEnergyFactor; // safety factor allowing loosening of the min/max energy cuts used. If set to 1 -> default cuts are used
   double fSafeSpaceMargin;// mm, safety margin used for the radius min cut    
   
+  static const int fNprocessAvailableTwoClu = 9;
+  TString fprocessIDsTwoClu[fNprocessAvailableTwoClu] = {"eIoni", "eBrem", "annihil", "Bhabha","Babayaga", "BabayagaGG", "OneNoVtx", "NoVtx", "Mixed"};
 
   int fNThetaBins;
   double fThetaWid;

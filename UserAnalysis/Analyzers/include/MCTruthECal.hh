@@ -27,14 +27,11 @@ public:
   Bool_t TagAndProbeFromVertex();
 
   
-  Int_t GetVtxFromCluID(Int_t CluId);//{
-  //std::vector<Int_t> GetCluFromVtxID(Int_t VtxId);//{//controllare se esiste
-  //Int_t* GetCluPcleCorr(Int_t VtxId);
-  std::pair<Int_t,Int_t> GetCluPcleCorr(Int_t VtxId);
-  //std::map<Int_t, Int_t*> GetCluPcleCorr_all();
-  std::map<Int_t, std::pair<Int_t,Int_t>> GetCluPcleCorr_all();;
+  Int_t GetVtxFromCluID(Int_t CluId);//{ //returns a sigle vertex associated to a cluster
+  std::vector<Int_t> GetPcleFromCluID(Int_t CluId);//{  //returns the list of particles associated to a cluster (numerated following the vertex->GetNParticleOut() order)
+  std::vector<Int_t> GetClusFromVtx(Int_t VtxId); //returns the list of clusters associated to a vertex
+  Int_t GetCluFromPcle(Int_t VtxId, Int_t PcleId); //returns the cluster associated to a vertex and a particle out from that vertex
 
-  //void GetCluPcleCorr(Int_t VtxId, Int_t &Val1, Int_t &Val2);
 private:
   static MCTruthECal* fInstance; 
   Bool_t InitHistos();
@@ -46,10 +43,9 @@ private:
   utl::ConfigParser* fCfgParser;
   HistoSvc* fHS;
   TMCVertex* mcVtx;
-  std::map<Int_t, Int_t> CluVtxCorr;
-  std::map<Int_t, std::vector<Int_t>> VtxCluCorr;
-  //std::map<Int_t, Int_t*> VtxPcleCluCorr;
-  std::map<Int_t, std::pair<Int_t,Int_t>> VtxPcleCluCorr;
+  std::map<Int_t, Int_t> CluVtxCorr; //cluster-vertex couple
+  std::map<Int_t, std::vector<Int_t>> CluPcleCorr; //cluster-list of particles candidates (particle out from the vertex) couple
+  std::map<Int_t, std::vector<Int_t>> VtxCluCorr; //vertex-list of clusters associated to the vertex
 
   Double_t fXMin;
   Double_t fXMax;

@@ -48,4 +48,5 @@ bin/
 /home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/CalibMonitorOld/*
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/OldCalibration/*
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/logs_
+/home/mancinima/BeamMonitorRun4/padme-fw/*/logs_*
+/home/mancinima/BeamMonitorRun4/padme-fw/*/work_*

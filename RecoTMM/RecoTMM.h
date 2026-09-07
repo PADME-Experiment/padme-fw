@@ -116,7 +116,7 @@ public :
    TBranch         *b_max_q;   //!
    TBranch         *b_t_max_q;   //!
   
-   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="Monitor_TMM.root");   
+   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="RecoTMM.root");   
    virtual ~RecoTMM();
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);

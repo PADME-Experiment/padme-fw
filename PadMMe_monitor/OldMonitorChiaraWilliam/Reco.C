@@ -487,12 +487,10 @@ void Reco::Loop(int RunID, int DetRunID)
       //h_sigmaC_vs_time->SetBinContent(currentBlock+1,sigmaC);
       
       //delete beamFit;
-    
 
       h_beam_block_PosCharge_Y->Reset();
       h_beam_block_PosCharge_X->Reset();
       
-            
       h_beamX_block->Reset();
       h_beamY_block->Reset();
       h_beam_block_2D->Reset();

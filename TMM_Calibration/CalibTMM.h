@@ -124,7 +124,7 @@ public :
    TBranch         *b_max_q;   //!
    TBranch         *b_t_max_q;   //!
   
-   CalibTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="Monitor_TMM.root");   
+   CalibTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="CalibrationTMM.root");   
    virtual ~CalibTMM();
    // virtual Int_t    Cut(Long64_t entry);
    virtual Int_t    GetEntry(Long64_t entry);
@@ -306,7 +306,6 @@ CalibTMM::CalibTMM(TObjArray *inputFileNameList,
                  int maxEvents,
                  TString outputFileName) :
    fTree(0),
-   // fCurrent(-1),
    fOwnChain(kFALSE),
    RunID(RunID),
    DetRunID(DetRunID),

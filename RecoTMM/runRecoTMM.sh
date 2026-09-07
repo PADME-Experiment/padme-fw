@@ -12,11 +12,12 @@ DetRunID="$2"
 MaxEvents="${3:-0}"
 NevtBlock="${4:-10000}"
 
-CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM"
-FileList="${CalibrationPath}/TMMFileList/run${PadmeRunID}.list"
-OutputDir="${CalibrationPath}/outputTMM"
+RecoPath="/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM"
+FileList="${RecoPath}/TMMFileList/run${PadmeRunID}.list"
+OutputDir="${RecoPath}/outputTMM"
 # OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
-OutputFile="${OutputDir}/VOIGTtest.root"
+OutputFile="${OutputDir}/Run680NoTarget_test.root"
+# OutputFile="${OutputDir}/TMMVoigtReco_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

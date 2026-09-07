@@ -47,17 +47,17 @@ jobs.txt
 *.F
 
 # directory with trash (Marco)
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/OldCalibration/*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/logs_*/*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/work_*/*
+RecoTMM/OldCalibration/*
+RecoTMM/CalibMonitorOld/*
+RecoTMM/logs_*/*
+RecoTMM/work_*/*
 
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/OldCalibration/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/logs_*/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/work_*/*
+TMM_Calibration/OldCalibration/*
+TMM_Calibration/CalibMonitorOld/*
+TMM_Calibration/logs_*/*
+TMM_Calibration/work_*/*
 
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/OldCalibration/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/logs_*/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/work_*/*
+TMM_Monitor/OldCalibration/*
+TMM_Monitor/CalibMonitorOld/*
+TMM_Monitor/logs_*/*
+TMM_Monitor/work_*/*

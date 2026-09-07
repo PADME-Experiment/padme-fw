@@ -33,6 +33,9 @@ bin/
 *.jpg
 *.gif
 
+jobs.txt
+
+
 # Build products
 *.o
 *.so
@@ -46,18 +49,15 @@ bin/
 # directory with trash (Marco)
 /home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/OldCalibration/*
 /home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/logs_*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/work_*
-/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/jobs.txt
+/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/logs_*/*
+/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM/work_*/*
 
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/OldCalibration/*
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/logs_*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/work_*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/jobs.txt
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/logs_*/*
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/work_*/*
 
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/OldCalibration/*
 /home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/CalibMonitorOld/*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/logs_*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/work_*
-/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/jobs.txt
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/logs_*/*
+/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Monitor/work_*/*

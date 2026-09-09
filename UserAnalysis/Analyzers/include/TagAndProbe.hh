@@ -65,6 +65,8 @@ private:
   MMFindBestTrack* fMMFindBestTrack;
   NPoTAnalysis* fNPoTAnalysis;
 
+  Double_t PFuncAtECal(Double_t x, Double_t y, Double_t *p);
+  Int_t ChargeFinder(Double_t x, Double_t y, Double_t E);
   Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
   Int_t QualityBin(Double_t purity, Int_t type) {
     //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
@@ -186,6 +188,13 @@ private:
   double spacing = 5;
   Int_t fNSlicesE;
   HistoSvc* fhSvcVal;   
+
+  //array of parameters for B=100G pid
+  Double_t par_ele_B100G[12] = {311.339, 22.8641, -1.38227, -399.42, 76.8035, 8.07501, 42.0509, -24.3585, -15.0576, 101.51, -39.3708, 8.6695};
+  Double_t par_ele_err_B100G[12] = {0.940137, 1.19608, 0.911382, 5.51391, 7.02906, 5.80897, 10.0573, 13.0114, 11.0776, 5.76637, 7.59705, 6.45178};
+  Double_t par_pos_B100G[12] = {287.734, -13.3566, -2.21919, -267.268, -112.543, 12.7678, -183.679, 62.481, -23.168, 221.518, 28.9116, 13.222};
+  Double_t par_pos_err_B100G[12] = {3.24053, 4.13089, 3.21182, 19.1165, 24.4124, 20.5565, 35.0005, 45.3913, 39.2735, 20.104, 26.5749, 22.8867};
+  
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

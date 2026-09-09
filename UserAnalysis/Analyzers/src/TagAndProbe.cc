@@ -13,6 +13,8 @@
 #include "TLorentzVector.h"
 #include <iostream>
 
+#define BFIELD true
+
 TagAndProbe* TagAndProbe::fInstance = 0;
 TagAndProbe* TagAndProbe::GetInstance()
 {
@@ -109,7 +111,7 @@ Bool_t TagAndProbe::InitHistos()
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_TAG"), 50,0,1,600,-300,300);
 
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_TAG"), 200,-5,5, 600,-300,300);
-  //fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), 50,0,1,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), 50,0,1,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_TAG"), 50,0,1,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_TAG"), 50,0,1,600,-300,300);
   
@@ -148,6 +150,9 @@ Bool_t TagAndProbe::InitHistos()
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_QualityvsDE_TAG_PROBE"),600,-300,300,25,-0.5,24.5);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_QualityNewvsDE_PROBE"),600,-300,300,2,-0.5,1.5);
 
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CluPos_X_vs_Y_HIGH_Purity_TAG"),600,-300,300,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_CluPos_X_vs_Y_HIGH_Purity_PROBE"),600,-300,300,600,-300,300);
+  
   fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQTAG",400, 0, 400, 600,-300, 300); // da mettere quello in phi
   fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEVsE_BESTQPROBE",400, 0, 400, 600,-300, 300); // da mettere quello in phi
   
@@ -160,7 +165,15 @@ Bool_t TagAndProbe::InitHistos()
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_TAG"),600,-300,300,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZ-dZEcalvsDE_PROBE"),600,-300,300,600,-300,300);
   fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_dZTAGvsdZPROBE"),600,-300,300,600,-300,300);
-  
+
+
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DE_ele_vs_DE_pos_TAG",600,-300,300,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEexp_ele_vs_DEexp_pos_TAG",600,-300,300,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_pos_TAG",400,0,400,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_ele_TAG",400,0,400,600,-300,300);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_P_vs_R_ELE_TAG"),400,-0.5,399.5,350,-0.5,349.5);
+  fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_P_vs_R_POS_TAG"),400,-0.5,399.5,350,-0.5,349.5);
+
   
   for(int iSlice = 0; iSlice < fNSlicesE; iSlice++) {
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice),600, -TMath::Pi(), TMath::Pi(), 600,-300, 300);
@@ -185,6 +198,39 @@ Double_t TagAndProbe::PurityFunc(Double_t x, Double_t y, Double_t *p) {
   return p[0]*sigX*sigY/(p[0]*sigX*sigY + p[1]*bkgX*bkgY);
 }
 
+Double_t TagAndProbe::PFuncAtECal(Double_t x, Double_t y, Double_t *p) {
+  double r = TMath::Sqrt(x*x + y*y);
+  double phi = TMath::ATan2(y,x);
+  double cosphi = TMath::Cos(phi);
+  double sinphi = TMath::Sin(phi);
+
+  double A0 = p[0];
+  double A1 = p[1]*cosphi + p[2]*sinphi;
+  double A2 = (r/400.)*(p[3]+p[4]*cosphi);
+  double A3 = (r/400.)*(r/400.)*(p[6]+p[7]*cosphi+p[8]*sinphi);
+  double A4 = (r/400.)*(r/400.)*(r/400.)*(p[9]+p[10]*cosphi+p[11]*sinphi);
+
+  return A0+A1+A2+A3+A4;
+}
+
+Int_t TagAndProbe::ChargeFinder(Double_t x, Double_t y, Double_t E) {
+  Double_t me = 0.511; //MeV
+  Double_t p_exp_ele=0;
+  Double_t p_exp_pos=0;
+  if(fabs(GeneralInfo::GetInstance()->GetBField()-100.)<1) {
+    p_exp_ele = PFuncAtECal(x,y,par_ele_B100G);
+    p_exp_pos = PFuncAtECal(x,y,par_pos_B100G);
+  }
+  Double_t E_exp_ele = TMath::Sqrt(p_exp_ele*p_exp_ele + me*me);
+  Double_t E_exp_pos = TMath::Sqrt(p_exp_pos*p_exp_pos + me*me);
+
+  int charge=0;
+  if(fabs(E_exp_ele - E) < fabs(E_exp_pos - E)) charge = -1;
+  else                                          charge = 1;
+
+  return charge;
+			
+}
 
 Int_t TagAndProbe::TagAndProbeSelection(){
   // loop over events and fill the struct with the info of interest for the tag and probe selection
@@ -234,16 +280,20 @@ Int_t TagAndProbe::TagAndProbeSelection(){
     double PhiExpProbe = TMath::ATan2(Yexph2, Xexph2);
 
     //Selection cuts for the tag cluster (h1) --> Radious, Minimum amount of hits
+    if(!BFIELD){
     if (cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMin())
       continue; // cluster should be within the radius range of the 2gamma cluster pair
     if (cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMax())
       continue; // cluster should be within the radius range of the 2gamma cluster pair
+    }
+
     if (tempClu[0]->GetNHitsInClus() < 3)
       continue;
-    
-    if(fGeneralInfo->GetBeamEnergy()-pg < fGeneralInfo->GetEnergyMin() || fGeneralInfo->GetBeamEnergy()-pg > fGeneralInfo->GetEnergyMax())
-      continue; // energy of the probe cluster should be within the energy range of the 2gamma cluster pair
-    
+
+    if(!BFIELD){
+      if(fGeneralInfo->GetBeamEnergy()-pg < fGeneralInfo->GetEnergyMin() || fGeneralInfo->GetBeamEnergy()-pg > fGeneralInfo->GetEnergyMax())
+	continue; // energy of the probe cluster should be within the energy range of the 2gamma cluster pair
+    }
 
     Int_t iSlice = (Int_t)(fGeneralInfo->GetBeamEnergy() - pg - fGeneralInfo->GetEnergyMin()) / spacing;
 
@@ -252,6 +302,24 @@ Int_t TagAndProbe::TagAndProbeSelection(){
         //fhSvcVal->FillHisto2List("ECalSel", Form("ECal_TP_DEVsE_noSel"), pg, cluEnergy[0] - pg, 1.);
     fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEVsE_NOcut_tag", fGeneralInfo->GetBeamEnergy() - pg, cluEnergy[0] - pg, 1.); // da mettere quello in phi
     fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DEvsPhiExp_tag_slice_%i", iSlice), PhiExpProbe, cluEnergy[0] - pg, 1.);
+
+    //MAGNETIC FIELD STUFF
+    Double_t p_exp_ele=0;
+    Double_t p_exp_pos=0;
+    Double_t me = 0.511; //MeV
+    if(fabs(GeneralInfo::GetInstance()->GetBField()-100.)<1) {
+      p_exp_ele = PFuncAtECal(cluPos[0].X(),cluPos[0].Y(),par_ele_B100G);
+      p_exp_pos = PFuncAtECal(cluPos[0].X(),cluPos[0].Y(),par_pos_B100G);
+    }
+    Double_t E_exp_ele = TMath::Sqrt(p_exp_ele*p_exp_ele + me*me);
+    Double_t E_exp_pos = TMath::Sqrt(p_exp_pos*p_exp_pos + me*me);
+    fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DE_ele_vs_DE_pos_TAG",E_exp_pos - pg, E_exp_ele - pg, 1.);
+    fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEexp_ele_vs_DEexp_pos_TAG",E_exp_pos - cluEnergy[0], E_exp_ele - cluEnergy[0], 1.);
+    fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_ele_TAG",cluEnergy[0], E_exp_ele - cluEnergy[0], 1.);
+    fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_pos_TAG",cluEnergy[0], E_exp_pos - cluEnergy[0], 1.);
+    
+    
+
     int quad = -1;
     if (cluPos[0].X() < 0 && cluPos[0].Y() < 0) quad = 0;
     else if (cluPos[0].X() < 0 && cluPos[0].Y() > 0) quad = 1;
@@ -314,7 +382,7 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_dRvsdV_fromlvl0_lvl1"),dV,dR);
 
 	  if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDV_4hit_lvl1_TAG"), dV, dR, 1.);
-	  //if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), track->pchi2, dR, 1.);
+	  if(track->nhit == 4) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), track->pchi2, dR, 1.);
 	  if(track->nhit == 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_TAG"), track->pchi2, dR, 1.);
 	  if(track->nhit > 5) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_TAG"), track->pchi2, dR, 1.);
 	  
@@ -356,7 +424,12 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 	}
 
 	if(purity > purity_TAG) purity_TAG = purity;
-
+	if(purity > 0.8) {
+	    fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_CluPos_X_vs_Y_HIGH_Purity_TAG"),cluPos[0].X(),cluPos[0].Y());
+	    int charge = ChargeFinder(cluPos[0].X(),cluPos[0].Y(),cluEnergy[0]);
+	    if(charge == -1)  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_P_vs_R_ELE_TAG"),TMath::Sqrt(cluPos[0].X()*cluPos[0].X()+cluPos[0].Y()*cluPos[0].Y()),cluEnergy[0]);
+	    else              fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_P_vs_R_POS_TAG"),TMath::Sqrt(cluPos[0].X()*cluPos[0].X()+cluPos[0].Y()*cluPos[0].Y()),cluEnergy[0]);
+	}
 	
 	fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_DRvsDE_lvl%d_TAG",track->level), cluEnergy[0] - pg, dR, 1.);
 
@@ -435,6 +508,7 @@ Int_t TagAndProbe::TagAndProbeSelection(){
 	}
 
 	if(purity > purity_PROBE) purity_PROBE = purity;
+	if(purity > 0.8) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_CluPos_X_vs_Y_HIGH_Purity_PROBE"),ExpPosProbe.X(),ExpPosProbe.Y());
 	
 	nTracksInQuadOther++;
 

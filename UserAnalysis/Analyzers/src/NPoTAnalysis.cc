@@ -102,7 +102,8 @@ Bool_t NPoTAnalysis::Process(){
 
   if(fEvent->LeadGlassRecoEvent!=0){
     fNPoTLG   =  402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/fGeneralInfo->GetBeamEnergy();
-    fNPoTLGCorr = 402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/(fGeneralInfo->GetBeamEnergy()*(fGeneralInfo->GetLGCorr()/0.922)); //DA VALUTARE
+    if(fGeneralInfo->GetLGCorr()>0) fNPoTLGCorr = 402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/(fGeneralInfo->GetBeamEnergy()*(fGeneralInfo->GetLGCorr()/0.922)); //DA VALUTARE
+    else fNPoTLGCorr = 402.5*fEvent->LeadGlassRecoEvent->GetNPoTs()/(fGeneralInfo->GetBeamEnergy()*(1./0.922)); //DA VALUTARE
     fNPoTBL   = fEvent->LeadGlassRecoEvent->GetBunchLength();
     fLGCharge = fEvent->LeadGlassRecoEvent->GetTotalCharge();
     fLGPed    = fEvent->LeadGlassRecoEvent->GetPedestal();

@@ -90,7 +90,9 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","ProcessID",7,-0.5,6.5);	
   fHS->BookHistoList("MCTruthECal","dRCluVtx",610,0.,305.); //TMath::Sqrt(((fXMax+fXMin)*(fXMax+fXMin))+((fYMax+fYMin)*(fYMax+fYMin))));
   fHS->BookHistoList("MCTruthECal","dXCluVtx",600,-2.*fXMax,2.*fXMax);
+  fHS->BookHisto2List("MCTruthECal","dXvsXCluVtx",600, -300, 300, 600,-2.*fXMax,2.*fXMax);
   fHS->BookHistoList("MCTruthECal","dYCluVtx",600,-2.*fYMax,2.*fYMax);
+  fHS->BookHisto2List("MCTruthECal","dYvsYCluVtx",600, -300, 300, 600,-2.*fYMax,2.*fYMax);
   fHS->BookHisto2List("MCTruthECal","dXvsPxovPzCluVtx",600,-3,3, 600,-2.*fYMax,2.*fYMax);
   fHS->BookHisto2List("MCTruthECal","dYvsPyovPzCluVtx",600,-3,3, 600,-2.*fYMax,2.*fYMax);
   fHS->BookHistoList("MCTruthECal","EPcle",100,0,400);
@@ -120,6 +122,8 @@ Bool_t MCTruthECal::InitHistos(){
   fHS->BookHistoList("MCTruthECal","EPcleAss_eBrem",100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcle_annihil",100,0,400);
   fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_annihil",300,-3.14, 3.14, 100,0,400);
+  fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_Babayaga",300,-3.14, 3.14, 100,0,400);
+  fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_BabayagaGG",300,-3.14, 3.14, 100,0,400);
   fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_eBrem",300,-3.14, 3.14, 100,0,400);
   fHS->BookHisto2List("MCTruthECal","EPcleVsTheta_eIoni",300,-3.14, 3.14, 100,0,400);
   fHS->BookHistoList("MCTruthECal","EPcleAss_annihil",100,0,400);
@@ -222,9 +226,15 @@ Bool_t MCTruthECal::Process(){
 
 
 Bool_t MCTruthECal::CorrelateVtxClu(){
-  VtxCluCorr.clear(); //Vtx-Clu 1-N correspondence
-  CluVtxCorr.clear(); //Cluster-Vtx 1-1 correspondence
-  VtxPcleCluCorr.clear();
+  CluVtxCorr.clear(); //cluster-vertex couple 1-1. correspondence
+  VtxCluCorr.clear(); //vertex-list of clusters associated to the vertex
+  CluPcleCorr.clear();  //cluster-list of particles candidates (particle out from the vertex) couple
+  //REMOVE LATER
+  // std::map<Int_t, Int_t> CluVtxCorr; //cluster-vertex couple
+  // std::map<Int_t, std::vector<Int_t>> CluPcleCorr; //cluster-list of particles candidates (particle out from the vertex) couple
+  // std::map<Int_t, std::vector<Int_t>> VtxCluCorr; 
+
+  
   
   TVector3 cluPos, VtxPos;
 
@@ -237,22 +247,17 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
   double cVal = 30.; //cm/ns
 
   double TOFoffset = 13.6; //ns --> TOF offset moving towards the calorimeter //just assigned default value, evaluated precisely later in the code
-  const double DTlow     = -0.00;//4.0; //from fit on DT
+  const double DTlow     = -2.00;//4.0; //from fit on DT
   const double DTup      = 7.27;//6.0; //from fit on DT
   const double muX       =  1.442; //0.868;//1.389; //from fit on DX
   const double muY       = -0.0731;//-0.100; //from fit on DY
   const double sigmaX    = 10.57;//7.232; //from fit on DX
   const double sigmaY    = 10.5;//7.632; //from fit on DY
 
-  std::vector<std::vector<Int_t>> VtxVector;
-  // Int_t CluEmpty[2]={-1,1};
 
   //Loop on vertex
   for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
-      std::vector<Int_t> CluforiV;
-      VtxVector.push_back(CluforiV);
-      // VtxPcleCluCorr.push_back(CluEmpty);
-
+      
       Int_t CluPcleOut[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1}; //2 is the maximum number of plces out from a vertex, initialized to -1 so that when a pcle is associated with a cluster the value becomes 1
       Int_t CluPcleOutFlag[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1};  //2 is the maximum number of plces out from a vertex, initialized to -1 so that when a pcle is associated with a cluster the value becomes 1
       Int_t Extrapolation[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1}; 
@@ -309,8 +314,8 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           sumBabayaga+=pcle;
           TVector3 VtxPosAtCalo;
           VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
-          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - fGeneralInfo->GetDisplacementXECal());
-          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())) - fGeneralInfo->GetDisplacementYECal());
+          VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
+          VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
        
           int icellX = VtxPosAtCalo.X()/cellSize + ncells/2;
           int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
@@ -390,7 +395,9 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
                     Double_t DeltaY = VtxPosAtCalo.Y()-cluPos.Y();
 
                     fHS->FillHistoList("MCTruthECal","dXCluVtx",DeltaX,1.);
+                    fHS->FillHisto2List("MCTruthECal","dXvsXCluVtx",VtxPosAtCalo.X(),DeltaX,1.);
                     fHS->FillHistoList("MCTruthECal","dYCluVtx",DeltaY,1.);
+                    fHS->FillHisto2List("MCTruthECal","dYvsYCluVtx",VtxPosAtCalo.Y(),DeltaY,1.);
                     fHS->FillHistoList("MCTruthECal","dRCluVtx",DeltaR,1.);
                     fHS->FillHisto2List("MCTruthECal","dXvsPxovPzCluVtx",pcleMom.X()/pcleMom.Z() ,DeltaX,1.);
                     fHS->FillHisto2List("MCTruthECal","dYvsPyovPzCluVtx", pcleMom.Y()/pcleMom.Z(),DeltaY,1.);
@@ -410,7 +417,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
                     {
                       NCluVtx +=1;
 
-                      if(ChiValue<tempChiPos){ //prendo il primo che soddisfa il Chi2 nel range
+                      if(ChiValue<tempChiPos){ //prendo il miglior Chi2 nel range
                         CluPcleOutFlag[iO]= 1; 
                         cluIdx = h1;
                         tempChiPos = ChiValue;
@@ -421,13 +428,27 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
                     } //chiude if Chi2
               } //chiude DT             
             } //chiude for clu
-          
-            //VtxPcleCluCorr[iV] = CluPcleOut;
+          // std::map<Int_t, Int_t> CluVtxCorr; //cluster-vertex couple
+          // std::map<Int_t, std::vector<Int_t>> CluPcleCorr; //cluster-list of particles candidates (particle out from the vertex) couple
+          // std::map<Int_t, std::vector<Int_t>> VtxCluCorr; 
+
+            //VtxCluCorr[iV] = CluPcleOut;
             if(CluPcleOutFlag[iO]==1) {
-               CluVtxCorr.insert({cluIdx, iV});
-              //VtxVector.at(iV).push_back(h1);
-              
-              VtxVector.at(iV).push_back(cluIdx);
+               CluVtxCorr.insert({cluIdx, iV}); //correct 
+               auto it = CluPcleCorr.find(cluIdx);
+               if(it != CluPcleCorr.end()) {
+                  it->second.push_back(iO);
+               }
+               else {
+                  CluPcleCorr.insert({cluIdx, std::vector<Int_t>{iO}});
+               }
+              auto it2 = VtxCluCorr.find(iV);
+               if(it2 != VtxCluCorr.end()) {
+                  it2->second.push_back(cluIdx);
+               }
+               else {
+                  VtxCluCorr.insert({iV, std::vector<Int_t>{cluIdx}});
+               }
               //flagga il cluster associato
               CluPcleOut[iO]= cluIdx; //salva indice cluster degli associati
               clu = fECal_clEvent->Element((int)cluIdx);
@@ -499,27 +520,23 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
 
               }
           }
-           //VtxPcleCluCorr.insert({iV, CluPcleOut});
-          VtxPcleCluCorr.insert({iV, make_pair(CluPcleOut[0], CluPcleOut[1])});
+           //VtxCluCorr.insert({iV, CluPcleOut});
+          // std::vector<Int_t> CluVtxVector;
+          //  for(int iO=0; iO<NPcles; iO++){
+          //   if(CluPcleOutFlag[iO]==1 && std::find(CluVtxVector.begin(), CluVtxVector.end(),CluPcleOut[iO])==CluVtxVector.end()){
+          //     CluVtxVector.push_back(CluPcleOut[iO]);
+          //     }
+          //  }
+          //  std::pair<Int_t,Int_t> CluPclePair;
+          //  if(CluVtxVector.size()>=2) CluPclePair= std::make_pair(CluVtxVector[0], CluVtxVector[1]);
+          //  else if(CluVtxVector.size()==1) CluPclePair= std::make_pair(CluVtxVector[0], -1);
+          //  else CluPclePair= std::make_pair(-1, -1);           
+
+          // VtxCluCorr.insert({iV, CluPclePair});
+
+          // //  VtxCluCorr.insert({iV, make_pair(CluPcleOut[0], CluPcleOut[1])});
       } //chiude Vtx
       
-      // VtxCluCorr[iV]= VtxVector.at(iV);
-// for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
-//   mcVtx = fEvent->MCTruthEvent->Vertex(iV);
-//   TVector3 VtxPosAtCalo;
-//   VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z()-72.8); //removed 6.5X0 faccia calorimetro
-  
-//   //Double_t Rpcle = TMath::Sqrt((VtxPosAtCalo.X()*VtxPosAtCalo.X())+(VtxPosAtCalo.Y()*VtxPosAtCalo.Y()));
-
-//   TOFoffset = (fGeneralInfo->GetCOG().Z()-72.8)/(10*cVal); // ns -->c is in cm/ns, R is in mm and 
-
-//   std::cout<<"Vertex id:"<<iV<<" Time: "<<mcVtx->GetTime()+TOFoffset<<" Pos:"<<mcVtx->GetPosition().X()<<","<<mcVtx->GetPosition().Y()<<","<<mcVtx->GetPosition().Z()<<std::endl;
-// }
-
-//  for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
-//    clu = fECal_clEvent->Element((int)h1);
-//       std::cout<<"Clu id: "<<h1<<" Vtx ass"<<GetVtxFromCluID(h1)<<" Time: "<<clu->GetTime()<<std::endl;
-//     }
 
   return true;
 
@@ -529,56 +546,56 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
 
 
 Int_t MCTruthECal::GetVtxFromCluID(Int_t CluId){
-    map<Int_t, Int_t>::iterator it;
-    it = CluVtxCorr.find(CluId);
-    if(it!= CluVtxCorr.end()){
-      return it->second;
-    }else{
-      return -1;
-    }
-
-
-    // return CluVtxCorr[CluId];
+  map<Int_t, Int_t>::iterator it;
+  it = CluVtxCorr.find(CluId);
+  if(it!= CluVtxCorr.end()){
+    return it->second;
+  }else{
+    return -1;
+  }  
+}
   
-  }
-  
-// std::vector<Int_t> MCTruthECal::GetCluFromVtxID(Int_t VtxId){
-//   if(VtxId< VtxCluCorr.size()) return VtxCluCorr[VtxId];
-//   }
-
-// Int_t* MCTruthECal::GetCluPcleCorr(Int_t VtxId){
-
-//     return VtxPcleCluCorr[VtxId];
-  
-// }
-
-std::pair<Int_t,Int_t> MCTruthECal::GetCluPcleCorr(Int_t VtxId){
-
-    std::map<Int_t, std::pair<Int_t,Int_t>>::iterator it;
-    it = VtxPcleCluCorr.find(VtxId);
-    if(it!= VtxPcleCluCorr.end()){
-      return it->second;
-    }else{
-      return {-1,-1};
-    }
-
-    return VtxPcleCluCorr[VtxId];
-  
+std::vector<Int_t> MCTruthECal::GetClusFromVtx(Int_t VtxId){
+  map<Int_t, std::vector<Int_t>>::iterator it;
+  it = VtxCluCorr.find(VtxId);
+  if(it!= VtxCluCorr.end()){
+    return it->second;
+  }else{
+    return {}; //returns empty vector if no clusters are associated with the vertex
+  }  
 }
 
+std::vector<Int_t> MCTruthECal::GetPcleFromCluID(Int_t CluId){
+map<Int_t, std::vector<Int_t>>::iterator it;
+    it = CluPcleCorr.find(CluId);
+    if(it!= CluPcleCorr.end()){
+      return it->second;
+    }else{
+      return {}; //returns empty vector if no particles are associated with the cluster
+    }  
+  }
 
-// std::map<Int_t, std::pair<Int_t,Int_t>> MCTruthECal::GetCluPcleCorr_all(){
-
-//     return VtxPcleCluCorr;
+Int_t MCTruthECal::GetCluFromPcle(Int_t VtxId, Int_t PcleId){
   
-// }
+  std::map<Int_t, std::vector<Int_t>>::iterator it;
+  it = VtxCluCorr.find(VtxId);
+  if(it!= VtxCluCorr.end()){
+    std::vector<Int_t> associatedClusters = it->second;
+    for(Int_t cluId : associatedClusters){
+      std::map<Int_t, std::vector<Int_t>>::iterator pcleIt;
+      pcleIt = CluPcleCorr.find(cluId);
+      if(pcleIt != CluPcleCorr.end()){
+        std::vector<Int_t> associatedParticles = pcleIt->second;
+        if(std::find(associatedParticles.begin(), associatedParticles.end(), PcleId) != associatedParticles.end()){
+          return cluId; //returns the cluster ID associated with the given vertex and particle
+        }
+      }
+    }
+  }
+  return -1; //returns -1 if no cluster is found for the given vertex and particle
 
-// void MCTruthECal::GetCluPcleCorr(Int_t VtxId, Int_t &Val1, Int_t &Val2){
-//     std::cout<<VtxId<<std::endl;
-//     Val1 = VtxPcleCluCorr[VtxId][0];
-//     Val2 = VtxPcleCluCorr[VtxId][1];
-  
-// }
+} //returns the cluster associated to a vertex and a particle out from that vertex
+
 
 
 

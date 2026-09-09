@@ -24,11 +24,17 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fGeneralInfo = GeneralInfo::GetInstance();
   fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fCfgParser = new utl::ConfigParser((const std::string)cfgFile.Data());
-  fApplyQualityCheck = true;
+  fApplyDataQuality = 1;
   if(fCfgParser->HasConfig("GENERAL", "DataQualityLevel")){
      fDataQualityLevel =TString(fCfgParser->GetSingleArg("GENERAL", "DataQualityLevel")).Atoi();
      } //handling del DataQualityLevel non implementato
-  // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
+
+  if(fCfgParser->HasConfig("GENERAL", "ApplyDataQuality")){
+     fApplyDataQuality = TString(fCfgParser->GetSingleArg("GENERAL", "ApplyDataQuality")).Atoi(); // deve poter leggere il config e sapere se e' in read mode o flag mode, se e' in flag mode deve leggere il file di testo coi periodi con problemi
+    } 
+     //handling del DataQualityLevel non implementato
+  
+  
   // e determina la flag per quell'evento in base al tempo  
   fEvent = event;
   fNRun = fGeneralInfo->GetRunNumberFromDB(); //30000 vale solo per il 2022
@@ -36,15 +42,6 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fHistoMode = fHistoModeVal;
   InputHistofile = InputHistofileVal;
   
-//   if(fHistoMode){
-//   TObjArray *tx = InputHistofile.Tokenize("/");
-//   InputHistofileName = ((TObjString *)(tx->At(tx->GetLast())))->String(); 
-
-//   TObjArray *txRun = InputHistofileName.Tokenize(".");
-//   fNRunString = ((TObjString *)(txRun->At(0)))->String()+"."+((TObjString *)(txRun->At(1)))->String(); 
-//   //fNRun = ((TObjString *)(txRun->At(0)))->String(); //OCCHIO
-  
-//  }
   // se e' readmode fa quello che c'e' sotto
   fSafety = 2000;
   fTimeBin = 5.; // sec
@@ -53,11 +50,15 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fNTimeBins = fSafety +((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBin; //check carefully this ratio because there are two long long int subtracted
   fNTimeBinsCoarse =1+fSafety*fTimeBin/fTimeBinCoarse + ((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBinCoarse; 
 
-  const int nObservables = 8;
-  TString obsNames[nObservables] = {"POT","ECalOverPOT","ECalHitOverPOT","POTBunchLength","LGPed","POTTarg", "TargXCharge", "TargYCharge"};
+  const int nObservables = 7;
+  TString obsNames[nObservables] = {"POT","ECalHitOverPOT","POTBunchLength","LGPed","POTTarg", "TargXCharge", "TargYCharge"};
+  double reject_above[nObservables] = {5000, 1.1, 300, 3712, 4000.,  4000., 4000.};
+  double reject_below[nObservables] = {1500, 0.95, 150, 3708, 0., 0., 0.}; 
   for (int i=0; i<nObservables; i++){
     observable obsn;
     obsn.name = obsNames[i].Data();
+    obsn.reject_above = reject_above[i];
+    obsn.reject_below = reject_below[i];
 
     obsn.valueSum = new Double_t[fNTimeBins];
     obsn.valueSquareSum = new Double_t[fNTimeBins];
@@ -149,13 +150,13 @@ Bool_t DataQuality::Process(){
         Value = fEvent->LeadGlassRecoEvent->GetPedestal();
 
       }else if((iter->name).CompareTo("POTTarg")==0){
-        Value = fEvent->TargetRecoBeam->getnPOT();
+        if(fEvent->TargetRecoBeam!=0) Value = fEvent->TargetRecoBeam->getnPOT();
 
       }else if((iter->name).CompareTo("TargXCharge")==0){
-        Value = fEvent->TargetRecoBeam->getXCharge();
+        if(fEvent->TargetRecoBeam!=0)  Value = fEvent->TargetRecoBeam->getXCharge();
 
       }else if((iter->name).CompareTo("TargYCharge")==0){
-        Value = fEvent->TargetRecoBeam->getYCharge();
+        if(fEvent->TargetRecoBeam!=0) Value = fEvent->TargetRecoBeam->getYCharge();
 
       }else{
       Value = 1;
@@ -188,8 +189,6 @@ Bool_t DataQuality::Process(){
 
 Bool_t DataQuality::Finalize(){
 
-  // return false;
-// 
 // 
 // qui i Double_t* e gli Int_t* devono essere scritti in uscita in forma di TGraph* (histoService gestisce il salvare i TGraph*) 
 // il nome del TGraph* deve dipendere dal run
@@ -205,7 +204,7 @@ if(fGeneralInfo->isMC()){
   std::cout<<"This run is MC, DataQuality checks do not apply"<<std::endl;
   return false;
 } 
-return true;
+//return true;
 fNRun = fGeneralInfo->GetRunNumberFromDB();
 if(!fHistoMode){
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
@@ -234,6 +233,8 @@ std::cout<<"Data Quality TH1D plots filled "<<std::endl;
 }
 
 if(fHistoMode && !fGeneralInfo->isMC()){
+  TString DQPath = TString(fCfgParser->GetSingleArg("GENERAL", "DQPath"));
+  // return false;
   TGraphErrors *gPoTratio = new TGraphErrors();
   gPoTratio->SetName("PoTRatio");
   TGraphErrors *gPoTLG = new TGraphErrors();
@@ -259,6 +260,12 @@ if(fHistoMode && !fGeneralInfo->isMC()){
   if(!fileIn) std::cout<<"File not existing"<<std::endl;
   std::cout<<"File to analyze for DataQuality: "<< InputHistofile.Data()<<std::endl;
   //retrive info from th1d and assign it to the obs struct
+  ofstream tobecut;
+  std::cout<<"fApplyDataQuality: "<<fApplyDataQuality<<std::endl;
+    if(!fApplyDataQuality){
+      std::cout<<"DataQuality is in flag mode, writing the bad periods to file: "<<Form("%s/tobecut_%d.txt",DQPath.Data(),fNRun)<<std::endl;
+      tobecut.open(Form("%s/tobecut_%d.txt",DQPath.Data(),fNRun));
+    }
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
     TH1D *hvalueSum = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSum_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
     TH1D *hvalueSquareSum = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSquareSum_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
@@ -310,14 +317,15 @@ if(fHistoMode && !fGeneralInfo->isMC()){
           obsplotCoarseSigma->SetPoint(NpointSigma, i*fTimeBinCoarse,sigmaVal);
           obsplotCoarseMean->SetPointError(NpointMean, 0.5* fTimeBin,sigmaVal);
     }
-        if((iter->name).CompareTo("ECalHitOverPOT")==0){
+        //if((iter->name).CompareTo("ECalHitOverPOT")!=0) continue;
           Int_t n3sigma = 0;
           Int_t n5sigma = 0;
           Int_t nbad = 0;
           TGraphErrors* obsplotMeanNoBeamDown = new TGraphErrors();
           std::cout<<obsplotMeanNoBeamDown->GetN()<<std::endl;
-          obsplotMeanNoBeamDown->SetName("obsplotMeanNoBeamDown");
+          obsplotMeanNoBeamDown->SetName("obsplotMeanNoBeamDown_"+iter->name);
           std::cout<<obsplotMean->GetN()<<std::endl;
+
           for(int iprm =0; iprm<obsplotMean->GetN(); iprm++){
              //std::cout<<iprm<< std::endl;
             
@@ -325,22 +333,27 @@ if(fHistoMode && !fGeneralInfo->isMC()){
             obsplotMean->GetPoint(iprm,xvalrm,yvalrm);
             errxrm= obsplotMean->GetErrorX(iprm);
             erryrm= obsplotMean->GetErrorY(iprm);
-            if(yvalrm < freject_below || yvalrm > freject_above){
-               std::cout<<"Removing yvalrm:"<<yvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
-               continue;}
+            if(yvalrm < iter->reject_below || yvalrm > iter->reject_above){
+              long long tStart = fGeneralInfo->GetRunStartTime() + (long long)xvalrm;
+              long long tStop  = tStart + (long long)fTimeBin;
+               //std::cout<<"Removing yvalrm:"<<yvalrm<<" xvalrm: "<<xvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
+              if(!fApplyDataQuality && tobecut.is_open()) tobecut<<fNRun<<"\t"<< iter->name<<"\t"<<(int) xvalrm/fTimeBin<<"\t"<<tStart<<"\t"<<tStop<<"\t"<<" -1"<<std::endl;
+              continue;}
             int Npointnobd= obsplotMeanNoBeamDown->GetN();
-            // std::cout<<iprm<<" "<<Npointnobd<<std::endl;
+
+            //std::cout<<iprm<<" "<<Npointnobd<<std::endl;
             //std::cout<<"N:"<<obsplotMeanNoBeamDown->GetN()<<" yvalrm: "<<yvalrm<< " xvalrm: "<<xvalrm <<" errY: "<<erryrm<<" errX: "<<errxrm<<std::endl;
             obsplotMeanNoBeamDown->SetPoint(Npointnobd,xvalrm, yvalrm);
             obsplotMeanNoBeamDown->SetPointError(Npointnobd,errxrm, erryrm);
             
           }
           obsplotMeanNoBeamDown->Fit(p0fit, "EMQ");
-          obsplotMeanNoBeamDown->SaveAs("prova.root");
+          obsplotMeanNoBeamDown->SaveAs(Form("checks/check_%s.root", (iter->name).Data()));
           Double_t p0Val = p0fit->GetParameter(0);
           Double_t p0sigma = p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
-          ofstream fitresults(Form("/data9Vd1/padme/dimeco/DataQuality/fitresults_%d.txt",fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
-          fitresults<<fNRunString.Data()<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
+          
+          ofstream fitresults(Form("%s/fitresults_%d.txt", DQPath.Data(),fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
+          fitresults<<fNRun<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<iter->name<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
           for(int ip =0; ip<obsplotMean->GetN(); ip++){
             double yval,xval;
             obsplotMean->GetPoint(ip,xval,yval);
@@ -349,10 +362,17 @@ if(fHistoMode && !fGeneralInfo->isMC()){
               n3sigma++;
             }else if(TMath::Abs(yval-p0Val)>3*pointSigma && TMath::Abs(yval-p0Val)<=5*pointSigma){
               n5sigma++;
-            }else nbad++;
+            }else{ 
+              nbad++;
+              long long tStart = fGeneralInfo->GetRunStartTime() + (long long)xval;
+              long long tStop  = tStart + (long long)fTimeBin;
+              //estendibile a X-Y del fascio misurata dai vari detector, il resto variano troppo
+              if(fApplyDataQuality && tobecut.is_open() && iter->name.Contains("ECalHitOverPOT")) tobecut<<fNRun<<"\t"<< iter->name<<"\t"<<(int) xval/fTimeBin<<"\t"<<tStart<<"\t"<<tStop<<"\t"<<pointSigma<<std::endl;
+            }
           }
           std::cout<<"N points: "<<obsplotMean->GetN()<<" N 3 sigma: "<<n3sigma<<" N 5 sigma: "<<n5sigma<<" N bad: "<<nbad<<std::endl;
-      }
+      
+
     obsplotMean->SetName(Form("gMean_%s", (iter->name).Data()));
     obsplotCoarseMean->SetName(Form("gMeanCoarse_%s", (iter->name).Data()));
     obsplotSigma->SetName(Form("gSigma_%s", (iter->name).Data()));

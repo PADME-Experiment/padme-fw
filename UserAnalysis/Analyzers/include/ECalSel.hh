@@ -61,7 +61,10 @@ struct ECalSelEvent{
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 
-
+struct BadTimeInterval {
+    long long tStart;
+    long long tStop;
+};
 
 class ECalSel : public TObject
 {
@@ -135,9 +138,9 @@ private:
   MCTruthECal* fMCTruthECal;
   NPoTAnalysis* fNPoTAnalysis;
   ETagAn* fETagAn;
-  bool isinTCUT(const std::vector<Point>& polygon, const Point& p);
   // general setup
   Bool_t fApplyCorrection;
+  Bool_t fApplyDataQuality;
   bool fFillLocalHistograms;
   bool fFillCalibHistograms;
   Bool_t fHistoMode;
@@ -145,6 +148,7 @@ private:
   TString InputHistofileName;
   TString fcfgPath;
   TString fNRun;
+  
   // general cuts
 
   double fTimeSafeMin; // ns, margin in time wrt to start of beam (should do that for end, too?)
@@ -153,6 +157,8 @@ private:
   double fSafeEnergyFactor; // safety factor allowing loosening of the min/max energy cuts used. If set to 1 -> default cuts are used
   double fSafeSpaceMargin;// mm, safety margin used for the radius min cut    
   
+  static const int fNprocessAvailableTwoClu = 9;
+  TString fprocessIDsTwoClu[fNprocessAvailableTwoClu] = {"eIoni", "eBrem", "annihil", "Bhabha","Babayaga", "BabayagaGG", "OneNoVtx", "NoVtx", "Mixed"};
 
   int fNThetaBins;
   double fThetaWid;
@@ -214,6 +220,8 @@ private:
   TGraphErrors* MCTrueDeno;
   TGraphErrors* DATATPEff; 
   TGraphErrors*  EffRatio; 
+
+  std::vector<BadTimeInterval> fBadIntervals;
 
 };
 

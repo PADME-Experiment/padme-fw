@@ -180,6 +180,7 @@ private:
   std::vector<TH2D*> TagSlicevsPhi;
   std::vector<TH2D*> ProbeSlicevsPhi;
   std::vector<TH2D*> DPhiSlicevsPhi;
+  std::vector<TH2D*> EProbeSlicevsE;
 
   TH2D *fhDTheta; 
   TH2D *fhDPhi;
@@ -188,7 +189,8 @@ private:
   double spacing = 5;
   Int_t fNSlicesE;
   HistoSvc* fhSvcVal;   
-
+  static const int fNprocessAvailableTwoClu = 7;
+  TString fprocessIDsTwoClu[fNprocessAvailableTwoClu] = {"eIoni", "eBrem", "annihil", "Bhabha","Babayaga", "BabayagaGG", "NoVtx"};
   //array of parameters for B=100G pid
   Double_t par_ele_B100G[12] = {311.339, 22.8641, -1.38227, -399.42, 76.8035, 8.07501, 42.0509, -24.3585, -15.0576, 101.51, -39.3708, 8.6695};
   Double_t par_ele_err_B100G[12] = {0.940137, 1.19608, 0.911382, 5.51391, 7.02906, 5.80897, 10.0573, 13.0114, 11.0776, 5.76637, 7.59705, 6.45178};

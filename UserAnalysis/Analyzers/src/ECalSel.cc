@@ -2812,8 +2812,8 @@ Bool_t ECalSel::Finalize()
 {
   fSigmaCut = 3;
   //return true;
-  if (fHistoMode)
-    TagProbeEff_macro();
+  //if (fHistoMode)
+    //TagProbeEff_macro();
   // if(fHistoMode) EvaluateResolutions_macro();
   return true;
 }

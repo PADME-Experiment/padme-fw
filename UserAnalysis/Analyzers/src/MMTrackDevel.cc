@@ -740,7 +740,7 @@ Bool_t MMTrackDevel::Process(){
 	  int Nhit_true_simple = (int) residuals_simple.size();
 	  double chi2_simple = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().chi2;
 	  
-	  fHS->FillHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_simplefit_Q%dV%s",quad,viewlabel.Data()),Nhit_true_simple,ROOT::Math::chisquared_cdf_c(chi2_simple, Nhit_true_simple-3),1.);
+	  //fHS->FillHisto2List("MMTrackDevel",Form("MM_pchi2_vs_Nhit_clu1_simplefit_Q%dV%s",quad,viewlabel.Data()),Nhit_true_simple,ROOT::Math::chisquared_cdf_c(chi2_simple, Nhit_true_simple-3),1.);
 
 	  TVector3 MMposAtIP = fMMClusteringInstance->GetMMCluster(itra,0,1)->GetTracklet().ExtrapolationAtZ(z_IP);//tempClu->GetPosition().Z());
 	  double dv_ip = MMposAtIP[1-view] - GeneralInfo::GetInstance()->GetTargetPos()[1-view];

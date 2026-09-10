@@ -217,7 +217,7 @@ Bool_t ECalCalib22::Finalize()
     std::cout << "This run is MC, Cosmics checks do not apply" << std::endl;
     return false;
   }
-  ChannelLandauFit();
+  //ChannelLandauFit();
 
   return true;
 }

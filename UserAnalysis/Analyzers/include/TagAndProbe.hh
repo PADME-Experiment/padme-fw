@@ -30,15 +30,20 @@ class TRecoVClusCollection;
 
 
 struct TagAndProbeEvent{
-  int indexECal[3]; // indices of the ecal clusters selected (could become a std vector)
-  double totalE;
-  double avgT;
-  double phi, theta;
-  TVector2 cog, xyclu[2]; // cog of the selected clusters
+  double cluEnergy[2];
+  double Eexp[2];
+  double cluTime[2];
+  double phiCM[2], thetaCM[2];
+  double Ebeam;
+  Int_t cluProcess[2];
+  TVector3 cog, targ, cluPos[2], cluPosExp; // cog of the selected clusters
   TLorentzVector labP[2]; // lab momenta
   TLorentzVector cmP[2]; // cm momenta
-  int TrackId[3]; // indices of the Track association [pointer to the association array] (could become a std vector)
-
+  Double_t purity[2][2]; // indices of the Track association [pointer to the association array] (could become a std vector)
+  TVector3 trackPosAtECal[2][2]; // position of the track at the ecal
+  TVector3 trackPosAtTarget[2][2]; // position of the track at the target
+  Double_t trackSlope[2][2]; // slope of the track
+  Double_t trackInter[2][2]; // intercept of the track
 };
 
 
@@ -161,7 +166,8 @@ private:
   double ecalEdge = (ncells/2+0.5)*cellSize; // 304.5mm                                                                                                                                                  
   const int nhole = 5; // 5x5 matrix is not instrumented                  
   bool fUseMM;
-  
+  TTree *ftree;
+  TagAndProbeEvent *tpEvent;
   TH1D *fCutFlow;
   TH2D *EofTag;
   TH2D *EofeIoni;

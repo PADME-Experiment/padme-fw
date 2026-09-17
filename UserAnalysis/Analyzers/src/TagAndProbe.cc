@@ -963,19 +963,18 @@ Int_t TagAndProbe::TagAndProbeSelection()
             //cose forma di fascio
             if(fabs(cluEnergy[0] - pg)<20) {
               if(purity_PROBE[vw] > 0.8 && purity_TAG[vw] > 0.8) {
-                TString viewlabel_TAG = GeneralInfo::GetInstance()->GetMMViewLabel(best_track_TAG[vw]->view);    
-                TString viewlabel_PROBE = GeneralInfo::GetInstance()->GetMMViewLabel(best_track_PROBE[vw]->view);    
-                TVector3 posAtTarget_TAG = best_track_TAG[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z());
-                TVector3 posAtTarget_PROBE = best_track_PROBE[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z());
-                fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_TAG_PROBE",viewlabel_TAG.Data(),viewlabel_TAG.Data()), cluPos[0][1 - best_track_TAG[vw]->view], posAtTarget_TAG[1-best_track_TAG[vw]->view]);
-                fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_TAG_PROBE",viewlabel_PROBE.Data(),viewlabel_PROBE.Data()), cluPos[1][1 - best_track_PROBE[vw]->view], posAtTarget_PROBE[1-best_track_PROBE[vw]->view]);
-                
-                double posAtTarget_MEAN = 0.5*(posAtTarget_TAG[1-best_track_TAG[vw]->view] + posAtTarget_PROBE[1-best_track_PROBE[vw]->view]);
-                fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_TAG_PROBE",viewlabel_PROBE.Data(),viewlabel_PROBE.Data()), cluPos[1][1 - best_track_PROBE[vw]->view], posAtTarget_MEAN);
-              }
-            }
-          }
-        }
+          TString viewlabel = GeneralInfo::GetInstance()->GetMMViewLabel(vw);    
+          TVector3 posAtTarget_TAG = best_track_TAG[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z());
+          TVector3 posAtTarget_PROBE = best_track_PROBE[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z());
+          fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_TAG_PROBE",viewlabel.Data(),viewlabel.Data()), cluPos[0][1 - best_track_TAG[vw]->view], posAtTarget_TAG[1-best_track_TAG[vw]->view]);
+          fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_TAG_PROBE",viewlabel.Data(),viewlabel.Data()), cluPos[1][1 - best_track_PROBE[vw]->view], posAtTarget_PROBE[1-best_track_PROBE[vw]->view]);
+          
+          double posAtTarget_MEAN = 0.5*(posAtTarget_TAG[1-best_track_TAG[vw]->view] + posAtTarget_PROBE[1-best_track_PROBE[vw]->view]);
+          fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_%s_atTarget_vs_%s_ECal_HIGHPURITY_MEAN",viewlabel.Data(),viewlabel.Data()), cluPos[1][1 - best_track_PROBE[vw]->view], posAtTarget_MEAN);
+	      }
+	    }
+	  }
+	}
       }
       
       if(fRecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED)) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_QualityvsDE_PROBED_%s", processProbed.Data()), cluEnergy[0] - pg, quality[1], 1.);

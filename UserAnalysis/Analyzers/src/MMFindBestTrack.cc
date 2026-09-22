@@ -170,32 +170,44 @@ void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t 
   // dV = track->inter_lvl0[0] - track->inter_lvl0[1];
   // dTheta = TMath::ATan(track->slope_lvl0[0]) - TMath::ATan(track->slope_lvl0[1]);
   // }
-  if (track->pchi2 < 0.6)
-    return;
   double purity = -999;
   if (track->level == 0)
   {
-    if (track->nhit == 3)
-    {
-      purity = PurityFunc(track->pchi2, dR, pars_3h_lvl0);
-    }
-    if (track->nhit == 4)
-    {
-      purity = PurityFunc(track->pchi2, dR, pars_4h_lvl0);
-    }
+    if (track->pchi2 < 0.6)
+    return;
+    else
+      {
+	if (track->nhit == 3)
+	  {
+	    purity = PurityFunc(track->pchi2, dR, pars_3h_lvl0);
+	  }
+	if (track->nhit == 4)
+	  {
+	    purity = PurityFunc(track->pchi2, dR, pars_4h_lvl0);
+	  }
+      }
   }
   else
   { // track->level == 1
-    if(track->nhit == 4) {
-      purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
-    }
-    if (track->nhit == 5)
-    {
-      purity = PurityFunc(track->pchi2, dR, pars_5h_lvl1);
-    }
-    if (track->nhit > 5)
-    {
-      purity = PurityFunc(track->pchi2, dR, pars_6ph_lvl1);
+    if(track->pchi2 < 0.1) return;
+    else
+      {
+	if(track->nhit == 4) {
+	  purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
+	}
+      }
+    else if (track->pchi2 < 0.6)
+      return;
+    else {
+      
+      if (track->nhit == 5)
+	{
+	  purity = PurityFunc(track->pchi2, dR, pars_5h_lvl1);
+	}
+      if (track->nhit > 5)
+	{
+	  purity = PurityFunc(track->pchi2, dR, pars_6ph_lvl1);
+	}
     }
   }
   track->purity= purity;

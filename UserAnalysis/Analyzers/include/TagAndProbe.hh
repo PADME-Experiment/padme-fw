@@ -36,10 +36,18 @@ struct TagAndProbeEvent{
   double phiCM[2], thetaCM[2];
   double Ebeam;
   Int_t cluProcess[2];
+  Int_t RunID;
+  Int_t isMC;
+  Int_t HasProbe = -1;
+  Double_t EnergyRange[2];
+  Double_t RadiusRange[2];
   TVector3 cog, targ, cluPos[2], cluPosExp; // cog of the selected clusters
   TLorentzVector labP[2]; // lab momenta
   TLorentzVector cmP[2]; // cm momenta
+  TLorentzVector trueLabP[2]; //mctruth
+  TLorentzVector trueCMP[2]; //mctruth
   Double_t purity[2][2]; // indices of the Track association [pointer to the association array] (could become a std vector)
+  Double_t purity_combined[2];
   TVector3 trackPosAtECal[2][2]; // position of the track at the ecal
   TVector3 trackPosAtTarget[2][2]; // position of the track at the target
   Double_t trackSlope[2][2]; // slope of the track
@@ -70,36 +78,6 @@ private:
   MMFindBestTrack* fMMFindBestTrack;
   NPoTAnalysis* fNPoTAnalysis;
 
-  Double_t PFuncAtECal(Double_t x, Double_t y, Double_t *p);
-  Int_t ChargeFinder(Double_t x, Double_t y, Double_t E);
-  Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
-  Int_t QualityBin(Double_t purity, Int_t type) {
-    //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
-    //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
-    // 0.02 < purity_TAG < 0.2    --> quality_bin_TAG = 2
-    //  0.2 < purity_TAG < 0.6    --> quality_bin_TAG = 3
-    //  0.6 < purity_TAG < 1    --> quality_bin_TAG = 4
-    //        purity_PROBE < 0      --> quality_bin_PROBE = 0 (no track considered)
-    //    0 < purity_PROBE < 0.02   --> quality_bin_PROBE = 1 (bad purity)
-    // 0.02 < purity_PROBE < 0.2    --> quality_bin_PROBE = 2
-    //  0.2 < purity_PROBE < 0.6    --> quality_bin_PROBE = 3
-    //  0.6 < purity_PROBE < 1    --> quality_bin_PROBE = 4
-    
-    if(type == 0) { //TAG
-      if(purity < 0)     return 0;
-      if(purity < 0.02)  return 1;
-      if(purity < 0.2)   return 2;
-      if(purity < 0.6)   return 3;
-      return 4;
-    }
-    else { //PROBE
-      if(purity < 0)     return 0;
-      if(purity < 0.02)  return 1;
-      if(purity < 0.2)   return 2;
-      if(purity < 0.6)   return 3;
-      return 4;
-    }
-  };
   
 public:
   //virtual Bool_t Init(PadmeAnalysisEvent* event);
@@ -110,7 +88,9 @@ public:
   Bool_t FitTagProbeEff();
   Bool_t FitTagProbeEffvsPhi();
   Bool_t TagProbeEff_macro();
-  
+  Double_t PFuncAtECal(Double_t x, Double_t y, Double_t *p);
+  Int_t ChargeFinder(Double_t x, Double_t y, Double_t E);
+
 
   virtual Bool_t Process();
 
@@ -198,11 +178,12 @@ private:
   static const int fNprocessAvailableTwoClu = 7;
   TString fprocessIDsTwoClu[fNprocessAvailableTwoClu] = {"eIoni", "eBrem", "annihil", "Bhabha","Babayaga", "BabayagaGG", "NoVtx"};
   //array of parameters for B=100G pid
+  
   Double_t par_ele_B100G[12] = {311.339, 22.8641, -1.38227, -399.42, 76.8035, 8.07501, 42.0509, -24.3585, -15.0576, 101.51, -39.3708, 8.6695};
   Double_t par_ele_err_B100G[12] = {0.940137, 1.19608, 0.911382, 5.51391, 7.02906, 5.80897, 10.0573, 13.0114, 11.0776, 5.76637, 7.59705, 6.45178};
   Double_t par_pos_B100G[12] = {287.734, -13.3566, -2.21919, -267.268, -112.543, 12.7678, -183.679, 62.481, -23.168, 221.518, 28.9116, 13.222};
   Double_t par_pos_err_B100G[12] = {3.24053, 4.13089, 3.21182, 19.1165, 24.4124, 20.5565, 35.0005, 45.3913, 39.2735, 20.104, 26.5749, 22.8867};
-  
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

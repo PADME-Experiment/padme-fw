@@ -91,6 +91,7 @@ public:
   Int_t GetNTracks() {return (int) fvTracks.size();};
   MMBestTrack3D* GetBestTrackFromCluPos(TVector3 cluPos, Double_t extrZ); //
   Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
+  Double_t PurityFunc_4HitL1(Double_t x, Double_t *p);
   Int_t QualityBin(Double_t purity, Int_t type) {
     //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
     //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
@@ -141,8 +142,14 @@ private:
   //purity fit parameters
 
   double pars_3h_lvl0[8] = {7.56008, 58.3746, -1.2901, 7.28396, 16.0513, 105.037, 3.37634, 0.263186};
+
   double pars_4h_lvl0[8] = {0.0265705, 92.0291, -1.24075, 6.90274, 19.2264, 104.307, 8.19723, 1.84315};
+
+  double pars_4h_lvl1[6] = {1819.62, 0.294837, 9.89586, 1664.43, 10.6183, 83.4185};
+  double err_pars_4h_lvl1[6] = {16.1599, 0.093497, 0.084371, 4.18318, 0.142544, 0.102222};
+  
   double pars_5h_lvl1[8] = {18.5897, 34.5641, 0.906092, 11.324, 5.74614, 87.1964, 2.09614, 0.914284};
+
   double pars_6ph_lvl1[8] = {204.73, 306.454, 1.26521, 11.1982, 4.69843, 99.2033, -0.781994, 4.14681};
 
    

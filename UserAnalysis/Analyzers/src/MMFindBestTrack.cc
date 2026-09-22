@@ -154,6 +154,12 @@ Double_t MMFindBestTrack::PurityFunc(Double_t x, Double_t y, Double_t *p)
   return p[0] * sigX * sigY / (p[0] * sigX * sigY + p[1] * bkgX * bkgY);
 }
 
+Double_t MMFindBestTrack::PurityFunc_4HitL1(Double_t x, Double_t *p) {
+  double sig = TMath::Exp(-0.5*(x-p[1])*(x-p[1])/(p[2]*p[2]));
+  double bkg = TMath::Exp(-0.5*(x-p[4])*(x-p[4])/(p[5]*p[5]));
+
+  return p[0]*sig/(p[0]*sig + p[1]*bkg);
+}
 
 void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t extrZ){
   TVector3 extPos = track->BestTrackExtrapolationAtZ(extrZ);
@@ -180,6 +186,9 @@ void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t 
   }
   else
   { // track->level == 1
+    if(track->nhit == 4) {
+      purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
+    }
     if (track->nhit == 5)
     {
       purity = PurityFunc(track->pchi2, dR, pars_5h_lvl1);

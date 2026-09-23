@@ -8,6 +8,8 @@
 #include "OfflineServer.hh"
 #include "TVector3.h"
 
+#define DEBUG true
+
 using namespace std;
 
 class TRecoEvent;

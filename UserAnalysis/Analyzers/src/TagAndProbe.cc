@@ -154,7 +154,6 @@ Bool_t TagAndProbe::InitHistos()
   // fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl0_TAG"), 50, 0, 1, 600, -300, 300);
   // fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_lvl1_TAG"), 50, 0, 1, 600, -300, 300);
   if(DEBUG) {
-    fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), 200, -5, 5, 600, -300, 300);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_4hit_lvl1_TAG"), 50, 0, 1, 600, -300, 300);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_5hit_lvl1_TAG"), 50, 0, 1, 600, -300, 300);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_DRvsPChi2_6phit_lvl1_TAG"), 50, 0, 1, 600, -300, 300);
@@ -525,8 +524,8 @@ Int_t TagAndProbe::TagAndProbeSelection()
 	    }
 	  
 	  fMMFindBestTrack->AssignPurity(track, cluPos[0], fGeneralInfo->GetCOG().Z());
-	  fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_%dh_lvl%d_TAG",track->nhit,track->level), cluEnergy[0] - pg, track->purity, 1.);
-	  
+	  if(track->nhit < 6) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_%dh_lvl%d_TAG",track->nhit,track->level), cluEnergy[0] - pg, track->purity, 1.);
+	  else fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_%dph_lvl%d_TAG",track->nhit,track->level), cluEnergy[0] - pg, track->purity, 1.);
 	  //       if (track->pchi2 < 0.6)
 	  //         continue;
 	  //       nTracksInQuad++;

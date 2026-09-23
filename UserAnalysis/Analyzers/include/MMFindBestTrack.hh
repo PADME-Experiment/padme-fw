@@ -92,6 +92,7 @@ public:
   MMBestTrack3D* GetBestTrackFromCluPos(TVector3 cluPos, Double_t extrZ); //
   Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
   Double_t PurityFunc_4HitL1(Double_t x, Double_t *p);
+  void AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t extrZ);//
   Int_t QualityBin(Double_t purity, Int_t type) {
     //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
     //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
@@ -124,8 +125,7 @@ private:
   static MMFindBestTrack* fInstance;
   GeneralInfo* fGeneralInfo;
   MMClustering* fMMClusteringInstance;
-  Bool_t InitHistos(Int_t);
-  void AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t extrZ);//
+  //Bool_t InitHistos(Int_t)
 
   Int_t fNRun;
   Bool_t fHistoMode;

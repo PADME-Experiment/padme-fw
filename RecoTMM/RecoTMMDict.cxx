@@ -55,7 +55,7 @@ namespace ROOT {
       ::RecoTMM *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::RecoTMM));
       static ::ROOT::TGenericClassInfo 
-         instance("RecoTMM", "RecoTMM.h", 69,
+         instance("RecoTMM", "RecoTMM.h", 94,
                   typeid(::RecoTMM), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &RecoTMM_Dictionary, isa_proxy, 4,
                   sizeof(::RecoTMM) );
@@ -748,69 +748,69 @@ namespace ROOT {
 } // end of namespace ROOT for class vector<TGraphErrors*>
 
 namespace ROOT {
-   static TClass *vectorlETF1mUgR_Dictionary();
-   static void vectorlETF1mUgR_TClassManip(TClass*);
-   static void *new_vectorlETF1mUgR(void *p = nullptr);
-   static void *newArray_vectorlETF1mUgR(Long_t size, void *p);
-   static void delete_vectorlETF1mUgR(void *p);
-   static void deleteArray_vectorlETF1mUgR(void *p);
-   static void destruct_vectorlETF1mUgR(void *p);
+   static TClass *vectorlEBlockTimeInfogR_Dictionary();
+   static void vectorlEBlockTimeInfogR_TClassManip(TClass*);
+   static void *new_vectorlEBlockTimeInfogR(void *p = nullptr);
+   static void *newArray_vectorlEBlockTimeInfogR(Long_t size, void *p);
+   static void delete_vectorlEBlockTimeInfogR(void *p);
+   static void deleteArray_vectorlEBlockTimeInfogR(void *p);
+   static void destruct_vectorlEBlockTimeInfogR(void *p);
 
    // Function generating the singleton type initializer
-   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<TF1*>*)
+   static TGenericClassInfo *GenerateInitInstanceLocal(const vector<BlockTimeInfo>*)
    {
-      vector<TF1*> *ptr = nullptr;
-      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<TF1*>));
+      vector<BlockTimeInfo> *ptr = nullptr;
+      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<BlockTimeInfo>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<TF1*>", -2, "vector", 389,
-                  typeid(vector<TF1*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
-                  &vectorlETF1mUgR_Dictionary, isa_proxy, 0,
-                  sizeof(vector<TF1*>) );
-      instance.SetNew(&new_vectorlETF1mUgR);
-      instance.SetNewArray(&newArray_vectorlETF1mUgR);
-      instance.SetDelete(&delete_vectorlETF1mUgR);
-      instance.SetDeleteArray(&deleteArray_vectorlETF1mUgR);
-      instance.SetDestructor(&destruct_vectorlETF1mUgR);
-      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<TF1*> >()));
+         instance("vector<BlockTimeInfo>", -2, "vector", 389,
+                  typeid(vector<BlockTimeInfo>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
+                  &vectorlEBlockTimeInfogR_Dictionary, isa_proxy, 0,
+                  sizeof(vector<BlockTimeInfo>) );
+      instance.SetNew(&new_vectorlEBlockTimeInfogR);
+      instance.SetNewArray(&newArray_vectorlEBlockTimeInfogR);
+      instance.SetDelete(&delete_vectorlEBlockTimeInfogR);
+      instance.SetDeleteArray(&deleteArray_vectorlEBlockTimeInfogR);
+      instance.SetDestructor(&destruct_vectorlEBlockTimeInfogR);
+      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::Pushback< vector<BlockTimeInfo> >()));
 
-      instance.AdoptAlternate(::ROOT::AddClassAlternate("vector<TF1*>","std::vector<TF1*, std::allocator<TF1*> >"));
+      instance.AdoptAlternate(::ROOT::AddClassAlternate("vector<BlockTimeInfo>","std::vector<BlockTimeInfo, std::allocator<BlockTimeInfo> >"));
       return &instance;
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const vector<TF1*>*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const vector<BlockTimeInfo>*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));
 
    // Dictionary for non-ClassDef classes
-   static TClass *vectorlETF1mUgR_Dictionary() {
-      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const vector<TF1*>*>(nullptr))->GetClass();
-      vectorlETF1mUgR_TClassManip(theClass);
+   static TClass *vectorlEBlockTimeInfogR_Dictionary() {
+      TClass* theClass =::ROOT::GenerateInitInstanceLocal(static_cast<const vector<BlockTimeInfo>*>(nullptr))->GetClass();
+      vectorlEBlockTimeInfogR_TClassManip(theClass);
    return theClass;
    }
 
-   static void vectorlETF1mUgR_TClassManip(TClass* ){
+   static void vectorlEBlockTimeInfogR_TClassManip(TClass* ){
    }
 
 } // end of namespace ROOT
 
 namespace ROOT {
    // Wrappers around operator new
-   static void *new_vectorlETF1mUgR(void *p) {
-      return  p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TF1*> : new vector<TF1*>;
+   static void *new_vectorlEBlockTimeInfogR(void *p) {
+      return  p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<BlockTimeInfo> : new vector<BlockTimeInfo>;
    }
-   static void *newArray_vectorlETF1mUgR(Long_t nElements, void *p) {
-      return p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<TF1*>[nElements] : new vector<TF1*>[nElements];
+   static void *newArray_vectorlEBlockTimeInfogR(Long_t nElements, void *p) {
+      return p ? ::new(static_cast<::ROOT::Internal::TOperatorNewHelper*>(p)) vector<BlockTimeInfo>[nElements] : new vector<BlockTimeInfo>[nElements];
    }
    // Wrapper around operator delete
-   static void delete_vectorlETF1mUgR(void *p) {
-      delete (static_cast<vector<TF1*>*>(p));
+   static void delete_vectorlEBlockTimeInfogR(void *p) {
+      delete (static_cast<vector<BlockTimeInfo>*>(p));
    }
-   static void deleteArray_vectorlETF1mUgR(void *p) {
-      delete [] (static_cast<vector<TF1*>*>(p));
+   static void deleteArray_vectorlEBlockTimeInfogR(void *p) {
+      delete [] (static_cast<vector<BlockTimeInfo>*>(p));
    }
-   static void destruct_vectorlETF1mUgR(void *p) {
-      typedef vector<TF1*> current_t;
+   static void destruct_vectorlEBlockTimeInfogR(void *p) {
+      typedef vector<BlockTimeInfo> current_t;
       (static_cast<current_t*>(p))->~current_t();
    }
-} // end of namespace ROOT for class vector<TF1*>
+} // end of namespace ROOT for class vector<BlockTimeInfo>
 
 namespace {
   void TriggerDictionaryInitialization_RecoTMMDict_Impl() {

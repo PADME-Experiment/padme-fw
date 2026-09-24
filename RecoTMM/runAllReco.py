@@ -6,11 +6,8 @@
 # Crea una directory di lavoro e una di log per ciascun job, con file di log dedicato
 # Tiene traccia dei PID dei processi lanciati in un file di testo
 
-#MARCO --> DA RIVEDERE!
-
 import os
 import sys
-import time
 import shlex
 import shutil
 import subprocess
@@ -24,7 +21,6 @@ from datetime import datetime
 
 RECO_SCRIPT = Path(__file__).resolve().parent / "runRecoTMM.sh"
 DEFAULT_JOB_FILE = "jobs.txt"
-
 
 def ask(prompt, default=None):
     if default is not None:
@@ -92,8 +88,8 @@ def launch_job(job, reco_script, src_dir, logdir, workbase):
     max_events = job[2] if len(job) >= 3 else "0"
     nevt_block = job[3] if len(job) >= 4 else "10000"
 
-    tag = f"padme{padme_run}_det{det_run}"
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    tag = f"padme{padme_run}_det{det_run}_nevt{max_events}_nblk{nevt_block}"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
     workdir = workbase / f"{tag}_{timestamp}"
     logfile = logdir / f"{tag}_{timestamp}.log"
@@ -120,6 +116,7 @@ def launch_job(job, reco_script, src_dir, logdir, workbase):
         proc = subprocess.Popen(
             ["nohup", "bash", "-lc", command],
             cwd=workdir,
+            stdin=subprocess.DEVNULL,
             stdout=log,
             stderr=subprocess.STDOUT,
             start_new_session=True,
@@ -158,8 +155,19 @@ def main():
         print("Nessun job valido trovato.")
         sys.exit(0)
 
-    ncores = os.cpu_count() or 1
-    max_parallel = int(ask("Numero massimo di job paralleli", ncores))
+    try:
+        ncores = len(os.sched_getaffinity(0))
+    except AttributeError:
+        ncores = os.cpu_count() or 1
+
+    if len(jobs) > ncores:
+        print()
+        print("ERROR: troppi job richiesti.")
+        print(f"Job nel file : {len(jobs)}")
+        print(f"CPU core     : {ncores}")
+        print()
+        print("Riduci il numero di job in jobs.txt e rilancia.")
+        sys.exit(1)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -176,15 +184,12 @@ def main():
     print(f"Log dir       : {logdir}")
     print(f"Work dir      : {workbase}")
     print(f"Job totali    : {len(jobs)}")
-    print(f"Job paralleli : {max_parallel}")
+    print(f"CPU core      : {ncores}")
     print()
 
-    print("Primi job trovati:")
-    for job in jobs[:5]:
+    print("Job trovati:")
+    for job in jobs:
         print("  " + " ".join(job))
-
-    if len(jobs) > 5:
-        print(f"  ... altri {len(jobs) - 5}")
 
     print()
 
@@ -195,27 +200,9 @@ def main():
         sys.exit(0)
 
     pidfile = logdir / "submitted_jobs.txt"
-    running = []
 
     with open(pidfile, "w") as pf:
         for job in jobs:
-
-            while len(running) >= max_parallel:
-                still_running = []
-
-                for proc, tag, logfile in running:
-                    ret = proc.poll()
-
-                    if ret is None:
-                        still_running.append((proc, tag, logfile))
-                    else:
-                        print(f"Finito {tag} con status {ret}")
-
-                running = still_running
-
-                if len(running) >= max_parallel:
-                    time.sleep(2)
-
             proc, tag, logfile = launch_job(
                 job,
                 reco_script,
@@ -224,36 +211,16 @@ def main():
                 workbase,
             )
 
-            running.append((proc, tag, logfile))
-
             pf.write(
                 f"{datetime.now()}  PID={proc.pid}  {tag}  log={logfile}\n"
             )
             pf.flush()
 
     print()
-    print("Tutti i job sono stati sottomessi.")
+    print("Tutti i job sono stati lanciati.")
     print(f"PID file: {pidfile}")
     print()
-
-    while running:
-        still_running = []
-
-        for proc, tag, logfile in running:
-            ret = proc.poll()
-
-            if ret is None:
-                still_running.append((proc, tag, logfile))
-            else:
-                print(f"Finito {tag} con status {ret}")
-
-        running = still_running
-
-        if running:
-            time.sleep(5)
-
-    print()
-    print("Done.")
+    print("Il launcher termina ora; i job continuano in background.")
 
 
 if __name__ == "__main__":

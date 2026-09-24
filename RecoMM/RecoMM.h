@@ -37,13 +37,11 @@
 #include "Riostream.h"
 #include "TMinuit.h"
 
-#include "TRawEvent.hh"
-#include "TRawMergedEvent.hh"
-
 #include "TInterpreter.h"
 #include "TROOT.h"
 
 #include <algorithm>
+// #include <chrono>
 #include <ctime>
 #include <cstdlib>
 #include <cstdio>
@@ -57,6 +55,7 @@
 #include <string>
 #include <cmath>
 #include <sys/stat.h>
+// #include <thread>
 #include <vector>
 
 using namespace std;
@@ -70,29 +69,61 @@ struct SliceFitResult {
   TH1D *chi2 = nullptr;  
 };
 
+// struct BeamFitSummary {
+//   bool   valid       = false;
+//   double charge      = 0.;
+//   double err_charge  = 0.;
+//   double position    = 0.;
+//   double err_position= 0.;
+//   double spread      = 0.;
+//   double err_spread  = 0.;
+// };
+
 class CalibMM {
 public :
    TChain         *fTree;      //! pointer to the analyzed TTree
+   // Int_t          fCurrent;    //! current Tree number in a TTree
    Bool_t         fOwnChain;   //! true if this class created the TTree
    int            RunID = 0;
    int            DetRunID = 0;
    int            maxEvents=0;
    TString        outputFileName = "CalibrationMM.root";
 
-   // RawMergedEvents input
-   TMMRawEvent *tmmRawEvent = nullptr;
-   TBranch     *b_tmmRawEvent = nullptr;
-
-   // Keep these as aliases to the content of TMMRawEvent.
-   // This lets the rest of CalibMM.C remain almost unchanged.
-   vector<int> *mmLayer = nullptr;
-   vector<int> *mmStrip = nullptr;
-   vector<vector<short>> *raw_q = nullptr;
+   // Branches declaration 
+   ULong64_t       evt;
+   UInt_t          error;
+   Int_t           daqTimeSec;
+   Int_t           daqTimeMicroSec;
+   Int_t           srsTimeStamp;
+   UInt_t          srsTrigger;
+   vector<unsigned int> *srsFec;
+   vector<unsigned int> *srsChip;
+   vector<unsigned int> *srsChan;
+   vector<string>  *mmChamber;
+   vector<int>     *mmLayer;
+   vector<char>    *mmReadout;
+   vector<int>     *mmStrip;
+   vector<vector<short> > *raw_q;
+   vector<short>   *max_q;
+   vector<int>     *t_max_q;
 
    // List of branches
+   TBranch         *b_evt;   //!
+   TBranch         *b_error;   //!
+   TBranch         *b_daqTimeSec;   //!
+   TBranch         *b_daqTimeMicroSec;   //!
+   TBranch         *b_srsTimeStamp;   //!
+   TBranch         *b_srsTrigger;   //!
+   TBranch         *b_srsFec;   //!
+   TBranch         *b_srsChip;   //!
+   TBranch         *b_srsChan;   //!
+   TBranch         *b_mmChamber;   //!
    TBranch         *b_mmLayer;   //!
+   TBranch         *b_mmReadout;   //!
    TBranch         *b_mmStrip;   //!
    TBranch         *b_raw_q;   //!
+   TBranch         *b_max_q;   //!
+   TBranch         *b_t_max_q;   //!
 
    CalibMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="CalibrationMM.root");   
    virtual ~CalibMM();
@@ -112,7 +143,6 @@ public :
 
    virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
    virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
-   virtual TF1*     FitSingleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
 
    virtual double   VoigtIntegralPDF(double *x, double *par);
    virtual TF1*     FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
@@ -135,12 +165,6 @@ public :
    double StripMin = 0.;
    double StripMax = 511.;
 
-   // strips for the fitslices procedure:
-   double stripstart = 220;
-   double stripstop  = 280;
-   
-   // saturation threshold for charge distribution [ADC counts]
-   double SaturationThreshold = 1600.;
    // strip calibration vectors
    vector<double> FitFullDiff[MM_N_Layers];
    vector<double> FitFullRatio[MM_N_Layers];
@@ -152,10 +176,6 @@ public :
    // event based histograms
    TH2F *hqmaxstrip[MM_N_Layers] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull[MM_N_Layers] = {0}; //qmax vs xstrip distribution
-
-   // event based histograms - no saturation
-   TH2F *hqmaxstrip_NoSat[MM_N_Layers] = {0}; //qmax vs xstrip distribution - saturation removed
-   TH2F *hqmaxstripFull_NoSat[MM_N_Layers] = {0}; //qmax vs xstrip distribution - saturation removed
 
    TH2F *htmaxstrip[MM_N_Layers] = {0}; //tmax vs xstrip distribution
    TH2F *htmaxstripFull[MM_N_Layers] = {0}; //tmax vs xstrip distribution
@@ -174,10 +194,6 @@ public :
    vector<TH2F*> hBlockqmaxstrip[MM_N_Layers]; //qmax vs xstrip distribution
    vector<TH2F*> hBlockqmaxstripFull[MM_N_Layers]; //qmax vs xstrip distribution
 
-   // block based histograms - no saturation
-   vector<TH2F*> hBlockqmaxstrip_NoSat[MM_N_Layers]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_NoSat[MM_N_Layers]; //qmax vs xstrip distribution
-
    // block based FitSlicesY() histograms
    vector<TH1D*> hBlockAmpslice[MM_N_Layers]; // amplitude slices
    vector<TH1D*> hBlockMeanslice[MM_N_Layers]; // mean slices
@@ -191,6 +207,10 @@ public :
    // event based calibrated histograms
    TH2F *hqmaxstrip_cal[MM_N_Layers] = {0}; //qmax vs xstrip distribution
    TH2F *hqmaxstripFull_cal[MM_N_Layers] = {0}; //qmax vs xstrip distribution
+
+   // event based calibrated histograms selected in time
+   TH2F *hqmaxstrip_sel[MM_N_Layers] = {0}; //qmax vs xstrip distribution
+   TH2F *hqmaxstripFull_sel[MM_N_Layers] = {0}; //qmax vs xstrip distribution
 
    // block based calibrated histograms
    vector<TH2F*> hBlockqmaxstrip_cal[MM_N_Layers]; //qmax vs xstrip distribution
@@ -231,36 +251,53 @@ CalibMM::CalibMM(TObjArray *inputFileNameList,
    maxEvents(maxEvents),
    outputFileName(outputFileName)
 {
+
    if (!inputFileNameList || inputFileNameList->GetEntries() == 0) {
       cerr << "ERROR: empty input file list in CalibMM constructor" << endl;
       return;
    }
-   fprintf(stdout, "=== === === Chain of input files === === ===\n");
-   TString rawMergedTreeName = "RawMergedEvents";
-   TChain *inputChain = new TChain(rawMergedTreeName);
 
+   fprintf(stdout, "=== === === Chain of input files === === ===\n");
+   TChain *chain = new TChain("apv_raw");
+   Long64_t totalEntries = 0;
    for (Int_t iFile = 0; iFile < inputFileNameList->GetEntries(); iFile++) {
       TString fileName = ((TObjString*)inputFileNameList->At(iFile))->GetString();
       fprintf(stdout, "%4d %s\n", iFile, fileName.Data());
-      Int_t added = inputChain->AddFile(fileName);
-      if (added == 0) {
-         cerr << "WARNING: could not add file to chain: " << fileName << endl;
+      TFile file(fileName.Data(), "READ");
+      if (file.IsZombie()) {
+         cerr << "WARNING: cannot open input file: " << fileName << endl;
+         continue;
       }
+      TTree *t = (TTree*)file.Get("apv_raw");
+      if (!t) {
+         cerr << "WARNING: cannot find tree apv_raw in file: " << fileName << endl;
+         continue;
+      }
+      Long64_t n = t->GetEntries();
+      if (n <= 0) {
+         cerr << "WARNING: tree apv_raw has zero entries in file: " << fileName << endl;
+         continue;
+      }
+
+      Int_t added = chain->Add(fileName.Data());
+      if (added == 0) {
+         cerr << "WARNING: could not add file to chain: "
+              << fileName << endl;
+         continue;
+      }
+      totalEntries += n;
+      cout << "Added " << fileName << " entries = " << n << " total = " << totalEntries << endl;
    }
 
-   Long64_t totalEntries = inputChain->GetEntries();
-
-   if (totalEntries == 0) {
-      fprintf(stderr, "ERROR - Tree '%s' in input chain has 0 entries\n", rawMergedTreeName.Data());
-      delete inputChain;
+   if (totalEntries <= 0) {
+      cerr << "ERROR: no valid entries found while building input chain" << endl;
+      delete chain;
       return;
    }
 
-   cout << "Total entries in chain = " << totalEntries << endl;
-
+   cout << "Total validated entries in chain = " << totalEntries << endl;
    fOwnChain = kTRUE;
-
-   Init(inputChain);
+   Init(chain);
 }
 
 CalibMM::~CalibMM()
@@ -287,22 +324,48 @@ Long64_t CalibMM::LoadTree(Long64_t entry)
 
 void CalibMM::Init(TChain *tree)
 {
-   if (!tree) return;
-   fTree = tree;
-   tmmRawEvent = nullptr;
+   //cout << "DEBUG Init: start" << endl;
 
-   // For the first test keep everything enabled.
-   // We can optimise branch status later.
+   // Object pointers
+   srsFec    = 0;
+   srsChip   = 0;
+   srsChan   = 0;
+   mmChamber = 0;
+   mmLayer   = 0;
+   mmReadout = 0;
+   mmStrip   = 0;
+   raw_q     = 0;
+   max_q     = 0;
+   t_max_q   = 0;
+
+   if (!tree) return;
+
+   fTree = tree;
+
+   // Keep all branches available
    fTree->SetBranchStatus("*", 1);
 
-   Int_t status = fTree->SetBranchAddress("fTMMRawEvent", &tmmRawEvent, &b_tmmRawEvent );
+   fTree->SetBranchAddress("evt",             &evt,             &b_evt);
+   fTree->SetBranchAddress("error",           &error,           &b_error);
+   fTree->SetBranchAddress("daqTimeSec",      &daqTimeSec,      &b_daqTimeSec);
+   fTree->SetBranchAddress("daqTimeMicroSec", &daqTimeMicroSec, &b_daqTimeMicroSec);
+   fTree->SetBranchAddress("srsTimeStamp",    &srsTimeStamp,    &b_srsTimeStamp);
+   fTree->SetBranchAddress("srsTrigger",      &srsTrigger,      &b_srsTrigger);
 
-   if (status < 0) {
-      cerr << "ERROR: cannot bind branch fTMMRawEvent" << " SetBranchAddress status = " << status << endl;
-      return;
-   }
+   fTree->SetBranchAddress("srsFec",          &srsFec,          &b_srsFec);
+   fTree->SetBranchAddress("srsChip",         &srsChip,         &b_srsChip);
+   fTree->SetBranchAddress("srsChan",         &srsChan,         &b_srsChan);
+   fTree->SetBranchAddress("mmChamber",       &mmChamber,       &b_mmChamber);
+   fTree->SetBranchAddress("mmLayer",         &mmLayer,         &b_mmLayer);
+   fTree->SetBranchAddress("mmReadout",       &mmReadout,       &b_mmReadout);
+   fTree->SetBranchAddress("mmStrip",         &mmStrip,         &b_mmStrip);
+   fTree->SetBranchAddress("raw_q",           &raw_q,           &b_raw_q);
+   fTree->SetBranchAddress("max_q",           &max_q,           &b_max_q);
+   fTree->SetBranchAddress("t_max_q",         &t_max_q,         &b_t_max_q);
 
    Notify();
+
+   // cout << "DEBUG Init: done" << endl;
 }
 
 bool CalibMM::Notify()

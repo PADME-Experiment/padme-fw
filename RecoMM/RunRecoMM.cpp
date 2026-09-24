@@ -1,4 +1,4 @@
-#include "RecoTMM.h"
+#include "CalibMM.h"
 
 #include "TChain.h"
 #include "TObjArray.h"
@@ -15,19 +15,8 @@
 
 using namespace std;
 
-// bool IsRemoteFile(const TString& name)
-// {
-//   return name.BeginsWith("root://") ||
-//          name.BeginsWith("http://") ||
-//          name.BeginsWith("https://") ||
-//          name.BeginsWith("xroot://") ||
-//          name.BeginsWith("davs://");
-// }
-
 bool FileExists(const TString& name)
 {
-  // if (IsRemoteFile(name)) return true;
-
   struct stat filestat;
   return stat(name.Data(), &filestat) == 0;
 }
@@ -42,29 +31,27 @@ void PrintUsage(const char* progname)
   cout << "Options:" << endl;
   cout << "  -i <file>     Add one input ROOT file. Can be repeated." << endl;
   cout << "  -l <list>     Text file containing one input ROOT file per line." << endl;
-  cout << "  -o <file>     Output ROOT file name. Default: Monitor_TMM.root" << endl;
+  cout << "  -o <file>     Output ROOT file name. Default: Calibration_MM" << endl;
   cout << "  -n <N>        Maximum number of events to reconstruct. Default: 0 = all." << endl;
   cout << "  -r <RunID>    PADME run ID, used as label/output metadata." << endl;
   cout << "  -d <DetRunID> Detector run ID, used as label/output metadata." << endl;
-  cout << "  -b <NBlock>   Block size in events. Default: 10000." << endl;
+  cout << "  -b <NBlock>   Block size in events. Default: 1000." << endl;
   cout << endl;
 }
 
 int main(int argc, char* argv[])
 {
-  
   int opt;
 
   int RunID = 0;
   int DetRunID = 0;
   int maxEvents = 0;
-  int NevtBlock = 10000;
+  int NevtBlock = 1000;
 
   TString inputFileName;
-  TString outputFileName = "RecoTMM_run0000000.root";
+  TString outputFileName = "Calibration_MM";
 
   TObjArray inputFileNameList;
-  inputFileNameList.SetOwner(kTRUE);
 
   while ((opt = getopt(argc, argv, "i:l:o:n:r:d:b:")) != -1) {
 
@@ -150,7 +137,7 @@ int main(int argc, char* argv[])
           cerr << "ERROR: NevtBlock must be > 0" << endl;
           return 1;
         }
-        cout << "Block size set to: "<< NevtBlock << " events" << endl;
+        cout << "Block size set to: " << NevtBlock << " events" << endl;
         break;
       }
 
@@ -180,7 +167,7 @@ int main(int argc, char* argv[])
   }
 
   cout << endl;
-  cout << "=== === === Reconstruction settings === === ===" << endl;
+  cout << "=== === === Calibration settings === === ===" << endl;
   cout << "RunID          = " << RunID << endl;
   cout << "DetRunID       = " << DetRunID << endl;
   cout << "maxEvents      = " << maxEvents << endl;
@@ -189,8 +176,8 @@ int main(int argc, char* argv[])
   cout << endl;
 
   {
-    RecoTMM reco(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName);
-    reco.LoopFileList(inputFileNameList, NevtBlock);    
+    CalibMM calib(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName);
+    calib.LoopFileList(inputFileNameList, NevtBlock);
   }
 
   cout << endl;

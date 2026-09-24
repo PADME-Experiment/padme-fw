@@ -45,6 +45,7 @@ jobs.txt
 *.exe
 *.P
 *.F
+*.nfs*
 
 # directory with trash (Marco)
 RecoTMM/OldCalibration/*
@@ -61,3 +62,10 @@ TMM_Monitor/OldCalibration/*
 TMM_Monitor/CalibMonitorOld/*
 TMM_Monitor/logs_*/*
 TMM_Monitor/work_*/*
+TMM_Monitor/logs/*
+TMM_Monitor/logs_*/*
+
+MM_Calibration/outputMM/*.txt
+
+TargetReco/CalibTarget/outputCalibration/Run4Monitor/*.txt
+TargetReco/CalibTarget/outputCalibration/*.txt

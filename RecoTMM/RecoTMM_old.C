@@ -95,7 +95,14 @@ void RecoTMM::CoordinateFinder(int iStrip, const vector<short> &camp, int &iRead
 }
 
 bool RecoTMM::LoadCalibrationConstants(const string &filename){
-  
+
+  ifstream infile(filename.c_str());
+
+  if (!infile.is_open()) {
+    cerr << "Error: Cannot open calibration file " << filename << endl;
+    return false;
+  }
+
   // Default: unity calibration
   for (int is = 0; is < MAXSTRIP; ++is) {
     XcalibConst[is] = 1.;
@@ -103,12 +110,6 @@ bool RecoTMM::LoadCalibrationConstants(const string &filename){
 
     YcalibConst[is] = 1.;
     YcalibErr[is]   = 0.;
-  }
-
-  ifstream infile(filename.c_str());
-  if (!infile.is_open()) {
-    cerr << "Error: Cannot open calibration file " << filename << " - using unity calibration" << endl;
-    return false;
   }
 
   int nX = 0;
@@ -667,77 +668,77 @@ void RecoTMM::BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphE
 //   }
 // }
 
-// void RecoTMM::FillBlockGraphsFromSlices(int iR){
+void RecoTMM::FillBlockGraphsFromSlices(int iR){
 
-//   for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
+  for (size_t ib = 0; ib < hBlockqmaxstrip[iR].size(); ib++) {
 
-//     SliceFitResult s = RunFitSlicesY(hBlockqmaxstrip[iR][ib], Form("%s_block%zu", tmm_tag[iR].Data(), ib) );
+    SliceFitResult s = RunFitSlicesY(hBlockqmaxstrip[iR][ib], Form("%s_block%zu", tmm_tag[iR].Data(), ib) );
 
-//     hBlockAmpslice[iR][ib]   = s.amp;
-//     hBlockMeanslice[iR][ib]  = s.mean;
-//     hBlockSigmaslice[iR][ib] = s.sigma;
-//     hBlockChi2slice[iR][ib]  = s.chi2;
+    hBlockAmpslice[iR][ib]   = s.amp;
+    hBlockMeanslice[iR][ib]  = s.mean;
+    hBlockSigmaslice[iR][ib] = s.sigma;
+    hBlockChi2slice[iR][ib]  = s.chi2;
 
-//     SliceFitResult sFull = RunFitSlicesY(hBlockqmaxstripFull[iR][ib], Form("%s_block%zu_full", tmm_tag[iR].Data(), ib));
+    SliceFitResult sFull = RunFitSlicesY(hBlockqmaxstripFull[iR][ib], Form("%s_block%zu_full", tmm_tag[iR].Data(), ib));
 
-//     hBlockAmpsliceFull[iR][ib]   = sFull.amp;
-//     hBlockMeansliceFull[iR][ib]  = sFull.mean;
-//     hBlockSigmasliceFull[iR][ib] = sFull.sigma;
-//     hBlockChi2sliceFull[iR][ib]  = sFull.chi2;
+    hBlockAmpsliceFull[iR][ib]   = sFull.amp;
+    hBlockMeansliceFull[iR][ib]  = sFull.mean;
+    hBlockSigmasliceFull[iR][ib] = sFull.sigma;
+    hBlockChi2sliceFull[iR][ib]  = sFull.chi2;
 
-//     if (!s.mean) continue;
+    if (!s.mean) continue;
     
-//     TFitResultPtr fitResult;
-//     double xini = StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
-//     double xfin = StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
+    TFitResultPtr fitResult;
+    double xini = StripMin * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
+    double xfin = StripMax * pitch + ((iR==0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
 
-//     // cout << "DEBUG: Fitting block " << ib << " for readout " << tmm_tag[iR] << " in range [" << xini << ", " << xfin << "]" << endl;
+    // cout << "DEBUG: Fitting block " << ib << " for readout " << tmm_tag[iR] << " in range [" << xini << ", " << xfin << "]" << endl;
     
-//     TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), xini, xfin, fitResult);
+    TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", tmm_tag[iR].Data(), ib), xini, xfin, fitResult);
     
-//     if (!fb || !fitResult.Get()) {
-//       cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
-//       continue;
-//     }
+    if (!fb || !fitResult.Get()) {
+      cerr << "WARNING: block fit failed for readout = " << tmm_tag[iR] << " block = " << ib << endl;
+      continue;
+    }
 
-//     double I = fb->GetParameter(0);
-//     double mu = fb->GetParameter(1);
-//     double s1 = fabs(fb->GetParameter(2));
-//     double s2 = fabs(fb->GetParameter(3));
+    double I = fb->GetParameter(0);
+    double mu = fb->GetParameter(1);
+    double s1 = fabs(fb->GetParameter(2));
+    double s2 = fabs(fb->GetParameter(3));
 
-//     double e_mu = fb->GetParError(1);
+    double e_mu = fb->GetParError(1);
 
-//     double norm = I;
-//     if (norm <= 0) continue;
+    double norm = I;
+    if (norm <= 0) continue;
 
-//     double sigma_eff = sqrt(s1*s1 + s2*s2);
-//     double charge_proxy = I;
-//     double xblock = ib;
+    double sigma_eff = sqrt(s1*s1 + s2*s2);
+    double charge_proxy = I;
+    double xblock = ib;
 
-//     int p0 = g_BlockBeamSpot[iR]->GetN();
-//     g_BlockBeamSpot[iR]->SetPoint(p0, xblock, mu);
-//     g_BlockBeamSpot[iR]->SetPointError(p0, 0., e_mu);
+    int p0 = g_BlockBeamSpot[iR]->GetN();
+    g_BlockBeamSpot[iR]->SetPoint(p0, xblock, mu);
+    g_BlockBeamSpot[iR]->SetPointError(p0, 0., e_mu);
 
-//     int p1 = g_BlockBeamSpread[iR]->GetN();
-//     g_BlockBeamSpread[iR]->SetPoint(p1, xblock, sigma_eff);
-//     g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0);
+    int p1 = g_BlockBeamSpread[iR]->GetN();
+    g_BlockBeamSpread[iR]->SetPoint(p1, xblock, sigma_eff);
+    g_BlockBeamSpread[iR]->SetPointError(p1, 0., 0);
 
-//     int p2 = g_BlockBeamCharge[iR]->GetN();
-//     g_BlockBeamCharge[iR]->SetPoint(p2, xblock, charge_proxy);
-//     g_BlockBeamCharge[iR]->SetPointError(p2, 0., sqrt(charge_proxy));
+    int p2 = g_BlockBeamCharge[iR]->GetN();
+    g_BlockBeamCharge[iR]->SetPoint(p2, xblock, charge_proxy);
+    g_BlockBeamCharge[iR]->SetPointError(p2, 0., sqrt(charge_proxy));
 
-//     BuildFitRatio(
-//       hBlockMeansliceFull[iR][ib],
-//       hBlockSigmasliceFull[iR][ib],
-//       fb,
-//       g_BlockRawCalibFullRatio[iR][ib],
-//       g_BlockRawCalibFullDiff[iR][ib]
-//     );
+    BuildFitRatio(
+      hBlockMeansliceFull[iR][ib],
+      hBlockSigmasliceFull[iR][ib],
+      fb,
+      g_BlockRawCalibFullRatio[iR][ib],
+      g_BlockRawCalibFullDiff[iR][ib]
+    );
 
-//     delete fb;
-//     fb = nullptr;
-//   }
-// }
+    delete fb;
+    fb = nullptr;
+  }
+}
 
 void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
@@ -767,64 +768,64 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   for (int l = 0; l < TMMCH_N_Readout; l++) {
 
     // --- Overall RAW (mode 1) ---
-    hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
-    // hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500);
+    hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
+    // hqmaxstrip[l] = new TH2F(Form("hqmaxstrip%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500);
     hqmaxstrip[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstrip[l]->SetYTitle("q_{max} [ADC counts]");
 
-    hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
-    // hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500);
+    hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
+    // hqmaxstripFull[l] = new TH2F(Form("hqmaxstripFull%s", tmm_tag[l].Data()), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500);
     hqmaxstripFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstripFull[l]->SetYTitle("q_{max} [ADC counts]");
 
     // --- FitSlicesY() result holders ---
     // hAmpslice[l] = new TH1D(Form("hAmpslice%s", tmm_tag[l].Data()), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hAmpslice[l] = new TH1D(Form("hAmpslice%s", tmm_tag[l].Data()), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hAmpslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hAmpslice[l]->SetYTitle("AMP (q_{max} [ADC counts])");
+    hAmpslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hAmpslice[l]->SetYTitle("AMP (q_{max} [ADC counts])");
 
     // hMeanslice[l] = new TH1D(Form("hMeanslice%s", tmm_tag[l].Data()), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hMeanslice[l] = new TH1D(Form("hMeanslice%s", tmm_tag[l].Data()), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hMeanslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hMeanslice[l]->SetYTitle("q_{max} [ADC counts]");
+    hMeanslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hMeanslice[l]->SetYTitle("q_{max} [ADC counts]");
 
     // hSigmaslice[l] = new TH1D(Form("hSigmaslice%s", tmm_tag[l].Data()), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hSigmaslice[l] = new TH1D(Form("hSigmaslice%s", tmm_tag[l].Data()), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hSigmaslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hSigmaslice[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
+    hSigmaslice[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hSigmaslice[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
     
     // hAmpsliceFull[l] = new TH1D(Form("hAmpsliceFull%s", tmm_tag[l].Data()), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hAmpsliceFull[l] = new TH1D(Form("hAmpsliceFull%s", tmm_tag[l].Data()), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hAmpsliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hAmpsliceFull[l]->SetYTitle("AMP (q_{max} [ADC counts])");
+    hAmpsliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hAmpsliceFull[l]->SetYTitle("AMP (q_{max} [ADC counts])");
 
     // hMeansliceFull[l] = new TH1D(Form("hMeansliceFull%s", tmm_tag[l].Data()), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hMeansliceFull[l] = new TH1D(Form("hMeansliceFull%s", tmm_tag[l].Data()), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hMeansliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hMeansliceFull[l]->SetYTitle("q_{max} [ADC counts]");
+    hMeansliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hMeansliceFull[l]->SetYTitle("q_{max} [ADC counts]");
 
     // hSigmasliceFull[l] = new TH1D(Form("hSigmasliceFull%s", tmm_tag[l].Data()), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2);
     // hSigmasliceFull[l] = new TH1D(Form("hSigmasliceFull%s", tmm_tag[l].Data()), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5);
-    // hSigmasliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-    // hSigmasliceFull[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
+    hSigmasliceFull[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+    hSigmasliceFull[l]->SetYTitle("#sigma_{q_{max}} [ADC counts]");
 
     // --- Overall EXT-CAL (mode 2): external txt ---
-    hqmaxstrip_extcal[l] = new TH2F(Form("hqmaxstrip_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
-    // hqmaxstrip_extcal[l] = new TH2F(Form("hqmaxstrip_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500);
+    hqmaxstrip_extcal[l] = new TH2F(Form("hqmaxstrip_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
+    // hqmaxstrip_extcal[l] = new TH2F(Form("hqmaxstrip_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500);
     hqmaxstrip_extcal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstrip_extcal[l]->SetYTitle("q_{max} calib [ADC counts]");
 
-    hqmaxstripFull_extcal[l] = new TH2F(Form("hqmaxstripFull_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
-    // hqmaxstripFull_extcal[l] = new TH2F(Form("hqmaxstripFull_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500);
+    hqmaxstripFull_extcal[l] = new TH2F(Form("hqmaxstripFull_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
+    // hqmaxstripFull_extcal[l] = new TH2F(Form("hqmaxstripFull_extcal%s", tmm_tag[l].Data()), TString("q_{max-calib} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500);
     hqmaxstripFull_extcal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstripFull_extcal[l]->SetYTitle("q_{max} calib [ADC counts]");
 
     // --- Overall RUN-CAL (mode 3): from g_RawCalibFullRatio ---
-    hqmaxstrip_runcal[l] = new TH2F(Form("hqmaxstrip_runcal%s", tmm_tag[l].Data()), TString("q_{max-runcal} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
+    hqmaxstrip_runcal[l] = new TH2F(Form("hqmaxstrip_runcal%s", tmm_tag[l].Data()), TString("q_{max-runcal} vs x_{strip} [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
     hqmaxstrip_runcal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstrip_runcal[l]->SetYTitle("q_{max} runcal [ADC counts]");
 
-    hqmaxstripFull_runcal[l] = new TH2F(Form("hqmaxstripFull_runcal%s", tmm_tag[l].Data()), TString("q_{max-runcal} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500);
+    hqmaxstripFull_runcal[l] = new TH2F(Form("hqmaxstripFull_runcal%s", tmm_tag[l].Data()), TString("q_{max-runcal} vs x_{strip} full [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500);
     hqmaxstripFull_runcal[l]->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
     hqmaxstripFull_runcal[l]->SetYTitle("q_{max} runcal [ADC counts]");
 
@@ -858,14 +859,14 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     g_DaqTimeBeamCharge[l] = new TGraphErrors();
     TGraphAttribute(g_DaqTimeBeamCharge[l], Form("g_DaqTimeBeamCharge_%s", tmm_tag[l].Data()), "DAQ time [s]", Form("q_{%s} [ADC counts]", tmm_tag[l].Data()), 22, kGreen + 2 + l);
     
-    // g_SrsTimeBeamSpot[l] = new TGraphErrors();
-    // TGraphAttribute(g_SrsTimeBeamSpot[l], Form("g_SrsTimeBeamSpot_%s", tmm_tag[l].Data()), "SRS timestamp", Form("%s [mm]", tmm_tag[l].Data()), 20, kBlue + l);
+    g_SrsTimeBeamSpot[l] = new TGraphErrors();
+    TGraphAttribute(g_SrsTimeBeamSpot[l], Form("g_SrsTimeBeamSpot_%s", tmm_tag[l].Data()), "SRS timestamp", Form("%s [mm]", tmm_tag[l].Data()), 20, kBlue + l);
 
-    // g_SrsTimeBeamSpread[l] = new TGraphErrors();
-    // TGraphAttribute(g_SrsTimeBeamSpread[l], Form("g_SrsTimeBeamSpread_%s", tmm_tag[l].Data()), "SRS timestamp", Form("#sigma_{%s} [mm]", tmm_tag[l].Data()), 21, kRed + l);
+    g_SrsTimeBeamSpread[l] = new TGraphErrors();
+    TGraphAttribute(g_SrsTimeBeamSpread[l], Form("g_SrsTimeBeamSpread_%s", tmm_tag[l].Data()), "SRS timestamp", Form("#sigma_{%s} [mm]", tmm_tag[l].Data()), 21, kRed + l);
 
-    // g_SrsTimeBeamCharge[l] = new TGraphErrors();
-    // TGraphAttribute(g_SrsTimeBeamCharge[l], Form("g_SrsTimeBeamCharge_%s", tmm_tag[l].Data()), "SRS timestamp", Form("q_{%s} [ADC counts]", tmm_tag[l].Data()), 22, kGreen + 2 + l);
+    g_SrsTimeBeamCharge[l] = new TGraphErrors();
+    TGraphAttribute(g_SrsTimeBeamCharge[l], Form("g_SrsTimeBeamCharge_%s", tmm_tag[l].Data()), "SRS timestamp", Form("q_{%s} [ADC counts]", tmm_tag[l].Data()), 22, kGreen + 2 + l);
 
     // --- overall run-based calibration graphs ---
     g_RawCalibFullDiff[l] = new TGraphErrors();
@@ -876,31 +877,17 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   }
 
   // --- time distribution histograms ---
-  // time association with loop index
-  g_SrsTimeStamp_iev = new TGraphErrors();
-  TGraphAttribute(g_SrsTimeStamp_iev, "g_SrsTimeStamp_iev", "Loop Index", "SrsTimeStamp", 22, kBlack);
+  g_SrsTimeStamp = new TGraphErrors();
+  TGraphAttribute(g_SrsTimeStamp, "g_SrsTimeStamp", "Evt ID", "SrsTimeStamp", 22, kBlack);
 
   g_DaqTimeSec_iev = new TGraphErrors();
-  TGraphAttribute(g_DaqTimeSec_iev, "g_DaqTimeSec_iev", "Loop Index", "DaqTimeSec [s]", 22, kBlack);
+  TGraphAttribute(g_DaqTimeSec_iev, "g_DaqTimeSec_iev", "Evt ID", "DaqTimeSec [s]", 22, kBlack);
 
-  g_DaqTimeMicroSec_iev = new TGraphErrors();
-  TGraphAttribute(g_DaqTimeMicroSec_iev, "g_DaqTimeMicroSec_iev", "Loop Index", "DaqTimeMicroSec [#mus]", 22, kBlack);
+  g_DaqTimeMicroSec = new TGraphErrors();
+  TGraphAttribute(g_DaqTimeMicroSec, "g_DaqTimeMicroSec", "Evt ID", "DaqTimeMicroSec [#mus]", 22, kBlack);
 
-  g_DaqTime_iev = new TGraphErrors();
-  TGraphAttribute(g_DaqTime_iev, "g_DaqTime_iev", "Loop Index", "DaqTime [s]", 22, kBlack);
-
-  // time association with tree event 
-  g_SrsTimeStamp_evt = new TGraphErrors();
-  TGraphAttribute(g_SrsTimeStamp_evt, "g_SrsTimeStamp_evt", "EvtID", "SrsTimeStamp", 22, kBlack);
-
-  g_DaqTimeSec_evt = new TGraphErrors();
-  TGraphAttribute(g_DaqTimeSec_evt, "g_DaqTimeSec_evt", "EvtID", "DaqTimeSec [s]", 22, kBlack);
-
-  g_DaqTimeMicroSec_evt = new TGraphErrors();
-  TGraphAttribute(g_DaqTimeMicroSec_evt, "g_DaqTimeMicroSec_evt", "EvtID", "DaqTimeMicroSec [#mus]", 22, kBlack);
-
-  g_DaqTime_evt = new TGraphErrors();
-  TGraphAttribute(g_DaqTime_evt, "g_DaqTime_evt", "EvtID", "DaqTime [s]", 22, kBlack);
+  g_DaqTimeSec_iev = new TGraphErrors();
+  TGraphAttribute(g_DaqTimeSec_iev, "g_DaqTimeSec_iev", "Evt ID", "DaqTime [s]", 22, kBlack);
 
   //block id- time association
   g_BlockMeanDaqSec = new TGraphErrors();
@@ -912,136 +899,132 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   g_BlockMeanSrsTime = new TGraphErrors();
   TGraphAttribute(g_BlockMeanSrsTime, "g_BlockMeanSrsTime", "Block ID", "Mean SRS timestamp", 22, kBlack);
 
-  g_evt_vs_iev = new TGraphErrors();
-  TGraphAttribute(g_evt_vs_iev, "g_evt_vs_iev", "Loop Index", "EvtID", 22, kBlack);
-
-
   // ------------------------------------------------------------
   // Block/global accumulators
   // ------------------------------------------------------------
 
   Long64_t RecoEntry = 0;
 
-  // auto EnsureBlockHistograms = [&](int iblock) {
-  //   while ((int)blockTimeInfo.size() <= iblock) {
-  //     blockTimeInfo.emplace_back();
-  //   }
+  auto EnsureBlockHistograms = [&](int iblock) {
+    while ((int)blockTimeInfo.size() <= iblock) {
+      blockTimeInfo.emplace_back();
+    }
 
-  //   for (int l = 0; l < TMMCH_N_Readout; l++) {
-  //     while ((int)hBlockqmaxstrip[l].size() <= iblock) {
-  //       int b = hBlockqmaxstrip[l].size();
+    for (int l = 0; l < TMMCH_N_Readout; l++) {
+      while ((int)hBlockqmaxstrip[l].size() <= iblock) {
+        int b = hBlockqmaxstrip[l].size();
 
-  //       // --- Block RAW (mode 1) ---
-  //       hBlockqmaxstrip[l].push_back(new TH2F(Form("hBlockqmaxstrip%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       // hBlockqmaxstrip[l].push_back(new TH2F(Form("hBlockqmaxstrip%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500));
-  //       hBlockqmaxstrip[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstrip[l].back()->SetYTitle("q_{max} [ADC counts]");
+        // --- Block RAW (mode 1) ---
+        hBlockqmaxstrip[l].push_back(new TH2F(Form("hBlockqmaxstrip%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        // hBlockqmaxstrip[l].push_back(new TH2F(Form("hBlockqmaxstrip%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500));
+        hBlockqmaxstrip[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstrip[l].back()->SetYTitle("q_{max} [ADC counts]");
 
-  //       hBlockqmaxstripFull[l].push_back(new TH2F(Form("hBlockqmaxstripFull%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       // hBlockqmaxstripFull[l].push_back(new TH2F(Form("hBlockqmaxstripFull%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -0.5, MAXSTRIP-0.5, 2500, 0, 2500));
-  //       hBlockqmaxstripFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstripFull[l].back()->SetYTitle("q_{max} [ADC counts]");
+        hBlockqmaxstripFull[l].push_back(new TH2F(Form("hBlockqmaxstripFull%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        // hBlockqmaxstripFull[l].push_back(new TH2F(Form("hBlockqmaxstripFull%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -0.5, MAXSTRIP-0.5, 1000, 0, 2500));
+        hBlockqmaxstripFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstripFull[l].back()->SetYTitle("q_{max} [ADC counts]");
 
-  //       // --- Block EXT-CAL (mode 2): external txt ---
-  //       hBlockqmaxstrip_extcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_extcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-extcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstrip_extcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstrip_extcal[l].back()->SetYTitle("q_{max} extcal [ADC counts]");
+        // --- Block EXT-CAL (mode 2): external txt ---
+        hBlockqmaxstrip_extcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_extcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-extcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstrip_extcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstrip_extcal[l].back()->SetYTitle("q_{max} extcal [ADC counts]");
 
-  //       hBlockqmaxstripFull_extcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_extcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-extcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstripFull_extcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstripFull_extcal[l].back()->SetYTitle("q_{max} extcal [ADC counts]");
+        hBlockqmaxstripFull_extcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_extcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-extcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstripFull_extcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstripFull_extcal[l].back()->SetYTitle("q_{max} extcal [ADC counts]");
 
-  //       // --- Block RUN-CAL (mode 3): overall run-based applied per block ---
-  //       hBlockqmaxstrip_runcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_runcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-runcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstrip_runcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstrip_runcal[l].back()->SetYTitle("q_{max} runcal [ADC counts]");
+        // --- Block RUN-CAL (mode 3): overall run-based applied per block ---
+        hBlockqmaxstrip_runcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_runcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-runcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstrip_runcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstrip_runcal[l].back()->SetYTitle("q_{max} runcal [ADC counts]");
 
-  //       hBlockqmaxstripFull_runcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_runcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-runcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstripFull_runcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstripFull_runcal[l].back()->SetYTitle("q_{max} runcal [ADC counts]");
+        hBlockqmaxstripFull_runcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_runcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-runcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstripFull_runcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstripFull_runcal[l].back()->SetYTitle("q_{max} runcal [ADC counts]");
 
-  //       // --- Block BLOCK-CAL (mode 4): per-block calibration ---
-  //       hBlockqmaxstrip_blockcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_blockcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-blockcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstrip_blockcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstrip_blockcal[l].back()->SetYTitle("q_{max} blockcal [ADC counts]");
+        // --- Block BLOCK-CAL (mode 4): per-block calibration ---
+        hBlockqmaxstrip_blockcal[l].push_back(new TH2F(Form("hBlockqmaxstrip_blockcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-blockcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstrip_blockcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstrip_blockcal[l].back()->SetYTitle("q_{max} blockcal [ADC counts]");
 
-  //       hBlockqmaxstripFull_blockcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_blockcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-blockcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 2500, 0, 2500));
-  //       hBlockqmaxstripFull_blockcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       hBlockqmaxstripFull_blockcal[l].back()->SetYTitle("q_{max} blockcal [ADC counts]");
+        hBlockqmaxstripFull_blockcal[l].push_back(new TH2F(Form("hBlockqmaxstripFull_blockcal%s_block%04d", tmm_tag[l].Data(), b), TString("q_{max-blockcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", b), MAXSTRIP, -xFullmm/2, +xFullmm/2, 1000, 0, 2500));
+        hBlockqmaxstripFull_blockcal[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        hBlockqmaxstripFull_blockcal[l].back()->SetYTitle("q_{max} blockcal [ADC counts]");
 
-  //       // --- Per-block FitSlicesY() histograms ---
-  //       // hBlockAmpslice[l].push_back(new TH1D(Form("hBlockAmpslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockAmpslice[l].push_back(new TH1D(Form("hBlockAmpslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockAmpslice[l].push_back(nullptr);
-  //       // hBlockAmpslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockAmpslice[l].back()->SetYTitle("AMP (q_{max} [ADC counts])");
+        // --- Per-block FitSlicesY() histograms ---
+        // hBlockAmpslice[l].push_back(new TH1D(Form("hBlockAmpslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockAmpslice[l].push_back(new TH1D(Form("hBlockAmpslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockAmpslice[l].push_back(nullptr);
+        // hBlockAmpslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockAmpslice[l].back()->SetYTitle("AMP (q_{max} [ADC counts])");
 
-  //       // hBlockMeanslice[l].push_back(new TH1D(Form("hBlockMeanslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockMeanslice[l].push_back(new TH1D(Form("hBlockMeanslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockMeanslice[l].push_back(nullptr);
-  //       // hBlockMeanslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockMeanslice[l].back()->SetYTitle("q_{max} [ADC counts]");
+        // hBlockMeanslice[l].push_back(new TH1D(Form("hBlockMeanslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockMeanslice[l].push_back(new TH1D(Form("hBlockMeanslice%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockMeanslice[l].push_back(nullptr);
+        // hBlockMeanslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockMeanslice[l].back()->SetYTitle("q_{max} [ADC counts]");
 
-  //       // hBlockSigmaslice[l].push_back(new TH1D(Form("hBlockSigmaslice%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockSigmaslice[l].push_back(new TH1D(Form("hBlockSigmaslice%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockSigmaslice[l].push_back(nullptr);
-  //       // hBlockSigmaslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockSigmaslice[l].back()->SetYTitle("#sigma_{q_{max}} [ADC counts]");
+        // hBlockSigmaslice[l].push_back(new TH1D(Form("hBlockSigmaslice%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockSigmaslice[l].push_back(new TH1D(Form("hBlockSigmaslice%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockSigmaslice[l].push_back(nullptr);
+        // hBlockSigmaslice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockSigmaslice[l].back()->SetYTitle("#sigma_{q_{max}} [ADC counts]");
 
-  //       // hBlockChi2slice[l].push_back(new TH1D(Form("hBlockChi2slice%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockChi2slice[l].push_back(new TH1D(Form("hBlockChi2slice%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockChi2slice[l].push_back(nullptr);
-  //       // hBlockChi2slice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockChi2slice[l].back()->SetYTitle("#Chi^{2}_{q_{max}} [ADC counts]");
+        // hBlockChi2slice[l].push_back(new TH1D(Form("hBlockChi2slice%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockChi2slice[l].push_back(new TH1D(Form("hBlockChi2slice%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution (even strips only) d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockChi2slice[l].push_back(nullptr);
+        // hBlockChi2slice[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockChi2slice[l].back()->SetYTitle("#Chi^{2}_{q_{max}} [ADC counts]");
         
-  //       // hBlockAmpsliceFull[l].push_back(new TH1D(Form("hBlockAmpsliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockAmpsliceFull[l].push_back(new TH1D(Form("hBlockAmpsliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockAmpsliceFull[l].push_back(nullptr);
-  //       // hBlockAmpsliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockAmpsliceFull[l].back()->SetYTitle("AMP (q_{max} [ADC counts])");
+        // hBlockAmpsliceFull[l].push_back(new TH1D(Form("hBlockAmpsliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockAmpsliceFull[l].push_back(new TH1D(Form("hBlockAmpsliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockAmpsliceFull[l].push_back(nullptr);
+        // hBlockAmpsliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockAmpsliceFull[l].back()->SetYTitle("AMP (q_{max} [ADC counts])");
 
-  //       // hBlockMeansliceFull[l].push_back(new TH1D(Form("hBlockMeansliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockMeansliceFull[l].push_back(new TH1D(Form("hBlockMeansliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockMeansliceFull[l].push_back(nullptr);
-  //       // hBlockMeansliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockMeansliceFull[l].back()->SetYTitle("q_{max} [ADC counts]");
+        // hBlockMeansliceFull[l].push_back(new TH1D(Form("hBlockMeansliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockMeansliceFull[l].push_back(new TH1D(Form("hBlockMeansliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("mean value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockMeansliceFull[l].push_back(nullptr);
+        // hBlockMeansliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockMeansliceFull[l].back()->SetYTitle("q_{max} [ADC counts]");
 
-  //       // hBlockSigmasliceFull[l].push_back(new TH1D(Form("hBlockSigmasliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockSigmasliceFull[l].push_back(new TH1D(Form("hBlockSigmasliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockSigmasliceFull[l].push_back(nullptr);
-  //       // hBlockSigmasliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockSigmasliceFull[l].back()->SetYTitle("#sigma_{q_{max}} [ADC counts]");
+        // hBlockSigmasliceFull[l].push_back(new TH1D(Form("hBlockSigmasliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockSigmasliceFull[l].push_back(new TH1D(Form("hBlockSigmasliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("sigma value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockSigmasliceFull[l].push_back(nullptr);
+        // hBlockSigmasliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockSigmasliceFull[l].back()->SetYTitle("#sigma_{q_{max}} [ADC counts]");
 
-  //       // hBlockChi2sliceFull[l].push_back(new TH1D(Form("hBlockChi2sliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
-  //       // hBlockChi2sliceFull[l].push_back(new TH1D(Form("hBlockChi2sliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
-  //       hBlockChi2sliceFull[l].push_back(nullptr);
-  //       // hBlockChi2sliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
-  //       // hBlockChi2sliceFull[l].back()->SetYTitle("#Chi^{2}_{q_{max}} [ADC counts]");
+        // hBlockChi2sliceFull[l].push_back(new TH1D(Form("hBlockChi2sliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -xFullmm/2, +xFullmm/2));
+        // hBlockChi2sliceFull[l].push_back(new TH1D(Form("hBlockChi2sliceFull%s_block%04d", tmm_tag[l].Data(), b), TString("Chi2 value slice distribution d [") + tmm_tag[l] + TString("]"), MAXSTRIP, -0.5, MAXSTRIP-0.5));
+        hBlockChi2sliceFull[l].push_back(nullptr);
+        // hBlockChi2sliceFull[l].back()->SetXTitle(TString(tmm_tag[l]+" [mm]").Data());
+        // hBlockChi2sliceFull[l].back()->SetYTitle("#Chi^{2}_{q_{max}} [ADC counts]");
 
-  //       // per-block calibration graphs
-  //       g_BlockRawCalibFullDiff[l].push_back(new TGraphErrors());
-  //       TGraphAttribute(g_BlockRawCalibFullDiff[l].back(), Form("g_BlockRawCalibFullDiff%s", tmm_tag[l].Data()), Form("%s [mm]", tmm_tag[l].Data()), "Q_{calib} - Q_{raw} [ADC counts]", 22, kBlack);
+        // per-block calibration graphs
+        g_BlockRawCalibFullDiff[l].push_back(new TGraphErrors());
+        TGraphAttribute(g_BlockRawCalibFullDiff[l].back(), Form("g_BlockRawCalibFullDiff%s", tmm_tag[l].Data()), Form("%s [mm]", tmm_tag[l].Data()), "Q_{calib} - Q_{raw} [ADC counts]", 22, kBlack);
 
-  //       g_BlockRawCalibFullRatio[l].push_back(new TGraphErrors());
-  //       TGraphAttribute(g_BlockRawCalibFullRatio[l].back(), Form("g_BlockRawCalibFullRatio%s", tmm_tag[l].Data()), Form("%s [mm]", tmm_tag[l].Data()), "Q_{calib} / Q_{raw}", 22, kBlack);
+        g_BlockRawCalibFullRatio[l].push_back(new TGraphErrors());
+        TGraphAttribute(g_BlockRawCalibFullRatio[l].back(), Form("g_BlockRawCalibFullRatio%s", tmm_tag[l].Data()), Form("%s [mm]", tmm_tag[l].Data()), "Q_{calib} / Q_{raw}", 22, kBlack);
       
-  //       // --- Per-block time distribution  ---
-  //       // if(l==0){
-  //       //   g_BlockSrsTimeStamp.push_back(new TGraphErrors());
-  //       //   TGraphAttribute(g_BlockSrsTimeStamp.back(), "g_BlockSrsTimeStamp", "Evt ID", "SrsTimeStamp", 22, kBlack);
+        // --- Per-block time distribution  ---
+        // if(l==0){
+        //   g_BlockSrsTimeStamp.push_back(new TGraphErrors());
+        //   TGraphAttribute(g_BlockSrsTimeStamp.back(), "g_BlockSrsTimeStamp", "Evt ID", "SrsTimeStamp", 22, kBlack);
           
-  //       //   g_BlockDaqTimeSec.push_back(new TGraphErrors());
-  //       //   TGraphAttribute(g_BlockDaqTimeSec.back(), "g_BlockDaqTimeSec", "Evt ID", "DaqTimeSec [s]", 22, kBlack);
+        //   g_BlockDaqTimeSec.push_back(new TGraphErrors());
+        //   TGraphAttribute(g_BlockDaqTimeSec.back(), "g_BlockDaqTimeSec", "Evt ID", "DaqTimeSec [s]", 22, kBlack);
 
-  //       //   g_BlockDaqTimeMicroSec.push_back(new TGraphErrors());
-  //       //   TGraphAttribute(g_BlockDaqTimeMicroSec.back(), "g_BlockDaqTimeMicroSec", "Evt ID", "DaqTimeMicroSec [#mus]", 22, kBlack);
+        //   g_BlockDaqTimeMicroSec.push_back(new TGraphErrors());
+        //   TGraphAttribute(g_BlockDaqTimeMicroSec.back(), "g_BlockDaqTimeMicroSec", "Evt ID", "DaqTimeMicroSec [#mus]", 22, kBlack);
 
-  //       //   g_BlockDaqTime.push_back(new TGraphErrors());
-  //       //   TGraphAttribute(g_BlockDaqTime.back(), Form("g_BlockDaqTime_block%04d", b), "entry", "DAQ time [s]", 22, kBlack);
-  //       // }
-  //     }
-  //   }
-  // };
+        //   g_BlockDaqTime.push_back(new TGraphErrors());
+        //   TGraphAttribute(g_BlockDaqTime.back(), Form("g_BlockDaqTime_block%04d", b), "entry", "DAQ time [s]", 22, kBlack);
+        // }
+      }
+    }
+  };
 
   // ------------------------------------------------------------
   // First pass: fill RAW histograms
@@ -1064,205 +1047,6 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   cout << "Will process " << nToProcess << " entries" << endl;
 
-  const int nBlocks = (int)((nToProcess + NevtBlock - 1) / NevtBlock);
-
-  cout << "Number of blocks: " << nBlocks << endl;
-
-  // One small structure per block: perfectly fine to keep in RAM
-  blockTimeInfo.clear();
-  blockTimeInfo.resize(nBlocks);
-
-  // Per-block calibration graphs are small and ARE needed in second pass
-  for (int l = 0; l < TMMCH_N_Readout; ++l) {
-      g_BlockRawCalibFullRatio[l].clear();
-      g_BlockRawCalibFullDiff[l].clear();
-      g_BlockRawCalibFullRatio[l].resize(nBlocks, nullptr);
-      g_BlockRawCalibFullDiff[l].resize(nBlocks, nullptr);
-  }
-
-  cout << "#### Creating output file " << outputFileName << endl;
-
-  TFile *outfile = new TFile(outputFileName.Data(), "RECREATE");
-
-  if (!outfile || outfile->IsZombie()) {
-      cerr << "ERROR: cannot create output file " << outputFileName << endl;
-      if (outfile) delete outfile;
-      return;
-  }
-
-  // Main output structure
-  TDirectory *overalldir       = outfile->mkdir("Overall");
-  TDirectory *rawoveralldir    = overalldir->mkdir("Raw");
-  TDirectory *extcaloveralldir = overalldir->mkdir("Calib_external");
-  TDirectory *runcaloveralldir = overalldir->mkdir("Calib_run");
-
-  TDirectory *blockdir = outfile->mkdir("Blocks");
-
-  // helper to create blockdir subdirectories
-  auto GetBlockSubdir = [&](int iblock, const char *subdirName) -> TDirectory *{
-      blockdir->cd();
-      TString blockName = Form("block_%04d", iblock);
-      TDirectory *thisblockdir = blockdir->GetDirectory(blockName);
-      if (!thisblockdir) thisblockdir = blockdir->mkdir(blockName);
-      TDirectory *subdir = thisblockdir->GetDirectory(subdirName);
-      if (!subdir) subdir = thisblockdir->mkdir(subdirName);
-      return subdir;
-  };
-
-  // histograms di appoggio
-  TH2F *currentBlockRaw[TMMCH_N_Readout] = {nullptr};
-  TH2F *currentBlockRawFull[TMMCH_N_Readout] = {nullptr}; 
-
-  // creation histo lambda function
-  auto CreateRawBlock = [&](int iblock) {
-      for (int l = 0; l < TMMCH_N_Readout; ++l) {
-          currentBlockRaw[l] = new TH2F(Form("hBlockqmaxstrip%s_block%04d", tmm_tag[l].Data(), iblock),
-              TString("q_{max} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", iblock),
-              MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-          );
-          currentBlockRaw[l]->SetDirectory(nullptr);
-          currentBlockRaw[l]->SetXTitle(TString(tmm_tag[l] + " [mm]").Data());
-          currentBlockRaw[l]->SetYTitle("q_{max} [ADC counts]");
-
-          currentBlockRawFull[l] = new TH2F(Form("hBlockqmaxstripFull%s_block%04d", tmm_tag[l].Data(), iblock),
-              TString("q_{max} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", iblock),
-              MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-          );
-          currentBlockRawFull[l]->SetDirectory(nullptr);
-          currentBlockRawFull[l]->SetXTitle(TString(tmm_tag[l] + " [mm]").Data());
-          currentBlockRawFull[l]->SetYTitle("q_{max} [ADC counts]");
-      }
-  };
-
-  auto FinalizeRawBlock = [&](int iblock) {
-      cout << "Finalizing RAW block " << iblock << endl;
-
-      TDirectory *rawblockdir = GetBlockSubdir(iblock, "Raw");
-
-      for (int iR = 0; iR < TMMCH_N_Readout; ++iR) {
-        // ------------------------------------------------
-        // FitSlicesY
-        // ------------------------------------------------
-        SliceFitResult s = RunFitSlicesY(currentBlockRaw[iR],Form("%s_block%d", tmm_tag[iR].Data(), iblock));
-        SliceFitResult sFull = RunFitSlicesY(currentBlockRawFull[iR],Form("%s_block%d_full", tmm_tag[iR].Data(), iblock));
-
-        // ------------------------------------------------
-        // Create the small calibration graphs
-        // These MUST survive until second pass
-        // ------------------------------------------------
-
-        g_BlockRawCalibFullDiff[iR][iblock] = new TGraphErrors();
-        TGraphAttribute(g_BlockRawCalibFullDiff[iR][iblock], Form("g_BlockRawCalibFullDiff%s", tmm_tag[iR].Data()), Form("%s [mm]", tmm_tag[iR].Data()), "Q_{calib} - Q_{raw} [ADC counts]", 22, kBlack);
-        
-        g_BlockRawCalibFullRatio[iR][iblock] = new TGraphErrors();
-        TGraphAttribute(g_BlockRawCalibFullRatio[iR][iblock], Form("g_BlockRawCalibFullRatio%s", tmm_tag[iR].Data()), Form("%s [mm]", tmm_tag[iR].Data()), "Q_{calib} / Q_{raw} [ADC counts]", 22, kBlack);
-
-        // ------------------------------------------------
-        // Same beam-profile fit you currently perform
-        // ------------------------------------------------
-
-        if (s.mean) {
-            TFitResultPtr fitResult;
-            const double xini = StripMin * pitch + ((iR == 0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
-            const double xfin = StripMax * pitch + ((iR == 0) ? GLOBAL_X_TRANSLATION : GLOBAL_Y_TRANSLATION);
-
-            TF1 *fb = FitVoigt(s.mean, Form("%s_block%d", tmm_tag[iR].Data(), iblock), xini, xfin, fitResult);
-
-            if (!fb || !fitResult.Get()) {
-              cerr << "WARNING: block fit failed" << " readout = " << tmm_tag[iR] << " block = " << iblock << endl;
-            } else if (!IsFitAccepted(fitResult, 1, 2)) {
-              cerr << "WARNING: block fit rejected" << " readout = " << tmm_tag[iR] << " block = " << iblock << endl;
-              delete fb;
-              fb = nullptr;
-            } else {
-              const double I = fb->GetParameter(0);
-              const double mu = fb->GetParameter(1);
-              const double s1 = fabs(fb->GetParameter(2));
-              const double s2 = fabs(fb->GetParameter(3));
-              const double e_mu = fb->GetParError(1);
-
-              if (I > 0.) {
-                const double sigma_eff = sqrt(s1 * s1 + s2 * s2);
-                const double charge_proxy = I;
-
-                int p = g_BlockBeamSpot[iR]->GetN();
-                g_BlockBeamSpot[iR]->SetPoint(p, iblock, mu );
-                g_BlockBeamSpot[iR]->SetPointError(p, 0., e_mu );
-
-                p = g_BlockBeamSpread[iR]->GetN();
-                g_BlockBeamSpread[iR]->SetPoint(p, iblock, sigma_eff );
-                g_BlockBeamSpread[iR]->SetPointError(p, 0., 0. );
-
-                p = g_BlockBeamCharge[iR]->GetN();
-                g_BlockBeamCharge[iR]->SetPoint(p, iblock, charge_proxy );
-                g_BlockBeamCharge[iR]->SetPointError( p,0.,sqrt(charge_proxy));
-              }
-
-              if (sFull.mean && sFull.sigma) {
-                BuildFitRatio(sFull.mean, sFull.sigma, fb, g_BlockRawCalibFullRatio[iR][iblock], g_BlockRawCalibFullDiff[iR][iblock] );
-              }
-
-              delete fb;
-              fb = nullptr;
-            }
-        }
-
-        // ------------------------------------------------
-        // WRITE EVERYTHING FROM THIS RAW BLOCK
-        // ------------------------------------------------
-
-        rawblockdir->cd();
-
-        currentBlockRaw[iR]->Write();
-        currentBlockRawFull[iR]->Write();
-
-        if (s.amp)   s.amp->Write();
-        if (s.mean)  s.mean->Write();
-        if (s.sigma) s.sigma->Write();
-        if (s.chi2)  s.chi2->Write();
-
-        if (sFull.amp)   sFull.amp->Write();
-        if (sFull.mean)  sFull.mean->Write();
-        if (sFull.sigma) sFull.sigma->Write();
-        if (sFull.chi2)  sFull.chi2->Write();
-
-        g_BlockRawCalibFullDiff[iR][iblock]->Write();
-        g_BlockRawCalibFullRatio[iR][iblock]->Write();
-
-        // ------------------------------------------------
-        // Dense/slice objects are no longer required
-        // ------------------------------------------------
-
-        delete currentBlockRaw[iR];
-        currentBlockRaw[iR] = nullptr;
-
-        delete currentBlockRawFull[iR];
-        currentBlockRawFull[iR] = nullptr;
-
-        delete s.amp;
-        delete s.mean;
-        delete s.sigma;
-        delete s.chi2;
-
-        delete sFull.amp;
-        delete sFull.mean;
-        delete sFull.sigma;
-        delete sFull.chi2;
-
-        // Diff graph is not needed in the second pass.
-        // It is already safely stored in the ROOT file.
-        delete g_BlockRawCalibFullDiff[iR][iblock];
-        g_BlockRawCalibFullDiff[iR][iblock] = nullptr;
-
-        // DO NOT delete g_BlockRawCalibFullRatio:
-        // second pass still needs it.
-      }
-
-      outfile->Flush();
-  };
-
-  // counter for raw block id 
-  int currentRawBlockId = -1;
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
 
     Long64_t nb = fTree->GetEntry(iev);    
@@ -1271,15 +1055,9 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
       continue;
     }
     // i block defined as the ratio between the current event index and the number of events per block
-    const int iblock = static_cast<int>(iev / NevtBlock);
+    const int iblock = (int)(iev / NevtBlock);
 
-    if (iblock != currentRawBlockId) {
-        // Previous block has just finished
-        if (currentRawBlockId >= 0)FinalizeRawBlock(currentRawBlockId);
-        // Start new block
-        currentRawBlockId = iblock;
-        CreateRawBlock(currentRawBlockId);
-    }
+    EnsureBlockHistograms(iblock);
 
     if (RecoEntry % 1000 == 0) {
       float progress = static_cast<float>(RecoEntry) / nToProcess;
@@ -1311,20 +1089,12 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     bt.sumDaqSec += (long double)daqTimeSec;
     bt.nEvents++;
 
-    int ipTime = g_SrsTimeStamp_iev->GetN();
+    int ipTime = g_SrsTimeStamp->GetN();
 
-    g_SrsTimeStamp_iev->SetPoint(ipTime, iev, srsTimeStamp);
+    g_SrsTimeStamp->SetPoint(ipTime, iev, srsTimeStamp);
     g_DaqTimeSec_iev->SetPoint(ipTime, iev, daqTimeSec);
-    g_DaqTimeMicroSec_iev->SetPoint(ipTime, iev, daqTimeMicroSec);
-    g_DaqTime_iev->SetPoint(ipTime, iev, daqTime);
-
-    ipTime = g_SrsTimeStamp_evt->GetN();
-    g_SrsTimeStamp_evt->SetPoint(ipTime, evt, srsTimeStamp);
-    g_DaqTimeSec_evt->SetPoint(ipTime, evt, daqTimeSec);
-    g_DaqTimeMicroSec_evt->SetPoint(ipTime, evt, daqTimeMicroSec);
-    g_DaqTime_evt->SetPoint(ipTime, evt, daqTime);
-
-    g_evt_vs_iev->SetPoint(iev, iev, evt);
+    g_DaqTimeMicroSec->SetPoint(ipTime, iev, daqTimeMicroSec);
+    g_DaqTimeSec_iev->SetPoint(ipTime, iev, daqTime);
 
     //per-block time distribution
     // int ipBlockTime = g_BlockSrsTimeStamp[iblock]->GetN();
@@ -1356,17 +1126,13 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
       if (channel % 2 == 0) {
         hqmaxstrip[iReadout_new]->Fill(x_strip, q_strip);
-        currentBlockRaw[iReadout_new]->Fill(x_strip, q_strip);
+        hBlockqmaxstrip[iReadout_new][iblock]->Fill(x_strip, q_strip);
       }
       hqmaxstripFull[iReadout_new]->Fill(x_strip, q_strip);
-      currentBlockRawFull[iReadout_new]->Fill(x_strip, q_strip);    
+      hBlockqmaxstripFull[iReadout_new][iblock]->Fill(x_strip, q_strip);
     }
 
     RecoEntry++;
-  }
-
-  if (currentRawBlockId >= 0) {
-    FinalizeRawBlock(currentRawBlockId);
   }
 
   cout << "#### Total reconstructed events: " << RecoEntry << endl;
@@ -1435,26 +1201,26 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
     if (!fit || !fitResultOverall.Get()) {
       cerr << "WARNING: overall fit failed for readout=" << tmm_tag[iR] << endl;
-      if (fit) {
-        delete fit;
-        fit = nullptr;
-      }
+      f.push_back(nullptr);
       continue;
     }
 
-    bool approved = IsFitAccepted(fitResultOverall, 1, 2 );
-    if (approved) {
-        BuildFitRatio(hMeansliceFull[iR], hSigmasliceFull[iR], fit, g_RawCalibFullRatio[iR], g_RawCalibFullDiff[iR] );
+    bool approved = IsFitAccepted(fitResultOverall, 1, 2);
+    if(approved){
+      BuildFitRatio(hMeansliceFull[iR], hSigmasliceFull[iR], fit, g_RawCalibFullRatio[iR], g_RawCalibFullDiff[iR]);  
+      delete fit;
+      fit = nullptr;
     } else {
-      cerr << "WARNING: overall calibration fit rejected" << " readout = " << tmm_tag[iR] << " fitStatus = " << (int)fitResultOverall << " covStatus = " << fitResultOverall->CovMatrixStatus() << endl;
+      cerr << "WARNING: overall calibration fit rejected for readout = " << tmm_tag[iR] << " fitStatus = " << (int)fitResultOverall << " covStatus = " << fitResultOverall->CovMatrixStatus() << endl;
     }
     delete fit;
     fit = nullptr;
+
   }
 
-  // for (int iR = 0; iR < TMMCH_N_Readout; iR++) {
-  //   FillBlockGraphsFromSlices(iR);
-  // }
+  for (int iR = 0; iR < TMMCH_N_Readout; iR++) {
+    FillBlockGraphsFromSlices(iR);
+  }
 
   for (int iR = 0; iR < TMMCH_N_Readout; ++iR) {
 
@@ -1482,11 +1248,11 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     const double tDaq = bt.meanDaq;
     const double eTDaq = 0.5 * fabs(bt.lastDaq - bt.firstDaq);
 
-    // const double tSrs = bt.meanSrs;
-    // const double eTSrs = 0.5 * fabs(bt.lastSrs - bt.firstSrs);
+    const double tSrs = bt.meanSrs;
+    const double eTSrs = 0.5 * fabs(bt.lastSrs - bt.firstSrs);
 
-    // const double tDaqSec = bt.meanDaqSec;
-    // const double eTDaqSec = 0.5 * fabs(bt.lastDaqSec - bt.firstDaqSec);
+    const double tDaqSec = bt.meanDaqSec;
+    const double eTDaqSec = 0.5 * fabs(bt.lastDaqSec - bt.firstDaqSec);
 
     const double eSpot = g_BlockBeamSpot[iR]->GetErrorY(ip);
 
@@ -1538,19 +1304,19 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     // SRS timestamp
     // --------------------------
 
-    // p = g_SrsTimeBeamSpot[iR]->GetN();
+    p = g_SrsTimeBeamSpot[iR]->GetN();
 
-    // g_SrsTimeBeamSpot[iR]->SetPoint(p, tSrs, beamSpot);
-    // g_SrsTimeBeamSpot[iR]->SetPointError(p, eTSrs, eSpot);
+    g_SrsTimeBeamSpot[iR]->SetPoint(p, tSrs, beamSpot);
+    g_SrsTimeBeamSpot[iR]->SetPointError(p, eTSrs, eSpot);
 
-    // p = g_SrsTimeBeamSpread[iR]->GetN();
+    p = g_SrsTimeBeamSpread[iR]->GetN();
 
-    // g_SrsTimeBeamSpread[iR]->SetPoint(p, tSrs, beamSpread);
-    // g_SrsTimeBeamSpread[iR]->SetPointError(p, eTSrs, eSpread);
+    g_SrsTimeBeamSpread[iR]->SetPoint(p, tSrs, beamSpread);
+    g_SrsTimeBeamSpread[iR]->SetPointError(p, eTSrs, eSpread);
 
-    // p = g_SrsTimeBeamCharge[iR]->GetN();
-    // g_SrsTimeBeamCharge[iR]->SetPoint(p, tSrs, beamCharge);
-    // g_SrsTimeBeamCharge[iR]->SetPointError(p, eTSrs, eCharge);
+    p = g_SrsTimeBeamCharge[iR]->GetN();
+    g_SrsTimeBeamCharge[iR]->SetPoint(p, tSrs, beamCharge);
+    g_SrsTimeBeamCharge[iR]->SetPointError(p, eTSrs, eCharge);
   }
 }
 
@@ -1575,111 +1341,34 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   // ------------------------------------------------------------
   // Helper: is this block index valid across all calibrated containers?
   // ------------------------------------------------------------
-  auto IsValidBlockForCalibration = [&](int iR, int iblock) -> bool{
-    if (iR < 0 || iR >= TMMCH_N_Readout) return false;
-    if (iblock < 0 || iblock >= nBlocks) return false;
+  auto IsValidBlockForCalibration = [&](int iR, int iblock) -> bool {
 
-    if (iblock >= (int)(g_BlockRawCalibFullRatio[iR].size())) return false;
+    if (iR < 0 || iR >= TMMCH_N_Readout) return false;
+    if (iblock < 0) return false;
+
+    if (iblock >= (int)hBlockqmaxstrip_blockcal[iR].size()) return false;
+    if (iblock >= (int)hBlockqmaxstripFull_blockcal[iR].size()) return false;
+    if (iblock >= (int)hBlockqmaxstrip_extcal[iR].size()) return false;
+    if (iblock >= (int)hBlockqmaxstripFull_extcal[iR].size()) return false;
+    if (iblock >= (int)hBlockqmaxstrip_runcal[iR].size()) return false;
+    if (iblock >= (int)hBlockqmaxstripFull_runcal[iR].size()) return false;
+
+    if (!hBlockqmaxstrip_blockcal[iR][iblock]) return false;
+    if (!hBlockqmaxstripFull_blockcal[iR][iblock]) return false;
+    if (!hBlockqmaxstrip_extcal[iR][iblock]) return false;
+    if (!hBlockqmaxstripFull_extcal[iR][iblock]) return false;
+    if (!hBlockqmaxstrip_runcal[iR][iblock]) return false;
+    if (!hBlockqmaxstripFull_runcal[iR][iblock]) return false;
+
+    if (iblock >= (int)g_BlockRawCalibFullRatio[iR].size()) return false;
     if (!g_BlockRawCalibFullRatio[iR][iblock]) return false;
+
     return true;
-};
+  };
 
   // ------------------------------------------------------------
   // Second pass: fill calibrated histograms (modes 2, 3 overall; 2, 3, 4 block)
   // ------------------------------------------------------------
-
-  // same logic with histo di appoggio per i calibrated plots
-  TH2F *currentExtCal[TMMCH_N_Readout] = {nullptr};
-  TH2F *currentExtCalFull[TMMCH_N_Readout] = {nullptr};
-
-  TH2F *currentRunCal[TMMCH_N_Readout] = {nullptr};
-  TH2F *currentRunCalFull[TMMCH_N_Readout] = {nullptr};
-
-  TH2F *currentBlockCal[TMMCH_N_Readout] = {nullptr};
-  TH2F *currentBlockCalFull[TMMCH_N_Readout] = {nullptr};
-
-  auto CreateCalibratedBlock = [&](int iblock){
-      for (int l = 0; l < TMMCH_N_Readout; ++l) {
-        currentExtCal[l] = new TH2F(
-            Form("hBlockqmaxstrip_extcal%s_block%04d",tmm_tag[l].Data(),iblock),
-            TString("q_{max-extcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentExtCal[l]->SetDirectory(nullptr);
-
-        currentExtCalFull[l] = new TH2F(
-            Form("hBlockqmaxstripFull_extcal%s_block%04d",tmm_tag[l].Data(),iblock),
-            TString("q_{max-extcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentExtCalFull[l]->SetDirectory(nullptr);
-
-        currentRunCal[l] = new TH2F(
-            Form("hBlockqmaxstrip_runcal%s_block%04d", tmm_tag[l].Data(), iblock),
-            TString("q_{max-runcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentRunCal[l]->SetDirectory(nullptr);
-
-        currentRunCalFull[l] = new TH2F(
-            Form("hBlockqmaxstripFull_runcal%s_block%04d", tmm_tag[l].Data(), iblock),
-            TString("q_{max-runcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentRunCalFull[l]->SetDirectory(nullptr);
-
-        currentBlockCal[l] = new TH2F(
-            Form("hBlockqmaxstrip_blockcal%s_block%04d", tmm_tag[l].Data(), iblock),
-            TString("q_{max-blockcal} vs x_{strip} [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentBlockCal[l]->SetDirectory(nullptr);
-
-        currentBlockCalFull[l] = new TH2F(
-            Form("hBlockqmaxstripFull_blockcal%s_block%04d", tmm_tag[l].Data(), iblock),
-            TString("q_{max-blockcal} vs x_{strip} full [") + tmm_tag[l] + Form("] block %04d", iblock),
-            MAXSTRIP, -xFullmm / 2., +xFullmm / 2., 2500, 0., 2500.
-        );
-        currentBlockCalFull[l]->SetDirectory(nullptr);
-      }
-  };
-
-  auto FinalizeCalibratedBlock = [&](int iblock) {
-      TDirectory *extcalblockdir = GetBlockSubdir(iblock, "Calib_external");
-      TDirectory *runcalblockdir = GetBlockSubdir(iblock, "Calib_run" );
-      TDirectory *blockcalblockdir = GetBlockSubdir(iblock, "Calib_block");
-
-      for (int l = 0; l < TMMCH_N_Readout; ++l) {
-          extcalblockdir->cd();
-          currentExtCal[l]->Write();
-          currentExtCalFull[l]->Write();
-
-          runcalblockdir->cd();
-          currentRunCal[l]->Write();
-          currentRunCalFull[l]->Write();
-
-          blockcalblockdir->cd();
-          currentBlockCal[l]->Write();
-          currentBlockCalFull[l]->Write();
-
-          delete currentExtCal[l];
-          delete currentExtCalFull[l];
-          delete currentRunCal[l];
-          delete currentRunCalFull[l];
-          delete currentBlockCal[l];
-          delete currentBlockCalFull[l];
-
-          currentExtCal[l] = nullptr;
-          currentExtCalFull[l] = nullptr;
-          currentRunCal[l] = nullptr;
-          currentRunCalFull[l] = nullptr;
-          currentBlockCal[l] = nullptr;
-          currentBlockCalFull[l] = nullptr;
-      }
-      outfile->Flush();
-  };
-  
-  int currentCalBlockId = -1;
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
 
     Long64_t nb = fTree->GetEntry(iev);    
@@ -1691,12 +1380,6 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
       cerr << "WARNING: null branch pointer at event " << iev << endl;
       continue;
     }
-    const int ic = static_cast<int>(iev / NevtBlock);
-    if (ic != currentCalBlockId) {
-      if (currentCalBlockId >= 0) FinalizeCalibratedBlock(currentCalBlockId);
-      currentCalBlockId = ic;
-      CreateCalibratedBlock(currentCalBlockId);
-    } 
 
     int firedstrip_size = min(
       min((int)mmLayer->size(),   (int)mmReadout->size()),
@@ -1735,9 +1418,10 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
         g_RawCalibFullRatio[iReadout_new],
         x_strip,
         xCalMin[iReadout_new],
-        xCalMax[iReadout_new]
-      );
-      
+        xCalMax[iReadout_new]);
+
+      const int ic = (int)(iev / NevtBlock);
+
       // ---- Mode 4 (block only): per-block calibration ----
       double blockcorr = 1.;
       bool blockValid = IsValidBlockForCalibration(iReadout_new, ic);
@@ -1760,13 +1444,13 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
       // ---- Block fills (4 modes; mode 1 was filled in the first pass) ----
       if (blockValid) {
         if (channel % 2 == 0) {
-          currentExtCal[iReadout_new]->Fill(x_strip, q_strip * extcorr);
-          currentRunCal[iReadout_new]->Fill(x_strip, q_strip * runcorr);
-          currentBlockCal[iReadout_new]->Fill(x_strip, q_strip * blockcorr);
+          hBlockqmaxstrip_extcal  [iReadout_new][ic]->Fill(x_strip, q_strip * extcorr);
+          hBlockqmaxstrip_runcal  [iReadout_new][ic]->Fill(x_strip, q_strip * runcorr);
+          hBlockqmaxstrip_blockcal[iReadout_new][ic]->Fill(x_strip, q_strip * blockcorr);
         }
-        currentExtCalFull[iReadout_new]->Fill(x_strip, q_strip * extcorr);
-        currentRunCalFull[iReadout_new]->Fill(x_strip, q_strip * runcorr);
-        currentBlockCalFull[iReadout_new]->Fill(x_strip, q_strip * blockcorr);
+        hBlockqmaxstripFull_extcal  [iReadout_new][ic]->Fill(x_strip, q_strip * extcorr);
+        hBlockqmaxstripFull_runcal  [iReadout_new][ic]->Fill(x_strip, q_strip * runcorr);
+        hBlockqmaxstripFull_blockcal[iReadout_new][ic]->Fill(x_strip, q_strip * blockcorr);
       } else {
         cerr << "WARNING: invalid block calibration index"
             << " event = " << iev << " ic = " << ic
@@ -1778,44 +1462,33 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     }
   }
 
-  if (currentCalBlockId >= 0) {
-    FinalizeCalibratedBlock(currentCalBlockId);
-  }
-
   // ------------------------------------------------------------
   // Write output ROOT file
   // ------------------------------------------------------------
-  // cout << "#### Creating output file " << outputFileName << endl;
-  // TFile *outfile = new TFile(outputFileName.Data(), "recreate");
-  // if (!outfile || outfile->IsZombie()) {
-  //   cerr << "ERROR: cannot create output file " << outputFileName << endl;
-  //   if (outfile) delete outfile;
-  //   return;
-  // }
+  cout << "#### Creating output file " << outputFileName << endl;
+  TFile *outfile = new TFile(outputFileName.Data(), "recreate");
+  if (!outfile || outfile->IsZombie()) {
+    cerr << "ERROR: cannot create output file " << outputFileName << endl;
+    if (outfile) delete outfile;
+    return;
+  }
 
-  // // Overall: 3 modes
-  // TDirectory *overalldir          = outfile->mkdir("Overall");
-  // TDirectory *rawoveralldir       = overalldir->mkdir("Raw");
-  // TDirectory *extcaloveralldir    = overalldir->mkdir("Calib_external");
-  // TDirectory *runcaloveralldir    = overalldir->mkdir("Calib_run");
+  // Overall: 3 modes
+  TDirectory *overalldir          = outfile->mkdir("Overall");
+  TDirectory *rawoveralldir       = overalldir->mkdir("Raw");
+  TDirectory *extcaloveralldir    = overalldir->mkdir("Calib_external");
+  TDirectory *runcaloveralldir    = overalldir->mkdir("Calib_run");
 
-  // // Blocks
-  // TDirectory *blockdir = outfile->mkdir("Blocks");
+  // Blocks
+  TDirectory *blockdir = outfile->mkdir("Blocks");
 
   // --- Overall RAW + slice histograms + calibration graphs ---
   outfile->cd();
   overalldir->cd();
-  if(g_SrsTimeStamp_iev) g_SrsTimeStamp_iev->Write();
+  if(g_SrsTimeStamp) g_SrsTimeStamp->Write();
   if(g_DaqTimeSec_iev) g_DaqTimeSec_iev->Write();
-  if(g_DaqTimeMicroSec_iev) g_DaqTimeMicroSec_iev->Write();
-  if(g_DaqTime_iev) g_DaqTime_iev->Write();
-  if(g_SrsTimeStamp_evt) g_SrsTimeStamp_evt->Write();
-  if(g_DaqTimeSec_evt) g_DaqTimeSec_evt->Write();
-  if(g_DaqTimeMicroSec_evt) g_DaqTimeMicroSec_evt->Write();
-  if(g_DaqTime_evt) g_DaqTime_evt->Write();
-  if(g_evt_vs_iev) g_evt_vs_iev->Write();
-
-
+  if(g_DaqTimeMicroSec) g_DaqTimeMicroSec->Write();
+  if (g_DaqTimeSec_iev) g_DaqTimeSec_iev->Write();
   for (int l = 0; l < TMMCH_N_Readout; l++) {
     overalldir->cd();
     if (g_DaqTimeBeamSpot[l])   g_DaqTimeBeamSpot[l]->Write();
@@ -1824,9 +1497,9 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     // if (g_DaqSecBeamSpot[l])    g_DaqSecBeamSpot[l]->Write();
     // if (g_DaqSecBeamSpread[l])  g_DaqSecBeamSpread[l]->Write();
     // if (g_DaqSecBeamCharge[l])  g_DaqSecBeamCharge[l]->Write();
-    // if (g_SrsTimeBeamSpot[l])   g_SrsTimeBeamSpot[l]->Write();
-    // if (g_SrsTimeBeamSpread[l]) g_SrsTimeBeamSpread[l]->Write();
-    // if (g_SrsTimeBeamCharge[l]) g_SrsTimeBeamCharge[l]->Write();
+    if (g_SrsTimeBeamSpot[l])   g_SrsTimeBeamSpot[l]->Write();
+    if (g_SrsTimeBeamSpread[l]) g_SrsTimeBeamSpread[l]->Write();
+    if (g_SrsTimeBeamCharge[l]) g_SrsTimeBeamCharge[l]->Write();
 
     rawoveralldir->cd();
     hqmaxstrip[l]->Write();
@@ -1872,6 +1545,61 @@ void RecoTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   if (g_BlockMeanDaqSec) g_BlockMeanDaqSec->Write();
   if (g_BlockMeanDaqTime) g_BlockMeanDaqTime->Write();
   if (g_BlockMeanSrsTime) g_BlockMeanSrsTime->Write();
+
+  // --- Per-block subdirectories, 4 modes each ---
+  for (int b = 0; b < (int)g_BlockBeamSpot[0]->GetN(); b++) {
+    TDirectory *thisblockdir       = blockdir->mkdir(Form("block_%04d", b));
+    TDirectory *rawblockdir        = thisblockdir->mkdir("Raw");
+    TDirectory *extcalblockdir     = thisblockdir->mkdir("Calib_external");
+    TDirectory *runcalblockdir     = thisblockdir->mkdir("Calib_run");
+    TDirectory *blockcalblockdir   = thisblockdir->mkdir("Calib_block");
+
+    thisblockdir->cd();
+    // TGraph filling block by block time evt association
+    // if(g_BlockSrsTimeStamp[b])    g_BlockSrsTimeStamp[b]->Write();
+    // if(g_BlockDaqTimeSec[b])      g_BlockDaqTimeSec[b]->Write();
+    // if(g_BlockDaqTimeMicroSec[b]) g_BlockDaqTimeMicroSec[b]->Write();
+    // if(g_BlockDaqTime[b])         g_BlockDaqTime[b]->Write(); 
+    
+    for (int l = 0; l < TMMCH_N_Readout; l++) {
+
+      // Mode 1: RAW + per-block slices + per-block calibration graphs
+      rawblockdir->cd();
+      if (b < (int)hBlockqmaxstrip[l].size()) {
+        hBlockqmaxstrip[l][b]->Write();
+        if (hBlockAmpslice[l][b])   hBlockAmpslice[l][b]->Write();
+        if (hBlockMeanslice[l][b])  hBlockMeanslice[l][b]->Write();
+        if (hBlockSigmaslice[l][b]) hBlockSigmaslice[l][b]->Write();
+        if (hBlockChi2slice[l][b])  hBlockChi2slice[l][b]->Write();
+      }
+      if (b < (int)hBlockqmaxstripFull[l].size()) {
+        hBlockqmaxstripFull[l][b]->Write();
+        if (hBlockAmpsliceFull[l][b])   hBlockAmpsliceFull[l][b]->Write();
+        if (hBlockMeansliceFull[l][b])  hBlockMeansliceFull[l][b]->Write();
+        if (hBlockSigmasliceFull[l][b]) hBlockSigmasliceFull[l][b]->Write();
+        if (hBlockChi2sliceFull[l][b])  hBlockChi2sliceFull[l][b]->Write();
+        if (b < (int)g_BlockRawCalibFullDiff[l].size()  && g_BlockRawCalibFullDiff[l][b])  g_BlockRawCalibFullDiff[l][b]->Write();
+        if (b < (int)g_BlockRawCalibFullRatio[l].size() && g_BlockRawCalibFullRatio[l][b]) g_BlockRawCalibFullRatio[l][b]->Write();
+      }
+
+      // Mode 2: EXT-CAL
+      extcalblockdir->cd();
+      if (b < (int)hBlockqmaxstrip_extcal[l].size())     hBlockqmaxstrip_extcal[l][b]->Write();
+      if (b < (int)hBlockqmaxstripFull_extcal[l].size()) hBlockqmaxstripFull_extcal[l][b]->Write();
+
+      // Mode 3: overall RUN-CAL applied per block
+      runcalblockdir->cd();
+      if (b < (int)hBlockqmaxstrip_runcal[l].size())     hBlockqmaxstrip_runcal[l][b]->Write();
+      if (b < (int)hBlockqmaxstripFull_runcal[l].size()) hBlockqmaxstripFull_runcal[l][b]->Write();
+
+      // Mode 4: per-block calibration
+      blockcalblockdir->cd();
+      if (b < (int)hBlockqmaxstrip_blockcal[l].size())     hBlockqmaxstrip_blockcal[l][b]->Write();
+      if (b < (int)hBlockqmaxstripFull_blockcal[l].size()) hBlockqmaxstripFull_blockcal[l][b]->Write();
+    }
+    blockdir->cd();
+  }
+  outfile->cd();
 
   outfile->Write();
   outfile->Close();

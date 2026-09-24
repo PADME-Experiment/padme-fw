@@ -10,14 +10,19 @@ fi
 PadmeRunID="$1"
 DetRunID="$2"
 MaxEvents="${3:-0}"
-NevtBlock="${4:-10000}"
+NevtBlock="${4:-1000}"
 
 RecoPath="/home/mancinima/BeamMonitorRun4/padme-fw/RecoTMM"
 FileList="${RecoPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${RecoPath}/outputTMM"
-# OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
-OutputFile="${OutputDir}/Run680NoTarget_test.root"
-# OutputFile="${OutputDir}/TMMVoigtReco_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+# OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+# OutputFile="${OutputDir}/Run680NoTarget_test.root"
+# OutputFile="${RecoPath}/TestNewReco1.root"
+if [[ "${MaxEvents}" == "-0" ]]; then
+  OutputFile="${OutputDir}/TMMRecoTime_run${PadmeRunID}_NevtAll_Nblk${NevtBlock}.root"
+else
+  OutputFile="${OutputDir}/TMMRecoTime_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+fi
 
 echo
 echo "Processing padmeRun ${PadmeRunID} - DetRun ${DetRunID}"

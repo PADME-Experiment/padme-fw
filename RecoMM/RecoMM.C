@@ -43,7 +43,7 @@ void CalibMM::CoordinateFinder(int iStrip, int iLayer, const vector<short> &camp
   double qtotT = 0;
   double threshold = 0.2 * qtot / Nbins;
 
-  for (int ibin = 0; ibin < Nbins; ++ibin) {
+  for (size_t ibin = 0; ibin < Nbins; ++ibin) {
     const double qbin = camp.at(ibin);
     if (qbin > qmax){
       qmax = qbin;
@@ -67,51 +67,32 @@ void CalibMM::CoordinateFinder(int iStrip, int iLayer, const vector<short> &camp
 }
 
 SliceFitResult CalibMM::RunFitSlicesY(TH2F *H, TString tag){
-    SliceFitResult out;
+  
+  SliceFitResult out;
+  if (!H) return out;
 
-    if (!H) return out;
+  H->FitSlicesY(gaus, 220, 280, 0, "QNR");
+  TH1D *h0 = (TH1D*)gDirectory->Get(Form("%s_0", H->GetName()));
+  TH1D *h1 = (TH1D*)gDirectory->Get(Form("%s_1", H->GetName()));
+  TH1D *h2 = (TH1D*)gDirectory->Get(Form("%s_2", H->GetName()));
+  TH1D *h3 = (TH1D*)gDirectory->Get(Form("%s_chi2", H->GetName()));
 
-    // Convert physical strip IDs to ROOT bin numbers.
-    const int firstBin = H->GetXaxis()->FindBin(stripstart);
-    const int lastBin  = H->GetXaxis()->FindBin(stripstop);
-
-    // Gaussian is fitted along Y = charge.
-    TF1 *fg = new TF1(Form("fg_%s", tag.Data()), "gaus", 0., SaturationThreshold);
-
-    // Keep Gaussian parameters in physically meaningful ranges.
-    fg->SetParLimits(0, 0., 1.e12);
-    fg->SetParLimits(1, 0., SaturationThreshold);
-    fg->SetParLimits(2, 1., SaturationThreshold);
-
-    // Require some statistics in each strip before trying the fit.
-    const int minEntriesPerSlice = 10;
-
-    H->FitSlicesY(fg, firstBin, lastBin, minEntriesPerSlice, "QNR");
-
-    TH1D *h0 =(TH1D*)gDirectory->Get(Form("%s_0", H->GetName()));
-    TH1D *h1 =(TH1D*)gDirectory->Get(Form("%s_1", H->GetName()));
-    TH1D *h2 =(TH1D*)gDirectory->Get(Form("%s_2", H->GetName()));
-    TH1D *h3 =(TH1D*)gDirectory->Get(Form("%s_chi2", H->GetName()));
-
-    if (!h0 || !h1 || !h2 || !h3) {
-        cerr << "ERROR: FitSlicesY failed for " << H->GetName() << endl;
-        delete fg;
-        return out;
-    }
-
-    out.amp =(TH1D*)h0->Clone(Form("hAmpSlice_%s", tag.Data()));
-    out.mean =(TH1D*)h1->Clone(Form("hMeanSlice_%s", tag.Data()));
-    out.sigma =(TH1D*)h2->Clone(Form("hSigmaSlice_%s", tag.Data()));
-    out.chi2 =(TH1D*)h3->Clone(Form("hChi2Slice_%s", tag.Data()));
-
-    out.amp->SetDirectory(0);
-    out.mean->SetDirectory(0);
-    out.sigma->SetDirectory(0);
-    out.chi2->SetDirectory(0);
-
-    delete fg;
-
+  if (!h0 || !h1 || !h2 || !h3) {
+    cerr << "ERROR: FitSlicesY failed for " << H->GetName() << endl;
     return out;
+  }
+
+  out.amp   = (TH1D*)h0->Clone(Form("hAmpSlice_%s", tag.Data()));
+  out.mean  = (TH1D*)h1->Clone(Form("hMeanSlice_%s", tag.Data()));
+  out.sigma = (TH1D*)h2->Clone(Form("hSigmaSlice_%s", tag.Data()));
+  out.chi2  = (TH1D*)h3->Clone(Form("hChi2Slice_%s", tag.Data()));
+
+  out.amp->SetDirectory(0);
+  out.mean->SetDirectory(0);
+  out.sigma->SetDirectory(0);
+  out.chi2->SetDirectory(0);
+
+  return out;
 }
 
 bool CalibMM::IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted, int minCovMatrixStatusAccepted){
@@ -134,22 +115,6 @@ TF1* CalibMM::FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax,
     cerr << "ERROR: FitDoubleGaussian received null histogram: " << name << endl;
     return nullptr;
   }
-
-  cout << "DEBUG FitDoubleGaussian "
-      << h->GetName()
-      << " entries=" << h->GetEntries()
-      << " integral=" << h->Integral()
-      << " maximum=" << h->GetMaximum()
-      << " nonzero bins=";
-
-  int nNonZero = 0;
-
-  for (int ib = 1; ib <= h->GetNbinsX(); ++ib) {
-      if (h->GetBinContent(ib) != 0.)
-          nNonZero++;
-  }
-
-cout << nNonZero << endl;
 
   if (h->GetEntries() <= 0 || h->Integral() <= 0.) {
     cerr << "WARNING: FitDoubleGaussian skipped empty histogram: " << h->GetName() << " layer = " << name << endl;
@@ -241,140 +206,21 @@ cout << nNonZero << endl;
 
   const int status = (int)fitResult;
   const int covStatus = fitResult->CovMatrixStatus();
-  // const bool accepted = IsFitAccepted(fitResult, 1, 2);
+  const bool accepted = IsFitAccepted(fitResult, 1, 2);
 
-  // if (!accepted) {
-  //   cerr << "WARNING: Double Gaussian fit NOT accepted for "  << h->GetName() << " layer = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid()  << endl;
-  //   // Keep returning the fit.
-  //   // The caller can decide whether to use it or reject it.
-  // } else {
-  //   if (status == 1) {
-  //     cerr << "WARNING: Double Gaussian fit accepted with status = 1 for " << h->GetName() << " layer = " << name << " ; covariance matrix may be non-ideal" << endl;
-  //   }
+  if (!accepted) {
+    cerr << "WARNING: Double Gaussian fit NOT accepted for "  << h->GetName() << " layer = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid()  << endl;
+    // Keep returning the fit.
+    // The caller can decide whether to use it or reject it.
+  } else {
+    if (status == 1) {
+      cerr << "WARNING: Double Gaussian fit accepted with status = 1 for " << h->GetName() << " layer = " << name << " ; covariance matrix may be non-ideal" << endl;
+    }
 
-  //   if (covStatus == 2) {
-  //     cerr << "WARNING: Double Gaussian covariance matrix accepted with CovMatrixStatus = 2 for " << h->GetName() << " layer = " << name << " ; forced positive definite covariance" << endl;
-  //   }
-  // }
-  delete prefit;
-  return fit;
-}
-
-TF1* CalibMM::FitSingleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult){
-  fitResult = TFitResultPtr();
-
-  if (!h) {
-    cerr << "ERROR: FitSingleGaussian received null histogram: " << name << endl;
-    return nullptr;
+    if (covStatus == 2) {
+      cerr << "WARNING: Double Gaussian covariance matrix accepted with CovMatrixStatus = 2 for " << h->GetName() << " layer = " << name << " ; forced positive definite covariance" << endl;
+    }
   }
-
-  cout << "DEBUG FitSingleGaussian " << h->GetName() << " entries=" << h->GetEntries() << " integral=" << h->Integral() << " maximum=" << h->GetMaximum() << " nonzero bins=";
-  int nNonZero = 0;
-
-  for (int ib = 1; ib <= h->GetNbinsX(); ++ib) {
-      if (h->GetBinContent(ib) != 0.) nNonZero++;
-  }
-  cout << nNonZero << endl;
-
-  if (h->GetEntries() <= 0 || h->Integral() <= 0.) {
-    cerr << "WARNING: FitSingleGaussian skipped empty histogram: " << h->GetName() << " layer = " << name << endl;
-    return nullptr;
-  }
-
-  if (xmax <= xmin) {
-    cerr << "ERROR: FitSingleGaussian invalid fit range for " << h->GetName() << " tag = " << name << " xmin = " << xmin << " xmax = " << xmax << endl;
-    return nullptr;
-  }
-
-  const int maxBin = h->GetMaximumBin();
-  const double maxContent = h->GetBinContent(maxBin);
-
-  if (maxContent <= 0.) {
-    cerr << "WARNING: FitSingleGaussian skipped histogram with non-positive maximum: " << h->GetName() << " layer = " << name << endl;
-    return nullptr;
-  }
-
-  TF1 *prefit = new TF1(Form("prefit_%s", name.Data()), "gaus", xmin, xmax);
-  TFitResultPtr prefitResult = h->Fit(prefit, "RQS0");
-
-  double amp0 = prefit->GetParameter(0);
-  double mu0  = prefit->GetParameter(1);
-  double s0   = fabs(prefit->GetParameter(2));
-
-  if ((int)prefitResult != 0) {
-    cerr << "WARNING: Gaussian prefit failed for " << h->GetName() << " view =" << name << " status =" << (int)prefitResult << ". Using histogram maximum/RMS seeds." << endl;
-    amp0 = maxContent;
-    mu0  = h->GetBinCenter(maxBin);
-    s0   = h->GetRMS();
-  }
-
-  if (amp0 <= 0.) amp0 = maxContent;
-  if (mu0 < xmin || mu0 > xmax) mu0 = h->GetBinCenter(maxBin);
-  if (s0 <= 0.) s0 = 0.1 * (xmax - xmin);
-
-  const double xrange = xmax - xmin;
-
-  if (s0 <= 0. || xrange <= 0.) {
-    cerr << "ERROR: FitSingleGaussian invalid seed/range for " << h->GetName() << " tag=" << name << " s0=" << s0 << " xrange=" << xrange << endl;
-    delete prefit;
-    return nullptr;
-  }
-
-  const double area0 = max(1.0, amp0 * sqrt(2. * TMath::Pi()) * s0);
-
-  TF1 *fit = new TF1(
-    Form("f_%s", name.Data()),
-    "[0]/(sqrt(2*TMath::Pi())*[2])*exp(-0.5*((x-[1])/[2])^2)",
-    xmin,
-    xmax
-  );
-
-  fit->SetParNames("I_1", "mean", "sigma_1");
-
-  const double I_low = 0.;
-  const double I_up  = max(1.0, 10. * area0);
-
-  const double s_low = 0.1;
-  const double s1_up = max(s_low * 2., xrange);
-  const double s2_up = max(s_low * 2., 5. * xrange);
-
-  double I1_0 = ClampToLimits(area0, I_low, I_up);
-  double s1_0 = ClampToLimits(s0,    s_low, s1_up);
-  double mu_0 = ClampToLimits(mu0,   xmin,  xmax);
-  
-  fit->SetParameters(I1_0, mu_0, s1_0);
-
-  fit->SetParLimits(0, I_low, I_up);
-  fit->SetParLimits(1, xmin, xmax);
-  fit->SetParLimits(2, s_low, s1_up);
-
-  fitResult = h->Fit(fit, "RQS");
-
-  if (!fitResult.Get()) {
-    cerr << "WARNING: Double Gaussian fit returned null result for " << h->GetName() << " layer = " << name << endl;
-    delete prefit;
-    delete fit;
-    fitResult = TFitResultPtr();
-    return nullptr;
-  }
-
-  const int status = (int)fitResult;
-  const int covStatus = fitResult->CovMatrixStatus();
-  // const bool accepted = IsFitAccepted(fitResult, 1, 2);
-
-  // if (!accepted) {
-  //   cerr << "WARNING: Double Gaussian fit NOT accepted for "  << h->GetName() << " layer = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid()  << endl;
-  //   // Keep returning the fit.
-  //   // The caller can decide whether to use it or reject it.
-  // } else {
-  //   if (status == 1) {
-  //     cerr << "WARNING: Double Gaussian fit accepted with status = 1 for " << h->GetName() << " layer = " << name << " ; covariance matrix may be non-ideal" << endl;
-  //   }
-
-  //   if (covStatus == 2) {
-  //     cerr << "WARNING: Double Gaussian covariance matrix accepted with CovMatrixStatus = 2 for " << h->GetName() << " layer = " << name << " ; forced positive definite covariance" << endl;
-  //   }
-  // }
   delete prefit;
   return fit;
 }
@@ -475,11 +321,11 @@ TF1* CalibMM::FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResu
 
   const int status    = (int)fitResult;
   const int covStatus = fitResult->CovMatrixStatus();
-  // const bool accepted = IsFitAccepted(fitResult, 1, 2);
+  const bool accepted = IsFitAccepted(fitResult, 1, 2);
 
-  // if (!accepted) {
-  //   cerr << "WARNING: Voigt fit NOT accepted for " << h->GetName() << " layer = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid() << endl;
-  // }
+  if (!accepted) {
+    cerr << "WARNING: Voigt fit NOT accepted for " << h->GetName() << " layer = " << name << " fitStatus = " << status << " covStatus = " << covStatus << " isValid = " << fitResult->IsValid() << endl;
+  }
 
   delete prefit;
   return fit;
@@ -531,9 +377,7 @@ void CalibMM::FillBlockGraphsFromSlices(int iR){
     if (!s.mean) continue;
     
     TFitResultPtr fitResult;
-    // TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", mm_tag[iR].Data(), ib), stripstart, stripstop, fitResult);
-    // TF1 *fb = FitSingleGaussian(s.mean, Form("%s_block%zu", mm_tag[iR].Data(), ib), stripstart, stripstop, fitResult);
-    TF1 *fb = FitDoubleGaussian(s.mean, Form("%s_block%zu", mm_tag[iR].Data(), ib), stripstart, stripstop, fitResult);
+    TF1 *fb = FitVoigt(s.mean, Form("%s_block%zu", mm_tag[iR].Data(), ib), StripMin, StripMax, fitResult);
 
     if (!fb || !fitResult.Get()) {
       cerr << "WARNING: block fit failed for layer = " << mm_tag[iR] << " block = " << ib << endl;
@@ -700,17 +544,6 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     hqmaxstripFull[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
     hqmaxstripFull[l]->SetYTitle("q_{max} [ADC counts]");
 
-    // charge distribution histograms - no saturation
-    // hqmaxstrip_NoSat[l] = new TH2F(Form("hqmaxstrip_NoSat%s", mm_tag[l].Data()), TString("q_{max} vs strip [") + mm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2, 1000, 0, 2500);
-    hqmaxstrip_NoSat[l] = new TH2F(Form("hqmaxstrip_NoSat%s", mm_tag[l].Data()), TString("q_{max} vs strip [") + mm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstrip_NoSat[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
-    hqmaxstrip_NoSat[l]->SetYTitle("q_{max} [ADC counts]");
-
-    // hqmaxstripFull_NoSat[l] = new TH2F(Form("hqmaxstripFull_NoSat%s", mm_tag[l].Data()), TString("q_{max} vs strip full [") + mm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2, 1000, 0, 2500);
-    hqmaxstripFull_NoSat[l] = new TH2F(Form("hqmaxstripFull_NoSat%s", mm_tag[l].Data()), TString("q_{max} vs strip full [") + mm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
-    hqmaxstripFull_NoSat[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
-    hqmaxstripFull_NoSat[l]->SetYTitle("q_{max} [ADC counts]");
-
     // time distribution histograms
     // htmaxstrip[l] = new TH2F(Form("htmaxstrip%s", mm_tag[l].Data()), TString("t_{max} vs strip [") + mm_tag[l] + TString("]"), maxStrip, -xmax/2, +xmax/2, 750, -50, 700);
     htmaxstrip[l] = new TH2F(Form("htmaxstrip%s", mm_tag[l].Data()), TString("t_{max} vs strip [") + mm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 750, -50, 700);
@@ -764,6 +597,15 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     hqmaxstripFull_cal[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
     hqmaxstripFull_cal[l]->SetYTitle("q_{max} calib [ADC counts]");
 
+    // selected plots in time
+    hqmaxstrip_sel[l] = new TH2F(Form("hqmaxstrip_sel%s", mm_tag[l].Data()), TString("q_{max-calib} vs strip [") + mm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstrip_sel[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
+    hqmaxstrip_sel[l]->SetYTitle("q_{max} calib [ADC counts]");
+
+    hqmaxstripFull_sel[l] = new TH2F(Form("hqmaxstripFull_sel%s", mm_tag[l].Data()), TString("q_{max-calib} vs strip full [") + mm_tag[l] + TString("]"), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500);
+    hqmaxstripFull_sel[l]->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
+    hqmaxstripFull_sel[l]->SetYTitle("q_{max} calib [ADC counts]");
+
     // block by block tgrapherrors
     g_BlockBeamSpot[l] = new TGraphErrors();
     TGraphAttribute(g_BlockBeamSpot[l], Form("g_BlockBeamSpot_%s", mm_tag[l].Data()), "entry", Form("%s_{Beam} strip", mm_tag[l].Data()), 20, kBlue + l);
@@ -803,15 +645,6 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
         hBlockqmaxstripFull[l].push_back(new TH2F( Form("hBlockqmaxstripFull%s_block%04d", mm_tag[l].Data(), b), TString("q_{max} vs strip full [") + mm_tag[l] + Form("] block %04d", b), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500));
         hBlockqmaxstripFull[l].back()->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
         hBlockqmaxstripFull[l].back()->SetYTitle("q_{max} [ADC counts]");
-
-        // charge distribution histograms - no saturation
-        hBlockqmaxstrip_NoSat[l].push_back(new TH2F( Form("hBlockqmaxstrip_NoSat%s_block%04d", mm_tag[l].Data(), b), TString("q_{max} vs strip [") + mm_tag[l] + Form("] block %04d", b), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500));
-        hBlockqmaxstrip_NoSat[l].back()->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
-        hBlockqmaxstrip_NoSat[l].back()->SetYTitle("q_{max} [ADC counts]");
-
-        hBlockqmaxstripFull_NoSat[l].push_back(new TH2F( Form("hBlockqmaxstripFull_NoSat%s_block%04d", mm_tag[l].Data(), b), TString("q_{max} vs strip full [") + mm_tag[l] + Form("] block %04d", b), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500));
-        hBlockqmaxstripFull_NoSat[l].back()->SetXTitle(TString(mm_tag[l]+" [strip]").Data());
-        hBlockqmaxstripFull_NoSat[l].back()->SetYTitle("q_{max} [ADC counts]");
 
         // charge distribution histograms calibrated block by block
         hBlockqmaxstrip_cal[l].push_back(new TH2F( Form("hBlockqmaxstrip_cal%s_block%04d", mm_tag[l].Data(), b), TString("q_{max} vs strip [") + mm_tag[l] + Form("] block %04d", b), maxStrip, -0.5, maxStrip-0.5, 1000, 0, 2500));
@@ -889,8 +722,7 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     cerr << "ERROR: input chain has zero entries" << endl;
     return;
   }
-  
-  cout << "Found Tree 'RawMergedEvents' with " << runNEntries << " entries" << endl;  
+  cout << "Found Tree 'apv_raw' with " << runNEntries << " entries" << endl;
   Long64_t nToProcess = runNEntries;
 
   if (maxEvents > 0 && maxEvents < runNEntries) {
@@ -901,37 +733,26 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
 
-    Long64_t nb = fTree->GetEntry(iev);
-
+    Long64_t nb = fTree->GetEntry(iev);    
     if (nb <= 0) {
       cerr << "WARNING: could not read event " << iev << endl;
       continue;
     }
-
-    if (!tmmRawEvent) {
-      cerr << "WARNING: null TMMRawEvent at event " << iev << endl;
-      continue;
-    }
-
-    // -------------------------------------------------
-    // Get the old MM raw structure from TMMRawEvent
-    // CHOOSE the version matching TMMRawEvent.hh
-    // -------------------------------------------------
-
-    mmLayer = &(tmmRawEvent->mmLayer);
-    mmStrip = &(tmmRawEvent->mmStrip);
-    raw_q   = &(tmmRawEvent->raw_q);
-
-    // -------------------------------------------------
-
-    if (!mmLayer || !mmStrip || !raw_q) {
-      cerr << "WARNING: null MM data at event " << iev << endl;
-      continue;
-    }
-
     EnsureBlockHistograms(blockCounter);
 
+    if (globalEntry % 1000 == 0) {
+      float progress = static_cast<float>(globalEntry) / nToProcess;
+
+      cout << "Processed " << globalEntry << " out of " << nToProcess << " entries (" << fixed << setprecision(2) << progress * 100 << "%)" << endl;
+    }
+
+    if (!mmLayer || !mmStrip || !raw_q) {
+      cerr << "WARNING: null branch pointer at event " << iev << endl;
+      continue;
+    }
+
     int firedstrip_size = min((int)mmLayer->size(), min((int)mmStrip->size(), (int)raw_q->size()));
+    // cout << "Event " << iev << ": firedstrip_size = " << firedstrip_size << endl;
 
     for (int j = 0; j < firedstrip_size; j++) {
       double x_strip = 0;
@@ -952,18 +773,10 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
         hqmaxstrip[iLayer]->Fill(x_strip, q_strip);
         htmaxstrip[iLayer]->Fill(x_strip, t_strip);
         hBlockqmaxstrip[iLayer][blockCounter]->Fill(x_strip, q_strip);
-        if(q_strip < SaturationThreshold) {
-          hqmaxstrip_NoSat[iLayer]->Fill(x_strip, q_strip);
-          hBlockqmaxstrip_NoSat[iLayer][blockCounter]->Fill(x_strip, q_strip);
-        }
       }
       hqmaxstripFull[iLayer]->Fill(x_strip, q_strip);
       htmaxstripFull[iLayer]->Fill(x_strip, t_strip);
       hBlockqmaxstripFull[iLayer][blockCounter]->Fill(x_strip, q_strip);
-      if(q_strip < SaturationThreshold) {
-        hqmaxstripFull_NoSat[iLayer]->Fill(x_strip, q_strip);
-        hBlockqmaxstripFull_NoSat[iLayer][blockCounter]->Fill(x_strip, q_strip);
-      }
       
     }
 
@@ -1001,17 +814,8 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   for (int iR = 0; iR < MM_N_Layers; iR++) {
 
-    // for MM chamber there is a large saturation effect arounf 1800ADC, cut introduced
-    // use the no saturated distribution to fit the slices and get the mean and sigma for each strip
-
-    cout << "DEBUG before FitSlices "
-        << mm_tag[iR]
-        << " raw=" << hqmaxstripFull[iR]->GetEntries()
-        << " nosat=" << hqmaxstripFull_NoSat[iR]->GetEntries()
-        << endl;
-
-    SliceFitResult even = RunFitSlicesY(hqmaxstrip_NoSat[iR], Form("%s_even", mm_tag[iR].Data()));
-    SliceFitResult full = RunFitSlicesY(hqmaxstripFull_NoSat[iR], Form("%s_full", mm_tag[iR].Data()));
+    SliceFitResult even = RunFitSlicesY(hqmaxstrip[iR], Form("%s_even", mm_tag[iR].Data()));
+    SliceFitResult full = RunFitSlicesY(hqmaxstripFull[iR], Form("%s_full", mm_tag[iR].Data()));
 
     hAmpslice[iR]   = even.amp;
     hMeanslice[iR]  = even.mean;
@@ -1025,9 +829,8 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     
     TFitResultPtr fitResult;
 
-    TF1 *fit = FitDoubleGaussian(hMeansliceFull[iR], mm_tag[iR], stripstart, stripstop, fitResult);
-    // TF1 *fit = FitSingleGaussian(hMeansliceFull[iR], mm_tag[iR], stripstart, stripstop, fitResult);
-    // TF1 *fit = FitVoigt(hMeanslice[iR], mm_tag[iR], stripstart, stripstop, fitResult);
+    // TF1 *fit = FitDoubleGaussian(hMeanslice[iR], mm_tag[iR], StripMin, StripMax, fitResult);
+    TF1 *fit = FitVoigt(hMeanslice[iR], mm_tag[iR], StripMin, StripMax, fitResult);
 
     if (!fit || !fitResult.Get()) {
       cerr << "WARNING: overall fit failed for layer=" << mm_tag[iR] << endl;
@@ -1037,12 +840,12 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
     f.push_back(fit);
 
-    // bool approved = IsFitAccepted(fitResult, 1, 2);
-    // if(approved){
-    //   BuildFitRatio(hMeansliceFull[iR], hSigmasliceFull[iR], fit, g_FitFullRatio[iR], g_FitFullDiff[iR]);  
-    // } else {
-    //   cerr << "WARNING: overall calibration fit rejected for layer = " << mm_tag[iR] << " fitStatus = " << (int)fitResult << " covStatus = " << fitResult->CovMatrixStatus() << endl;
-    // }
+    bool approved = IsFitAccepted(fitResult, 1, 2);
+    if(approved){
+      BuildFitRatio(hMeansliceFull[iR], hSigmasliceFull[iR], fit, g_FitFullRatio[iR], g_FitFullDiff[iR]);  
+    } else {
+      cerr << "WARNING: overall calibration fit rejected for layer = " << mm_tag[iR] << " fitStatus = " << (int)fitResult << " covStatus = " << fitResult->CovMatrixStatus() << endl;
+    }
   }
 
   //writing the calibration constants in an output file.txt
@@ -1055,26 +858,14 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   //calibrated plots
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
-    
-    Long64_t nb = fTree->GetEntry(iev);
 
+    Long64_t nb = fTree->GetEntry(iev);    
     if (nb <= 0) {
       cerr << "WARNING: could not read event " << iev << endl;
       continue;
     }
-
-    if (!tmmRawEvent) {
-      cerr << "WARNING: null TMMRawEvent at event " << iev << endl;
-      continue;
-    }
-
-    // Same aliases as in first loop
-    mmLayer = &(tmmRawEvent->mmLayer);
-    mmStrip = &(tmmRawEvent->mmStrip);
-    raw_q   = &(tmmRawEvent->raw_q);
-
     if (!mmLayer || !mmStrip || !raw_q) {
-      cerr << "WARNING: null MM data at event " << iev << endl;
+      cerr << "WARNING: null branch pointer at event " << iev << endl;
       continue;
     }
 
@@ -1094,14 +885,16 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
       CoordinateFinder(channel, iLayer, raw_q->at(j), x_strip, q_strip, t_strip);
 
       double chargecorrection = 1.;
-      if (x_strip >= stripstart && x_strip <= stripstop && g_FitFullRatio[iLayer]->GetN() > 0) {
+      if (x_strip >= StripMin && x_strip <= StripMax && g_FitFullRatio[iLayer]->GetN() > 0) {
         chargecorrection = g_FitFullRatio[iLayer]->Eval(x_strip);
       }
 
       if (channel % 2 == 0) {
         hqmaxstrip_cal[iLayer]->Fill(x_strip, q_strip * chargecorrection);
+        if(t_strip < 500 && t_strip > 250) hqmaxstrip_sel[iLayer]->Fill(x_strip, q_strip * chargecorrection);
       }
       hqmaxstripFull_cal[iLayer]->Fill(x_strip, q_strip * chargecorrection);
+      if(t_strip < 500 && t_strip > 250) hqmaxstripFull_sel[iLayer]->Fill(x_strip, q_strip * chargecorrection);
 
 
       int ic = iev / NevtBlock;
@@ -1110,7 +903,7 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
         double Blockchargecorrection = 1.;
 
-        if (x_strip >= stripstart && x_strip <= stripstop) {
+        if (x_strip >= StripMin && x_strip <= StripMax) {
           if (g_BlockFitFullRatio[iLayer][ic]->GetN() > 0) {
             Blockchargecorrection = g_BlockFitFullRatio[iLayer][ic]->Eval(x_strip);
           } else {
@@ -1159,8 +952,6 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   for (int l = 0; l < MM_N_Layers; l++) {
     hqmaxstrip[l]->Write();
     hqmaxstripFull[l]->Write();
-    hqmaxstrip_NoSat[l]->Write();
-    hqmaxstripFull_NoSat[l]->Write();
     htmaxstrip[l]->Write();
     htmaxstripFull[l]->Write();
     hAmpslice[l]->Write();
@@ -1182,6 +973,8 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
   for (int l = 0; l < MM_N_Layers; l++) {
     hqmaxstrip_cal[l]->Write();
     hqmaxstripFull_cal[l]->Write();
+    hqmaxstrip_sel[l]->Write();
+    hqmaxstripFull_sel[l]->Write();
   }
 
   // Write block histograms in subdirectories
@@ -1204,7 +997,6 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
       rawblockdir->cd();
       if (b < (int)hBlockqmaxstrip[l].size()) {
         hBlockqmaxstrip[l][b]->Write();
-        hBlockqmaxstrip_NoSat[l][b]->Write();
         hBlockAmpslice[l][b]->Write();
         hBlockMeanslice[l][b]->Write();
         hBlockSigmaslice[l][b]->Write();
@@ -1213,7 +1005,6 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
       if (b < (int)hBlockqmaxstripFull[l].size()) {
         hBlockqmaxstripFull[l][b]->Write();
-        hBlockqmaxstripFull_NoSat[l][b]->Write();
         hBlockAmpsliceFull[l][b]->Write();
         hBlockMeansliceFull[l][b]->Write();
         hBlockSigmasliceFull[l][b]->Write();

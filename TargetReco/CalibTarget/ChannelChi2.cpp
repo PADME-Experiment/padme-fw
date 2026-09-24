@@ -416,7 +416,7 @@ bool TargetChargePosition(int runNumber, const string &filePathPattern, RunEvent
     double qLG, dqLG;
 
     int chunk = 0;
-    static int NCHUNKS = 10; // number of blocks to average over
+    static int NCHUNKS = 100; // number of blocks to average over
 
     for(Long64_t ev=0; ev<nentries; ev++){
         t->GetEntry(ev);
@@ -810,14 +810,20 @@ int main(int argc, char** argv) {
         cerr << "Calibration constants missing — continuing with unity gains!" << endl;
     }
     
-    // string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputReco_NewRun4_100files/Reco_run_00%d.root";
+    // string rootPattern = "/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/outputReco_Run4/Reco_run_00%d.root";
     string rootPattern = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/outputReco/Reco_run_00%d.root";
+    // string rootPattern = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/provamerged_00%d.root";
 
     // defining the output txt file
     // ofstream OutputTxt(Form("/home/mancinima/LeadGlassCalib2024/padme-fw/TargetRun4/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i_NewReco_100files.txt", runNumber));
-    ofstream OutputTxt(Form("/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i.txt", runNumber));
+    ofstream OutputTxt(Form("/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00%i_v1.txt", runNumber));
+    // ofstream OutputTxt(Form("/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/Prova_reco_vecchia_run_00%i.txt", runNumber));
+    // ofstream OutputTxt(Form("/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/Prova_provamerged_00%i.txt", runNumber));
+
     // defining the output root file
-    TString outputFileName = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/NUOVO_run_00" + to_string(runNumber) + ".root";
+    TString outputFileName = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/TargetAnalysis_run_00" + to_string(runNumber) + "_v1.root";
+    // TString outputFileName = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/Prova_reco_vecchia_run_00" + to_string(runNumber) + ".root";
+    // TString outputFileName = "/home/mancinima/BeamMonitorRun4/padme-fw/TargetReco/CalibTarget/outputCalibration/Run4Monitor/Prova_provamerged_00" + to_string(runNumber) + ".root";
     TFile* histoFile = new TFile(outputFileName,"RECREATE");
     if(!histoFile) {
         fprintf(stderr,"ERROR - Cannot create output file %s\n",outputFileName.Data());
@@ -1355,10 +1361,10 @@ int main(int argc, char** argv) {
 
 
         //adding plots for stability charge variations studies
-        TF1 *p0LG = new TF1("p0LG", "pol0", 0, 100);
-        TF1 *p0Xcal = new TF1("p0Xcal", "pol0", 0, 100);
-        TF1 *p0Xraw = new TF1("p0Xraw", "pol0", 0, 100); 
-        TF1 *p0TarLGRatio = new TF1("p0TarLGRatio", "pol0", 0, 100);
+        TF1 *p0LG = new TF1("p0LG", "pol0", 0, Nfits);
+        TF1 *p0Xcal = new TF1("p0Xcal", "pol0", 0, Nfits);
+        TF1 *p0Xraw = new TF1("p0Xraw", "pol0", 0, Nfits); 
+        TF1 *p0TarLGRatio = new TF1("p0TarLGRatio", "pol0", 0, Nfits);
         gQLG->Fit("p0LG", "QR");
         gQXTot_target_cal->Fit("p0Xcal", "QR");
         gQXTot_target_raw->Fit("p0Xraw", "QR");

@@ -54,7 +54,9 @@
 using namespace std;
 
 #define TMMCH_N_Readout 2
-#define NEvtBLOCKS 10000 // this quantity must be passed as a parameter or read from somewhere else
+#define NEvtBLOCKS 1000
+
+constexpr double ADC_TO_PC = 300. * 1.6e-19 * 1.e12;  // pC / ADC
 
 struct SliceFitResult {
   TH1D *amp = nullptr;
@@ -98,9 +100,10 @@ void SetBadObservableResult(ObservableResult &obs){
   obs.charge = -99.;
   obs.chargeErr = -99.;
 
-  int fitStatus = -99;
-  int covStatus = -99;
-  bool fitAccepted = false;
+  obs.fitStatus = -99;
+  obs.covStatus = -99;
+  obs.fitAccepted = false;
+
 }
 
 int TGraphAttribute(TGraphErrors *Graph, TString title, TString xlabel, TString ylabel, int markerstyle, int color){
@@ -477,7 +480,8 @@ static double VoigtTruncatedRMS(TF1 *f, double a, double b){
   // Effective half-width of the Voigt: Gaussian core + Lorentzian tail.
   // 6 sigma captures the Gaussian to <1e-8; 20 gamma captures the
   // Lorentzian tail integral to <2% (Lorentzian tails decay as 1/x^2).
-  const double halfWin = 6. * sigma + 20. * gamma;
+  double halfWin = 6. * sigma + 20. * gamma;
+  // if(halfWin>abs(b-a)) halfWin = abs(b-a);
 
   const double lo = max(a, mu - halfWin);
   const double hi = min(b, mu + halfWin);
@@ -752,12 +756,28 @@ ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFit
     if (!applyFitSelection || fitOK) {
       ExtractVoigtObservables(f, fitResult, obs);
     } else {
-      cerr << "WARNING: FitSlicesY Voigt fit rejected for view = " << tag << " fitStatus = " << obs.fitStatus << " covStatus = " << obs.covStatus << endl;
-      SetBadObservableResult(obs);
-      obs.fitStatus   = (int)fitResult;
-      obs.covStatus   = fitResult->CovMatrixStatus();
-      obs.fitAccepted = false;
+
+    cerr << "WARNING: FitSlicesY Voigt fit rejected"
+        << " view=" << tag
+        << " fitStatus=" << obs.fitStatus
+        << " covStatus=" << obs.covStatus
+        << " I=" << f->GetParameter(0)
+        << " mu=" << f->GetParameter(1)
+        << " sigmaG=" << f->GetParameter(2)
+        << " gammaL=" << f->GetParameter(3);
+
+    if (f->GetNDF() > 0) {
+      cerr << " chi2/ndf=" << f->GetChisquare() / f->GetNDF();
+    } else {
+      cerr << " chi2/ndf=-1";
     }
+
+    cerr << endl;
+    SetBadObservableResult(obs);
+    obs.fitStatus   = (int)fitResult;
+    obs.covStatus   = fitResult->CovMatrixStatus();
+    obs.fitAccepted = false;
+  }
 
     delete f;
   } else {
@@ -771,19 +791,36 @@ ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFit
     const double mu    = obs.spot;
     const double sigma = obs.width;
 
-    TF1 *fg = new TF1(Form("fg_singleCore_%s", tag.Data()), "gaus", mu - 2. * sigma, mu + 2. * sigma);
-    TFitResultPtr fgResult = s.mean->Fit(fg, "RQS0");
+    const double hmin = s.mean->GetXaxis()->GetXmin();
+    const double hmax = s.mean->GetXaxis()->GetXmax();
 
-    if (fg && fgResult.Get() && (int)fgResult <= 1) {
-      obs.widthSingleCore    = fabs(fg->GetParameter(2));
-      obs.widthSingleCoreErr = fg->GetParError(2);
+    const double fitMin = std::max(hmin, mu - 2. * sigma);
+    const double fitMax = std::min(hmax, mu + 2. * sigma);
+
+    if (fitMax <= fitMin) {
+        obs.widthSingleCore    = -99.;
+        obs.widthSingleCoreErr = -99.;
     } else {
-      obs.widthSingleCore    = -99.;
-      obs.widthSingleCoreErr = -99.;
-      cerr << "WARNING: single-core Gaussian cross-check failed for view = " << tag << " status = " << (int)fgResult << endl;
-    }
 
-    delete fg;
+        TF1 *fg = new TF1(
+            Form("fg_singleCore_%s", tag.Data()),
+            "gaus",
+            fitMin,
+            fitMax
+        );
+
+        TFitResultPtr fgResult = s.mean->Fit(fg, "RQS0");
+
+        if (fgResult.Get() && (int)fgResult <= 1) {
+            obs.widthSingleCore    = fabs(fg->GetParameter(2));
+            obs.widthSingleCoreErr = fg->GetParError(2);
+        } else {
+            obs.widthSingleCore    = -99.;
+            obs.widthSingleCoreErr = -99.;
+            cerr << "WARNING: single-core Gaussian cross-check failed for view = " << tag << " status = " << (int)fgResult << endl;
+        }
+        delete fg;
+    }
   } else {
     obs.widthSingleCore    = -99.;
     obs.widthSingleCoreErr = -99.;
@@ -870,16 +907,17 @@ void TGraphAttributePair(TGraphErrors *g[2], TString baseName, TString view, TSt
   TGraphAttribute(g[1], Form("g_Block%sFitSlices_%s", baseName.Data(), view.Data()), "block", ytitle, markerstyle, color);
 }
 
-void FillGraphPair(TGraphErrors *gSpot[2], TGraphErrors *gWidth[2], TGraphErrors *gSingleWidthCore[2], TGraphErrors *gCharge[2], int ip, int iblk, const vector<ObservableResult> obs[2]){
-  for (int im = 0; im < 2; ++im) {
+void FillGraphPair(TGraphErrors *gSpot[2],TGraphErrors *gWidth[2],TGraphErrors *gSingleWidthCore[2],TGraphErrors *gCharge[2],int ip,int iblk,const vector<ObservableResult> obs[2],bool convertChargeToPC = false){
+for (int im = 0; im < 2; ++im) {
     if (obs[im].empty()) continue;
 
     const ObservableResult &o = obs[im].back();
+    const double qScale = convertChargeToPC ? ADC_TO_PC : 1.0;
 
-    AddGraphPoint(gSpot[im],            ip, iblk, o.spot,            o.spotErr);
-    AddGraphPoint(gWidth[im],           ip, iblk, o.width,           o.widthErr);
-    AddGraphPoint(gSingleWidthCore[im], ip, iblk, o.widthSingleCore, o.widthSingleCoreErr);
-    AddGraphPoint(gCharge[im],          ip, iblk, o.charge,          o.chargeErr);
+    AddGraphPoint(gSpot[im],            ip, iblk, o.spot,               o.spotErr);
+    AddGraphPoint(gWidth[im],           ip, iblk, o.width,              o.widthErr);
+    AddGraphPoint(gSingleWidthCore[im], ip, iblk, o.widthSingleCore,    o.widthSingleCoreErr);
+    AddGraphPoint(gCharge[im],          ip, iblk, o.charge * qScale,    o.chargeErr* qScale);
   }
 }
 
@@ -1009,7 +1047,7 @@ void AnalysisTMM(const char *InputFileName){
   inName.ReplaceAll(".root", "");
 
   // TString outName = Form("DoubleG_AnalysisTMM_%s.root", inName.Data());
-  TString outName = Form("Voigt_AnalysisTMM_%s.root", inName.Data());
+  TString outName = Form("Analysis_%s.root", inName.Data());
 
   TFile *fout = TFile::Open(outName, "RECREATE");
   TDirectory *dGraphsOut = fout->mkdir("Graphs");
@@ -1181,6 +1219,19 @@ void AnalysisTMM(const char *InputFileName){
   TGraphErrors *gQFitSliceQDirExtCalOverall[TMMCH_N_Readout];
   TGraphErrors *gQFitSliceQDirRunCalOverall[TMMCH_N_Readout];
 
+  //fit status graphs
+  TGraph *gFitStatusRaw[TMMCH_N_Readout];
+  TGraph *gCovStatusRaw[TMMCH_N_Readout];
+
+  TGraph *gFitStatusBlockCal[TMMCH_N_Readout];
+  TGraph *gCovStatusBlockCal[TMMCH_N_Readout];
+
+  TGraph *gFitStatusExtCalOverall[TMMCH_N_Readout];
+  TGraph *gCovStatusExtCalOverall[TMMCH_N_Readout];
+
+  TGraph *gFitStatusRunCalOverall[TMMCH_N_Readout];
+  TGraph *gCovStatusRunCalOverall[TMMCH_N_Readout];
+
   TGraphErrors *gXYratioRaw[2]; //one for direct one for FitSlice
   TGraphErrors *gXYratioBlockCal[2];
   TGraphErrors *gXYratioExtCalOverall[2];
@@ -1232,56 +1283,82 @@ void AnalysisTMM(const char *InputFileName){
     gQFitSliceQDirExtCalOverall[iv] = new TGraphErrors();
     gQFitSliceQDirRunCalOverall[iv] = new TGraphErrors();
 
+    gFitStatusRaw[iv] = new TGraph();
+    gCovStatusRaw[iv] = new TGraph();
+    gFitStatusBlockCal[iv] = new TGraph();
+    gCovStatusBlockCal[iv] = new TGraph();
+    gFitStatusExtCalOverall[iv] = new TGraph();
+    gCovStatusExtCalOverall[iv] = new TGraph();
+    gFitStatusRunCalOverall[iv] = new TGraph();
+    gCovStatusRunCalOverall[iv] = new TGraph();
+
     TGraphAttributePair(gSpotRaw[iv],            "BeamSpotRaw",        v, Form("%s [mm]", v.Data()),       20, kRed+1);
     TGraphAttributePair(gWidthRaw[iv],           "BeamSpreadRaw",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
     TGraphAttributePair(gSingleWidthCoreRaw[iv], "SingleCoreWidthRaw", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
-    TGraphAttributePair(gChargeRaw[iv],          "BeamChargeRaw",      v, Form("Q_{%s} [adc]", v.Data()),       20, kRed+1);
+    TGraphAttributePair(gChargeRaw[iv],          "BeamChargeRaw",      v, Form("Q_{%s} [pC]", v.Data()),       20, kRed+1);
 
     TGraphAttributePair(gSpotBlockCal[iv],            "BeamSpotBlockCal",        v, Form("%s [mm]", v.Data()),       20, kBlue+1);
     TGraphAttributePair(gWidthBlockCal[iv],           "BeamSpreadBlockCal",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlue+1);
     TGraphAttributePair(gSingleWidthCoreBlockCal[iv], "SingleCoreWidthBlockCal", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlue+1);
-    TGraphAttributePair(gChargeBlockCal[iv],          "BeamChargeBlockCal",      v, Form("Q_{%s} [adc]", v.Data()),       20, kBlue+1);
+    TGraphAttributePair(gChargeBlockCal[iv],          "BeamChargeBlockCal",      v, Form("Q_{%s} [pC]", v.Data()),       20, kBlue+1);
 
     TGraphAttributePair(gSpotExtCalOverall[iv],            "BeamSpotExtCalOverall",        v, Form("%s [mm]", v.Data()),       20, kViolet-3);
     TGraphAttributePair(gWidthExtCalOverall[iv],           "BeamSpreadExtCalOverall",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
     TGraphAttributePair(gSingleWidthCoreExtCalOverall[iv], "SingleCoreWidthExtCalOverall", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
-    TGraphAttributePair(gChargeExtCalOverall[iv],          "BeamChargeExtCalOverall",      v, Form("Q_{%s} [adc]", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gChargeExtCalOverall[iv],          "BeamChargeExtCalOverall",      v, Form("Q_{%s} [pC]", v.Data()),       20, kViolet-3);
   
     TGraphAttributePair(gSpotRunCalOverall[iv],            "BeamSpotRunCalOverall",        v, Form("%s [mm]", v.Data()),       20, kSpring-1);
     TGraphAttributePair(gWidthRunCalOverall[iv],           "BeamSpreadRunCalOverall",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
     TGraphAttributePair(gSingleWidthCoreRunCalOverall[iv], "SingleCoreWidthRunCalOverall", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
-    TGraphAttributePair(gChargeRunCalOverall[iv],          "BeamChargeRunCalOverall",      v, Form("Q_{%s} [adc]", v.Data()),       20, kSpring-1);
+    TGraphAttributePair(gChargeRunCalOverall[iv],          "BeamChargeRunCalOverall",      v, Form("Q_{%s} [pC]", v.Data()),       20, kSpring-1);
   
     // TGraphMethods
     TGraphAttribute(gQFitSliceQDirRaw[iv], "gQFitSliceQDirRaw_"+v, "block", "QFit/Qdir", 20, kRed+1);
     TGraphAttribute(gQFitSliceQDirBlockCal[iv], "gQFitSliceQDirBlockCal_"+v, "block", "QFit/Qdir", 20, kBlue+1);
     TGraphAttribute(gQFitSliceQDirExtCalOverall[iv], "gQFitSliceQDirExtCalOverall_"+v, "block", "QFit/Qdir", 20, kViolet-3);
     TGraphAttribute(gQFitSliceQDirRunCalOverall[iv], "gQFitSliceQDirRunCalOverall_"+v, "block", "QFit/Qdir", 20, kSpring-1);
+
+    gFitStatusRaw[iv]->SetName(Form("gFitStatusRaw_%s", v.Data()));
+    gFitStatusRaw[iv]->SetTitle(Form("Voigt fit status Raw %s;block;fit status", v.Data()));
+    gCovStatusRaw[iv]->SetName(Form("gCovStatusRaw_%s", v.Data()));
+    gCovStatusRaw[iv]->SetTitle(Form("Voigt covariance status Raw %s;block;covariance status", v.Data()));
+    gFitStatusBlockCal[iv]->SetName(Form("gFitStatusBlockCal_%s", v.Data()));
+    gFitStatusBlockCal[iv]->SetTitle(Form("Voigt fit status BlockCal %s;block;fit status", v.Data()));
+    gCovStatusBlockCal[iv]->SetName(Form("gCovStatusBlockCal_%s", v.Data()));
+    gCovStatusBlockCal[iv]->SetTitle(Form("Voigt covariance status BlockCal %s;block;covariance status", v.Data()));
+    gFitStatusExtCalOverall[iv]->SetName(Form("gFitStatusExtCalOverall_%s", v.Data()));
+    gFitStatusExtCalOverall[iv]->SetTitle(Form("Voigt fit status ExtCalOverall %s;block;fit status", v.Data()));
+    gCovStatusExtCalOverall[iv]->SetName(Form("gCovStatusExtCalOverall_%s", v.Data()));
+    gCovStatusExtCalOverall[iv]->SetTitle(Form("Voigt covariance status ExtCalOverall %s;block;covariance status", v.Data()));
+    gFitStatusRunCalOverall[iv]->SetName(Form("gFitStatusRunCalOverall_%s", v.Data()));
+    gFitStatusRunCalOverall[iv]->SetTitle(Form("Voigt fit status RunCalOverall %s;block;fit status", v.Data()));
+    gCovStatusRunCalOverall[iv]->SetName(Form("gCovStatusRunCalOverall_%s", v.Data()));
+    gCovStatusRunCalOverall[iv]->SetTitle(Form("Voigt covariance status RunCalOverall %s;block;covariance status", v.Data()));
     
     // initializing TH2 per view comparison
     InitTH2Pair(hSpotvsSigmaRaw[iv], Form("hSpotvsSigmaRaw_%s", v.Data()), Form("spot vs #sigma-Raw %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("#sigma_{%s} [mm]",v.Data()));
     InitTH2Pair(hSpotvsSigmaSCoreRaw[iv], Form("hSpotvsSigmaSCoreRaw_%s", v.Data()), Form("spot vs Siglecore#sigma-Raw %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("SingleCore #sigma_{%s} [mm]",v.Data()));
-    InitTH2Pair(hSpotvsQRaw[iv], Form("hSpotvsQRaw_%s", v.Data()), Form("spot vs Q-Raw %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmavsQRaw[iv], Form("hSigmavsQRaw_%s", v.Data()), Form("#sigma vs Q-Raw %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmaSCorevsQRaw[iv], Form("hSigmaSCorevsQRaw_%s", v.Data()), Form("SingleCore #sigma vs Q-Raw %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
+    InitTH2Pair(hSpotvsQRaw[iv], Form("hSpotvsQRaw_%s", v.Data()), Form("spot vs Q-Raw %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmavsQRaw[iv], Form("hSigmavsQRaw_%s", v.Data()), Form("#sigma vs Q-Raw %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmaSCorevsQRaw[iv], Form("hSigmaSCorevsQRaw_%s", v.Data()), Form("SingleCore #sigma vs Q-Raw %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
   
     InitTH2Pair(hSpotvsSigmaBlockCal[iv], Form("hSpotvsSigmaBlockCal_%s", v.Data()), Form("spot vs #sigma-BlockCal %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("#sigma_{%s} [mm]",v.Data()));
     InitTH2Pair(hSpotvsSigmaSCoreBlockCal[iv], Form("hSpotvsSigmaSCoreBlockCal_%s", v.Data()), Form("spot vs Siglecore#sigma-BlockCal %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("SingleCore #sigma_{%s} [mm]",v.Data()));
-    InitTH2Pair(hSpotvsQBlockCal[iv], Form("hSpotvsQBlockCal_%s", v.Data()), Form("spot vs Q-BlockCal %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmavsQBlockCal[iv], Form("hSigmavsQBlockCal_%s", v.Data()), Form("#sigma vs Q-BlockCal %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmaSCorevsQBlockCal[iv], Form("hSigmaSCorevsQBlockCal_%s", v.Data()), Form("SingleCore #sigma vs Q-BlockCal %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
+    InitTH2Pair(hSpotvsQBlockCal[iv], Form("hSpotvsQBlockCal_%s", v.Data()), Form("spot vs Q-BlockCal %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmavsQBlockCal[iv], Form("hSigmavsQBlockCal_%s", v.Data()), Form("#sigma vs Q-BlockCal %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmaSCorevsQBlockCal[iv], Form("hSigmaSCorevsQBlockCal_%s", v.Data()), Form("SingleCore #sigma vs Q-BlockCal %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
   
     InitTH2Pair(hSpotvsSigmaExtCalOverall[iv], Form("hSpotvsSigmaExtCalOverall_%s", v.Data()), Form("spot vs #sigma-ExtCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 159.5, Form("%s [mm]",v.Data()), Form("#sigma_{%s} [mm]",v.Data()));
     InitTH2Pair(hSpotvsSigmaSCoreExtCalOverall[iv], Form("hSpotvsSigmaSCoreExtCalOverall_%s", v.Data()), Form("spot vs Siglecore#sigma-ExtCalOverall %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("SingleCore #sigma_{%s} [mm]",v.Data()));
-    InitTH2Pair(hSpotvsQExtCalOverall[iv], Form("hSpotvsQExtCalOverall_%s", v.Data()), Form("spot vs Q-ExtCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmavsQExtCalOverall[iv], Form("hSigmavsQExtCalOverall_%s", v.Data()), Form("#sigma vs Q-ExtCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmaSCorevsQExtCalOverall[iv], Form("hSigmaSCorevsQExtCalOverall_%s", v.Data()), Form("SingleCore #sigma vs Q-ExtCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
+    InitTH2Pair(hSpotvsQExtCalOverall[iv], Form("hSpotvsQExtCalOverall_%s", v.Data()), Form("spot vs Q-ExtCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmavsQExtCalOverall[iv], Form("hSigmavsQExtCalOverall_%s", v.Data()), Form("#sigma vs Q-ExtCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmaSCorevsQExtCalOverall[iv], Form("hSigmaSCorevsQExtCalOverall_%s", v.Data()), Form("SingleCore #sigma vs Q-ExtCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
   
     InitTH2Pair(hSpotvsSigmaRunCalOverall[iv], Form("hSpotvsSigmaRunCalOverall_%s", v.Data()), Form("spot vs #sigma-RunCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 159.5, Form("%s [mm]",v.Data()), Form("#sigma_{%s} [mm]",v.Data()));
     InitTH2Pair(hSpotvsSigmaSCoreRunCalOverall[iv], Form("hSpotvsSigmaSCoreRunCalOverall_%s", v.Data()), Form("spot vs Siglecore#sigma-RunCalOverall %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("SingleCore #sigma_{%s} [mm]",v.Data()));
-    InitTH2Pair(hSpotvsQRunCalOverall[iv], Form("hSpotvsQRunCalOverall_%s", v.Data()), Form("spot vs Q-RunCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmavsQRunCalOverall[iv], Form("hSigmavsQRunCalOverall_%s", v.Data()), Form("#sigma vs Q-RunCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
-    InitTH2Pair(hSigmaSCorevsQRunCalOverall[iv], Form("hSigmaSCorevsQRunCalOverall_%s", v.Data()), Form("SingleCore #sigma vs Q-RunCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [adc]",v.Data()));
+    InitTH2Pair(hSpotvsQRunCalOverall[iv], Form("hSpotvsQRunCalOverall_%s", v.Data()), Form("spot vs Q-RunCalOverall %s", v.Data()), 100, -20.025, 19.975, 300, -0.5, 150000, Form("%s [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmavsQRunCalOverall[iv], Form("hSigmavsQRunCalOverall_%s", v.Data()), Form("#sigma vs Q-RunCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("#sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
+    InitTH2Pair(hSigmaSCorevsQRunCalOverall[iv], Form("hSigmaSCorevsQRunCalOverall_%s", v.Data()), Form("SingleCore #sigma vs Q-RunCalOverall %s", v.Data()), 125, -0.025, 49.975, 300, -0.5, 150000, Form("SingleCore #sigma_{%s} [mm]",v.Data()), Form("Q_{%s} [pC]",v.Data()));
   
   }
 
@@ -1319,22 +1396,22 @@ void AnalysisTMM(const char *InputFileName){
   InitTH2Pair(hXvsYRaw, "hXvsYRaw", "X vs Y-Raw", 100, -20.025, 19.975, 100, -20.025, 19.975, "X [mm]", "Y [mm]");
   InitTH2Pair(hSigmaXvsSigmaYRaw, "hSigmaXvsSigmaYRaw", "#sigma_{X} vs #sigma_{Y}-Raw", 125, -0.025, 49.975, 125, -0.025, 49.975, "#sigma_{X} [mm]", "#sigma_{Y} [mm]");
   InitTH2Pair(hSigmaSCoreXvsSigmaSCoreYRaw, "hSigmaSCoreXvsSigmaSCoreYRaw", "SingleGaussian #sigma_{X} vs #sigma_{Y}-Raw", 125, -0.025, 49.975, 125, -0.025, 49.975, "X single-core width [mm]", "Y single-core width [mm]");
-  InitTH2Pair(hQXvsQYRaw, "hQXvsQYRaw", "Q_{X} vs Q_{Y}-Raw", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [adc]", "Q_{Y} [adc]");
+  InitTH2Pair(hQXvsQYRaw, "hQXvsQYRaw", "Q_{X} vs Q_{Y}-Raw", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [pC]", "Q_{Y} [pC]");
 
   InitTH2Pair(hXvsYBlockCal, "hXvsYBlockCal", "X vs Y-BlockCal", 100, -20.025, 19.975, 100, -20.025, 19.975, "X [mm]", "Y [mm]");
   InitTH2Pair(hSigmaXvsSigmaYBlockCal, "hSigmaXvsSigmaYBlockCal", "#sigma_{X} vs #sigma_{Y}-BlockCal", 125, -0.025, 49.975, 125, -0.025, 49.975, "#sigma_{X} [mm]", "#sigma_{Y} [mm]");
   InitTH2Pair(hSigmaSCoreXvsSigmaSCoreYBlockCal, "hSigmaSCoreXvsSigmaSCoreYBlockCal", "SingleGaussian #sigma_{X} vs #sigma_{Y}-BlockCal", 125, -0.025, 49.975, 125, -0.025, 49.975, "X single-core width [mm]", "Y single-core width [mm]");
-  InitTH2Pair(hQXvsQYBlockCal, "hQXvsQYBlockCal", "Q_{X} vs Q_{Y}-BlockCal", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [adc]", "Q_{Y} [adc]");
+  InitTH2Pair(hQXvsQYBlockCal, "hQXvsQYBlockCal", "Q_{X} vs Q_{Y}-BlockCal", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [pC]", "Q_{Y} [pC]");
 
   InitTH2Pair(hXvsYExtCalOverall, "hXvsYExtCalOverall", "X vs Y-ExtCalOverall", 100, -20.025, 19.975, 100, -20.025, 19.975, "X [mm]", "Y [mm]");
   InitTH2Pair(hSigmaXvsSigmaYExtCalOverall, "hSigmaXvsSigmaYExtCalOverall", "#sigma_{X} vs #sigma_{Y}-ExtCalOverall", 125, -0.025, 49.975, 125, -0.025, 49.975, "#sigma_{X} [mm]", "#sigma_{Y} [mm]");
   InitTH2Pair(hSigmaSCoreXvsSigmaSCoreYExtCalOverall, "hSigmaSCoreXvsSigmaSCoreYExtCalOverall", "SingleGaussian #sigma_{X} vs #sigma_{Y}-ExtCalOverall", 125, -0.025, 49.975, 125, -0.025, 49.975, "X single-core width [mm]", "Y single-core width [mm]");
-  InitTH2Pair(hQXvsQYExtCalOverall, "hQXvsQYExtCalOverall", "Q_{X} vs Q_{Y}-ExtCalOverall", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [adc]", "Q_{Y} [adc]");
+  InitTH2Pair(hQXvsQYExtCalOverall, "hQXvsQYExtCalOverall", "Q_{X} vs Q_{Y}-ExtCalOverall", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [pC]", "Q_{Y} [pC]");
 
   InitTH2Pair(hXvsYRunCalOverall, "hXvsYRunCalOverall", "X vs Y-RunCalOverall", 100, -20.025, 19.975, 100, -20.025, 19.975, "X [mm]", "Y [mm]");
   InitTH2Pair(hSigmaXvsSigmaYRunCalOverall, "hSigmaXvsSigmaYRunCalOverall", "#sigma_{X} vs #sigma_{Y}-RunCalOverall", 125, -0.025, 49.975, 125, -0.025, 49.975, "#sigma_{X} [mm]", "#sigma_{Y} [mm]");
   InitTH2Pair(hSigmaSCoreXvsSigmaSCoreYRunCalOverall, "hSigmaSCoreXvsSigmaSCoreYRunCalOverall", "SingleGaussian #sigma_{X} vs #sigma_{Y}-RunCalOverall", 125, -0.025, 49.975, 125, -0.025, 49.975, "X single-core width [mm]", "Y single-core width [mm]");
-  InitTH2Pair(hQXvsQYRunCalOverall, "hQXvsQYRunCalOverall", "Q_{X} vs Q_{Y}-RunCalOverall", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [adc]", "Q_{Y} [adc]");
+  InitTH2Pair(hQXvsQYRunCalOverall, "hQXvsQYRunCalOverall", "Q_{X} vs Q_{Y}-RunCalOverall", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [pC]", "Q_{Y} [pC]");
 
   
   for (size_t i = 0; i < blocks.size(); ++i) {
@@ -1395,32 +1472,41 @@ void AnalysisTMM(const char *InputFileName){
       BlockRunCalOverallObs[iv][0].push_back(ComputeObservables(h2RunCalOverallBlock, v));
       BlockRunCalOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2RunCalOverallBlock, true, 1, 2));
 
+      const ObservableResult &fitRaw = BlockRawObs[iv][1].back();
+      const ObservableResult &fitBlockCal = BlockCalObs[iv][1].back();
+      const ObservableResult &fitExtCal = BlockExtCalOverallObs[iv][1].back();
+      const ObservableResult &fitRunCal = BlockRunCalOverallObs[iv][1].back();
+
       FillGraphPair(gSpotRaw[iv],
           gWidthRaw[iv], gSingleWidthCoreRaw[iv],
           gChargeRaw[iv],
           i, iblk,
-          BlockRawObs[iv]
+          BlockRawObs[iv],
+          true
       );
 
       FillGraphPair(gSpotBlockCal[iv],
           gWidthBlockCal[iv], gSingleWidthCoreBlockCal[iv],
           gChargeBlockCal[iv], 
           i, iblk,
-          BlockCalObs[iv]
+          BlockCalObs[iv],
+          true
       );
 
       FillGraphPair(gSpotExtCalOverall[iv],
           gWidthExtCalOverall[iv], gSingleWidthCoreExtCalOverall[iv],
           gChargeExtCalOverall[iv],
           i, iblk,
-          BlockExtCalOverallObs[iv]
+          BlockExtCalOverallObs[iv],
+          true
       );
 
       FillGraphPair(gSpotRunCalOverall[iv],
           gWidthRunCalOverall[iv], gSingleWidthCoreRunCalOverall[iv],
           gChargeRunCalOverall[iv],
           i, iblk,
-          BlockRunCalOverallObs[iv]
+          BlockRunCalOverallObs[iv],
+          true
       );
 
       FillTH2ObservablePair(hSpotvsSigmaRaw[iv], hSpotvsSigmaSCoreRaw[iv], hSpotvsQRaw[iv],
@@ -1442,6 +1528,15 @@ void AnalysisTMM(const char *InputFileName){
         hSigmavsQRunCalOverall[iv], hSigmaSCorevsQRunCalOverall[iv],
         BlockRunCalOverallObs[iv]
       );
+
+      gFitStatusRaw[iv]->SetPoint(gFitStatusRaw[iv]->GetN(), iblk, fitRaw.fitStatus );
+      gCovStatusRaw[iv]->SetPoint(gCovStatusRaw[iv]->GetN(), iblk, fitRaw.covStatus);
+      gFitStatusBlockCal[iv]->SetPoint(gFitStatusBlockCal[iv]->GetN(), iblk, fitBlockCal.fitStatus);
+      gCovStatusBlockCal[iv]->SetPoint(gCovStatusBlockCal[iv]->GetN(), iblk, fitBlockCal.covStatus);
+      gFitStatusExtCalOverall[iv]->SetPoint(gFitStatusExtCalOverall[iv]->GetN(), iblk, fitExtCal.fitStatus);
+      gCovStatusExtCalOverall[iv]->SetPoint(gCovStatusExtCalOverall[iv]->GetN(), iblk, fitExtCal.covStatus);
+      gFitStatusRunCalOverall[iv]->SetPoint(gFitStatusRunCalOverall[iv]->GetN(), iblk, fitRunCal.fitStatus);
+      gCovStatusRunCalOverall[iv]->SetPoint(gCovStatusRunCalOverall[iv]->GetN(), iblk, fitRunCal.covStatus);
 
       double eRaw = RatioError(BlockRawObs[iv][1].back().charge, BlockRawObs[iv][1].back().chargeErr, BlockRawObs[iv][0].back().charge, BlockRawObs[iv][0].back().chargeErr);
       double eBlockCal = RatioError(BlockCalObs[iv][1].back().charge, BlockCalObs[iv][1].back().chargeErr, BlockCalObs[iv][0].back().charge, BlockCalObs[iv][0].back().chargeErr);
@@ -1556,27 +1651,27 @@ void AnalysisTMM(const char *InputFileName){
     TGraphAttributePair(gSpotRawRatio[iv],            "BeamSpotRawRatio",        v, Form("%s [mm]", v.Data()),       20, kRed+1);
     TGraphAttributePair(gWidthRawRatio[iv],           "BeamSpreadRawRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
     TGraphAttributePair(gSingleWidthCoreRawRatio[iv], "SingleCoreWidthRawRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
-    TGraphAttributePair(gChargeRawRatio[iv],          "BeamChargeRawRatio",      v, Form("Q_{%s} [adc]", v.Data()),       20, kRed+1);
+    TGraphAttributePair(gChargeRawRatio[iv],          "BeamChargeRawRatio",      v, Form("Q_{%s}", v.Data()),       20, kRed+1);
 
     TGraphAttributePair(gSpotBlockCalRatio[iv],            "BeamSpotBlockCalRatio",        v, Form("%s [mm]", v.Data()),       20, kBlue+1);
     TGraphAttributePair(gWidthBlockCalRatio[iv],           "BeamSpreadBlockCalRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlue+1);
     TGraphAttributePair(gSingleWidthCoreBlockCalRatio[iv], "SingleCoreWidthBlockCalRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlue+1);
-    TGraphAttributePair(gChargeBlockCalRatio[iv],          "BeamChargeBlockCalRatio",      v, Form("Q_{%s} [adc]", v.Data()),       20, kBlue+1);
+    TGraphAttributePair(gChargeBlockCalRatio[iv],          "BeamChargeBlockCalRatio",      v, Form("Q_{%s}", v.Data()),       20, kBlue+1);
 
     TGraphAttributePair(gSpotExtCalOverallRatio[iv],            "BeamSpotExtCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kViolet-3);
     TGraphAttributePair(gWidthExtCalOverallRatio[iv],           "BeamSpreadExtCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
     TGraphAttributePair(gSingleWidthCoreExtCalOverallRatio[iv], "SingleCoreWidthExtCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
-    TGraphAttributePair(gChargeExtCalOverallRatio[iv],          "BeamChargeExtCalOverallRatio",      v, Form("Q_{%s} [adc]", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gChargeExtCalOverallRatio[iv],          "BeamChargeExtCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kViolet-3);
 
     TGraphAttributePair(gSpotRunCalOverallRatio[iv],            "BeamSpotRunCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kSpring-1);
     TGraphAttributePair(gWidthRunCalOverallRatio[iv],           "BeamSpreadRunCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
     TGraphAttributePair(gSingleWidthCoreRunCalOverallRatio[iv], "SingleCoreWidthRunCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
-    TGraphAttributePair(gChargeRunCalOverallRatio[iv],          "BeamChargeRunCalOverallRatio",      v, Form("Q_{%s} [adc]", v.Data()),       20, kSpring-1);
+    TGraphAttributePair(gChargeRunCalOverallRatio[iv],          "BeamChargeRunCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kSpring-1);
 
     TGraphAttributePair(gSpotBlockCal_ExtCalOverallRatio[iv],            "BeamSpotBlockCal_ExtCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kBlack);
     TGraphAttributePair(gWidthBlockCal_ExtCalOverallRatio[iv],           "BeamSpreadBlockCal_ExtCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlack);
     TGraphAttributePair(gSingleWidthCoreBlockCal_ExtCalOverallRatio[iv], "SingleCoreWidthBlockCal_ExtCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlack);
-    TGraphAttributePair(gChargeBlockCal_ExtCalOverallRatio[iv],          "BeamChargeBlockCal_ExtCalOverallRatio",      v, Form("Q_{%s} [adc]", v.Data()),       20, kBlack);
+    TGraphAttributePair(gChargeBlockCal_ExtCalOverallRatio[iv],          "BeamChargeBlockCal_ExtCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kBlack);
 
   }
 
@@ -1699,7 +1794,17 @@ void AnalysisTMM(const char *InputFileName){
     gQFitSliceQDirBlockCal[iv]->Write();
     gQFitSliceQDirExtCalOverall[iv]->Write();
     gQFitSliceQDirRunCalOverall[iv]->Write();
+
+    gFitStatusRaw[iv]->Write();
+    gCovStatusRaw[iv]->Write();
+    gFitStatusBlockCal[iv]->Write();
+    gCovStatusBlockCal[iv]->Write();
+    gFitStatusExtCalOverall[iv]->Write();
+    gCovStatusExtCalOverall[iv]->Write();
+    gFitStatusRunCalOverall[iv]->Write();
+    gCovStatusRunCalOverall[iv]->Write();
   }
+  
   WriteGraphPair(gXYratioRaw);
   WriteGraphPair(gXYratioBlockCal);
   WriteGraphPair(gXYratioExtCalOverall);

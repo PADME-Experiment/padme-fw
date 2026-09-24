@@ -66,6 +66,31 @@ struct SliceFitResult {
   TH1D *chi2 = nullptr;  
 };
 
+struct BlockTimeInfo {
+
+  Long64_t nEvents = 0;
+
+  ULong64_t firstEvt = 0;
+  ULong64_t lastEvt  = 0;
+
+  double firstSrs = 0.;
+  double lastSrs  = 0.;
+  double meanSrs  = 0.;
+
+  double firstDaqSec = 0.;   // daqTimeSec + 1e-6 * daqTimeMicroSec
+  double lastDaqSec  = 0.;
+  double meanDaqSec  = 0.;
+
+  double firstDaq = 0.;   // daqTimeSec + 1e-6 * daqTimeMicroSec
+  double lastDaq  = 0.;
+  double meanDaq  = 0.;
+
+  // temporary accumulators
+  long double sumSrs = 0.;
+  long double sumDaq = 0.;
+  long double sumDaqSec = 0.;
+};
+
 class RecoTMM {
 public :
    TChain         *fTree;      //! pointer to the analyzed TTree
@@ -131,7 +156,7 @@ public :
    virtual void     LoopFileList(TObjArray &inputFileNameList, int NevtBlock=10000);
    virtual bool     LoadCalibrationConstants(const string &filename);
    virtual void     BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphErrors *gRatio, TGraphErrors *gDiff);
-   virtual void     FillBlockGraphsFromSlices(int iReadout);
+   // virtual void     FillBlockGraphsFromSlices(int iReadout);
    virtual bool     IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted = 1,int minCovMatrixStatusAccepted = 2);
 
    virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
@@ -198,7 +223,10 @@ public :
    vector<double> FitFullRatio[TMMCH_N_Readout];
 
    // tf1 di fit
-   vector<TF1*> f;
+   // vector<TF1*> f;
+
+   // per-block time info - struct with srstimestamp, daqtime, first/last/mean --> this serves to derive the correct variable for the time association
+   vector<BlockTimeInfo> blockTimeInfo;
   
    /////// HISTOGRAMS //////
    // ---- Overall, event based ----
@@ -256,14 +284,54 @@ public :
    TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout]   = {0};
    TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0};
    TGraphErrors *g_BlockBeamCharge[TMMCH_N_Readout] = {0};
+   
+   // block based graphs - association of the average time of the entire block with the first-look observables (beam spot, spread, charge)
+   // TGraphErrors *g_DaqSecBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTimeSec
+   // TGraphErrors *g_DaqSecBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTimeSec
+   // TGraphErrors *g_DaqSecBeamCharge[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
+
+   // non può funzionare perché non è garantita la conseguenzialità degli eventi nel tree in termini temporali
+   TGraphErrors *g_DaqTimeBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTime
+   TGraphErrors *g_DaqTimeBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTime
+   TGraphErrors *g_DaqTimeBeamCharge[TMMCH_N_Readout] = {0}; // beam charge vs DaqTime
+
+   // TGraphErrors *g_SrsTimeBeamSpot[TMMCH_N_Readout]   = {0};
+   // TGraphErrors *g_SrsTimeBeamSpread[TMMCH_N_Readout] = {0};
+   // TGraphErrors *g_SrsTimeBeamCharge[TMMCH_N_Readout] = {0};
 
    //TGraphs for strip calibration (overall run-based)
    TGraphErrors *g_RawCalibFullDiff[TMMCH_N_Readout]  = {0};
    TGraphErrors *g_RawCalibFullRatio[TMMCH_N_Readout] = {0};
+
+   // TGraphs with time vs iev association (iev indice del loop sulle entry)
+   TGraphErrors *g_SrsTimeStamp_iev = 0;
+   TGraphErrors *g_DaqTimeSec_iev = 0;
+   TGraphErrors *g_DaqTimeMicroSec_iev = 0;
+   TGraphErrors *g_DaqTime_iev = 0; // combines Sec and MicroSec into a thin separated time 
+
+   // TGraphs with time vs iev association (iev indice del loop sulle entry)
+   TGraphErrors *g_SrsTimeStamp_evt = 0;
+   TGraphErrors *g_DaqTimeSec_evt = 0;
+   TGraphErrors *g_DaqTimeMicroSec_evt = 0;
+   TGraphErrors *g_DaqTime_evt = 0; // combines Sec and MicroSec into a thin separated time 
+
+   // evt iev association
+   TGraphErrors *g_evt_vs_iev = 0;
    
    //block based TGraphs for strip calibration (per-block)
    vector<TGraphErrors*> g_BlockRawCalibFullDiff[TMMCH_N_Readout];
    vector<TGraphErrors*> g_BlockRawCalibFullRatio[TMMCH_N_Readout];
+
+   // block based TGraphs with time vs event id association
+   // vector<TGraphErrors*> g_BlockSrsTimeStamp;
+   // vector<TGraphErrors*> g_BlockDaqTimeSec;
+   // vector<TGraphErrors*> g_BlockDaqTimeMicroSec;
+   // vector<TGraphErrors*> g_BlockDaqTime;
+
+   // block id time association
+   TGraphErrors *g_BlockMeanDaqSec = 0;
+   TGraphErrors *g_BlockMeanDaqTime = 0;
+   TGraphErrors *g_BlockMeanSrsTime = 0;
 
 };
 
@@ -333,7 +401,10 @@ RecoTMM::RecoTMM(TObjArray *inputFileNameList,
 
 RecoTMM::~RecoTMM()
 {
-   if (!fTree) return;
+   if (fOwnChain && fTree) {
+        delete fTree;
+        fTree = nullptr;
+    }
 }
 
 Int_t RecoTMM::GetEntry(Long64_t entry)
@@ -369,25 +440,37 @@ void RecoTMM::Init(TChain *tree)
 
    fTree = tree;
 
-   fTree->SetBranchStatus("*", 1);
+   fTree->SetBranchStatus("*", 0);
+
+   fTree->SetBranchStatus("evt", 1);
+   fTree->SetBranchStatus("daqTimeSec", 1);
+   fTree->SetBranchStatus("daqTimeMicroSec", 1);
+   fTree->SetBranchStatus("srsTimeStamp", 1);
+   // fTree->SetBranchStatus("srsTrigger", 1);
+   fTree->SetBranchStatus("mmLayer", 1);
+   fTree->SetBranchStatus("mmReadout", 1);
+   fTree->SetBranchStatus("mmStrip", 1);
+   fTree->SetBranchStatus("raw_q", 1);
+   // fTree->SetBranchStatus("max_q", 1);
+   // fTree->SetBranchStatus("t_max_q", 1);
 
    fTree->SetBranchAddress("evt",             &evt,             &b_evt);
-   fTree->SetBranchAddress("error",           &error,           &b_error);
+   // fTree->SetBranchAddress("error",           &error,           &b_error);
    fTree->SetBranchAddress("daqTimeSec",      &daqTimeSec,      &b_daqTimeSec);
    fTree->SetBranchAddress("daqTimeMicroSec", &daqTimeMicroSec, &b_daqTimeMicroSec);
    fTree->SetBranchAddress("srsTimeStamp",    &srsTimeStamp,    &b_srsTimeStamp);
-   fTree->SetBranchAddress("srsTrigger",      &srsTrigger,      &b_srsTrigger);
+   // fTree->SetBranchAddress("srsTrigger",      &srsTrigger,      &b_srsTrigger);
 
-   fTree->SetBranchAddress("srsFec",          &srsFec,          &b_srsFec);
-   fTree->SetBranchAddress("srsChip",         &srsChip,         &b_srsChip);
-   fTree->SetBranchAddress("srsChan",         &srsChan,         &b_srsChan);
-   fTree->SetBranchAddress("mmChamber",       &mmChamber,       &b_mmChamber);
+   // fTree->SetBranchAddress("srsFec",          &srsFec,          &b_srsFec);
+   // fTree->SetBranchAddress("srsChip",         &srsChip,         &b_srsChip);
+   // fTree->SetBranchAddress("srsChan",         &srsChan,         &b_srsChan);
+   // fTree->SetBranchAddress("mmChamber",       &mmChamber,       &b_mmChamber);
    fTree->SetBranchAddress("mmLayer",         &mmLayer,         &b_mmLayer);
    fTree->SetBranchAddress("mmReadout",       &mmReadout,       &b_mmReadout);
    fTree->SetBranchAddress("mmStrip",         &mmStrip,         &b_mmStrip);
    fTree->SetBranchAddress("raw_q",           &raw_q,           &b_raw_q);
-   fTree->SetBranchAddress("max_q",           &max_q,           &b_max_q);
-   fTree->SetBranchAddress("t_max_q",         &t_max_q,         &b_t_max_q);
+   // fTree->SetBranchAddress("max_q",           &max_q,           &b_max_q);
+   // fTree->SetBranchAddress("t_max_q",         &t_max_q,         &b_t_max_q);
 
    Notify();
 }

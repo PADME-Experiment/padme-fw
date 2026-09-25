@@ -158,7 +158,7 @@ Double_t MMFindBestTrack::PurityFunc_4HitL1(Double_t x, Double_t *p) {
   double sig = TMath::Exp(-0.5*(x-p[1])*(x-p[1])/(p[2]*p[2]));
   double bkg = TMath::Exp(-0.5*(x-p[4])*(x-p[4])/(p[5]*p[5]));
 
-  return p[0]*sig/(p[0]*sig + p[1]*bkg);
+  return p[0]*sig/(p[0]*sig + p[3]*bkg);
 }
 
 void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t extrZ){

@@ -62,6 +62,18 @@ struct ECalSelEvent{
   int indexETagAss[3]; // indices of the etag association [pointer to the association array] (could become a std vector)
 };
 
+struct ECalBremEvent{
+  int indexECal[2]; // indices of the ecal clusters selected (could become a std vector)
+  double energy[2];
+  double time[2];
+  double phi[2], thetaLab[2], thetaCM[2];
+  TVector2 cog, xyclu[2]; // cog of the selected clusters
+  TLorentzVector labP[2]; // lab momenta
+  TLorentzVector cmP[2]; // cm momenta
+  int purity[2][2]; // indices of the etag association [pointer to the association array] (could become a std vector)
+  int processID[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
+  int purity_comb[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
+};
 struct BadTimeInterval {
     long long tStart;
     long long tStop;
@@ -223,7 +235,8 @@ private:
   TGraphErrors* MCTrueDeno;
   TGraphErrors* DATATPEff; 
   TGraphErrors*  EffRatio; 
-
+  ECalBremEvent* bremev;
+  TTree* ftree;
   std::vector<BadTimeInterval> fBadIntervals;
 
 };

@@ -64,7 +64,7 @@ struct MMBestTrack3D{
   // TVector3 lambda; // cosines of track directions
   // vector<TVector3> vres; //vector of residuals
 
-  Double_t purity=-999; //default, assigned only when calling track-clupos association
+  Double_t purity=0; //default, assigned only when calling track-clupos association
 
   // TVector3 BestTrackExtrapolationAtZ(double z_in) {
   //   TVector3 ext_pos;
@@ -92,7 +92,9 @@ public:
   MMBestTrack3D* GetBestTrackFromCluPos(TVector3 cluPos, Double_t extrZ); //
   Double_t PurityFunc(Double_t x, Double_t y, Double_t *p);
   Double_t PurityFunc_4HitL1(Double_t x, Double_t *p);
+  MMBestTrack3D* GetBestTrackFromCluID(Int_t cluId); //implemented but commented for now --> to use it remove comments in cc and in Process()
   void AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t extrZ);//
+  
   Int_t QualityBin(Double_t purity, Int_t type) {
     //        purity_TAG < 0      --> quality_bin_TAG = 0 (no track considered)
     //    0 < purity_TAG < 0.02   --> quality_bin_TAG = 1 (bad purity)
@@ -138,7 +140,7 @@ private:
   int fEventCounter;
   bool fSaveEvent;
   vector<MMBestTrack*> fvTracks;
-
+  std::map<Int_t, MMBestTrack3D*> fCluTrackAss;
   //purity fit parameters
 
   double pars_3h_lvl0[8] = {7.56008, 58.3746, -1.2901, 7.28396, 16.0513, 105.037, 3.37634, 0.263186};

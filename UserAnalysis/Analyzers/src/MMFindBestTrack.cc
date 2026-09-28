@@ -91,16 +91,16 @@ Bool_t MMFindBestTrack::Process(){
         bt->quad = qd;
         bt->view = vw;
         bt->level = 1;
-	bt->nhit = best_tra1[qd][vw].nhit;
-	bt->slope = best_tra1[qd][vw].tracklet.slope;
+        bt->nhit = best_tra1[qd][vw].nhit;
+        bt->slope = best_tra1[qd][vw].tracklet.slope;
         bt->inter = best_tra1[qd][vw].tracklet.inter;
         bt->chi2 = best_tra1[qd][vw].tracklet.chi2;
         bt->chi2IP = best_tra1[qd][vw].tracklet.chi2IP;
-	bt->pchi2 = pchi2_best1[qd][vw];
-	bt->slope_lvl0[0] = best_tra1[qd][vw].tracklet.slope_lvl0[0];
-	bt->slope_lvl0[1] = best_tra1[qd][vw].tracklet.slope_lvl0[1];
-	bt->inter_lvl0[0] = best_tra1[qd][vw].tracklet.inter_lvl0[0];
-	bt->inter_lvl0[1] = best_tra1[qd][vw].tracklet.inter_lvl0[1]; 
+        bt->pchi2 = pchi2_best1[qd][vw];
+        bt->slope_lvl0[0] = best_tra1[qd][vw].tracklet.slope_lvl0[0];
+        bt->slope_lvl0[1] = best_tra1[qd][vw].tracklet.slope_lvl0[1];
+        bt->inter_lvl0[0] = best_tra1[qd][vw].tracklet.inter_lvl0[0];
+        bt->inter_lvl0[1] = best_tra1[qd][vw].tracklet.inter_lvl0[1]; 
         for(int ipar=0; ipar<5; ipar++){
           bt->pars[ipar] = best_tra1[qd][vw].tracklet.pars[ipar];
         }
@@ -119,12 +119,12 @@ Bool_t MMFindBestTrack::Process(){
         bt->quad = qd;
         bt->view = vw;
         bt->level = 0;
-	bt->nhit = best_tra0[qd][vw].nhit;
+	      bt->nhit = best_tra0[qd][vw].nhit;
         bt->slope = best_tra0[qd][vw].tracklet.slope;
         bt->inter = best_tra0[qd][vw].tracklet.inter;
         bt->chi2 = best_tra0[qd][vw].tracklet.chi2;
         bt->chi2IP = best_tra0[qd][vw].tracklet.chi2IP;
-	bt->pchi2 = pchi2_best0[qd][vw];
+	      bt->pchi2 = pchi2_best0[qd][vw];
         for(int ipar=0; ipar<5; ipar++){
           bt->pars[ipar] = best_tra0[qd][vw].tracklet.pars[ipar];
         }        
@@ -139,7 +139,14 @@ Bool_t MMFindBestTrack::Process(){
       }
       //else std::cerr<<"[BEST TRACK FINDER] ci sta qualche problema"<<std::endl;
     }
-  }  
+  } 
+  for (int h1=0; h1< fEvent->ECalRecoCl->GetNElements(); ++h1) {  
+    TRecoVCluster* clu = fEvent->ECalRecoCl->Element((int)h1);
+    TVector3 cluPos(
+    clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
+    fCluTrackAss.insert({h1, GetBestTrackFromCluPos(cluPos, fGeneralInfo->GetCOG().Z())});
+  }
+
   return true;
 }
 Double_t MMFindBestTrack::PurityFunc(Double_t x, Double_t y, Double_t *p)
@@ -252,10 +259,16 @@ MMBestTrack3D* MMFindBestTrack::GetBestTrackFromCluPos(TVector3 cluPos,Double_t 
   besttrack3D->purity = combined_purity;
   return besttrack3D;
 }
- 
+MMBestTrack3D* MMFindBestTrack::GetBestTrackFromCluID(Int_t CluId){
 
-
-
+  std::map<Int_t, MMBestTrack3D*>::iterator it;
+  it = fCluTrackAss.find(CluId);
+    if(it!= fCluTrackAss.end()){
+      return it->second;
+    }else{
+      return nullptr;
+    }  
+}
 
 Bool_t MMFindBestTrack::Finalize(){
   if(fGeneralInfo->isMC()){

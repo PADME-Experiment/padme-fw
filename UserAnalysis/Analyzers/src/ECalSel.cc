@@ -46,7 +46,7 @@ ECalSel::ECalSel()
   TString cfgFile = "config/UserAnalysis.conf";
   // single cluster conditions
   fTimeSafeMin = -1E10; // ns
-  fMaxTimeDistance = 5; // 5; // ns, sigma = 1.6 ns
+  fMaxTimeDistance = 5; // 5; // ns, sigma = 0.8 ns
   fMinGGDistance = 60;  // mm
   // kinematic conditions are run-dependent.
   fSafeEnergyFactor = 0.7; // Safety factor used for the energy min and max cuts
@@ -76,6 +76,7 @@ Bool_t ECalSel::Init(PadmeAnalysisEvent *event, Bool_t fHistoModeVal, TString In
   fMCTruthECal = MCTruthECal::GetInstance();
   fNPoTAnalysis = NPoTAnalysis::GetInstance();
   fETagAn = ETagAn::GetInstance();
+  fMMFindBestTrack = MMFindBestTrack::GetInstance();
   fFillLocalHistograms = false;
   InputHistofile = InputHistofileVal;
 
@@ -300,6 +301,7 @@ Bool_t ECalSel::Process()
   {
 
     // DataQuality();
+    BremSelection();
     NPoTLGCorr();
     TwoClusSel();
     TwoClusters_couples();
@@ -1354,6 +1356,109 @@ std::vector<std::pair<Int_t, Int_t>> ECalSel::GetCluCouples(){
   return couples; 
 }
 
+Int_t ECalSel::BremSelection(){
+  std::vector<std::pair<Int_t, Int_t>> couples = GetCluCouples();
+  TRecoVCluster *tempClu[2];
+  double cluTime[2];
+  for (std::vector<std::pair<Int_t, Int_t>>::iterator clupairs = couples.begin(); clupairs != couples.end(); ++clupairs) {
+    tempClu[0] = fECal_clEvent->Element(clupairs->first);
+    tempClu[1] = fECal_clEvent->Element(clupairs->second);
+
+    if(tempClu[0]->GetEnergy() < tempClu[1]->GetEnergy()){
+        tempClu[0] = fECal_clEvent->Element(clupairs->second);
+        tempClu[1] = fECal_clEvent->Element(clupairs->first);
+    }
+
+    double dt = tempClu[0]->GetTime()-tempClu[1]->GetTime();
+    double cluEnergy[2];
+    cluEnergy[0] = tempClu[0]->GetEnergy();
+    cluEnergy[1] = tempClu[1]->GetEnergy();
+
+    TVector3 cluPos[2];
+    cluPos[0].SetXYZ(
+        tempClu[0]->GetPosition().X(),
+        tempClu[0]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
+ 
+    cluPos[1].SetXYZ(
+        tempClu[1]->GetPosition().X(),
+        tempClu[1]->GetPosition().Y(), fGeneralInfo->GetCOG().Z());
+
+    TVector3 cluPosRel[2];
+    cluPosRel[0] = cluPos[0]-fGeneralInfo->GetCOG();
+    cluPosRel[1] = cluPos[1]-fGeneralInfo->GetCOG();
+    
+    double dr = (cluPos[0] - cluPos[1]).Mag();
+
+    
+    double pg[2];                                  // expected energies in the lab frame
+    double cosq[2];
+    TLorentzVector labMomenta[2], labMomentaCM[2]; // momenta in the lab and CM frames
+    TVector3 cluMomCrossBoost[2];                  // vector product between cluster direction and beam momentum (normalised to 1)
+    //evaluate kinematics and momenta   
+    for(int i=0; i<2; i++){
+        TVector3 cluMom = cluPos[i] - fGeneralInfo->GetTargetPos();
+        cluMom *= (cluEnergy[i] / cluMom.Mag());
+        // laboratory and cm momenta
+        Double_t Estar = fGeneralInfo->GetSqrts()/2;
+        labMomenta[i].SetVectM(cluMom, 0.); // define a photon-like tlorentzVector --> siamo sicuri a 17 MeV??
+        labMomentaCM[i].SetVectM(labMomenta[i].Vect(), 0);
+        labMomentaCM[i].Boost(-fGeneralInfo->GetBoost());
+      }
+
+
+      TVector2 cog(
+          (cluEnergy[0] * cluPos[0] + cluEnergy[1] * cluPos[1]).X() / (cluEnergy[0] + cluEnergy[1]),
+          (cluEnergy[0] * cluPos[0] + cluEnergy[1] * cluPos[1]).Y() / (cluEnergy[0] + cluEnergy[1]));
+
+
+    TString processSelected;
+    bool processFound = false;
+    if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
+        {
+          if (fMCTruthECal->GetVtxFromCluID((int)clupairs->first) < 0 && fMCTruthECal->GetVtxFromCluID((int)clupairs->second) < 0  )
+          {
+            processSelected = "NoVtx";
+          }
+          else if(fMCTruthECal->GetVtxFromCluID((int)clupairs->first) < 0 || fMCTruthECal->GetVtxFromCluID((int)clupairs->second) < 0){
+            processSelected = "OneNoVtx";
+          }
+          else if(fMCTruthECal->GetVtxFromCluID((int)clupairs->first) != fMCTruthECal->GetVtxFromCluID((int)clupairs->second)){
+            processSelected = "Mixed";
+          }
+          else
+          {
+            TMCVertex *mcVtx = fEvent->MCTruthEvent->Vertex(fMCTruthECal->GetVtxFromCluID((int)clupairs->first));
+            processSelected = mcVtx->GetProcess().Data();
+          }
+
+          for(int ipro=0; ipro< fNprocessAvailableTwoClu; ipro++){
+            if(processSelected == fprocessIDsTwoClu[ipro]){
+              processFound = true;
+              break;
+            }
+          }
+          if(!processFound){
+          std::cout << "Process not found: " << processSelected.Data() << std::endl;
+            }
+        }
+
+    if(fabs(dt) > fMaxTimeDistance) continue;
+    //cut clusters outside calorimeter safe areas
+
+    if((cluPos[0].Perp()< 90. || cluPos[0].Perp()> fGeneralInfo->GetRadiusMax() ) ||(cluPos[1].Perp()< 90. || cluPos[1].Perp()> fGeneralInfo->GetRadiusMax() )) continue;
+    MMBestTrack3D *asstracks[2];
+    asstracks[0] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->first);
+    asstracks[1] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->second);
+    if(((!asstracks[0] && asstracks[1]) || (!asstracks[1] && asstracks[0]))) std::cout<< "there's just one track or less"<<std::endl;;
+
+    if((asstracks[0] && ((asstracks[0]->tracks[0] && asstracks[0]->tracks[0]->purity > 0.6) || (asstracks[0]->tracks[1] && asstracks[0]->tracks[1]->purity > 0.6) )) || (asstracks[1] && ((asstracks[1]->tracks[0] && asstracks[1]->tracks[0]->purity > 0.6) || (asstracks[1]->tracks[1] && asstracks[1]->tracks[1]->purity > 0.6) ))){
+      fhSvcVal->FillHisto2List("BremSelection", Form("ECal_Brem_DTHEVsDPHIAbs"),fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      fhSvcVal->FillHisto2List("BremSelection", Form("ECal_Brem_DTHEVsDPHIAbs_%s", processSelected.Data()),fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()),labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
+      std::cout<< "One track is good"<<std::endl;
+    }
+  }
+  return 1;
+}
 
 Int_t ECalSel::TwoClusters_couples(){
   Int_t CutFlow=0;
@@ -1716,7 +1821,9 @@ Int_t ECalSel::TwoClusters_couples(){
             pcleOut[0] = mcVtx->ParticleOut(fMCTruthECal->GetPcleFromCluID(clupairs->first).at(0)); //chooses the first pcle matching the cluster
             pcleOut[1] = mcVtx->ParticleOut(fMCTruthECal->GetPcleFromCluID(clupairs->second).at(0));
           
-        
+            fhSvcVal->FillHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EMeasvsETrue"), pcleOut[0]->GetEnergy(), cluEnergy[0], 1.);
+            fhSvcVal->FillHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EMeasvsETrue"), pcleOut[1]->GetEnergy(), cluEnergy[1], 1.);
+
             TLorentzVector labMomenta_true[2], labMomentaCM_true[2];
             for(int i=0; i<2; i++){
               labMomenta_true[i].SetVectM(pcleOut[i]->GetMomentum(), 0.); // define a photon-like tlorentzVector
@@ -1937,6 +2044,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->CreateList("ECalSelTwoClu");
   fhSvcVal->CreateList("ECalSelBField");
   fhSvcVal->CreateList("ECalSelTwoCluMC");
+  fhSvcVal->CreateList("BremSelection");
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx_Eweight", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
@@ -2090,6 +2198,7 @@ Bool_t ECalSel::InitHistos()
   
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsE1plusE2_dphi", 600, 0., 600, 600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
+  fhSvcVal->BookHisto2List("BremSelection", "ECal_Brem_DTHEVsDPHIAbs", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_dt", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_dr", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_DTHEVsDPHIAbs_dphi", 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
@@ -2135,6 +2244,7 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EHit2vsR2_Babayaga"), 500, 0, 500,  600, 0, 300);
   fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EHit2vsR2_BabayagaGG"), 500, 0, 500,  600, 0, 300);
   fhSvcVal->BookHisto2List("ECalSelTwoClu", Form("ECal_TC_EMeasvsEExp"), 600, 0, 300,  600, 0, 300);
+  fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EMeasvsETrue"), 600, 0, 300,  600, 0, 300);
   fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EMeasvsEExp_Babayaga"), 600, 0, 300,  600, 0, 300);
   fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EExpvsETrue_Babayaga"), 600, 0, 300,  600, 0, 300);
   fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_EMeasvsEExp_BabayagaGG"), 600, 0, 300,  600, 0, 300);
@@ -2152,6 +2262,7 @@ Bool_t ECalSel::InitHistos()
  for (int pid = 0; pid < fNprocessAvailableTwoClu; pid++)
   {
     fhSvcVal->BookHisto2List("ECalSelTwoCluMC" , Form("ECal_TC_DTHEVsDPHIAbs_%s", fprocessIDsTwoClu[pid].Data()), 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
+    fhSvcVal->BookHisto2List("BremSelection" , Form("ECal_Brem_DTHEVsDPHIAbs_%s", fprocessIDsTwoClu[pid].Data()), 600, 0., 2*TMath::Pi(), 600, 0., 2*TMath::Pi());
     fhSvcVal->BookHisto2List("ECalSelTwoCluMC" , Form("ECal_TC_R1VsR2_%s", fprocessIDsTwoClu[pid].Data()), 500, 0., 500, 500, 0., 500);
     fhSvcVal->BookHisto2List("ECalSelTwoCluMC" , Form("ECal_TC_Phi1VsPhi2_%s", fprocessIDsTwoClu[pid].Data()),800, -TMath::Pi(), TMath::Pi(), 800, -TMath::Pi(), TMath::Pi());
     fhSvcVal->BookHisto2List("ECalSelTwoCluMC", Form("ECal_TC_DTHEVsE1plusE2_dphi_%s",fprocessIDsTwoClu[pid].Data()) , 600, 0., 600, 600, 0., 2*TMath::Pi());

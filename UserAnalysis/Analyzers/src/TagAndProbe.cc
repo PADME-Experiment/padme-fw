@@ -62,7 +62,7 @@ Bool_t TagAndProbe::Init(PadmeAnalysisEvent *event, Bool_t HistoMode, TString In
   fHistoMode = HistoMode;
 
   fNSlicesE = 1 + (Int_t)(fGeneralInfo->GetEnergyMax() - fGeneralInfo->GetEnergyMin()) / spacing;
-
+  std::cout<< "TIME "<<fECalSel->GetMaxTimeDistance()<< "GG "<<fECalSel->GetMinGGDistance()<<std::endl;
   // PRENDE VARIABILI SELEZIONE DA ECALSEL (TAGLI THETA - PHI)
   
   
@@ -80,15 +80,15 @@ Bool_t TagAndProbe::Process()
 Bool_t TagAndProbe::InitHistos()
 {
 
-  double fXMin = -21. * (14 + 0.5);
-  double fXMax = 21. * (14 + 0.5);
-  double fXW = 21; // mm
-  int fNXBins = (fXMax - fXMin) / fXW;
-  double fYMin = -21. * (14 + 0.5);
-  double fYMax = 21. * (14 + 0.5);
-  double fYW = 21; // mm
+  // double fXMin = -21. * (14 + 0.5);
+  // double fXMax = 21. * (14 + 0.5);
+  // double fXW = 21; // mm
+  // //int fNXBins = (fXMax - fXMin) / fXW;
+  // double fYMin = -21. * (14 + 0.5);
+  // double fYMax = 21. * (14 + 0.5);
+  // double fYW = 21; // mm
 
-  int fNYBins = (fYMax - fYMin) / fYW;
+  //int fNYBins = (fYMax - fYMin) / fYW;
 
   fhSvcVal->CreateList("TagAndProbe");
   fhSvcVal->CreateList("TagAndProbe_sliced");
@@ -101,7 +101,7 @@ Bool_t TagAndProbe::InitHistos()
   ftree->Branch("RadiusRange[2]",&tpEvent->RadiusRange,"RadiusRange[2]/D");
   ftree->Branch("cog","TVector3",&tpEvent->cog);
   ftree->Branch("targ","TVector3",&tpEvent->targ);
-
+  ftree->Branch("HasProbe",&tpEvent->HasProbe, "HasProbe/I");
   ftree->Branch("cluEnergy",&tpEvent->cluEnergy,"cluEnergy[2]/D");
   ftree->Branch("Eexp",&tpEvent->Eexp,"Eexp[2]/D");
   ftree->Branch("cluTime",&tpEvent->cluTime,"cluTime[2]/D");
@@ -180,9 +180,11 @@ Bool_t TagAndProbe::InitHistos()
 
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_TAG"), 600, -300, 300, 50, 0, 1);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_TAG"), 600, -300, 300, 50, 0, 1);
+    fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl0_TAG"), 600, -300, 300, 50, 0, 1);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl1_TAG"), 600, -300, 300, 50, 0, 1);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_5h_lvl1_TAG"), 600, -300, 300, 50, 0, 1);
     fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_6ph_lvl1_TAG"), 600, -300, 300, 50, 0, 1);
+    fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_morehits_ph_TAG"), 600, -300, 300, 50, 0, 1);
   }
   // fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_3h_lvl0_PROBE"), 600, -300, 300, 50, 0, 1);
   // fhSvcVal->BookHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_4h_lvl0_PROBE"), 600, -300, 300, 50, 0, 1);
@@ -420,15 +422,15 @@ Int_t TagAndProbe::TagAndProbeSelection()
     fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_ele_TAG", cluEnergy[0], E_exp_ele - cluEnergy[0], 1.);
     fhSvcVal->FillHisto2List("TagAndProbe", "ECal_TP_DEexp_vs_E_pos_TAG", cluEnergy[0], E_exp_pos - cluEnergy[0], 1.);
 
-    int quad = -1;
-    if (cluPos[0].X() < 0 && cluPos[0].Y() < 0)
-      quad = 0;
-    else if (cluPos[0].X() < 0 && cluPos[0].Y() > 0)
-      quad = 1;
-    else if (cluPos[0].X() > 0 && cluPos[0].Y() > 0)
-      quad = 2;
-    else
-      quad = 3;
+    // int quad = -1;
+    // if (cluPos[0].X() < 0 && cluPos[0].Y() < 0)
+    //   quad = 0;
+    // else if (cluPos[0].X() < 0 && cluPos[0].Y() > 0)
+    //   quad = 1;
+    // else if (cluPos[0].X() > 0 && cluPos[0].Y() > 0)
+    //   quad = 2;
+    // else
+    //   quad = 3;
     
     // int quadOther = -1;
 
@@ -525,7 +527,7 @@ Int_t TagAndProbe::TagAndProbeSelection()
 	  
 	  fMMFindBestTrack->AssignPurity(track, cluPos[0], fGeneralInfo->GetCOG().Z());
 	  if(track->nhit < 6) fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_%dh_lvl%d_TAG",track->nhit,track->level), cluEnergy[0] - pg, track->purity, 1.);
-	  else fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_%dph_lvl%d_TAG",track->nhit,track->level), cluEnergy[0] - pg, track->purity, 1.);
+	  else fhSvcVal->FillHisto2List("TagAndProbe", Form("ECal_TP_PurityvsDE_morehits_ph_TAG"), cluEnergy[0] - pg, track->purity, 1.);
 	  //       if (track->pchi2 < 0.6)
 	  //         continue;
 	  //       nTracksInQuad++;
@@ -856,7 +858,7 @@ Int_t TagAndProbe::TagAndProbeSelection()
 
       }
     }
-    
+    *tpEvent = TagAndProbeEvent{};
      
     tpEvent->cluEnergy[0] = cluEnergy[0];
     tpEvent->cluPos[0] = cluPos[0];
@@ -872,7 +874,7 @@ Int_t TagAndProbe::TagAndProbeSelection()
     tpEvent->EnergyRange[1] = fGeneralInfo->GetEnergyMax();
     tpEvent->RadiusRange[0] = fGeneralInfo->GetRadiusMin();
     tpEvent->RadiusRange[1] = fGeneralInfo->GetRadiusMax();
-
+    tpEvent->HasProbe=-1;
     tpEvent->cog = fGeneralInfo->GetCOG();
     tpEvent->targ = fGeneralInfo->GetTargetPos();
     tpEvent->Eexp[1] = probeExpEnergy;

@@ -11,6 +11,7 @@
 #include "TLorentzVector.h"
 #include "PadmeAnalysisEvent.hh"
 #include "GeneralInfo.hh"
+#include "MMFindBestTrack.hh"
 #include "MCTruthECal.hh"
 #include "NPoTAnalysis.hh"
 #include "ETagAn.hh"
@@ -126,6 +127,7 @@ protected:
 private:
   std::vector<std::pair<Int_t, Int_t>> GetCluCouples();
   Int_t TwoClusters_couples();
+  Int_t BremSelection();
   Int_t BFieldSelection();
   Int_t TwoClusSel();
   Int_t OneClusSel();
@@ -136,6 +138,7 @@ private:
   std::vector<ECalSelEvent*> fECalEvents;
   GeneralInfo* fGeneralInfo;
   MCTruthECal* fMCTruthECal;
+  MMFindBestTrack* fMMFindBestTrack;
   NPoTAnalysis* fNPoTAnalysis;
   ETagAn* fETagAn;
   // general setup

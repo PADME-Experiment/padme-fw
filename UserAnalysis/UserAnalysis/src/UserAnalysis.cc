@@ -153,6 +153,8 @@ Bool_t UserAnalysis::Process(){
     fDataQuality->Process();
     fECalCalib22->Process(fEvent);
   }
+  fMMFindBestTrack->Process();
+
   fECalSel->ProcessForCalib();
 
   fECalSel->Process();
@@ -161,7 +163,6 @@ Bool_t UserAnalysis::Process(){
 //    fECalETagMatching->Process();
 //  }
   fMMTrackDevel->Process();
-  fMMFindBestTrack->Process();
   fTagAndProbe->Process();
 
   //  fIsGGAnalysis->Process();

@@ -140,12 +140,12 @@ Bool_t MMFindBestTrack::Process(){
       //else std::cerr<<"[BEST TRACK FINDER] ci sta qualche problema"<<std::endl;
     }
   } 
-  for (int h1=0; h1< fEvent->ECalRecoCl->GetNElements(); ++h1) {  
-    TRecoVCluster* clu = fEvent->ECalRecoCl->Element((int)h1);
-    TVector3 cluPos(
-    clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
-    fCluTrackAss.insert({h1, GetBestTrackFromCluPos(cluPos, fGeneralInfo->GetCOG().Z())});
-  }
+  // for (int h1=0; h1< fEvent->ECalRecoCl->GetNElements(); ++h1) {  
+  //   TRecoVCluster* clu = fEvent->ECalRecoCl->Element((int)h1);
+  //   TVector3 cluPos(
+  //   clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z());
+  //   fCluTrackAss.insert({h1, GetBestTrackFromCluPos(cluPos, fGeneralInfo->GetCOG().Z())});
+  // }
 
   return true;
 }
@@ -264,6 +264,7 @@ MMBestTrack3D* MMFindBestTrack::GetBestTrackFromCluID(Int_t CluId){
   std::map<Int_t, MMBestTrack3D*>::iterator it;
   it = fCluTrackAss.find(CluId);
     if(it!= fCluTrackAss.end()){
+      
       return it->second;
     }else{
       return nullptr;

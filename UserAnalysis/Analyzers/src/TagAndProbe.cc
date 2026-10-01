@@ -365,6 +365,8 @@ Int_t TagAndProbe::TagAndProbeSelection()
 
     Int_t iSlice = (Int_t)(fGeneralInfo->GetBeamEnergy() - pg - fGeneralInfo->GetEnergyMin()) / spacing;
     //MC Truth
+    *tpEvent = TagAndProbeEvent{};
+
     TString processSelected="";
     Int_t processIDTag=-1;
     if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
@@ -858,7 +860,6 @@ Int_t TagAndProbe::TagAndProbeSelection()
 
       }
     }
-    *tpEvent = TagAndProbeEvent{};
      
     tpEvent->cluEnergy[0] = cluEnergy[0];
     tpEvent->cluPos[0] = cluPos[0];

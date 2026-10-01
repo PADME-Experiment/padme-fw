@@ -762,6 +762,7 @@ Int_t ECalSel::TwoClusSel()
   double cluEnergy[2];
   double Etotclu = 0;
   double EtotcluR = 0;
+  double NcluR = 0;
 
 
   // fill general occupancy plot of ECal
@@ -797,12 +798,15 @@ Int_t ECalSel::TwoClusSel()
       }
       if(cluPosRel[0].Perp() > fGeneralInfo->GetRadiusMin()- fSafeSpaceMargin && cluPosRel[0].Perp() < fGeneralInfo->GetRadiusMax()){
         EtotcluR+=tempClu[0]->GetEnergy();
+        fhSvcVal->FillHistoList("ECalSel", "ECal_SC_EofClu_RCut", tempClu[0]->GetEnergy(), 1.);
+        NcluR+=1;
       }
   }
 
   if (fFillLocalHistograms){
     fhSvcVal->FillHistoList("ECalSel", "ECal_SC_EClusters_nocut", Etotclu, 1.);
     fhSvcVal->FillHistoList("ECalSel", "ECal_SC_EClusters_Rcut", EtotcluR, 1.);
+    fhSvcVal->FillHistoList("ECalSel", "ECal_SC_NClusters_RCut", NcluR, 1.);
   }
   // aggiungere NCell x clu vs E
   //  loop on cluster pairs
@@ -1742,14 +1746,18 @@ Int_t ECalSel::TwoClusters_couples(){
                                   labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
       }
       CutFlow |=  (1<<9);
-      Double_t bremOffset=-fSigmaCut * fSigmaDTheta;
-      if((DeltaTheta > fMeanDTheta + bremOffset - fSigmaCut * fSigmaDTheta && DeltaTheta < fMeanDTheta + bremOffset + fSigmaCut * fSigmaDTheta)){
+      // Double_t bremOffset=-fSigmaCut * fSigmaDTheta;
+      if(1){
+
         //fill the struct and tree
         *bremev = ECalBremEvent{};
         MMBestTrack3D *asstracks[2];
-        asstracks[0] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->first);
-        asstracks[1] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->second);  
-        
+        //asstracks[0] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->first);
+        asstracks[0] = fMMFindBestTrack->GetBestTrackFromCluPos(cluPos[0], fGeneralInfo->GetCOG().Z());
+        //asstracks[1] = fMMFindBestTrack->GetBestTrackFromCluID(clupairs->second);
+        asstracks[1] = fMMFindBestTrack->GetBestTrackFromCluPos(cluPos[1], fGeneralInfo->GetCOG().Z());
+        bremev->thetaCMinfo[0] = fMeanDTheta;
+        bremev->thetaCMinfo[1] = fSigmaDTheta;
         bremev->xyclu[0].Set(cluPos[0].X(), cluPos[0].Y());
         bremev->xyclu[1].Set(cluPos[1].X(), cluPos[1].Y());
 
@@ -1764,7 +1772,12 @@ Int_t ECalSel::TwoClusters_couples(){
         bremev->energy[1] = cluEnergy[1];
         bremev->time[1] = cluTime[1];
         bremev->cog.Set(cog.X(), cog.Y());
-        
+        bremev->seedposition[0].Set( fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().X(), fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetPosition().Y());
+        bremev->seedposition[1].Set( fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().X(), fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetPosition().Y());
+        bremev->seedenergy[0] = fECal_hitEvent->Hit( tempClu[0]->GetSeed())->GetEnergy();
+        bremev->seedenergy[1] = fECal_hitEvent->Hit( tempClu[1]->GetSeed())->GetEnergy();
+        bremev->cluster_Nhits[0]= tempClu[0]->GetNHitsInClus();
+        bremev->cluster_Nhits[1]= tempClu[1]->GetNHitsInClus();
         bremev->labP[0] = labMomenta[0];  
         bremev->labP[1] = labMomenta[1];  
         bremev->cmP[0] = labMomentaCM[0];  
@@ -1777,7 +1790,7 @@ Int_t ECalSel::TwoClusters_couples(){
         bremev->purity[1][1] = asstracks[1]->tracks[1] ? asstracks[1]->tracks[1]->purity : -999;
         
         bremev->processID[0]=-1;
-        bremev->processID[1] = -1;
+        bremev->processID[1]= -1;
         if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
           { 
             if (fMCTruthECal->GetVtxFromCluID(clupairs->first) < 0)
@@ -2142,17 +2155,24 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("time", &bremev->time, "time[2]/D");
   ftree->Branch("phi", &bremev->phi, "phi[2]/D");
   ftree->Branch("thetaCM", &bremev->thetaCM, "thetaCM[2]/D");
+  ftree->Branch("thetaCMinfo", &bremev->thetaCMinfo, "thetaCMinfo[2]/D");
+  ftree->Branch("thetaCM", &bremev->thetaCM, "thetaCM[2]/D");
   ftree->Branch("thetaLab", &bremev->thetaLab, "thetaLab[2]/D");
-  ftree->Branch("cog", &bremev->cog, "TVector2");
-  ftree->Branch("xyclu_0", &bremev->xyclu[0], "TVector2");
-  ftree->Branch("xyclu_1", &bremev->xyclu[1], "TVector2");
-  ftree->Branch("labP_0", &bremev->labP[0], "TLorentzVector");
-  ftree->Branch("labP_1", &bremev->labP[1], "TLorentzVector");
-  ftree->Branch("cmP_0", &bremev->cmP[0], "TLorentzVector");
-  ftree->Branch("cmP_1", &bremev->cmP[1], "TLorentzVector");
+  ftree->Branch("seedenergy", &bremev->seedenergy, "seedenergy[2]/D");
+  ftree->Branch("seedposition_0","TVector2", &bremev->seedposition[0]);
+  ftree->Branch("seedposition_1","TVector2", &bremev->seedposition[1]);
+  ftree->Branch("cluster_Nhits", &bremev->cluster_Nhits, "cluster_Nhits[2]/I");
+
+  ftree->Branch("cog", "TVector2", &bremev->cog);
+  ftree->Branch("xyclu_0","TVector2", &bremev->xyclu[0]);
+  ftree->Branch("xyclu_1", "TVector2", &bremev->xyclu[1]);
+  ftree->Branch("labP_0", "TLorentzVector", &bremev->labP[0]);
+  ftree->Branch("labP_1", "TLorentzVector", &bremev->labP[1]);
+  ftree->Branch("cmP_0", "TLorentzVector", &bremev->cmP[0]);
+  ftree->Branch("cmP_1", "TLorentzVector", &bremev->cmP[1]);
   ftree->Branch("processID", &bremev->processID, "processID[2]/I");
   ftree->Branch("purity",&bremev->purity,"purity[2][2]/D");
-  ftree->Branch("purity_combined",&bremev->purity_comb,"purity[2]/D");
+  ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx_Eweight", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
@@ -2288,8 +2308,9 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHistoList("ECalSel", "NPoTLG_NO_Corr", NBinsPOT, Min_POT, Max_POT);
   fhSvcVal->BookHistoList("ECalSelTwoClu", "EnSignalBhabha", 100, 0., 300.);
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_NClusters_nocut", 50, 0, 50);
-  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EClusters_nocut", 400, 0, 4000);
-  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EClusters_Rcut", 400, 0, 4000);
+  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_NClusters_RCut", 50, 0, 50);
+  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EClusters_nocut", 1000, 0, 10000);
+  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EClusters_Rcut", 1000, 0, 10000);
 
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DrVsDtAll", 400, -400, 400, 200, 0, 600.);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DrVsDt", 400, -400, 400, 200, 0, 600.);
@@ -2410,6 +2431,8 @@ Bool_t ECalSel::InitHistos()
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_DTHEVsEnergySum",600, 0., 2*TMath::Pi(), 400, 0, 400);
 
   fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EofClu_nocut", 500, 0, 1000);
+  fhSvcVal->BookHistoList("ECalSel", "ECal_SC_EofClu_RCut", 500, 0, 1000);
+
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_NCellvsEnergy_nocut", 500, 0, 5000, 50, 0, 50);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_NCellvsEnergy_phi_r_cut", 500, 0, 1000, 50, 0, 50);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_MeanTimevsEnergy_nocut", 500, 0, 1000, 500, -1000, 1000);

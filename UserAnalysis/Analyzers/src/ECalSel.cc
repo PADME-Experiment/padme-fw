@@ -1816,8 +1816,19 @@ Int_t ECalSel::TwoClusters_couples(){
               // std::cout<<mcVtx->GetNParticleOut()<<std::endl;
               bremev->processID[0] = 6;
             }
+            TMCParticle* pcleOut = mcVtx->ParticleOut(fMCTruthECal->GetPcleFromCluID(clupairs->first).at(0)); //chooses the first pcle matching the cluster
+            bremev->trueLabP[0].SetVectM(pcleOut->GetMomentum(), 0.); // define a photon-like tlorentzVector
+            bremev->trueCMP[0].SetVectM(bremev->trueLabP[0].Vect(), 0);
+            bremev->trueCMP[0].Boost(-fGeneralInfo->GetBoost());
+            TVector3 VtxPos = mcVtx->GetPosition();
+            TVector3 VtxPosAtCalo;
+            VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());
+            VtxPosAtCalo.SetX(VtxPos.X()+((pcleOut->GetMomentum().X()/pcleOut->GetMomentum().Z())*(VtxPosAtCalo.Z()-VtxPos.Z())));
+            VtxPosAtCalo.SetY(VtxPos.Y()+((pcleOut->GetMomentum().Y()/pcleOut->GetMomentum().Z())*(VtxPosAtCalo.Z()-VtxPos.Z())));
+            bremev->truePos[0].SetX(VtxPosAtCalo.X());
+            bremev->truePos[0].SetY(VtxPosAtCalo.Y());
           }
-            if (fMCTruthECal->GetVtxFromCluID(clupairs->second) < 0)
+          if (fMCTruthECal->GetVtxFromCluID(clupairs->second) < 0)
             { // processProbed = "NoVtx";
               bremev->processID[1] = 0;
             }else
@@ -1839,6 +1850,17 @@ Int_t ECalSel::TwoClusters_couples(){
                 // std::cout<<mcVtx->GetNParticleOut()<<std::endl;
                 bremev->processID[1] = 6;
               }
+              TMCParticle* pcleOut = mcVtx->ParticleOut(fMCTruthECal->GetPcleFromCluID(clupairs->second).at(0)); //chooses the first pcle matching the cluster
+              bremev->trueLabP[1].SetVectM(pcleOut->GetMomentum(), 0.); // define a photon-like tlorentzVector
+              bremev->trueCMP[1].SetVectM(bremev->trueLabP[1].Vect(), 0);
+              bremev->trueCMP[1].Boost(-fGeneralInfo->GetBoost());
+              TVector3 VtxPos = mcVtx->GetPosition();
+              TVector3 VtxPosAtCalo;
+              VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());
+              VtxPosAtCalo.SetX(VtxPos.X()+((pcleOut->GetMomentum().X()/pcleOut->GetMomentum().Z())*(VtxPosAtCalo.Z()-VtxPos.Z())));
+              VtxPosAtCalo.SetY(VtxPos.Y()+((pcleOut->GetMomentum().Y()/pcleOut->GetMomentum().Z())*(VtxPosAtCalo.Z()-VtxPos.Z())));
+              bremev->truePos[1].SetX(VtxPosAtCalo.X());
+              bremev->truePos[1].SetY(VtxPosAtCalo.Y());
             }
           }
         fhSvcVal->FillNtupleList("BremSelection","ftree");
@@ -2168,8 +2190,18 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("xyclu_1", "TVector2", &bremev->xyclu[1]);
   ftree->Branch("labP_0", "TLorentzVector", &bremev->labP[0]);
   ftree->Branch("labP_1", "TLorentzVector", &bremev->labP[1]);
+  
   ftree->Branch("cmP_0", "TLorentzVector", &bremev->cmP[0]);
   ftree->Branch("cmP_1", "TLorentzVector", &bremev->cmP[1]);
+
+  ftree->Branch("trueLabP_0", "TLorentzVector", &bremev->trueLabP[0]);
+  ftree->Branch("trueLabP_1", "TLorentzVector", &bremev->trueLabP[1]);
+  ftree->Branch("trueCMP_0", "TLorentzVector", &bremev->trueCMP[0]);
+  ftree->Branch("trueCMP_1", "TLorentzVector", &bremev->trueCMP[1]);
+
+  ftree->Branch("truePos_0","TVector3", &bremev->truePos[0]);
+  ftree->Branch("truePos_1","TVector3", &bremev->truePos[1]);
+
   ftree->Branch("processID", &bremev->processID, "processID[2]/I");
   ftree->Branch("purity",&bremev->purity,"purity[2][2]/D");
   ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");

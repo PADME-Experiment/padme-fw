@@ -70,8 +70,10 @@ struct ECalBremEvent{
   int cluster_Nhits[2];
   TVector2 seedposition[2];
   double seedenergy[2];
-  TVector2 cog, xyclu[2]; // cog of the selected clusters
+  TVector2 cog, xyclu[2], truePos[2]; // cog of the selected clusters
   TLorentzVector labP[2]; // lab momenta
+  TLorentzVector trueLabP[2]; // true lab momenta
+  TLorentzVector trueCMP[2]; // true cm momenta
   TLorentzVector cmP[2]; // cm momenta
   Double32_t purity[2][2]; // indices of the etag association [pointer to the association array] (could become a std vector)
   int processID[2]; // indices of the etag association [pointer to the association array] (could become a std vector)

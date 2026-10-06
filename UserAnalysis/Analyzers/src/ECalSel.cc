@@ -2218,14 +2218,14 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");
   ftree->Branch("trackSlope[2][2]", &bremev->trackSlope, "trackSlope[2][2]/D");
   ftree->Branch("trackInter[2][2]", &bremev->trackInter, "trackInter[2][2]/D");
-  ftree->Branch("trackPosAtECalTagVX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");
-  ftree->Branch("trackPosAtECalTagVY","TVector3",&bremev->trackPosAtECal[0][1]);//,"trackPosAtECal[2][2]/D");
-  ftree->Branch("trackPosAtECalProbeVX","TVector3",&bremev->trackPosAtECal[1][0]);//,"trackPosAtECal[2][2]/D");
-  ftree->Branch("trackPosAtECalProbeVY","TVector3",&bremev->trackPosAtECal[1][1]);//,"trackPosAtECal[2][2]/D");
-  ftree->Branch("trackPosAtTargetTagVX","TVector3",&bremev->trackPosAtTarget[0][0]);//,"trackPosAtTarget[2][2]/D");
-  ftree->Branch("trackPosAtTargetTagVY","TVector3",&bremev->trackPosAtTarget[0][1]);//,"trackPosAtTarget[2][2]/D");
-  ftree->Branch("trackPosAtTargetProbeVX","TVector3",&bremev->trackPosAtTarget[1][0]);//,"trackPosAtTarget[2][2]/D");
-  ftree->Branch("trackPosAtTargetProbeVY","TVector3",&bremev->trackPosAtTarget[1][1]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECal1VY","TVector3",&bremev->trackPosAtECal[0][1]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[1][0]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECal1VY","TVector3",&bremev->trackPosAtECal[1][1]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtTarget0VX","TVector3",&bremev->trackPosAtTarget[0][0]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTarget0VY","TVector3",&bremev->trackPosAtTarget[0][1]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTarget1VX","TVector3",&bremev->trackPosAtTarget[1][0]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTarget1VY","TVector3",&bremev->trackPosAtTarget[1][1]);//,"trackPosAtTarget[2][2]/D");
 
 
 

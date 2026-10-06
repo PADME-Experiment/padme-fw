@@ -78,7 +78,12 @@ struct ECalBremEvent{
   Double32_t purity[2][2]; // indices of the etag association [pointer to the association array] (could become a std vector)
   int processID[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
   Double32_t purity_comb[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
+    TVector3 trackPosAtECal[2][2]; // position of the track at the ecal
+  TVector3 trackPosAtTarget[2][2]; // position of the track at the target
+  Double_t trackSlope[2][2]; // slope of the track
+  Double_t trackInter[2][2]; // intercept of the track
 };
+
 struct BadTimeInterval {
     long long tStart;
     long long tStop;

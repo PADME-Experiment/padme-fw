@@ -1784,11 +1784,21 @@ Int_t ECalSel::TwoClusters_couples(){
         bremev->cmP[1] = labMomentaCM[1]; 
         bremev->purity_comb[0] =  asstracks[0]->purity;
         bremev->purity_comb[1] =  asstracks[1]->purity;
-        bremev->purity[0][0] = asstracks[0]->tracks[0] ? asstracks[0]->tracks[0]->purity : -999;
-        bremev->purity[0][1] = asstracks[0]->tracks[1] ? asstracks[0]->tracks[1]->purity : -999;
-        bremev->purity[1][0] = asstracks[1]->tracks[0] ? asstracks[1]->tracks[0]->purity : -999;
-        bremev->purity[1][1] = asstracks[1]->tracks[1] ? asstracks[1]->tracks[1]->purity : -999;
-        
+	for(int vw=0; vw<2; vw++) {
+	  bremev->purity[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->purity : -999;
+	  bremev->purity[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->purity : -999;
+	  
+	  bremev->trackPosAtECal[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z()) : TVector3(0, 0, 0);
+	  bremev->trackPosAtTarget[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z()) : TVector3(0, 0, 0);
+	  bremev->trackPosAtECal[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z()) : TVector3(0, 0, 0);
+	  bremev->trackPosAtTarget[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetTargetPos().Z()) : TVector3(0, 0, 0);
+	  bremev->trackSlope[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->slope : -999;
+	  bremev->trackSlope[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->slope : -999;
+	  bremev->trackInter[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->inter : -999;
+	  bremev->trackInter[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->inter : -999;
+	}
+
+	
         bremev->processID[0]=-1;
         bremev->processID[1]= -1;
         if (fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))
@@ -2203,9 +2213,23 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("truePos_1","TVector3", &bremev->truePos[1]);
 
   ftree->Branch("processID", &bremev->processID, "processID[2]/I");
+
   ftree->Branch("purity",&bremev->purity,"purity[2][2]/D");
   ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");
+  ftree->Branch("trackSlope[2][2]", &bremev->trackSlope, "trackSlope[2][2]/D");
+  ftree->Branch("trackInter[2][2]", &bremev->trackInter, "trackInter[2][2]/D");
+  ftree->Branch("trackPosAtECalTagVX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECalTagVY","TVector3",&bremev->trackPosAtECal[0][1]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECalProbeVX","TVector3",&bremev->trackPosAtECal[1][0]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtECalProbeVY","TVector3",&bremev->trackPosAtECal[1][1]);//,"trackPosAtECal[2][2]/D");
+  ftree->Branch("trackPosAtTargetTagVX","TVector3",&bremev->trackPosAtTarget[0][0]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTargetTagVY","TVector3",&bremev->trackPosAtTarget[0][1]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTargetProbeVX","TVector3",&bremev->trackPosAtTarget[1][0]);//,"trackPosAtTarget[2][2]/D");
+  ftree->Branch("trackPosAtTargetProbeVY","TVector3",&bremev->trackPosAtTarget[1][1]);//,"trackPosAtTarget[2][2]/D");
 
+
+
+  
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx_Eweight", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
   fhSvcVal->BookHisto2List("ECalSel", "ECal_SC_yvsx", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);
   fhSvcVal->BookHisto2List("ECalSelTwoClu", "ECal_TC_yvsx", fNXBins * 10, fXMin, fXMax, fNYBins * 10, fYMin, fYMax);

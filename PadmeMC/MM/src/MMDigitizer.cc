@@ -8,6 +8,7 @@
 #include "MMDigitizer.hh"
 #include "MMHit.hh"
 #include "MMIonizations.hh"
+#include "MMGeometry.hh"
 
 #include "G4DigiManager.hh"
 #include "G4HCofThisEvent.hh"
@@ -24,12 +25,16 @@ MMDigitizer::MMDigitizer(G4String name)
 { InitializeAmplificationFluctuation();
   G4String colName = "MMDigiCollection";
   collectionName.push_back(colName);
+  fgeo = MMGeometry::GetInstance();
+
 }
 
 MMDigitizer::~MMDigitizer()
 {}
 
 TF1* MMDigitizer::ampl_dist = nullptr;
+//TF1* MMDigitizer::dumplingFunc = nullptr;
+
 
 void MMDigitizer::InitializeAmplificationFluctuation(){
     
@@ -37,12 +42,51 @@ void MMDigitizer::InitializeAmplificationFluctuation(){
         
         // Initialize function according to parameters fitted from real data
         // coming from may 2024 Test Beam at LNF 
-        ampl_dist = new TF1("AmplificationFluctuation", "landau", 1, 2500*300);  // [0, 2500] Charge in ADC Counts
-        ampl_dist->SetParameter(0, 0.0134);
-        ampl_dist->SetParameter(1, 10000.);
-        ampl_dist->SetParameter(2, 800.);
+        ampl_dist = new TF1("AmplificationFluctuation", "landau", 1, 2500*10);  // [0, 2500] Charge in ADC Counts
+        ampl_dist->SetParameter(0,0.013);//0.0134);
+        ampl_dist->SetParameter(1,10000);//10000.);
+        ampl_dist->SetParameter(2, 100);//800);
 
     }
+}
+
+G4double MMDigitizer::DumpChargeAmplification(G4ThreeVector ionipos, G4int stupid){ 
+
+      // boardSN plane Layer side  view otherview hole offset stripid_orig     board MC
+      // 0       0     0     0     0    0         6    0      1-256          0
+      // 1       0     0     1     0    0         6    256    257-512        1000
+      // 2       0     1     0     0    1         6    0      0-255          2000
+      // 3       0     1     1     0    1         6    256    256-511        3000
+      // 4       0     2     0     1    1         1    0      0-255          ....
+      // 5       0     2     1     1    1         1    256    256-511
+      // 6       0     3     0     1    0         1    0      0-255
+      // 7       0     3     1     1    0         1    256    256-511
+
+      // 8       1     4     0     0    0         1    0      0-255
+      // 9       1     4     1     0    0         1    256    256-511
+      // 10      1     5     0     0    1         1    0      0-255
+      // 11      1     5     1     0    1         1    256    256-511
+      // 12      1     6     0     1    1         6    0      0-255
+      // 13      1     6     1     1    1         6    256    256-511
+      // 14      1     7     0     1    0         6    0      0-255
+      // 15      1     7     1     1    0         6    256    256-511
+      G4int board = stupid/1000;
+      if(board/4 ==0 || board/4 ==3){ 
+        G4int plane = (board / 4) / 3;
+        G4int ilayer = (board % 4) / 2;
+        G4double GluePos =
+            fgeo->GetGlueHolePosition(ilayer + 2 * plane);
+
+        G4double GlueSigma =
+            fgeo->GetGlueHoleSigma(ilayer + 2 * plane);
+        //G4cout<<(ionipos[1 - plane])<<" "<<GluePos<<" "<<GlueSigma<<G4endl;
+        G4double x = ionipos[1 - plane];
+        
+        return pow(1.0 - std::exp( -0.5 * std::pow((x - GluePos) / GlueSigma, 2)),4);
+    }
+
+    return 1.0;
+    
 }
 G4double MMDigitizer::GetAmplificationFluctuation(){
     return ampl_dist->GetRandom();
@@ -103,7 +147,9 @@ void MMDigitizer::Digitize()
             G4int id = ioni->GetID(j);
             //G4cout<<"id: "<<id<<" NHits:"<<NHits<<G4endl;
             G4double r = ioni->GetRadius(j);
-            
+            G4ThreeVector pos = ioni->GetPosition(j);
+            G4double dumplingFactor = DumpChargeAmplification(pos, id);
+
             // G4cout << "MMDigitier StripID : " << id << G4endl;
             // G4cout << "MMDigitier Charge : " << charge << G4endl;
             // G4cout << "MMDigitier Time : " << t << G4endl;
@@ -117,11 +163,11 @@ void MMDigitizer::Digitize()
               }else{
                 charge *=ioni->GetExternalGain();
               }
-            if (dCharge[id] == 0.) {
+            if (dCharge[id] < 1e-6) {
               // Exstracted from a data driven distribution
-              dCharge[id] = charge;
+              dCharge[id] = charge*dumplingFactor;
             } else{
-              dCharge[id] += charge;
+              dCharge[id] += charge*dumplingFactor;
             }
             // if(charge>0){
             // // if (dNHitxCh[id] == 0.) {
@@ -145,7 +191,7 @@ void MMDigitizer::Digitize()
             // digi->SetTime(t);
             // digi->SetCharge(dCharge[id]);
             // MMDigiCollection->insert(digi);
-            if (dTime[id] == 0.) {
+            if (dTime[id] < 1e-6) {
               // If yes, substitute the existing value with the new one
               dTime[id] = t*charge;
             }
@@ -180,7 +226,8 @@ void MMDigitizer::Digitize()
       // if(stripcharge > 160){
       //   stripcharge-=160;
       // }
-      digi->SetCharge(stripcharge*ampl/4);
+      //G4cout<<"stripcharge "<<stripcharge<<" ampl "<<ampl<<G4endl;
+      digi->SetCharge(stripcharge*ampl);
       //digi->SetNHitxCh(dNHitxCh[it->first]);
       MMDigiColl->insert(digi);
       // digi->Print();

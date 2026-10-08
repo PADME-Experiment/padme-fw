@@ -83,7 +83,8 @@ public:
 
   G4double GetMMStripPitch() { return fMMStripPitch;}
   G4double GetMMStripWidth() { return fMMStripWidth;}
-  
+  G4double GetGlueHolePosition(G4int i) {return fGlueHolePositions[i];}
+  G4double GetGlueHoleSigma(G4int i) {return fGlueHoleSigmas[i];}
   G4double GetMMPanelSizeV1()  { return fMMPanelSizeV1;}
   G4double GetMMPanelSizeV2()  { return fMMPanelSizeV2;}
   G4int    GetV1StripHole()     { return fV1StripHole;}
@@ -161,6 +162,8 @@ private:
   G4double fMMFR4ReadoutSizeZ;
   G4double fMMLateralFR4;
   G4double fMMLateralBrass;
+  G4double fGlueHolePositions[4];
+  G4double fGlueHoleSigmas[4];
 
   //geometry of strips readout design (same for x and y)
   G4double fMMStripPitch;

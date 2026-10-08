@@ -53,6 +53,7 @@ class MMIonizations
     G4int GetNIonizations(){return fNionizations;}
     G4int GetNHits(){return fIDs.size();}
     G4double GetRadius(G4int i){return fRadii[i];}
+    G4ThreeVector GetPosition(G4int i){return fIonipos[i];}
     G4double GetElectronCharge(){return feCharge;}
     G4double GetChargeFromDistribution();
     G4double GetTimeSpread(G4double charge);
@@ -71,7 +72,7 @@ class MMIonizations
     
     G4double fGain = 10000.;
     G4double fFirstZone = 60*mm;
-    G4double fFirstGain = 0.001; //to be checked
+    G4double fFirstGain = 0.03; //to be checked
     G4double fSecondZone = 100*mm;
     G4double fSecondGain = 0.001; //to be checked
     G4double fExternalGain = 1.; //to be checked
@@ -80,10 +81,10 @@ class MMIonizations
     G4double fdE;
     G4int fid;
     G4double ftime;
-
     std::vector<G4int> fIDs;
     std::vector<G4double> fTimes;
     std::vector<G4double> fRadii;
+    std::vector<G4ThreeVector> fIonipos;
     G4int fNionizations;
 
     MMGeometry* geo;

@@ -73,7 +73,7 @@ void MMDetector::CreateGeometry()
   fMMVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   fMMVolume->SetVisAttributes(G4VisAttributes::GetInvisible);
   G4RotationMatrix* rotationMatrix = new G4RotationMatrix(); 
-  rotationMatrix->rotateY(0.*deg); // added to mimic test beam conditions
+  rotationMatrix->rotateX(geo->GetMMRotationAngle()); // added to mimic test beam conditions -- should be from geo input
   new G4PVPlacement(rotationMatrix,MMPos,fMMVolume,"MM",fMotherVolume,false,0,false);
 
   //GAS VOLUME

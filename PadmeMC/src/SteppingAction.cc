@@ -112,7 +112,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     //const G4LogicalVolume* lVolume = volume->GetLogicalVolume();
     //const G4VPhysicalVolume* mother = preStepTouch->GetVolume(1);
    
-    if ((step->GetPostStepPoint()->GetPhysicalVolume() != 0 && (step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") || (name =="TargetSupport")) ) {
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && ((step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") || (name =="TargetSupport")) ) {
       G4Track* track = step->GetTrack();
       G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
       // Enable for some debug printout
@@ -139,7 +139,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
 
       if ( (proc == "eBrem") || (proc == "eIoni") ) {
-        const G4TrackVector* sec = step->GetSecondary();
+        //const G4TrackVector* sec = step->GetSecondary();
         const std::vector<const G4Track*> *sec = step->GetSecondaryInCurrentStep();
         size_t nSec = (*sec).size();
         if (nSec>0) {

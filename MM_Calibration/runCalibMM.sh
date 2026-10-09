@@ -14,9 +14,10 @@ NevtBlock="${4:-1000}"
 
 CalibrationPath="/home/mancinima/BeamMonitorRun4/padme-fw/MM_Calibration"
 
-FileList="${CalibrationPath}/MMFileList/run${PadmeRunID}.list"
+FileList="${CalibrationPath}/MMFileList/run_${PadmeRunID}.list"
 OutputDir="${CalibrationPath}/outputMM"
 OutputFile="${OutputDir}/MMCalib${PadmeRunID}_det${DetRunID}"
+# OutputFile="${CalibrationPath}/TestForBFieldOn"
 
 # ============================================================
 # PADME framework

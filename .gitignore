@@ -35,7 +35,6 @@ bin/
 
 jobs.txt
 
-
 # Build products
 *.o
 *.so
@@ -52,6 +51,8 @@ RecoTMM/OldCalibration/*
 RecoTMM/CalibMonitorOld/*
 RecoTMM/logs_*/*
 RecoTMM/work_*/*
+MM_Calibration/OldCalib/*
+
 
 TMM_Calibration/OldCalibration/*
 TMM_Calibration/CalibMonitorOld/*
@@ -66,6 +67,9 @@ TMM_Monitor/logs/*
 TMM_Monitor/logs_*/*
 
 MM_Calibration/outputMM/*.txt
+
+MM_Monitor/outputMM/*.txt
+MM_Monitor/logs/*
 
 TargetReco/CalibTarget/outputCalibration/Run4Monitor/*.txt
 TargetReco/CalibTarget/outputCalibration/*.txt

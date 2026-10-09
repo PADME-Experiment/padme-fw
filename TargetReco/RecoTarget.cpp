@@ -1,95 +1,321 @@
-#include "TRandom.h"
-#include "TMarker.h"
-#include "TLine.h"
-#include "TCanvas.h"
-#include "TDirectory.h"
 #include "TFile.h"
 #include "TChain.h"
-#include "TTreeIndex.h"
 #include "TTree.h"
-#include "TBranch.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include "TH1F.h"
-#include "TProfile.h"
-#include "TMath.h"
-#include "TGraph.h"
-#include "TGraphErrors.h"
-#include "TSpline.h"
 #include "TString.h"
+
 #include "TRawEvent.hh"
 #include "TRawMergedEvent.hh"
-#include "TF1.h"
-#include "TButton.h"
-#include "TTimeStamp.h"
-#include <TSystem.h>
 
-#include "Riostream.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <vector>
 #include <algorithm>
-#include <sys/stat.h>
-
+#include <array>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
-#include <ctime>
-
-#define NTUPLE_N_BOARDS 2
-#define NTUPLE_N_CHANNELS 32
-#define VPP 1.
+#include <limits>
+#include <string>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
 using namespace std;
+namespace {
 
-// first 0-15 are X channels, last 16-31 are Y channels
-int PhysicsChannels[NTUPLE_N_CHANNELS] = {15,13,11,9,7,5,3,1,0,2,4,6,8,10,12,14,22,20,18,16,17,19,21,23,25,27,29,31,30,28,26,24};
-int PhysicstoADC[NTUPLE_N_CHANNELS] = {8,7,9,6,10,5,11,4,12,3,13,2,14,1,15,0,19,20,18,21,17,22,16,23,31,24,30,25,29,26,28,27};
+// -----------------------------------------------------------------------------
+// Detector / acquisition configuration
+// -----------------------------------------------------------------------------
 
-const int NPED_target = 100; //number
-const int NPED_LG = 50;
-static const int NAVG = 1000;
-static const int NSAMPLETIME = 1024;
+constexpr int kTargetBoardId = 28;
+constexpr int kLeadGlassBoardId = 14;
+constexpr int kLeadGlassChannel = 31;
 
-const double DigThre = 1000; //mV digitizer saturation threshold
-const double FEEThre = 900; //mV, FEE saturation
-const double fImpedance = 50.;
-  
-const double digiTime = 1.; // Sampled at 5 GS/s  ---> da prendere dalla rootupla
-const double fTimeBin = digiTime*1e-9; // seconds
+constexpr int kNTargetChannels = 32;
+constexpr int kNSamples = 1000;
 
-const int NChannels = 32; 
+constexpr int kTargetPedestalSamples = 100;
+constexpr int kLeadGlassPedestalSamples = 50;
 
-int go_ahead_flag = 0;
-int write_to_file_flag = 1;
+constexpr int kBlockSize = 100;
 
-struct Eve{
-  Int_t NTNevent = -999;
-  ULong64_t NTEventTime = 0;
-  // Double_t NTAbsDateEvent;
-  // Double_t NTAbsTimeEvent;
-  Double_t NTAbsTimeEventUNIX = -999.;
-  Double_t NTQChOld[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTQCh1WfFixed[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTQChCumFixed[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t PedChOld[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t PedCh1Wf[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t PedChCum[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTVMaxOld[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTVMax1Wf[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTVMaxCum[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTTMaxOld[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTTMax1Wf[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  Double_t NTTMaxCum[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS] = {{-999.}};
-  // Double_t WavesOld[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][NSAMPLETIME];
-  // Double_t Waves1Wf[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][NSAMPLETIME];
-  // Double_t WavesCum[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS][NSAMPLETIME];
-  Double_t SampleTime[NSAMPLETIME] = {-999.};
-  // Bool_t Saturation[NTUPLE_N_BOARDS][NTUPLE_N_CHANNELS]; //saturation evaluation
-  Int_t NTTrigMask = -999;
+// Target charge integration window.
+// The original code used: t > 200 && t < 700.
+constexpr int kTargetIntegrationFirst = 200;
+constexpr int kTargetIntegrationLast = 699;
+
+// Lead Glass charge integration window.
+// The original code used: t > 100 && t < 600.
+constexpr int kLeadGlassIntegrationFirst = 100;
+constexpr int kLeadGlassIntegrationLast = 599;
+
+constexpr double kVpp = 1.0;
+constexpr double kADCCounts = 4096.0;
+constexpr double kTargetImpedanceOhm = 50.0;
+
+// IMPORTANT:
+// The original reconstruction used digiTime = 1 ns even though a comment said
+// "sampled at 5 GS/s".  We intentionally preserve the numerical value here.
+// Replace this constant with the proper value from the raw-data header once the
+// corresponding PADME getter has been identified.
+constexpr double kSamplePeriodNs = 1.0;
+constexpr double kSamplePeriodSec = kSamplePeriodNs * 1.e-9;
+
+// Legacy Target normalization retained only to allow comparison with QChOld.
+constexpr double kLegacyTargetScale = 1.75;
+
+// Original Lead Glass charge conversion.
+constexpr double kLeadGlassChargeFactor = 4.8828e-3;
+
+constexpr double kInvalid = -999.0;
+
+
+// -----------------------------------------------------------------------------
+// Small reconstruction result objects
+// -----------------------------------------------------------------------------
+
+struct TargetWaveformResult {
+  double chargeLegacy = kInvalid;
+  double charge = kInvalid;
+  double vMax = kInvalid;
+  double tMaxNs = kInvalid;
 };
 
-void go_ahead(){
-  go_ahead_flag = 1;
-}
+struct LeadGlassWaveformResult {
+  double charge = kInvalid;
+  double vMax = kInvalid;
+  double tMaxNs = kInvalid;
+};
+
+
+// -----------------------------------------------------------------------------
+// Output tree records
+// -----------------------------------------------------------------------------
+
+struct EventRecord {
+  Int_t run = -1;
+  Int_t event = -1;
+
+  Long64_t blockId = -1;
+  Int_t indexInBlock = -1;
+
+  UInt_t triggerMask = 0;
+
+  ULong64_t eventRunTime = 0;
+  Double_t absTimeUnix = kInvalid;
+
+  Double_t targetQOld[kNTargetChannels];
+  Double_t targetQ[kNTargetChannels];
+  Double_t targetVMax[kNTargetChannels];
+  Double_t targetTMax[kNTargetChannels];
+
+  Double_t lgQ = kInvalid;
+  Double_t lgVMax = kInvalid;
+  Double_t lgTMax = kInvalid;
+
+  void Reset()
+  {
+    run = -1;
+    event = -1;
+    blockId = -1;
+    indexInBlock = -1;
+    triggerMask = 0;
+    eventRunTime = 0;
+    absTimeUnix = kInvalid;
+
+    fill_n(targetQOld, kNTargetChannels, kInvalid);
+    fill_n(targetQ, kNTargetChannels, kInvalid);
+    fill_n(targetVMax, kNTargetChannels, kInvalid);
+    fill_n(targetTMax, kNTargetChannels, kInvalid);
+
+    lgQ = kInvalid;
+    lgVMax = kInvalid;
+    lgTMax = kInvalid;
+  }
+};
+
+
+struct BlockRecord {
+  Int_t run = -1;
+  Long64_t blockId = -1;
+
+  Bool_t complete = false;
+  Int_t nEvents = 0;
+
+  Int_t firstEvent = -1;
+  Int_t lastEvent = -1;
+
+  ULong64_t firstEventRunTime = 0;
+  ULong64_t lastEventRunTime = 0;
+
+  Double_t firstTimeUnix = kInvalid;
+  Double_t meanTimeUnix = kInvalid;
+  Double_t lastTimeUnix = kInvalid;
+
+  Double_t targetQ[kNTargetChannels];
+  Double_t targetVMax[kNTargetChannels];
+  Double_t targetTMax[kNTargetChannels];
+
+  Double_t lgQMean = kInvalid;
+  Double_t lgQStd = kInvalid;
+  Double_t lgQSem = kInvalid;
+
+  Double_t lgVMaxMean = kInvalid;
+  Double_t lgVMaxStd = kInvalid;
+  Double_t lgVMaxSem = kInvalid;
+
+  Double_t lgTMaxMean = kInvalid;
+  Double_t lgTMaxStd = kInvalid;
+  Double_t lgTMaxSem = kInvalid;
+
+  void Reset()
+  {
+    run = -1;
+    blockId = -1;
+    complete = false;
+    nEvents = 0;
+
+    firstEvent = -1;
+    lastEvent = -1;
+
+    firstEventRunTime = 0;
+    lastEventRunTime = 0;
+
+    firstTimeUnix = kInvalid;
+    meanTimeUnix = kInvalid;
+    lastTimeUnix = kInvalid;
+
+    fill_n(targetQ, kNTargetChannels, kInvalid);
+    fill_n(targetVMax, kNTargetChannels, kInvalid);
+    fill_n(targetTMax, kNTargetChannels, kInvalid);
+
+    lgQMean = kInvalid;
+    lgQStd = kInvalid;
+    lgQSem = kInvalid;
+
+    lgVMaxMean = kInvalid;
+    lgVMaxStd = kInvalid;
+    lgVMaxSem = kInvalid;
+
+    lgTMaxMean = kInvalid;
+    lgTMaxStd = kInvalid;
+    lgTMaxSem = kInvalid;
+  }
+};
+
+
+// -----------------------------------------------------------------------------
+// Block accumulator
+// -----------------------------------------------------------------------------
+
+struct BlockAccumulator {
+  Long64_t blockId = 0;
+  Int_t run = -1;
+
+  Int_t nEvents = 0;
+  Int_t firstEvent = -1;
+  Int_t lastEvent = -1;
+
+  ULong64_t firstEventRunTime = 0;
+  ULong64_t lastEventRunTime = 0;
+
+  Double_t firstTimeUnix = kInvalid;
+  Double_t lastTimeUnix = kInvalid;
+
+  // To avoid loss of precision from repeatedly summing ~1.8e9 UNIX times,
+  // accumulate offsets relative to the first event in the block.
+  Double_t sumTimeOffset = 0.0;
+
+  array<array<double, kNSamples>, kNTargetChannels> targetWaveSum{};
+
+  double lgQSum = 0.0;
+  double lgQSumSq = 0.0;
+
+  double lgVMaxSum = 0.0;
+  double lgVMaxSumSq = 0.0;
+
+  double lgTMaxSum = 0.0;
+  double lgTMaxSumSq = 0.0;
+
+  void Reset(Long64_t newBlockId)
+  {
+    blockId = newBlockId;
+    run = -1;
+
+    nEvents = 0;
+    firstEvent = -1;
+    lastEvent = -1;
+
+    firstEventRunTime = 0;
+    lastEventRunTime = 0;
+
+    firstTimeUnix = kInvalid;
+    lastTimeUnix = kInvalid;
+    sumTimeOffset = 0.0;
+
+    for (auto& channel : targetWaveSum) {
+      channel.fill(0.0);
+    }
+
+    lgQSum = 0.0;
+    lgQSumSq = 0.0;
+
+    lgVMaxSum = 0.0;
+    lgVMaxSumSq = 0.0;
+
+    lgTMaxSum = 0.0;
+    lgTMaxSumSq = 0.0;
+  }
+
+  bool Empty() const
+  {
+    return nEvents == 0;
+  }
+
+  bool Full() const
+  {
+    return nEvents >= kBlockSize;
+  }
+
+  void AddEvent(Int_t eventRun, Int_t eventNumber, ULong64_t eventRunTime, Double_t absTimeUnix, const array<array<double, kNSamples>, kNTargetChannels>& targetRaw, const LeadGlassWaveformResult& lg){
+    if (nEvents == 0) {
+      run = eventRun;
+      firstEvent = eventNumber;
+      firstEventRunTime = eventRunTime;
+      firstTimeUnix = absTimeUnix;
+      sumTimeOffset = 0.0;
+    } else {
+      sumTimeOffset += absTimeUnix - firstTimeUnix;
+    }
+
+    lastEvent = eventNumber;
+    lastEventRunTime = eventRunTime;
+    lastTimeUnix = absTimeUnix;
+
+    for (int ch = 0; ch < kNTargetChannels; ++ch) {
+      for (int s = 0; s < kNSamples; ++s) {
+        targetWaveSum[ch][s] += targetRaw[ch][s];
+      }
+    }
+
+    lgQSum += lg.charge;
+    lgQSumSq += lg.charge * lg.charge;
+
+    lgVMaxSum += lg.vMax;
+    lgVMaxSumSq += lg.vMax * lg.vMax;
+
+    lgTMaxSum += lg.tMaxNs;
+    lgTMaxSumSq += lg.tMaxNs * lg.tMaxNs;
+
+    ++nEvents;
+  }
+};
+
+
+// -----------------------------------------------------------------------------
+// Utility functions
+// -----------------------------------------------------------------------------
 
 bool IsRemoteFile(const TString& name)
 {
@@ -100,546 +326,713 @@ bool IsRemoteFile(const TString& name)
          name.BeginsWith("davs://");
 }
 
-int main(int argc, char* argv[]) {
+
+void MeanStdSem(double sum, double sumSq, int n, double& mean, double& stdev, double& sem){
   
-  int c;
+  if (n <= 0) {
+    mean = kInvalid;
+    stdev = kInvalid;
+    sem = kInvalid;
+    return;
+  }
+
+  mean = sum / (double)(n);
+
+  if (n == 1) {
+    stdev = 0.0;
+    sem = 0.0;
+    return;
+  }
+
+  const double variance = max(0.0, (sumSq - (double)(n) * mean * mean) / (double)(n - 1));
+
+  stdev = sqrt(variance);
+  sem = stdev / sqrt((double)(n));
+}
+
+
+// -----------------------------------------------------------------------------
+// Waveform reconstruction
+// -----------------------------------------------------------------------------
+
+TargetWaveformResult ReconstructTargetWaveform(const array<double, kNSamples>& samples){
+  TargetWaveformResult result;
+
+  double pedestal = 0.0;
+  for (int s = 0; s < kTargetPedestalSamples; ++s) {
+    pedestal += samples[s];
+  }
+  pedestal /= (double)(kTargetPedestalSamples);
+
+  double vMax = -numeric_limits<double>::infinity();
+  int tMaxSample = 0;
+
+  double chargeLegacy = 0.0;
+  double charge = 0.0;
+
+  for (int s = 0; s < kNSamples; ++s) {
+    const double signalMv = kVpp * (samples[s] - pedestal) / kADCCounts * 1000.0;
+
+    if (signalMv > vMax) {
+      vMax = signalMv;
+      tMaxSample = s;
+    }
+
+    if (s >= kTargetIntegrationFirst && s <= kTargetIntegrationLast) {
+
+      // Legacy Target charge definition retained for comparison.
+      chargeLegacy += signalMv / kTargetImpedanceOhm * kSamplePeriodSec / 1.e-12 / 1000.0 / kLegacyTargetScale;
+
+      // Main event/cumulative charge:
+      // integrate only positive contributions, as intended in the old code.
+      const double positiveSignalMv = max(0.0, signalMv);
+
+      charge += positiveSignalMv * 1.e-3 / kTargetImpedanceOhm * kSamplePeriodSec / 1.e-12;
+    }
+  }
+
+  result.chargeLegacy = chargeLegacy;
+  result.charge = charge;
+  result.vMax = vMax;
+  result.tMaxNs = (double)(tMaxSample) * kSamplePeriodNs;
+
+  return result;
+}
+
+
+LeadGlassWaveformResult ReconstructLeadGlassWaveform(const array<double, kNSamples>& samples){
+
+  LeadGlassWaveformResult result;
+
+  double pedestal = 0.0;
+  for (int s = 0; s < kLeadGlassPedestalSamples; ++s) {
+    pedestal += samples[s];
+  }
+  pedestal /= (double)(kLeadGlassPedestalSamples);
+
+  double vMax = -numeric_limits<double>::infinity();
+  int tMaxSample = 0;
+
+  double charge = 0.0;
+
+  for (int s = 0; s < kNSamples; ++s) {
+
+    // LG pulse is negative-going.
+    // Keep exactly the original convention: this is still in ADC counts,
+    // not converted to mV.
+    const double signal = kVpp * (pedestal - samples[s]);
+
+    if (signal > vMax) {
+      vMax = signal;
+      tMaxSample = s;
+    }
+
+    if (s >= kLeadGlassIntegrationFirst && s <= kLeadGlassIntegrationLast) {
+      charge += signal * kLeadGlassChargeFactor;
+    }
+  }
+
+  result.charge = charge;
+  result.vMax = vMax;
+  result.tMaxNs = (double)(tMaxSample) * kSamplePeriodNs;
+
+  return result;
+}
+
+
+// -----------------------------------------------------------------------------
+// Raw detector extraction
+// -----------------------------------------------------------------------------
+
+bool ExtractDetectorWaveforms(TRawEvent* rawEvent, array<array<double, kNSamples>, kNTargetChannels>& targetRaw, array<double, kNSamples>& lgRaw, int verbose){
+  
+  for (auto& channel : targetRaw) {
+    channel.fill(0.0);
+  }
+  lgRaw.fill(0.0);
+
+  array<bool, kNTargetChannels> targetChannelSeen{};
+  bool lgSeen = false;
+  bool targetBoardSeen = false;
+  bool lgBoardSeen = false;
+
+  for (UChar_t brd = 0; brd < rawEvent->GetNADCBoards(); ++brd) {
+
+    TADCBoard* adcBoard = rawEvent->ADCBoard(brd);
+    if (!adcBoard) {
+      if (verbose > 1) cerr << "WARNING - null ADC board pointer" << endl;
+      continue;
+    }
+
+    const int boardId = adcBoard->GetBoardId();
+
+    if (boardId != kTargetBoardId && boardId != kLeadGlassBoardId) continue;
+
+    if (boardId == kTargetBoardId)    targetBoardSeen = true;
+    if (boardId == kLeadGlassBoardId) lgBoardSeen = true;
+
+    const UChar_t nChannels = adcBoard->GetNADCChannels();
+
+    for (UChar_t ich = 0; ich < nChannels; ++ich) {
+
+      TADCChannel* adcChannel = adcBoard->ADCChannel(ich);
+      if (!adcChannel) {
+        if (verbose > 1) cerr << "WARNING - null ADC channel pointer on board " << boardId << endl;
+        continue;
+      }
+
+      const int channel = adcChannel->GetChannelNumber();
+
+      if (boardId == kLeadGlassBoardId) {
+
+        if (channel != kLeadGlassChannel) continue;
+
+        for (int s = 0; s < kNSamples; ++s) {
+          lgRaw[s] = (double)(adcChannel->GetSample(s));
+        }
+
+        lgSeen = true;
+      }
+
+      else if (boardId == kTargetBoardId) {
+        if (channel < 0 || channel >= kNTargetChannels) {
+          if (verbose) {
+            cerr << "WARNING - unexpected Target channel " << channel << endl;
+          }
+          continue;
+        }
+        for (int s = 0; s < kNSamples; ++s) {
+          targetRaw[channel][s] = (double)(adcChannel->GetSample(s));
+        }
+        targetChannelSeen[channel] = true;
+      }
+    }
+  }
+
+  if (!targetBoardSeen || !lgBoardSeen || !lgSeen) {
+    return false;
+  }
+
+  for (int ch = 0; ch < kNTargetChannels; ++ch) {
+    if (!targetChannelSeen[ch]) {
+      if (verbose) {
+        cerr  << "WARNING - Target channel " << ch << " missing: event rejected" << endl;
+      }
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+// -----------------------------------------------------------------------------
+// ROOT tree creation
+// -----------------------------------------------------------------------------
+
+TTree* CreateEventTree(EventRecord& event)
+{
+  TTree* tree = new TTree( "Events", "Event-level Target and Lead Glass reconstruction");
+
+  tree->Branch("run", &event.run, "run/I");
+  tree->Branch("event", &event.event, "event/I");
+  tree->Branch("blockId", &event.blockId, "blockId/L");
+  tree->Branch("indexInBlock", &event.indexInBlock, "indexInBlock/I");
+  tree->Branch("triggerMask", &event.triggerMask, "triggerMask/i");
+  tree->Branch("eventRunTime", &event.eventRunTime, "eventRunTime/l");
+  tree->Branch("absTimeUnix", &event.absTimeUnix, "absTimeUnix/D");
+  tree->Branch("targetQOld", event.targetQOld, Form("targetQOld[%d]/D", kNTargetChannels));
+  tree->Branch("targetQ", event.targetQ, Form("targetQ[%d]/D", kNTargetChannels));
+  tree->Branch("targetVMax", event.targetVMax, Form("targetVMax[%d]/D", kNTargetChannels));
+  tree->Branch("targetTMax", event.targetTMax, Form("targetTMax[%d]/D", kNTargetChannels));
+  tree->Branch("lgQ", &event.lgQ, "lgQ/D");
+  tree->Branch("lgVMax", &event.lgVMax, "lgVMax/D");
+  tree->Branch("lgTMax", &event.lgTMax, "lgTMax/D");
+
+  return tree;
+}
+
+
+TTree* CreateBlockTree(BlockRecord& block)
+{
+  TTree* tree = new TTree("Blocks", "Block-level cumulative Target and Lead Glass reconstruction");
+
+  tree->Branch("run", &block.run, "run/I");
+  tree->Branch("blockId", &block.blockId, "blockId/L");
+  tree->Branch("complete", &block.complete, "complete/O");
+  tree->Branch("nEvents", &block.nEvents, "nEvents/I");
+  tree->Branch("firstEvent", &block.firstEvent, "firstEvent/I");
+  tree->Branch("lastEvent", &block.lastEvent, "lastEvent/I");
+  tree->Branch("firstEventRunTime", &block.firstEventRunTime, "firstEventRunTime/l");
+  tree->Branch("lastEventRunTime", &block.lastEventRunTime, "lastEventRunTime/l");
+  tree->Branch("firstTimeUnix", &block.firstTimeUnix, "firstTimeUnix/D");
+  tree->Branch("meanTimeUnix", &block.meanTimeUnix, "meanTimeUnix/D");
+  tree->Branch("lastTimeUnix", &block.lastTimeUnix, "lastTimeUnix/D");
+  tree->Branch("targetQ", block.targetQ, Form("targetQ[%d]/D", kNTargetChannels));
+  tree->Branch("targetVMax", block.targetVMax, Form("targetVMax[%d]/D", kNTargetChannels));
+  tree->Branch("targetTMax", block.targetTMax, Form("targetTMax[%d]/D", kNTargetChannels));
+  tree->Branch("lgQMean", &block.lgQMean, "lgQMean/D");
+  tree->Branch("lgQStd", &block.lgQStd, "lgQStd/D");
+  tree->Branch("lgQSem", &block.lgQSem, "lgQSem/D");
+  tree->Branch("lgVMaxMean", &block.lgVMaxMean, "lgVMaxMean/D");
+  tree->Branch("lgVMaxStd", &block.lgVMaxStd, "lgVMaxStd/D");
+  tree->Branch("lgVMaxSem", &block.lgVMaxSem, "lgVMaxSem/D");
+  tree->Branch("lgTMaxMean", &block.lgTMaxMean, "lgTMaxMean/D");
+  tree->Branch("lgTMaxStd", &block.lgTMaxStd, "lgTMaxStd/D");
+  tree->Branch("lgTMaxSem", &block.lgTMaxSem, "lgTMaxSem/D");
+
+  return tree;
+}
+
+// -----------------------------------------------------------------------------
+// Finalize a block and write it
+// -----------------------------------------------------------------------------
+
+void FinalizeBlock(const BlockAccumulator& accumulator, BlockRecord& block, TTree* blockTree){
+
+  if (accumulator.Empty()) {
+    return;
+  }
+
+  block.Reset();
+
+  block.run = accumulator.run;
+  block.blockId = accumulator.blockId;
+
+  block.nEvents = accumulator.nEvents;
+  block.complete = (accumulator.nEvents == kBlockSize);
+
+  block.firstEvent = accumulator.firstEvent;
+  block.lastEvent = accumulator.lastEvent;
+
+  block.firstEventRunTime = accumulator.firstEventRunTime;
+  block.lastEventRunTime = accumulator.lastEventRunTime;
+
+  block.firstTimeUnix = accumulator.firstTimeUnix;
+  block.lastTimeUnix = accumulator.lastTimeUnix;
+
+  block.meanTimeUnix = accumulator.firstTimeUnix + accumulator.sumTimeOffset / (double)(accumulator.nEvents);
+  array<double, kNSamples> averageWaveform{};
+
+  for (int ch = 0; ch < kNTargetChannels; ++ch) {
+
+    for (int s = 0; s < kNSamples; ++s) {
+      averageWaveform[s] = accumulator.targetWaveSum[ch][s] / (double)(accumulator.nEvents);
+    }
+    const TargetWaveformResult reco = ReconstructTargetWaveform(averageWaveform);
+    block.targetQ[ch] = reco.charge;
+    block.targetVMax[ch] = reco.vMax;
+    block.targetTMax[ch] = reco.tMaxNs;
+  }
+
+  MeanStdSem(accumulator.lgQSum, accumulator.lgQSumSq, accumulator.nEvents, block.lgQMean, block.lgQStd, block.lgQSem);
+  MeanStdSem(accumulator.lgVMaxSum, accumulator.lgVMaxSumSq, accumulator.nEvents, block.lgVMaxMean, block.lgVMaxStd, block.lgVMaxSem);
+  MeanStdSem(accumulator.lgTMaxSum, accumulator.lgTMaxSumSq, accumulator.nEvents, block.lgTMaxMean, block.lgTMaxStd, block.lgTMaxSem);
+
+  blockTree->Fill();
+}
+
+
+// -----------------------------------------------------------------------------
+// Command-line help
+// -----------------------------------------------------------------------------
+
+void PrintUsage(const char* executable)
+{
+  cout
+      << "\nUsage:\n"
+      << "  " << executable
+      << " [-i <file>] [-l <list>] [-o <file>]"
+      << " [-n <n>] [-e <event>] [-v] [-h]\n\n"
+
+      << "Options:\n"
+      << "  -i <file>   Add one input ROOT file. Can be repeated.\n"
+      << "  -l <list>   Text file containing one input ROOT file per line.\n"
+      << "  -o <file>   Output ROOT file. Default: RecoTarget.root\n"
+      << "  -n <n>      Maximum number of accepted events to write.\n"
+      << "              0 means no limit.\n"
+      << "  -e <event>  Process only this event number. Can be repeated.\n"
+      << "  -v          Increase verbosity. Can be repeated.\n"
+      << "  -h          Show this help.\n\n"
+
+      << "Output trees:\n"
+      << "  Events : one entry per accepted event\n"
+      << "  Blocks : one entry per "
+      << kBlockSize
+      << " accepted events; final partial block is also written\n\n";
+}
+
+} // namespace
+
+
+// =============================================================================
+// main
+// =============================================================================
+
+int main(int argc, char* argv[]){
+  
   int verbose = 0;
-  int nevents = 0;
+  int maxAcceptedEvents = 0;
 
-  TString inputFileName;
+  TString outputFileName = "RecoTarget.root";
   TObjArray inputFileNameList;
-  struct stat filestat;
+  vector<Int_t> selectedEvents;
 
-  TString outputFileName = "RawHisto.root";
-  Int_t event;
-  vector<UInt_t> events;
-  Int_t board;
-  vector<UInt_t> boards;
+  struct stat fileStat;
 
-  // Parse options
-  while ((c = getopt (argc, argv, "i:l:o:n:e:b:vh")) != -1) {
-    switch (c){
+  int option = 0;
+
+  while ((option = getopt(argc, argv, "i:l:o:n:e:vh")) != -1) {
+
+    switch (option) {
+
       case 'i':
         inputFileNameList.Add(new TObjString(optarg));
-        fprintf(stdout,"Added input data file '%s'\n",optarg);
-	      break;
-      case 'l':
-        if ( stat(optarg, &filestat) == 0 || IsRemoteFile(optarg) ) {
+        cout << "Added input data file '" << optarg << "'" << endl;
+        break;
 
-          fprintf(stdout,"Reading list of input files from '%s'\n",optarg);
-          ifstream inputList(optarg);
+      case 'l': {
+        if (stat(optarg, &fileStat) != 0) {
+          cerr << "ERROR - file list '" << optarg << "' is not accessible" << endl;
+          return 1;
+        }
 
-          while( inputFileName.ReadLine(inputList) ){
+        ifstream inputList(optarg);
 
-            TString fname = inputFileName.Data();
+        if (!inputList) {
+          cerr << "ERROR - cannot open file list '" << optarg << "'" << endl;
+          return 1;
+        }
 
-            if ( IsRemoteFile(fname) || stat(fname.Data(), &filestat) == 0 ) {
+        cout << "Reading list of input files from '" << optarg << "'" << endl;
 
-              inputFileNameList.Add(new TObjString(fname));
-              fprintf(stdout,"Added input data file '%s'\n",fname.Data());
+        string line;
 
-            } else {
-              fprintf(stdout,"WARNING: file '%s' is not accessible\n",fname.Data());
-            }
+        while (getline(inputList, line)) {
+
+          if (line.empty()) {
+            continue;
           }
-        } else {
-          fprintf(stdout,"WARNING: file list '%s' is not accessible\n",optarg);
+
+          TString fileName(line.c_str());
+
+          if (IsRemoteFile(fileName) || stat(fileName.Data(), &fileStat) == 0) {
+            inputFileNameList.Add( new TObjString(fileName));
+            if (verbose) {
+              cout << "Added input data file '" << fileName << "'" << endl;
+            }
+          } else {
+            cerr << "WARNING - file '" << fileName << "' is not accessible" << endl;
+          }
         }
         break;
+      }
+
       case 'o':
         outputFileName = optarg;
-        fprintf(stdout,"Output histogram file set to '%s'\n",optarg);
-	      break;
+        break;
+
       case 'n':
-        if ( sscanf(optarg,"%d",&nevents) != 1 ) {
-          fprintf (stderr, "Error while processing option '-n'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
-        }
-        if (nevents<0) {
-          fprintf (stderr, "Error while processing option '-n'. Required %d events (must be >=0).\n", nevents);
-          exit(1);
-        }
-        if (nevents) {
-          fprintf(stdout,"Will read first %d events in file\n",nevents);
-        } else {
-          fprintf(stdout,"Will read all events in file\n");
+        if (sscanf(optarg, "%d", &maxAcceptedEvents) != 1 || maxAcceptedEvents < 0) {
+          cerr << "ERROR - invalid value for -n: " << optarg << endl;
+          return 1;
         }
         break;
-      case 'e':
-        if ( sscanf(optarg,"%d",&event) != 1 ) {
-          fprintf (stderr, "Error while processing option '-e'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
+
+      case 'e': {
+        Int_t eventNumber = -1;
+        if (sscanf(optarg, "%d", &eventNumber) != 1 || eventNumber < 0) {
+          cerr << "ERROR - invalid event number: " << optarg << endl;
+          return 1;
         }
-        if (event<0) {
-          fprintf (stderr, "Error while processing option '-e'. Required event %d (must be >=0).\n", event);
-          exit(1);
-        }
-        events.push_back(event);
-        fprintf(stdout,"Added event %d to list\n",event);
+
+        selectedEvents.push_back(eventNumber);
         break;
-      case 'b':
-        if ( sscanf(optarg,"%d",&board) != 1 ) {
-          fprintf (stderr, "Error while processing option '-b'. Wrong parameter '%s'.\n", optarg);
-          exit(1);
-        }
-        if (board<0 || board>31) {
-          fprintf (stderr, "Error while processing option '-b'. Required board %d (must be 0<=board<=31).\n", board);
-          exit(1);
-        }
-        boards.push_back(board);
-        fprintf(stdout,"Added board %d to list\n",board);
-        break;
+      }
+
       case 'v':
-	      verbose++;
+        ++verbose;
         break;
+
       case 'h':
-        fprintf(stdout,"\nRawHisto [-i <file>] [-l <list>] [-o <file>] [-n <n>] [-e <event>] [-b <board>] [-v <level>] [-h]\n\n");
-        fprintf(stdout,"  -i: add a file to list of input files (can be repeated)\n");
-        fprintf(stdout,"  -l: specify text file with list of input files (one file per line)\n");
-        fprintf(stdout,"  -o: define the name of the output file (default: %s)\n",outputFileName.Data());
-        fprintf(stdout,"  -n: total number of events to save to output file (default: 0 i.e. no limit)\n");
-        fprintf(stdout,"  -e: add <event> to list of events to save to output file (can be repeated)\n");
-        fprintf(stdout,"  -b: add <board> to list of boards to save to output file (can be repeated)\n");
-        fprintf(stdout,"  -v: enable verbose output (repeat for more output)\n");
-        fprintf(stdout,"  -h: show this help message and exit\n\n");
-        fprintf(stdout,"N.B. if no -e/-b options are specified, then all events/boards will be saved to the output file\n\n");
-        exit(0);
-      case '?':
-        if (optopt == 'i' || optopt == 'l' || optopt == 'o' || optopt == 'n' || optopt == 'e' || optopt == 'b')
-                fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-              else if (isprint(optopt))
-                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-              else
-                fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
-              exit(1);
-            default:
-              abort();
+        PrintUsage(argv[0]);
+        return 0;
+
+      default:
+        PrintUsage(argv[0]);
+        return 1;
     }
   }
 
-  // Check if the input file list is empty
-  if ( inputFileNameList.GetEntries() == 0 ) {
-    fprintf(stderr,"ERROR - Input file list is empty\n");
-    exit(1);
+
+  // ---------------------------------------------------------------------------
+  // Validate input
+  // ---------------------------------------------------------------------------
+
+  if (inputFileNameList.GetEntries() == 0) {
+    cerr << "ERROR - input file list is empty" << endl;
+    return 1;
   }
 
-  if (verbose) fprintf(stdout,"Set verbose level to %d\n",verbose);
 
-  // Create chain of input files
-  fprintf(stdout,"=== === === Chain of input files === === ===\n");
-  TString rawMergedTreeName = "RawMergedEvents";
-  TChain* inputChain = new TChain(rawMergedTreeName);
-  for (Int_t iFile = 0; iFile < inputFileNameList.GetEntries(); iFile++) {
-    fprintf(stdout,"%4d %s\n",iFile,((TObjString*)inputFileNameList.At(iFile))->GetString().Data());
-    inputChain->AddFile(((TObjString*)inputFileNameList.At(iFile))->GetString());
-  }
-  if (inputChain->GetEntries() == 0) {
-    fprintf(stderr,"ERROR - Tree '%s' in input chain has 0 entries\n", rawMergedTreeName.Data());
-    exit(1);
-  }
+  // ---------------------------------------------------------------------------
+  // Build the input chain
+  // ---------------------------------------------------------------------------
 
-  // Get some info about the input chain
-  Long64_t runNEntries = inputChain->GetEntries();
-  cout << "Found Tree " << rawMergedTreeName << " with " << branches->GetEntries() << " branches and " << runNEntries << " entries" << endl;
+  const TString rawMergedTreeName = "RawMergedEvents";
+  TChain inputChain(rawMergedTreeName);
 
-  TRawMergedEvent* fRawMergedEvent = new TRawMergedEvent();
-  cout << "Allocated in " << fRawMergedEvent << endl;
-  inputChain->SetBranchAddress("RawMergedEvent", &fRawMergedEvent);
+  cout << "=== Input files ===" << endl;
 
-  // Create ntuple -- maybe not needed in this case?
-  Eve Event; 
-    
-  TTree* tree = new TTree("NTU","Event3");
-  tree->Branch("Nevent",&(Event.NTNevent),"Nevent/I");
-  tree->Branch("EventTime",&(Event.NTEventTime),"EventTime/l");
-  // tree->Branch("AbsDateEvent",&(Event.NTAbsDateEvent),"AbsDateEvent/D");
-  // tree->Branch("AbsTimeEvent",&(Event.NTAbsTimeEvent),"AbsTimeEvent/D");
-  tree->Branch("AbsTimeEventUNIX",&(Event.NTAbsTimeEventUNIX),"AbsTimeEventUNIX/D");
-  tree->Branch("QChOld",&(Event.NTQChOld),Form("QChOld[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("QCh1WfFixed",&(Event.NTQCh1WfFixed),Form("QCh1WfFixed[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("QChCumFixed",&(Event.NTQChCumFixed),Form("QChCumFixed[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  // tree->Branch("PedChOld",&(Event.PedChOld),Form("PedChOld[%d][%d]/D,",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  // tree->Branch("PedCh1Wf",&(Event.PedCh1Wf),Form("PedCh1Wf[%d][%d]/D,",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  // tree->Branch("PedChCum",&(Event.PedChCum),Form("PedChCum[%d][%d]/D,",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("VMaxOld",&(Event.NTVMaxOld),Form("VMaxOld[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("VMax1Wf",&(Event.NTVMax1Wf),Form("VMax1Wf[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("VMaxCum",&(Event.NTVMaxCum),Form("VMaxCum[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("TMaxOld",&(Event.NTTMaxOld),Form("TMaxOld[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("TMax1Wf",&(Event.NTTMax1Wf),Form("TMax1Wf[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("TMaxCum",&(Event.NTTMaxCum),Form("TMaxCum[%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  // tree->Branch("WavesOld",&(Event.WavesOld), Form("WavesOld[%d][%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS,NSAMPLETIME));
-  // tree->Branch("Waves1Wf",&(Event.Waves1Wf), Form("Waves1Wf[%d][%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS,NSAMPLETIME));
-  // tree->Branch("WavesCum",&(Event.WavesCum), Form("WavesCum[%d][%d][%d]/D",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS,NSAMPLETIME));
-  tree->Branch("SampleTime",&(Event.SampleTime),Form("SampleTime[%d]/D", NSAMPLETIME));
-  // tree->Branch("Saturation",&(Event.Saturation),Form("Saturation[%d][%d]/B",NTUPLE_N_BOARDS,NTUPLE_N_CHANNELS));
-  tree->Branch("TrigMask",&(Event.NTTrigMask),Form("TrigMask/I"));
-  
-  // Create output file for histograms
-  TFile* histoFile = new TFile(outputFileName,"RECREATE");
-  if(!histoFile) {
-    fprintf(stderr,"ERROR - Cannot create output file %s\n",outputFileName.Data());
-    exit(1);
+  for (Int_t i = 0; i < inputFileNameList.GetEntries(); ++i) {
+    const TString fileName = static_cast<TObjString*>(inputFileNameList.At(i))->GetString();
+    cout << "  " << i << "  " << fileName  << endl;
+    inputChain.AddFile(fileName);
   }
 
-  // Define parameters for signal analysis  
-  Double_t Sample[NTUPLE_N_CHANNELS][NSAMPLETIME];
-  Double_t AbsRecoSampleOld[NSAMPLETIME];
-  Double_t AbsRecoSample1Wf[NTUPLE_N_CHANNELS][NSAMPLETIME];
-  Double_t SampleCum[NTUPLE_N_CHANNELS][NSAMPLETIME];
-  Double_t AbsRecoSampleCum[NTUPLE_N_CHANNELS][NSAMPLETIME];
-    
-  Int_t readEvent = 0;
-  
-  //cumulative waveform analysis variables
-  Double_t baselineSumCum[NTUPLE_N_CHANNELS] = {0}; 
-  Double_t baseNCum[NTUPLE_N_CHANNELS] = {0};
-  Double_t ChargeCumFixed[NTUPLE_N_CHANNELS] = {0};
-  Double_t PedTempCum[NTUPLE_N_CHANNELS] = {0};
+  const Long64_t inputEntries = inputChain.GetEntries();
 
-  int NWFcumulative = 100; //number of waveforms to be summed for cumulative waveform analysis
-  int nsum = 0; //counter for cumulative waveforms
+  if (inputEntries <= 0) {
+    cerr << "ERROR - tree '" << rawMergedTreeName << "' has no entries" << endl;
+    return 1;
+  }
 
-  // maximum of X and Y strips
-  Double_t VMax1Wf_chan[NTUPLE_N_CHANNELS] = {0.};
+  const int nBranches = inputChain.GetListOfBranches() ? inputChain.GetListOfBranches()->GetEntries() : 0;
+  cout << "Found tree " << rawMergedTreeName << " with " << nBranches << " branches and " << inputEntries << " entries" << endl;
 
-  cout << "=== === === Starting event loop === === ===" << endl;
-  for (Long64_t iev = 0; iev < runNEntries; ++iev) {
+  // ---------------------------------------------------------------------------
+  // Input branch
+  // ---------------------------------------------------------------------------
 
-    // reset temporary per-event buffers
-    for (int ch = 0; ch < NTUPLE_N_CHANNELS; ++ch) {
-      VMax1Wf_chan[ch] = -999.;
-      for (int s = 0; s < NSAMPLETIME; ++s) {
-        Sample[ch][s] = 0.;
-        AbsRecoSample1Wf[ch][s] = 0.;
-      }
-    }
-    for (int s = 0; s < NSAMPLETIME; ++s) {
-      AbsRecoSampleOld[s] = 0.;
-    }
-  
-    // Bool_t Saturated = false;
+  TRawMergedEvent* rawMergedEvent = new TRawMergedEvent();
 
-    inputChain->GetEntry(iev);
-    // cout << "DEBUG: GetEntry called for event " << iev << endl;
-    TRawEvent *fRawEvt = fRawMergedEvent->GetTRawEvent();
-    // cout << "DEBUG: fRawEvt allocated " << fRawEvt << " for event " << iev << endl;
-    UInt_t trigMask = fRawEvt->GetEventTrigMask();
-    // cout << "Event number: " << iev << " - Trigger mask: " << trigMask << endl;
-    if (!(trigMask & 0x01)) continue;
-    Event.NTTrigMask = trigMask;
-    nsum++;
+  inputChain.SetBranchAddress("RawMergedEvent", &rawMergedEvent);
 
-    // Access your event object as usual
-    Int_t runNumber = fRawEvt->GetRunNumber();
-    // cout << "Run number: " << runNumber << endl;
-    if(!runNumber) {
-      fprintf(stderr,"ERROR - No Run number available \n");
-      continue;
-    }
-    Int_t evtNumber = fRawEvt->GetEventNumber();
-    // cout << "Event number: " << evtNumber << endl;
-    if(!evtNumber) {
-      fprintf(stderr,"ERROR - No Event number available \n");
+  // ---------------------------------------------------------------------------
+  // Output file and trees
+  // ---------------------------------------------------------------------------
+
+  TFile* outputFile = TFile::Open(outputFileName, "RECREATE");
+
+  if (!outputFile || outputFile->IsZombie()) {
+
+    cerr << "ERROR - cannot create output file " << outputFileName << endl;
+    delete rawMergedEvent;
+    if (outputFile) delete outputFile;
+
+    return 1;
+  }
+
+  outputFile->cd();
+
+  EventRecord eventRecord;
+  eventRecord.Reset();
+
+  BlockRecord blockRecord;
+  blockRecord.Reset();
+
+  TTree* eventTree = CreateEventTree(eventRecord);
+  TTree* blockTree = CreateBlockTree(blockRecord);
+
+  // ---------------------------------------------------------------------------
+  // Event-loop buffers
+  // ---------------------------------------------------------------------------
+
+  array<array<double, kNSamples>, kNTargetChannels> targetRaw{};
+  array<double, kNSamples> lgRaw{};
+
+  BlockAccumulator block;
+  Long64_t nextBlockId = 0;
+  block.Reset(nextBlockId);
+
+  Long64_t acceptedEvents = 0;
+  Long64_t rejectedMissingDetector = 0;
+  Long64_t rejectedTrigger = 0;
+
+  // ---------------------------------------------------------------------------
+  // Main loop
+  // ---------------------------------------------------------------------------
+
+  cout << "=== Starting reconstruction ===" << endl;
+
+  for (Long64_t entry = 0; entry < inputEntries; ++entry) {
+
+    inputChain.GetEntry(entry);
+    if (!rawMergedEvent) continue;
+
+    TRawEvent* rawEvent = rawMergedEvent->GetTRawEvent();
+    if (!rawEvent) continue;
+
+    const UInt_t triggerMask = rawEvent->GetEventTrigMask();
+
+    // Accept trigger bit 0, as in the original reconstruction.
+    if (!(triggerMask & 0x01)) {
+      ++rejectedTrigger;
       continue;
     }
 
-    ULong64_t EvT = fRawEvt->GetEventRunTime();
-    Double_t AbsTimeEvUNIX = fRawEvt->GetEventAbsTime().AsDouble(); // UNIX TIME
-    // AbsTimeEvUNIX.Print();
-    // Check if this event number was selected
-    if ( (events.size() > 0) && (count(events.begin(), events.end(), evtNumber) == 0) ) continue;
-    readEvent++;
-    if ( nevents && (readEvent>nevents) ) {
-      printf("- Read %d event(s): stopping here\n",nevents);
-      break;
+    const Int_t runNumber = rawEvent->GetRunNumber();
+    const Int_t eventNumber = rawEvent->GetEventNumber();
+
+    // Optional explicit event-number selection.
+    if (!selectedEvents.empty() && count(selectedEvents.begin(), selectedEvents.end(), eventNumber) == 0) {
+      continue;
     }
 
-    // Show some activity meter
-    if ( readEvent % 1000 == 0 ) {
-      printf("Run: %7d ------> Processing event: %8d/%d (%.0f%%)\n",runNumber,readEvent,runNEntries,(float)(100*readEvent/runNEntries));
+    // Do not let one block span different runs.
+    if (!block.Empty() && runNumber != block.run) {
+      if (verbose) {
+        cout << "Run changed from " << block.run << " to " << runNumber << ": writing partial block " << block.blockId << " with " << block.nEvents << " events" << endl;
+      }
+      FinalizeBlock(block, blockRecord, blockTree);
+
+      ++nextBlockId;
+      block.Reset(nextBlockId);
     }
-  
-    // Loop over boards
-    for(UChar_t brd = 0; brd<fRawEvt->GetNADCBoards(); brd++){
-      // Check if this board was selected
-      if (!fRawEvt->ADCBoard(brd)){
-        fprintf(stderr,"ERROR - no Board ID registered\n");
-        continue;
-      }
-      Int_t brdID = fRawEvt->ADCBoard(brd)->GetBoardId();
-      // cout << "brdID= " << (int)brdID << endl;
-      if ( (boards.size() > 0) && (count(boards.begin(),boards.end(),brdID) == 0) ){
-        continue;
-      }
-      if (brdID != 14 && brdID != 28){ // board 14 LG, board 28 Target
-        continue;
-      }
+    const ULong64_t eventRunTime = rawEvent->GetEventRunTime();
+    const Double_t absTimeUnix = rawEvent->GetEventAbsTime().AsDouble();
 
-      TADCBoard* adcB = fRawEvt->ADCBoard(brd); 
-      if(!adcB){
-        fprintf(stderr,"ERROR - ADCBoard pointer is null\n");
-        continue;
-      }
-      // UChar_t nTrg = adcB->GetNADCTriggers();
-      UChar_t nChn = adcB->GetNADCChannels(); 
-      if(!nChn){
-        fprintf(stderr,"ERROR - no channels available for board %d\n", brdID);
-        continue;
-      }
-      // cout << "N-channels available = " << (int)adcB->GetNADCChannels() << endl;
+    // -------------------------------------------------------------------------
+    // Extract both detector waveforms.
+    //
+    // IMPORTANT:
+    // The event is accepted only if both LG and all 32 Target channels are
+    // available.  Therefore Events and Blocks always refer to the same event
+    // population for the two detectors.
+    // -------------------------------------------------------------------------
 
-      // Loop over the channels
-      for(UChar_t ch=0; ch<nChn; ch++){
-        Double_t ChargeOld = 0.;
-        Double_t PedTempOld = 0.;
-        Double_t Charge1WfFixed = 0.;        
-        Double_t PedTemp1Wf = 0.;
+    const bool detectorsOK = ExtractDetectorWaveforms(rawEvent, targetRaw, lgRaw, verbose);
 
-        TADCChannel* ADCChn = adcB->ADCChannel(ch);
-        if (!ADCChn){
-          fprintf(stderr,"ERROR - ADCChannel pointer is null for board %d channel %d\n",brdID, ch);
-          continue;      
-        } 
-        UChar_t chan = ADCChn->GetChannelNumber();
-        // cout << "brdID: " << brdID << << "chan: " << (int)chan << endl;
-        if (brdID == 14 && chan != 31) continue; // board 14 LG, channel 31 only
-        if (!(trigMask & 0x01)) continue;
-        // Loop over the samples
-        for(UShort_t s=0; s<NAVG; s++){
-          Sample[chan][s] = (Double_t)ADCChn->GetSample(s);
-          SampleCum[chan][s] += (Double_t)ADCChn->GetSample(s);
-        }
-
-        // Compute the PEDESTAL for the four methods: old Reco one - 1 waveform - TMaxCut -  cumulative
-        Double_t baseFrom = 0;
-        Double_t baselineSumOld{0},baseNOld{0};
-        Double_t baselineSum1Wf{0},baseN1Wf{0};
-
-        for(Int_t s = baseFrom; s < NPED_target + baseFrom; s++) {
-          if(brdID == 14){
-            if(s<NPED_LG){
-              baselineSumOld += Sample[chan][s];
-              baseNOld++;
-            }
-          } if(brdID == 28){
-            if(s<NPED_target){
-              baselineSumOld += Sample[chan][s];
-              baseNOld++;
-            }
-            baselineSum1Wf += Sample[chan][s];
-            baseN1Wf++;
-            if(nsum>0 && nsum%NWFcumulative==0){
-              baselineSumCum[chan] += SampleCum[chan][s];    
-              baseNCum[chan]++;
-            }
-          }
-        }
-        if(brdID == 14){
-          PedTempOld = (Double_t)baselineSumOld/(Double_t)baseNOld;
-          // cout << "baselineSumOld: " << baselineSumOld << " - baseNOld: " << baseNOld << " - Pedestal PedTempOld: " << PedTempOld << endl;
-        } if(brdID == 28){
-          PedTempOld = (Double_t)baselineSumOld/(Double_t)baseNOld;
-          PedTemp1Wf = (Double_t)baselineSum1Wf/(Double_t)baseN1Wf;
-          if(nsum>0 && nsum%NWFcumulative==0){
-            PedTempCum[chan] = (Double_t)baselineSumCum[chan]/(Double_t)baseNCum[chan];
-            baselineSumCum[chan] = 0;
-            baseNCum[chan] = 0;
-          }
-        }
-        
-        // Get total charge and position of maximum
-        Double_t VMaxOld = -999.;
-        Double_t TMaxOld = -999.;
-        Double_t VMax1Wf = -999.;
-        Double_t TMax1Wf = -999.;
-        Double_t VMaxCum = -999.;
-        Double_t TMaxCum = -999.;
-
-        // Loop over the samples defining the RECO waveforms for each method
-        for(UShort_t s=0; s<NAVG; s++){
-          if(brdID == 14){ //LG has negative wf
-            AbsRecoSampleOld[s] = VPP*(PedTempOld - Sample[chan][s]); // /4096.*1000. //Signal NOT IN mV
-            if (AbsRecoSampleOld[s] > VMaxOld) {  
-              VMaxOld = AbsRecoSampleOld[s];
-              TMaxOld = (Double_t)s;
-              // cout << "LOOP FILLING: VMaxOld: " << VMaxOld << " - TMaxOld: " << TMaxOld << endl;
-            }
-          } if(brdID == 28){
-            // Sample[chan][s] = (Double_t)ADCChn->GetSample(s);   
-            AbsRecoSampleOld[s] = VPP*(Sample[chan][s]-PedTempOld)/4096.*1000.; //Signal in mV
-            if (AbsRecoSampleOld[s] > VMaxOld) {  
-              VMaxOld = AbsRecoSampleOld[s];
-              TMaxOld = (Double_t)s;
-            }
-            AbsRecoSample1Wf[chan][s] = VPP*(Sample[chan][s]-PedTemp1Wf)/4096.*1000.; //Signal in mV       
-            if (AbsRecoSample1Wf[chan][s] > VMax1Wf) {  
-              VMax1Wf = AbsRecoSample1Wf[chan][s];
-              TMax1Wf = (Double_t)s;
-            }
-            if(nsum>0 && nsum%NWFcumulative==0){
-              // cout << "TrigMask = " << trigMask << endl;
-              AbsRecoSampleCum[chan][s] = (VPP*(SampleCum[chan][s]-PedTempCum[chan])/4096.*1000.)/nsum; //Signal in mV
-              SampleCum[chan][s] = 0;
-              if (AbsRecoSampleCum[chan][s] > VMaxCum) {
-                VMaxCum = AbsRecoSampleCum[chan][s];
-                TMaxCum = (Double_t)s;
-              }
-            }
-          }
-        } // end of loop on samples
-        //filling the vector of the maximum of every channel
-        VMax1Wf_chan[chan] = VMax1Wf;
-
-        //Check saturation HERE
-        // if(VMaxOld>FEEThre) Saturated = true; // WARNING : very preliminary saturation check, need to improve
-        // saturation properly evaluated: doing VMax<900mV plays the same role of asking a cut directly on ADCChn->GetSample(s);   
-
-        //Compute CHARGES
-        // negli header dei rawdata ci sono nsample e sampling rate: sono dei bit (numeri salvati) facilmente accessibili con una funzioncina
-        for(UShort_t t=0; t<NAVG; t++){
-          // ChargeOld --> charge computation taken by line 504-507 of TargetReconstruction.cc
-          if(brdID == 14){
-            if(t>100 && t<600){ // LG integration window taken from PadmeReco config files & 
-              ChargeOld += (AbsRecoSampleOld[t])*4.8828E-3; // renorm copied by the LeadglassReconstrction.cc
-              // ChargeOld = PedTempOld*(600-100)-(TMath::Mean(NAVG,&Sample[chan][0])*NAVG); //1pC/1000??? what is 1.75???
-            }
-          } if(brdID == 28){
-            if(t>200 && t<700){
-              ChargeOld += AbsRecoSampleOld[t]/50*1E-9/1E-12/1000/1.75; //1pC/1000??? what is 1.75???
-              if(AbsRecoSample1Wf[chan][t]<0) Charge1WfFixed += 0; // to avoid negative contributions due to noise
-              Charge1WfFixed += (AbsRecoSample1Wf[chan][t]*1e-3)/fImpedance*fTimeBin/1E-12; //charge in pC
-              if(nsum>0 && nsum%NWFcumulative==0){
-                if(AbsRecoSampleCum[chan][t]<0) ChargeCumFixed[chan] += 0; // to avoid negative contributions due to noise
-                ChargeCumFixed[chan] += (AbsRecoSampleCum[chan][t]*1e-3)/fImpedance*fTimeBin/1E-12; //charge in pC
-              }
-            }
-          }
-        }
-
-        Int_t idx;
-        if(brdID == 14){
-          idx = 0; //hardcoded for LeadGlass board 
-          Event.NTQChOld[idx][chan] = ChargeOld;
-          // Event.NTQCh1WfFixed[idx][chan] = 0;
-          // Event.PedChOld[idx][chan] = PedTempOld;
-          // Event.PedCh1Wf[idx][chan] = 0;
-          Event.NTVMaxOld[idx][chan] = VMaxOld;
-          Event.NTTMaxOld[idx][chan] = TMaxOld * digiTime;
-          // cout << "NTU: VMaxOld: " << VMaxOld << " - TMaxOld: " << TMaxOld << endl;
-          // Event.NTVMax1Wf[idx][chan] = 0;
-          // Event.NTTMax1Wf[idx][chan] = 0;
-          // Event.NTVMaxCum[idx][chan] = 0;
-          // Event.NTTMaxCum[idx][chan] = 0;
-          // Event.Saturation[idx][chan] = Saturated;
-
-          // if(nsum>0 && nsum%NWFcumulative==0){
-          //   Event.NTQChCumFixed[idx][chan] = 0;
-          //   Event.PedChCum[idx][chan] = 0;
-          // }
-          // else {
-          //   Event.PedChCum[idx][chan] = -999.;
-          // }
-
-          for(UShort_t s=0;s<NSAMPLETIME;s++){
-          // waveforms storage in ntuple
-            if(s<NAVG){
-              // Event.WavesOld[idx][chan][s] = AbsRecoSampleOld[s];
-              // Event.Waves1Wf[idx][chan][s] = 0;
-              if(nsum>0 && nsum%NWFcumulative==0){
-                // Event.WavesCum[idx][chan][s] = AbsRecoSampleCum[chan][s];
-              } else {
-                // Event.WavesCum[idx][chan][s] = 0.;
-              }
-              Event.SampleTime[s]=s*digiTime;
-            } else {
-              // Event.WavesOld[idx][chan][s] = 0.;
-              // Event.Waves1Wf[idx][chan][s] = 0.;
-              // Event.WavesCum[idx][chan][s] = 0.;
-            }
-          } 
-
-        } if(brdID == 28) {
-          idx = 1; //hardcoded for Target board
-          Event.NTQChOld[idx][chan] = ChargeOld;
-          Event.NTQCh1WfFixed[idx][chan] = Charge1WfFixed;
-          // Event.PedChOld[idx][chan] = PedTempOld;
-          // Event.PedCh1Wf[idx][chan] = PedTemp1Wf;
-          Event.NTVMaxOld[idx][chan] = VMaxOld;
-          Event.NTTMaxOld[idx][chan] = TMaxOld * digiTime;
-          Event.NTVMax1Wf[idx][chan] = VMax1Wf;
-          Event.NTTMax1Wf[idx][chan] = TMax1Wf * digiTime;
-          Event.NTVMaxCum[idx][chan] = VMaxCum;
-          Event.NTTMaxCum[idx][chan] = TMaxCum * digiTime;
-          // Event.Saturation[idx][chan] = Saturated;
-
-          if(nsum>0 && nsum%NWFcumulative==0){
-            Event.NTQChCumFixed[idx][chan] = ChargeCumFixed[chan];
-            // Event.PedChCum[idx][chan] = PedTempCum[chan];
-            ChargeCumFixed[chan]=0;
-            PedTempCum[chan]=0;
-          }
-          else {
-            Event.NTQChCumFixed[idx][chan] = -999.;
-            // Event.PedChCum[idx][chan] = -999.;
-          }
-
-          for(UShort_t s=0;s<NSAMPLETIME;s++){
-          // waveforms storage in ntuple
-            if(s<NAVG){
-              // Old[idx][chan][s] = AbsRecoSampleOld[s];
-              // Event.Waves1Wf[idx][chan][s] = AbsRecoSample1Wf[chan][s];
-              if(nsum>0 && nsum%NWFcumulative==0){
-                // Event.WavesCum[idx][chan][s] = AbsRecoSampleCum[chan][s];
-              } else {
-                // Event.WavesCum[idx][chan][s] = 0.;
-              }
-              // Event.SampleTime[s]=s*digiTime;
-            } else{
-              // Event.WavesOld[idx][chan][s] = 0.;
-              // Event.Waves1Wf[idx][chan][s] = 0.;
-              // Event.WavesCum[idx][chan][s] = 0.;
-            }
-          }
-        }
-      }   // end loop on channels
-    } // end loop on boards
-    
-    if(nsum>0 && nsum%NWFcumulative==0){
-      // cout << "Resetting nsum counter. Event number: " << iev << " nsum before reset: " << nsum << endl;
-      nsum=0;
+    if (!detectorsOK) {
+      ++rejectedMissingDetector;
+      continue;
     }
 
-    Event.NTNevent = evtNumber; // GetEventNumber from TChain of the RawEvent
-    Event.NTEventTime = EvT;
-    // Event.NTAbsDateEvent = AbsDateEv;
-    // Event.NTAbsTimeEvent = AbsTimeEv;
-    Event.NTAbsTimeEventUNIX = AbsTimeEvUNIX;
-    tree->Fill();
+    // -------------------------------------------------------------------------
+    // Reconstruct Lead Glass
+    // -------------------------------------------------------------------------
 
-    // Clear event
-    fRawEvt->Clear("C");
-  } // end loop on events
+    const LeadGlassWaveformResult lgReco = ReconstructLeadGlassWaveform(lgRaw);
 
-  histoFile->cd();
-  tree->Write();
+    // -------------------------------------------------------------------------
+    // Fill event-level Target quantities
+    // -------------------------------------------------------------------------
 
-  TString baseName = outputFileName;
-  Ssiz_t us = baseName.Last('_');
-  if (us >= 0) baseName = baseName(us + 1, baseName.Length() - us - 1);
-  Ssiz_t dot = baseName.Last('.');
-  if (dot >= 0) baseName = baseName(0, dot);
-  printf("%s\n",baseName.Data());
+    eventRecord.Reset();
 
-  histoFile->Write();
+    eventRecord.run = runNumber;
+    eventRecord.event = eventNumber;
 
-  // Save and close output file
-  printf("Closing output file\n");
-  printf("\t\t\t----------> root -l %s \n",outputFileName.Data());
-  histoFile->Close();
+    eventRecord.blockId = block.blockId;
+    eventRecord.indexInBlock = block.nEvents;
+    eventRecord.triggerMask = triggerMask;
+    eventRecord.eventRunTime = eventRunTime;
+    eventRecord.absTimeUnix = absTimeUnix;
 
-  delete inputChain;
-  delete fRawMergedEvent;
-  histoFile->Close();
-  delete histoFile;
+    for (int ch = 0; ch < kNTargetChannels; ++ch) {
+      const TargetWaveformResult targetReco = ReconstructTargetWaveform(targetRaw[ch]);
+      eventRecord.targetQOld[ch] = targetReco.chargeLegacy;
+      eventRecord.targetQ[ch] = targetReco.charge;
+      eventRecord.targetVMax[ch] = targetReco.vMax;
+      eventRecord.targetTMax[ch] = targetReco.tMaxNs;
+    }
+    eventRecord.lgQ = lgReco.charge;
+    eventRecord.lgVMax = lgReco.vMax;
+    eventRecord.lgTMax = lgReco.tMaxNs;
+
+    // -------------------------------------------------------------------------
+    // The event is now officially accepted.
+    // Add it to both the Events tree and the current block.
+    // -------------------------------------------------------------------------
+
+    eventTree->Fill();
+
+    block.AddEvent(runNumber, eventNumber, eventRunTime, absTimeUnix, targetRaw, lgReco);
+    ++acceptedEvents;
+
+    // -------------------------------------------------------------------------
+    // Close a complete block
+    // -------------------------------------------------------------------------
+
+    if (block.Full()) {
+      FinalizeBlock(block, blockRecord, blockTree);
+      if (verbose > 1) {
+        cout << "Wrote complete block " << block.blockId << " with " << block.nEvents << " events" << endl;
+      }
+      ++nextBlockId;
+      block.Reset(nextBlockId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Progress
+    // -------------------------------------------------------------------------
+
+    if (acceptedEvents % 1000 == 0) {
+      cout << "Processed " << acceptedEvents << " accepted events" << "  [input entry " << entry + 1 << "/" << inputEntries << "]" << endl;
+    }
+
+    // -------------------------------------------------------------------------
+    // Optional accepted-event limit
+    // -------------------------------------------------------------------------
+
+    if (maxAcceptedEvents > 0 && acceptedEvents >= maxAcceptedEvents) break;
+
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Save the final partial block, if any.
+  //
+  // It has complete == false and nEvents < kBlockSize.
+  // This preserves the event -> blockId relation for every written event.
+  // Later physics analysis can simply require complete == true.
+  // ---------------------------------------------------------------------------
+
+  if (!block.Empty()) {
+    if (verbose) cout << "Writing final partial block " << block.blockId << " with " << block.nEvents << " events" << endl;
+    FinalizeBlock(block, blockRecord, blockTree);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Write output
+  // ---------------------------------------------------------------------------
+
+  outputFile->cd();
+
+  eventTree->Write();
+  blockTree->Write();
+
+  const Long64_t nEventTreeEntries = eventTree->GetEntries();
+  const Long64_t nBlockTreeEntries = blockTree->GetEntries();
+
+  outputFile->Write();
+  outputFile->Close();
+
+  // ---------------------------------------------------------------------------
+  // Summary
+  // ---------------------------------------------------------------------------
+
+  cout
+      << "\n=== Reconstruction summary ===\n"
+      << "Input entries                  : "
+      << inputEntries << "\n"
+      << "Accepted events                : "
+      << acceptedEvents << "\n"
+      << "Rejected by trigger            : "
+      << rejectedTrigger << "\n"
+      << "Rejected: missing detector data: "
+      << rejectedMissingDetector << "\n"
+      << "Event-tree entries             : "
+      << nEventTreeEntries << "\n"
+      << "Block-tree entries             : "
+      << nBlockTreeEntries << "\n"
+      << "Output file                    : "
+      << outputFileName << "\n"
+      << endl;
+
+
+  delete rawMergedEvent;
+  delete outputFile;
+
   return 0;
 }

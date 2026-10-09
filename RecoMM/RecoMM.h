@@ -1,382 +1,299 @@
+#ifndef RecoMM_h
+#define RecoMM_h
 
-#ifndef CalibMM_h
-#define CalibMM_h
-
-#include "TRandom.h"
-#include "TRandom3.h"
-#include "TMarker.h"
-#include "TLine.h"
-#include "TCanvas.h"
+#include "TBranch.h"
+#include "TChain.h"
 #include "TDirectory.h"
 #include "TFile.h"
-#include "TChain.h"
-#include "TTree.h"
-#include "TTreeIndex.h"
-#include "TBranch.h"
+#include "TGraphErrors.h"
+#include "TH1D.h"
+#include "TH2F.h"
+#include "TMath.h"
 #include "TObjArray.h"
 #include "TObjString.h"
-#include "TH1.h"
-#include "TH1F.h"
-#include "TH2.h"
-#include "TProfile.h"
-#include "TMath.h"
-#include "TGraph.h"
-#include "TGraphErrors.h"
-#include "TSpline.h"
 #include "TString.h"
-#include "TStyle.h"
-#include "TSystem.h"
-#include "TPaveText.h"
-#include "TObject.h"
-#include "TF1.h"
-#include <TMatrixDSym.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
-#include "TButton.h"
-#include "TTimeStamp.h"
-#include "Riostream.h"
-#include "TMinuit.h"
-
-#include "TInterpreter.h"
-#include "TROOT.h"
+#include "TTree.h"
 
 #include <algorithm>
-// #include <chrono>
-#include <ctime>
-#include <cstdlib>
+#include <cmath>
 #include <cstdio>
-#include <cstddef>
-#include <fstream>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
-#include <map>
-#include <numeric>
-#include <sstream>
 #include <string>
-#include <cmath>
-#include <sys/stat.h>
-// #include <thread>
 #include <vector>
 
 using namespace std;
 
 #define MM_N_Layers 8
 
-struct SliceFitResult {
-  TH1D *amp = nullptr;
-  TH1D *mean = nullptr;
-  TH1D *sigma = nullptr;
-  TH1D *chi2 = nullptr;  
+struct BlockTimeInfo {
+  Long64_t nEvents = 0;
+
+  ULong64_t firstEvt = 0;
+  ULong64_t lastEvt  = 0;
+
+  double firstSrs = 0.;
+  double lastSrs  = 0.;
+  double meanSrs  = 0.;
+
+  double firstDaqSec = 0.;
+  double lastDaqSec  = 0.;
+  double meanDaqSec  = 0.;
+
+  double firstDaq = 0.;
+  double lastDaq  = 0.;
+  double meanDaq  = 0.;
+
+  long double sumSrs    = 0.;
+  long double sumDaq    = 0.;
+  long double sumDaqSec = 0.;
 };
 
-// struct BeamFitSummary {
-//   bool   valid       = false;
-//   double charge      = 0.;
-//   double err_charge  = 0.;
-//   double position    = 0.;
-//   double err_position= 0.;
-//   double spread      = 0.;
-//   double err_spread  = 0.;
-// };
+class RecoMM {
+public:
+  TChain  *fTree = nullptr;
+  Bool_t   fOwnChain = kFALSE;
+  int      RunID = 0;
+  int      DetRunID = 0;
+  int      maxEvents = 0;
+  TString  outputFileName = "RecoMM.root";
 
-class CalibMM {
-public :
-   TChain         *fTree;      //! pointer to the analyzed TTree
-   // Int_t          fCurrent;    //! current Tree number in a TTree
-   Bool_t         fOwnChain;   //! true if this class created the TTree
-   int            RunID = 0;
-   int            DetRunID = 0;
-   int            maxEvents=0;
-   TString        outputFileName = "CalibrationMM.root";
+  // ---------------------------------------------------------------------------
+  // Input apv_raw branches actually used by RecoMM
+  // ---------------------------------------------------------------------------
+  ULong64_t evt = 0;
+  Int_t daqTimeSec = 0;
+  Int_t daqTimeMicroSec = 0;
+  Int_t srsTimeStamp = 0;
 
-   // Branches declaration 
-   ULong64_t       evt;
-   UInt_t          error;
-   Int_t           daqTimeSec;
-   Int_t           daqTimeMicroSec;
-   Int_t           srsTimeStamp;
-   UInt_t          srsTrigger;
-   vector<unsigned int> *srsFec;
-   vector<unsigned int> *srsChip;
-   vector<unsigned int> *srsChan;
-   vector<string>  *mmChamber;
-   vector<int>     *mmLayer;
-   vector<char>    *mmReadout;
-   vector<int>     *mmStrip;
-   vector<vector<short> > *raw_q;
-   vector<short>   *max_q;
-   vector<int>     *t_max_q;
+  vector<int> *mmLayer = nullptr;
+  vector<int> *mmStrip = nullptr;
+  vector<vector<short>> *raw_q = nullptr;
 
-   // List of branches
-   TBranch         *b_evt;   //!
-   TBranch         *b_error;   //!
-   TBranch         *b_daqTimeSec;   //!
-   TBranch         *b_daqTimeMicroSec;   //!
-   TBranch         *b_srsTimeStamp;   //!
-   TBranch         *b_srsTrigger;   //!
-   TBranch         *b_srsFec;   //!
-   TBranch         *b_srsChip;   //!
-   TBranch         *b_srsChan;   //!
-   TBranch         *b_mmChamber;   //!
-   TBranch         *b_mmLayer;   //!
-   TBranch         *b_mmReadout;   //!
-   TBranch         *b_mmStrip;   //!
-   TBranch         *b_raw_q;   //!
-   TBranch         *b_max_q;   //!
-   TBranch         *b_t_max_q;   //!
+  TBranch *b_evt = nullptr;
+  TBranch *b_daqTimeSec = nullptr;
+  TBranch *b_daqTimeMicroSec = nullptr;
+  TBranch *b_srsTimeStamp = nullptr;
+  TBranch *b_mmLayer = nullptr;
+  TBranch *b_mmStrip = nullptr;
+  TBranch *b_raw_q = nullptr;
 
-   CalibMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="CalibrationMM.root");   
-   virtual ~CalibMM();
-   // virtual Int_t    Cut(Long64_t entry);
-   virtual Int_t    GetEntry(Long64_t entry);
-   virtual Long64_t LoadTree(Long64_t entry);
-   virtual void     Init(TChain *tree);
-   virtual bool     Notify();
+  RecoMM(TObjArray *inputFileNameList, int RunID = 0, int DetRunID = 0, int maxEvents = 0, TString outputFileName = "RecoMM.root");
+  virtual ~RecoMM();
 
-   virtual void     CoordinateFinder(int iStrip, int iLayer, const vector<short> &camp, double &x_strip, double &q_strip, double &t_strip);
-   virtual void     LoopFileList(TObjArray &inputFileNameList, int NevtBlock=10000);
-   virtual void     BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphErrors *gRatio, TGraphErrors *gDiff);
-   virtual void     FillBlockGraphsFromSlices(int iLayer);
-   virtual void     WriteCalibrationGraphTxt(ofstream &out, TGraphErrors *g, int runID, TString view);
-   virtual void     WriteCalibrationConstants(TString filename, int runID);
-   virtual bool     IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted = 1,int minCovMatrixStatusAccepted = 2);
+  virtual Int_t GetEntry(Long64_t entry);
+  virtual Long64_t LoadTree(Long64_t entry);
+  virtual void Init(TChain *tree);
+  virtual bool Notify();
 
-   virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
-   virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
+  // ---------------------------------------------------------------------------
+  // MM detector reconstruction
+  // ---------------------------------------------------------------------------
+  virtual double StripToX(int iStrip, int iLayer) const;
+  virtual double LayerXMin(int iLayer) const;
+  virtual double LayerXMax(int iLayer) const;
+  virtual int LayerNBinsX(int iLayer) const;
 
-   virtual double   VoigtIntegralPDF(double *x, double *par);
-   virtual TF1*     FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
+  virtual void CoordinateFinder(int iStrip, int iLayer, const vector<short> &camp, double &t_strip, double &x_strip, double &z_strip, double &q_strip);
 
+  virtual void LoopFileList(TObjArray &inputFileNameList, int NevtBlock = 10000);
 
-   ///////ENVIRONMENT VARIABLES//////
-   // MM: 8 independent strip layers, 512 strips per layer.
-   // Calibration is performed versus strip ID; physical x/z reconstruction
-   // (central holes, shifts, drift velocity) remains a Reco-level operation.
-   TString mm_tag[MM_N_Layers] = {"L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"};
+  // ---------------------------------------------------------------------------
+  // MM geometry / working point
+  // ---------------------------------------------------------------------------
+  TString mm_tag[MM_N_Layers] = {"L0", "L1", "L2", "L3", "L4", "L5", "L6", "L7"};
 
-   float pitch = 1.2; // mm
-   int maxStrip = 512, maxStripApv = 128;
-   float xmax = maxStrip * pitch;
+  static const int MAXSTRIP = 512;
 
-   float clock = 25., ncamp = 27; // 675 ns time window (450 ns -> ncamp = 18)
+  double pitch = 1.2; // mm
 
-   // Fit/calibration boundaries in strip ID.
-   // Keep the complete MM strip range; empty FitSlicesY bins do not contribute to the fit.
-   double StripMin = 0.;
-   double StripMax = 511.;
+  // Central inactive gap used by the existing MM reconstruction.
+  double geo_hole[MM_N_Layers] = {8.4, 8.4, 2.4, 2.4, 2.4, 2.4, 8.4, 8.4};
 
-   // strip calibration vectors
-   vector<double> FitFullDiff[MM_N_Layers];
-   vector<double> FitFullRatio[MM_N_Layers];
+  double shift_coord[MM_N_Layers] = { 18.54, 18.54, 12.1, 12.1, 18.54, 18.54, 12.1, 12.1};
 
-   // tf1 di fit
-   vector<TF1*> f;
+  double zm = 50.;
+  double vd = 0.1002; // mm/ns
+  double clock = 25.; // ns
 
-   /////// HISTOGRAMS //////
-   // event based histograms
-   TH2F *hqmaxstrip[MM_N_Layers] = {0}; //qmax vs xstrip distribution
-   TH2F *hqmaxstripFull[MM_N_Layers] = {0}; //qmax vs xstrip distribution
+  // Saturated hits remain in the RAW histograms, but are excluded from the
+  // dedicated NoSat products and from the block maximum-charge-strip monitor.
+  double SaturationThreshold = 1600.;
 
-   TH2F *htmaxstrip[MM_N_Layers] = {0}; //tmax vs xstrip distribution
-   TH2F *htmaxstripFull[MM_N_Layers] = {0}; //tmax vs xstrip distribution
+  vector<BlockTimeInfo> blockTimeInfo;
 
-   // event based FitSlicesY() histograms
-   TH1D *hAmpslice[MM_N_Layers] = {0};
-   TH1D *hMeanslice[MM_N_Layers] = {0};
-   TH1D *hSigmaslice[MM_N_Layers] = {0};
-   TH1D *hChi2slice[MM_N_Layers] = {0};
-   TH1D *hAmpsliceFull[MM_N_Layers] = {0};
-   TH1D *hMeansliceFull[MM_N_Layers] = {0};
-   TH1D *hSigmasliceFull[MM_N_Layers] = {0};
-   TH1D *hChi2sliceFull[MM_N_Layers] = {0};
+  // ---------------------------------------------------------------------------
+  // Overall RAW products: no calibration is applied anywhere in RecoMM.
+  // ---------------------------------------------------------------------------
+  TH2F *hqmaxstripFull[MM_N_Layers] = {nullptr};
+  TH2F *hqmaxstripFull_NoSat[MM_N_Layers] = {nullptr};
 
-   // block based histograms
-   vector<TH2F*> hBlockqmaxstrip[MM_N_Layers]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull[MM_N_Layers]; //qmax vs xstrip distribution
+  TH1D *hQmaxSumNoSatStrip[MM_N_Layers] = {nullptr};
 
-   // block based FitSlicesY() histograms
-   vector<TH1D*> hBlockAmpslice[MM_N_Layers]; // amplitude slices
-   vector<TH1D*> hBlockMeanslice[MM_N_Layers]; // mean slices
-   vector<TH1D*> hBlockSigmaslice[MM_N_Layers]; // sigma slices
-   vector<TH1D*> hBlockChi2slice[MM_N_Layers]; // sigma slices
-   vector<TH1D*> hBlockAmpsliceFull[MM_N_Layers]; // amplitude slices (full)
-   vector<TH1D*> hBlockMeansliceFull[MM_N_Layers]; // mean slices (full)
-   vector<TH1D*> hBlockSigmasliceFull[MM_N_Layers]; // sigma slices (full)
-   vector<TH1D*> hBlockChi2sliceFull[MM_N_Layers]; // sigma slices
+  TH2F *htimePositionFull[MM_N_Layers] = {nullptr};
+  TH2F *hzPositionFull[MM_N_Layers] = {nullptr};
 
-   // event based calibrated histograms
-   TH2F *hqmaxstrip_cal[MM_N_Layers] = {0}; //qmax vs xstrip distribution
-   TH2F *hqmaxstripFull_cal[MM_N_Layers] = {0}; //qmax vs xstrip distribution
+  // ---------------------------------------------------------------------------
+  // Block-level seed monitors for the later analysis.
+  // Definition of "maximum-charge strip": strip with the largest sum of q_max
+  // over NON-SATURATED hits in that event-ID block.
+  // ---------------------------------------------------------------------------
+  TGraphErrors *g_BlockMaxChargeStrip[MM_N_Layers] = {nullptr};
+  TGraphErrors *g_BlockMaxChargePosition[MM_N_Layers] = {nullptr};
+  TGraphErrors *g_BlockMaxChargeValue[MM_N_Layers] = {nullptr};
 
-   // event based calibrated histograms selected in time
-   TH2F *hqmaxstrip_sel[MM_N_Layers] = {0}; //qmax vs xstrip distribution
-   TH2F *hqmaxstripFull_sel[MM_N_Layers] = {0}; //qmax vs xstrip distribution
+  TGraphErrors *g_DaqTimeMaxChargeStrip[MM_N_Layers] = {nullptr};
+  TGraphErrors *g_DaqTimeMaxChargePosition[MM_N_Layers] = {nullptr};
+  TGraphErrors *g_DaqTimeMaxChargeValue[MM_N_Layers] = {nullptr};
 
-   // block based calibrated histograms
-   vector<TH2F*> hBlockqmaxstrip_cal[MM_N_Layers]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_cal[MM_N_Layers]; //qmax vs xstrip distribution
+  // ---------------------------------------------------------------------------
+  // Event/time and block/time association.
+  // ---------------------------------------------------------------------------
+  TGraphErrors *g_DaqTime_iev = nullptr;
+  TGraphErrors *g_SrsTimeStamp_evt = nullptr;
+  TGraphErrors *g_DaqTimeSec_evt = nullptr;
+  TGraphErrors *g_DaqTimeMicroSec_evt = nullptr;
+  TGraphErrors *g_DaqTime_evt = nullptr;
+  TGraphErrors *g_evt_vs_iev = nullptr;
 
-   // block based calibrated histograms - overlall calibration
-   vector<TH2F*> hBlockqmaxstrip_Overallcal[MM_N_Layers]; //qmax vs xstrip distribution
-   vector<TH2F*> hBlockqmaxstripFull_Overallcal[MM_N_Layers]; //qmax vs xstrip distribution
-
-   ////// GRAPHS //////
-   // block based graphs
-   TGraphErrors *g_BlockBeamSpot[MM_N_Layers] = {0};  //Beam spot over blocks of events for stability monitoring
-   TGraphErrors *g_BlockBeamSpread[MM_N_Layers] = {0}; //Beam spread over blocks of events for stability monitoring
-   TGraphErrors *g_BlockBeamCharge[MM_N_Layers] = {0}; //Beam charge over blocks of events for stability monitoring
-
-   //TGraphs for strip calibration
-   TGraphErrors *g_FitFullDiff[MM_N_Layers] = {0}; // to identify possible dead strips
-   TGraphErrors *g_FitFullRatio[MM_N_Layers] = {0}; // to define calibration constants
-
-   //block based TGraphs for strip calibration
-   vector<TGraphErrors*> g_BlockFitFullDiff[MM_N_Layers]; // to identify possible dead strips
-   vector<TGraphErrors*> g_BlockFitFullRatio[MM_N_Layers]; // to define calibration constants
-
+  TGraphErrors *g_BlockMeanDaqSec = nullptr;
+  TGraphErrors *g_BlockMeanDaqTime = nullptr;
+  TGraphErrors *g_BlockMeanSrsTime = nullptr;
 };
 
 #endif
 
-#ifdef CalibMM_cxx
-CalibMM::CalibMM(TObjArray *inputFileNameList,
-                 int RunID,
-                 int DetRunID,
-                 int maxEvents,
-                 TString outputFileName) :
-   fTree(0),
-   fOwnChain(kFALSE),
-   RunID(RunID),
-   DetRunID(DetRunID),
-   maxEvents(maxEvents),
-   outputFileName(outputFileName)
+#ifdef RecoMM_cxx
+
+RecoMM::RecoMM(TObjArray *inputFileNameList,
+               int RunID,
+               int DetRunID,
+               int maxEvents,
+               TString outputFileName)
+    : fTree(nullptr),
+      fOwnChain(kFALSE),
+      RunID(RunID),
+      DetRunID(DetRunID),
+      maxEvents(maxEvents),
+      outputFileName(outputFileName)
 {
+  if (!inputFileNameList || inputFileNameList->GetEntries() == 0) {
+    cerr << "ERROR: empty input file list in RecoMM constructor" << endl;
+    return;
+  }
 
-   if (!inputFileNameList || inputFileNameList->GetEntries() == 0) {
-      cerr << "ERROR: empty input file list in CalibMM constructor" << endl;
-      return;
-   }
+  fprintf(stdout, "=== === === Chain of input files === === ===\n");
 
-   fprintf(stdout, "=== === === Chain of input files === === ===\n");
-   TChain *chain = new TChain("apv_raw");
-   Long64_t totalEntries = 0;
-   for (Int_t iFile = 0; iFile < inputFileNameList->GetEntries(); iFile++) {
-      TString fileName = ((TObjString*)inputFileNameList->At(iFile))->GetString();
-      fprintf(stdout, "%4d %s\n", iFile, fileName.Data());
-      TFile file(fileName.Data(), "READ");
-      if (file.IsZombie()) {
-         cerr << "WARNING: cannot open input file: " << fileName << endl;
-         continue;
+  TChain *chain = new TChain("apv_raw");
+  Long64_t totalEntries = 0;
+
+  for (Int_t iFile = 0; iFile < inputFileNameList->GetEntries(); ++iFile) {
+    TString fileName = ((TObjString *)inputFileNameList->At(iFile))->GetString();
+    fprintf(stdout, "%4d %s\n", iFile, fileName.Data());
+
+    TFile *file = TFile::Open(fileName.Data(), "READ");
+    if (!file || file->IsZombie()) {
+      cerr << "WARNING: cannot open input file: " << fileName << endl;
+      if (file) {
+        file->Close();
+        delete file;
       }
-      TTree *t = (TTree*)file.Get("apv_raw");
-      if (!t) {
-         cerr << "WARNING: cannot find tree apv_raw in file: " << fileName << endl;
-         continue;
-      }
-      Long64_t n = t->GetEntries();
-      if (n <= 0) {
-         cerr << "WARNING: tree apv_raw has zero entries in file: " << fileName << endl;
-         continue;
-      }
+      continue;
+    }
 
-      Int_t added = chain->Add(fileName.Data());
-      if (added == 0) {
-         cerr << "WARNING: could not add file to chain: "
-              << fileName << endl;
-         continue;
-      }
-      totalEntries += n;
-      cout << "Added " << fileName << " entries = " << n << " total = " << totalEntries << endl;
-   }
+    TTree *tree = dynamic_cast<TTree *>(file->Get("apv_raw"));
+    if (!tree) {
+      cerr << "WARNING: cannot find tree apv_raw in file: " << fileName << endl;
+      file->Close();
+      delete file;
+      continue;
+    }
 
-   if (totalEntries <= 0) {
-      cerr << "ERROR: no valid entries found while building input chain" << endl;
-      delete chain;
-      return;
-   }
+    const Long64_t nEntries = tree->GetEntries();
+    file->Close();
+    delete file;
 
-   cout << "Total validated entries in chain = " << totalEntries << endl;
-   fOwnChain = kTRUE;
-   Init(chain);
+    if (nEntries <= 0) {
+      cerr << "WARNING: tree apv_raw has zero entries in file: " << fileName << endl;
+      continue;
+    }
+
+    const Int_t added = chain->Add(fileName.Data());
+    if (added == 0) {
+      cerr << "WARNING: could not add file to chain: " << fileName << endl;
+      continue;
+    }
+
+    totalEntries += nEntries;
+    cout << "Added " << fileName << " entries = " << nEntries << " total = " << totalEntries << endl;
+  }
+
+  if (totalEntries <= 0) {
+    cerr << "ERROR: no valid entries found while building input chain" << endl;
+    delete chain;
+    return;
+  }
+
+  cout << "Total validated entries in chain = " << totalEntries << endl;
+
+  fOwnChain = kTRUE;
+  Init(chain);
 }
 
-CalibMM::~CalibMM()
+RecoMM::~RecoMM()
 {
-   if (!fTree) return;
+  if (fOwnChain && fTree) {
+    delete fTree;
+    fTree = nullptr;
+  }
 }
 
-Int_t CalibMM::GetEntry(Long64_t entry)
+Int_t RecoMM::GetEntry(Long64_t entry)
 {
-// Read contents of entry.
-   if (!fTree) return 0;
-   return fTree->GetEntry(entry);
+  if (!fTree) return 0;
+  return fTree->GetEntry(entry);
 }
 
-Long64_t CalibMM::LoadTree(Long64_t entry)
+Long64_t RecoMM::LoadTree(Long64_t entry)
 {
-   if (!fTree) return -5;
-
-   Long64_t centry = fTree->LoadTree(entry);
-   if (centry < 0) return centry;
-
-   return centry;
+  if (!fTree) return -5;
+  return fTree->LoadTree(entry);
 }
 
-void CalibMM::Init(TChain *tree)
+void RecoMM::Init(TChain *tree)
 {
-   //cout << "DEBUG Init: start" << endl;
+  if (!tree) return;
 
-   // Object pointers
-   srsFec    = 0;
-   srsChip   = 0;
-   srsChan   = 0;
-   mmChamber = 0;
-   mmLayer   = 0;
-   mmReadout = 0;
-   mmStrip   = 0;
-   raw_q     = 0;
-   max_q     = 0;
-   t_max_q   = 0;
+  fTree = tree;
 
-   if (!tree) return;
+  mmLayer = nullptr;
+  mmStrip = nullptr;
+  raw_q = nullptr;
 
-   fTree = tree;
+  fTree->SetBranchStatus("*", 0);
+  fTree->SetBranchStatus("evt", 1);
+  fTree->SetBranchStatus("daqTimeSec", 1);
+  fTree->SetBranchStatus("daqTimeMicroSec", 1);
+  fTree->SetBranchStatus("srsTimeStamp", 1);
+  fTree->SetBranchStatus("mmLayer", 1);
+  fTree->SetBranchStatus("mmStrip", 1);
+  fTree->SetBranchStatus("raw_q", 1);
 
-   // Keep all branches available
-   fTree->SetBranchStatus("*", 1);
+  fTree->SetBranchAddress("evt", &evt, &b_evt);
+  fTree->SetBranchAddress("daqTimeSec", &daqTimeSec, &b_daqTimeSec);
+  fTree->SetBranchAddress("daqTimeMicroSec", &daqTimeMicroSec, &b_daqTimeMicroSec);
+  fTree->SetBranchAddress("srsTimeStamp", &srsTimeStamp, &b_srsTimeStamp);
+  fTree->SetBranchAddress("mmLayer", &mmLayer, &b_mmLayer);
+  fTree->SetBranchAddress("mmStrip", &mmStrip, &b_mmStrip);
+  fTree->SetBranchAddress("raw_q", &raw_q, &b_raw_q);
 
-   fTree->SetBranchAddress("evt",             &evt,             &b_evt);
-   fTree->SetBranchAddress("error",           &error,           &b_error);
-   fTree->SetBranchAddress("daqTimeSec",      &daqTimeSec,      &b_daqTimeSec);
-   fTree->SetBranchAddress("daqTimeMicroSec", &daqTimeMicroSec, &b_daqTimeMicroSec);
-   fTree->SetBranchAddress("srsTimeStamp",    &srsTimeStamp,    &b_srsTimeStamp);
-   fTree->SetBranchAddress("srsTrigger",      &srsTrigger,      &b_srsTrigger);
-
-   fTree->SetBranchAddress("srsFec",          &srsFec,          &b_srsFec);
-   fTree->SetBranchAddress("srsChip",         &srsChip,         &b_srsChip);
-   fTree->SetBranchAddress("srsChan",         &srsChan,         &b_srsChan);
-   fTree->SetBranchAddress("mmChamber",       &mmChamber,       &b_mmChamber);
-   fTree->SetBranchAddress("mmLayer",         &mmLayer,         &b_mmLayer);
-   fTree->SetBranchAddress("mmReadout",       &mmReadout,       &b_mmReadout);
-   fTree->SetBranchAddress("mmStrip",         &mmStrip,         &b_mmStrip);
-   fTree->SetBranchAddress("raw_q",           &raw_q,           &b_raw_q);
-   fTree->SetBranchAddress("max_q",           &max_q,           &b_max_q);
-   fTree->SetBranchAddress("t_max_q",         &t_max_q,         &b_t_max_q);
-
-   Notify();
-
-   // cout << "DEBUG Init: done" << endl;
+  Notify();
 }
 
-bool CalibMM::Notify()
+bool RecoMM::Notify()
 {
-   // The Notify() function is called when a new file is opened. This
-   // can be either for a new TTree in a TChain or when when a new TTree
-   // is started when using PROOF. It is normally not necessary to make changes
-   // to the generated code, but the routine can be extended by the
-   // user if needed. The return value is currently not used.
-
-   return true;
+  return true;
 }
 
-#endif // #ifdef CalibMM_cxx
+#endif // RecoMM_cxx

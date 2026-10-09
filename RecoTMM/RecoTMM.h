@@ -1,5 +1,5 @@
 #ifndef RecoTMM_h
-#define RecoTMM_h
+#define RecoTMMh
 
 #include "TRandom.h"
 #include "TRandom3.h"
@@ -72,6 +72,11 @@ struct BlockTimeInfo {
 
   ULong64_t firstEvt = 0;
   ULong64_t lastEvt  = 0;
+
+  Long64_t firstTreeIndex = -1;
+  Long64_t lastTreeIndex = -1;
+  long double sumTreeIndex = 0.;
+  double meanTreeIndex = -1.;
 
   double firstSrs = 0.;
   double lastSrs  = 0.;
@@ -283,21 +288,27 @@ public :
    // block based graphs
    TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout]   = {0};
    TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0};
-   TGraphErrors *g_BlockBeamCharge[TMMCH_N_Readout] = {0};
+   TGraphErrors *g_BlockBeamChargeFit[TMMCH_N_Readout] = {0};
+   TGraphErrors *g_BlockBeamChargeIntegral[TMMCH_N_Readout] = {0};
    
    // block based graphs - association of the average time of the entire block with the first-look observables (beam spot, spread, charge)
-   // TGraphErrors *g_DaqSecBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTimeSec
-   // TGraphErrors *g_DaqSecBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTimeSec
-   // TGraphErrors *g_DaqSecBeamCharge[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
+   TGraphErrors *g_DaqSecBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTimeSec
+   TGraphErrors *g_DaqSecBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTimeSec
+   TGraphErrors *g_DaqSecBeamChargeFit[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
+   TGraphErrors *g_DaqSecBeamChargeIntegral[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
 
    // non può funzionare perché non è garantita la conseguenzialità degli eventi nel tree in termini temporali
    TGraphErrors *g_DaqTimeBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTime
    TGraphErrors *g_DaqTimeBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTime
-   TGraphErrors *g_DaqTimeBeamCharge[TMMCH_N_Readout] = {0}; // beam charge vs DaqTime
+   TGraphErrors *g_DaqTimeBeamChargeFit[TMMCH_N_Readout] = {0}; // fit-integral charge vs DaqTime
+   TGraphErrors *g_DaqTimeBeamChargeIntegral[TMMCH_N_Readout] = {0}; // fit-integral charge vs DaqTime
+   TGraphErrors *g_TreeIndexBeamChargeFit[TMMCH_N_Readout] = {0}; // fit-integral charge vs mean tree index
+   TGraphErrors *g_TreeIndexBeamChargeIntegral[TMMCH_N_Readout] = {0}; // fit-integral charge vs mean tree index
 
    // TGraphErrors *g_SrsTimeBeamSpot[TMMCH_N_Readout]   = {0};
    // TGraphErrors *g_SrsTimeBeamSpread[TMMCH_N_Readout] = {0};
-   // TGraphErrors *g_SrsTimeBeamCharge[TMMCH_N_Readout] = {0};
+   // TGraphErrors *g_SrsTimeBeamChargeFit[TMMCH_N_Readout] = {0};
+   // TGraphErrors *g_SrsTimeBeamChargeIntegral[TMMCH_N_Readout] = {0};
 
    //TGraphs for strip calibration (overall run-based)
    TGraphErrors *g_RawCalibFullDiff[TMMCH_N_Readout]  = {0};
@@ -317,21 +328,27 @@ public :
 
    // evt iev association
    TGraphErrors *g_evt_vs_iev = 0;
+
+   TGraphErrors *g_DaqTimeBeamChargeFitTotal = 0;
+   TGraphErrors *g_DaqTimeBeamChargeIntegralTotal = 0;
+   TGraphErrors *g_TreeIndexBeamChargeFitTotal = 0;
+   TGraphErrors *g_TreeIndexBeamChargeIntegralTotal = 0;
    
    //block based TGraphs for strip calibration (per-block)
    vector<TGraphErrors*> g_BlockRawCalibFullDiff[TMMCH_N_Readout];
    vector<TGraphErrors*> g_BlockRawCalibFullRatio[TMMCH_N_Readout];
 
    // block based TGraphs with time vs event id association
-   // vector<TGraphErrors*> g_BlockSrsTimeStamp;
-   // vector<TGraphErrors*> g_BlockDaqTimeSec;
-   // vector<TGraphErrors*> g_BlockDaqTimeMicroSec;
-   // vector<TGraphErrors*> g_BlockDaqTime;
+   vector<TGraphErrors*> g_BlockSrsTimeStamp;
+   vector<TGraphErrors*> g_BlockDaqTimeSec;
+   vector<TGraphErrors*> g_BlockDaqTimeMicroSec;
+   vector<TGraphErrors*> g_BlockDaqTime;
 
    // block id time association
    TGraphErrors *g_BlockMeanDaqSec = 0;
    TGraphErrors *g_BlockMeanDaqTime = 0;
    TGraphErrors *g_BlockMeanSrsTime = 0;
+   TGraphErrors *g_BlockMeanTreeIndex = 0;
 
 };
 
@@ -402,9 +419,9 @@ RecoTMM::RecoTMM(TObjArray *inputFileNameList,
 RecoTMM::~RecoTMM()
 {
    if (fOwnChain && fTree) {
-        delete fTree;
-        fTree = nullptr;
-    }
+      delete fTree;
+      fTree = nullptr;
+   }
 }
 
 Int_t RecoTMM::GetEntry(Long64_t entry)

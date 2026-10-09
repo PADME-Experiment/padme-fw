@@ -55,7 +55,7 @@ namespace ROOT {
       ::RecoTMM *ptr = nullptr;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::RecoTMM));
       static ::ROOT::TGenericClassInfo 
-         instance("RecoTMM", "RecoTMM.h", 94,
+         instance("RecoTMM", "RecoTMM.h", 99,
                   typeid(::RecoTMM), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &RecoTMM_Dictionary, isa_proxy, 4,
                   sizeof(::RecoTMM) );

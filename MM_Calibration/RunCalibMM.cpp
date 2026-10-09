@@ -15,14 +15,24 @@
 
 using namespace std;
 
-bool FileExists(const TString& name)
-{
+bool IsRemoteFile(const TString& name){
+  return name.BeginsWith("root://") ||
+         name.BeginsWith("http://") ||
+         name.BeginsWith("https://") ||
+         name.BeginsWith("xroot://") ||
+         name.BeginsWith("davs://");
+}
+
+bool FileExists(const TString& name){
+  // Do not use stat() on remote URLs.
+  // ROOT/TFile will validate remote accessibility later.
+  if (IsRemoteFile(name)) return true;
+
   struct stat filestat;
   return stat(name.Data(), &filestat) == 0;
 }
 
-void PrintUsage(const char* progname)
-{
+void PrintUsage(const char* progname){
   cout << endl;
   cout << "Usage:" << endl;
   cout << "  " << progname << " -i input.root -r RunID -d DetRunID [options]" << endl;
@@ -177,6 +187,10 @@ int main(int argc, char* argv[])
 
   {
     CalibMM calib(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName);
+    if (!calib.fTree) {
+      cerr << "ERROR: CalibMM initialization failed" << endl;
+      return 1;
+    }
     calib.LoopFileList(inputFileNameList, NevtBlock);
   }
 

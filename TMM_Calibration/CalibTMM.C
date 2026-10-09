@@ -521,8 +521,7 @@ void CalibTMM::WriteCalibrationGraphTxt(ofstream &out, TGraphErrors *g, int runI
 
   if (!g) {
     cerr << "WARNING: null overall calibration graph for view = " << view << " ; writing unity calibration for all strips" << endl;
-  }
-  else {
+  } else {
     const int n = g->GetN();
 
     for (int ip = 0; ip < n; ++ip) {
@@ -905,7 +904,6 @@ void CalibTMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     // TF1 *fit = FitDoubleGaussian(hMeanslice[iR], tmm_tag[iR], StripMin, StripMax, fitResult);
 
     TF1 *fit = FitVoigt(hMeanslice[iR], tmm_tag[iR], StripMin, StripMax, fitResult);
-
 
     if (!fit || !fitResult.Get()) {
       cerr << "WARNING: overall fit failed for readout=" << tmm_tag[iR] << endl;

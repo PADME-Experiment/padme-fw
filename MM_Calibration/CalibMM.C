@@ -889,8 +889,7 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
     cerr << "ERROR: input chain has zero entries" << endl;
     return;
   }
-  
-  cout << "Found Tree 'RawMergedEvents' with " << runNEntries << " entries" << endl;  
+  cout << "Found Tree 'apv_raw' with " << runNEntries << " entries" << endl;
   Long64_t nToProcess = runNEntries;
 
   if (maxEvents > 0 && maxEvents < runNEntries) {
@@ -901,37 +900,27 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
 
-    Long64_t nb = fTree->GetEntry(iev);
-
+    Long64_t nb = fTree->GetEntry(iev);    
     if (nb <= 0) {
       cerr << "WARNING: could not read event " << iev << endl;
       continue;
     }
 
-    if (!tmmRawEvent) {
-      cerr << "WARNING: null TMMRawEvent at event " << iev << endl;
-      continue;
-    }
-
-    // -------------------------------------------------
-    // Get the old MM raw structure from TMMRawEvent
-    // CHOOSE the version matching TMMRawEvent.hh
-    // -------------------------------------------------
-
-    mmLayer = &(tmmRawEvent->mmLayer);
-    mmStrip = &(tmmRawEvent->mmStrip);
-    raw_q   = &(tmmRawEvent->raw_q);
-
-    // -------------------------------------------------
-
-    if (!mmLayer || !mmStrip || !raw_q) {
-      cerr << "WARNING: null MM data at event " << iev << endl;
-      continue;
-    }
-
     EnsureBlockHistograms(blockCounter);
 
+    if (globalEntry % 1000 == 0) {
+      float progress = static_cast<float>(globalEntry) / nToProcess;
+
+      cout << "Processed " << globalEntry << " out of " << nToProcess << " entries (" << fixed << setprecision(2) << progress * 100 << "%)" << endl;
+    }
+
+    if (!mmLayer || !mmStrip || !raw_q) {
+      cerr << "WARNING: null branch pointer at event " << iev << endl;
+      continue;
+    }
+
     int firedstrip_size = min((int)mmLayer->size(), min((int)mmStrip->size(), (int)raw_q->size()));
+    // cout << "Event " << iev << ": firedstrip_size = " << firedstrip_size << endl;
 
     for (int j = 0; j < firedstrip_size; j++) {
       double x_strip = 0;
@@ -1055,26 +1044,14 @@ void CalibMM::LoopFileList(TObjArray &inputFileNameList, int NevtBlock) {
 
   //calibrated plots
   for (Long64_t iev = 0; iev < nToProcess; ++iev) {
-    
-    Long64_t nb = fTree->GetEntry(iev);
 
+    Long64_t nb = fTree->GetEntry(iev);    
     if (nb <= 0) {
       cerr << "WARNING: could not read event " << iev << endl;
       continue;
     }
-
-    if (!tmmRawEvent) {
-      cerr << "WARNING: null TMMRawEvent at event " << iev << endl;
-      continue;
-    }
-
-    // Same aliases as in first loop
-    mmLayer = &(tmmRawEvent->mmLayer);
-    mmStrip = &(tmmRawEvent->mmStrip);
-    raw_q   = &(tmmRawEvent->raw_q);
-
     if (!mmLayer || !mmStrip || !raw_q) {
-      cerr << "WARNING: null MM data at event " << iev << endl;
+      cerr << "WARNING: null branch pointer at event " << iev << endl;
       continue;
     }
 

@@ -17,11 +17,11 @@ FileList="${RecoPath}/TMMFileList/run${PadmeRunID}.list"
 OutputDir="${RecoPath}/outputTMM"
 # OutputFile="${OutputDir}/TMMRecostructed_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
 # OutputFile="${OutputDir}/Run680NoTarget_test.root"
-# OutputFile="${RecoPath}/TestNewReco1.root"
+# OutputFile="${RecoPath}/TestForAnalysis_TreeIndex.root"
 if [[ "${MaxEvents}" == "-0" ]]; then
-  OutputFile="${OutputDir}/TMMRecoTime_run${PadmeRunID}_NevtAll_Nblk${NevtBlock}.root"
+  OutputFile="${OutputDir}/TMMRecoTime_TreeInd_run${PadmeRunID}_NevtAll_Nblk${NevtBlock}.root"
 else
-  OutputFile="${OutputDir}/TMMRecoTime_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
+  OutputFile="${OutputDir}/TMMRecoTime_TreeInd_run${PadmeRunID}_Nevt${MaxEvents}_Nblk${NevtBlock}.root"
 fi
 
 echo

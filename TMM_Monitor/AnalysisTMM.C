@@ -275,7 +275,7 @@ TF1* FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResu
   double mu0  = prefit->GetParameter(1);
   double s0   = fabs(prefit->GetParameter(2));
 
-  cout << "DEBUG: FitDoubleGaussian prefit results for " << h->GetName() << " view = " << name << " : amp0 = " << amp0 << ", mu0 = " << mu0 << ", s0 = " << s0 << endl;
+  // cout << "DEBUG: FitDoubleGaussian prefit results for " << h->GetName() << " view = " << name << " : amp0 = " << amp0 << ", mu0 = " << mu0 << ", s0 = " << s0 << endl;
 
   if ((int)prefitResult != 0) {
     cerr << "WARNING: Gaussian prefit failed for " << h->GetName() << " view =" << name << " status =" << (int)prefitResult << ". Using histogram maximum/RMS seeds." << endl;
@@ -518,31 +518,6 @@ void ExtractVoigtObservables(TF1 *f, TFitResultPtr fitResult, ObservableResult &
   obs.widthTail = gamma;
   obs.widthTailErr = sqrt(max(0.0, cov(3, 3)));
 
-  // // Practical Voigt FWHM approximation:
-  // const double fG = 2.354820045 * sigma;
-  // const double fL = 2.0 * gamma;
-
-  // // Olivero and Longbothum FWHM approximation --> accuracy of 0.02% [Journal of Quantitative Spectroscopy and Radiative Transfer. 17 (2): 233–236]
-  // const double fV = 0.5346 * fL + sqrt(0.2166 * fL * fL + fG * fG);
-
-  // obs.width = fV / 2.354820045;
-
-  // Error propagation with covariance between sigma and gamma
-  // const double D = sqrt(0.2166 * fL * fL + fG * fG);
-
-  // double grad[4] = {0., 0., 0., 0.};
-
-  // const double dfG_dsigma = 2.354820045;
-  // const double dfL_dgamma = 2.0;
-
-  // const double dfV_dfG = fG / D;
-  // const double dfV_dfL = 0.5346 + 0.2166 * fL / D;
-
-  // grad[2] = (dfV_dfG * dfG_dsigma) / 2.354820045;
-  // grad[3] = (dfV_dfL * dfL_dgamma) / 2.354820045;
-
-  // obs.widthErr = PropagateError(cov, grad, 4);
-
   const double a = f->GetXmin();
   const double b = f->GetXmax();
   const double sEff = VoigtTruncatedRMS(f, a, b);
@@ -572,52 +547,38 @@ void ExtractVoigtObservables(TF1 *f, TFitResultPtr fitResult, ObservableResult &
   }
 }
 
-void AddGraphPoint(TGraphErrors *g, int ip, double x, double y, double ey){
-  if (!g) return;
-  g->SetPoint(ip, x, y);
-  g->SetPointError(ip, 0., ey);
+void AddGraphPoint(TGraphErrors *g, int ip, double x, double y, double ey, double ex = 0.){
+    if (!g) return;
+    g->SetPoint(ip, x, y);
+    g->SetPointError(ip, ex, ey);
 }
 
-void WriteSliceFit(TH2F *h2, TString tag, TDirectory *outdir){
-  if (!h2 || !outdir) return;
-
+void WriteSliceFitResult(const SliceFitResult &s, TDirectory *outdir){
+  if (!outdir) return;
+  TDirectory *oldDir = gDirectory;
   outdir->cd();
-
-  SliceFitResult s = RunFitSlicesY(h2, tag);
-
-  if (s.amp)   s.amp->Write();
-  if (s.mean)  s.mean->Write();
+  if (s.amp) s.amp->Write();
+  if (s.mean) s.mean->Write();
   if (s.sigma) s.sigma->Write();
-  if (s.chi2)  s.chi2->Write();
+  if (s.chi2) s.chi2->Write();
+  if (oldDir) oldDir->cd();
 }
 
 ObservableResult ComputeObservables(TH2F *h2, TString tag){
   ObservableResult obs;
   if (!h2) return obs;
-
-  double entries = 0.;
-  double charge = 0.;
-  double err_charge = 0.;
-  double charge2 = 0.;
   double mean_charge = 0.;
   double err_mean_charge = 0.;
- 
-  for (int ix = 1; ix <= h2->GetNbinsX(); ++ix) {
-    for (int iy = 1; iy <= h2->GetNbinsY(); ++iy) {
-      const double n = h2->GetBinContent(ix, iy);
-      const double q = h2->GetYaxis()->GetBinCenter(iy);
 
-      entries += n;
-      charge  += n * q;
-      charge2 += n * q * q;
-    }
-  }
+  Double_t stats[7] = {0.};
+  h2->GetStats(stats);
+  const double entries = stats[0];
+  const double charge = stats[4];
+  const double charge2 = stats[5];
 
   if (entries > 0.) {
     mean_charge = charge / NEvtBLOCKS;
-    err_charge = sqrt(max(0.0, charge2));
-    // const double variance = charge2 / NEvtBLOCKS - mean_charge * mean_charge;    
-    err_mean_charge = err_charge / NEvtBLOCKS;
+    err_mean_charge = sqrt(max(0.0, charge2)) / NEvtBLOCKS;
   }
 
   obs.entries = entries;
@@ -625,101 +586,13 @@ ObservableResult ComputeObservables(TH2F *h2, TString tag){
   obs.chargeErr = err_mean_charge;
   obs.spot = h2->GetMean();
   obs.spotErr = h2->GetMeanError();
-  obs.spotErrCons = 0; // to be determined
+  obs.spotErrCons = 0;
   obs.width = h2->GetRMS();
   obs.widthErr = h2->GetRMSError();
   return obs;
 }
 
-// ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFitSelection = false, int maxFitStatusAccepted = 1, int minCovMatrixStatusAccepted = 2){  
-//   ObservableResult obs;
-//   if (!h2) {
-//     SetBadObservableResult(obs);
-//     return obs;
-//   }
-
-//   SliceFitResult s = RunFitSlicesY(h2, tag);
-
-//   if (!s.mean) {
-//     SetBadObservableResult(obs);
-//     delete s.amp;
-//     delete s.sigma;
-//     delete s.chi2;
-//     return obs;
-//   }
-
-//   const double xmin = s.mean->GetXaxis()->GetXmin();
-//   const double xmax = s.mean->GetXaxis()->GetXmax();
-
-//   TFitResultPtr fitResult;
-
-//   TF1 *f = FitDoubleGaussian(s.mean, Form("DoubleGaussian_%s", tag.Data()), xmin, xmax, fitResult);
-
-//   // TF1 *f = FitVoigt(s.mean, Form("Voigt_%s", tag.Data()), xmin, xmax, fitResult);
-
-//   // if (f) {
-//   //   ExtractVoigtObservables(f, fitResult, obs);
-//   //   delete f;
-//   // }
-
-//   bool fitOK = false;
-
-//   if (f && fitResult.Get()) {
-//     obs.fitStatus = (int)fitResult;
-//     obs.covStatus = fitResult->CovMatrixStatus();
-
-//     fitOK = IsFitAccepted(fitResult, maxFitStatusAccepted, minCovMatrixStatusAccepted);
-//     obs.fitAccepted = fitOK;
-
-//     if (!applyFitSelection || fitOK) {
-//       ExtractDoubleGaussianObservables(f, fitResult, obs);
-//     } else {
-//       cerr << "WARNING: FitSlicesY double-Gaussian fit rejected for view = " << tag << " fitStatus = " << obs.fitStatus << " covStatus = " << obs.covStatus << endl;
-//       SetBadObservableResult(obs);
-
-//       obs.fitStatus = (int)fitResult;
-//       obs.covStatus = fitResult->CovMatrixStatus();
-//       obs.fitAccepted = false;
-//     }
-
-//     delete f;
-//   } else {
-//     cerr << "WARNING: FitSlicesY double-Gaussian fit failed technically for view = " << tag << endl;
-//     SetBadObservableResult(obs);
-//   }
-
-// // Single-core Gaussian fit only if the main fit produced usable mu/sigma
-//   if (obs.spot > -9000. && obs.width > 0.) {
-//     const double mu = obs.spot;
-//     const double sigma = obs.width;
-
-//     TF1 *fg = new TF1(Form("fg_singleCore_%s", tag.Data()), "gaus", mu - 2. * sigma, mu + 2. * sigma);
-//     TFitResultPtr fgResult = s.mean->Fit(fg, "RQS0");
-
-//     if (fg && fgResult.Get() && (int)fgResult <= 1) {
-//       obs.widthSingleCore = fabs(fg->GetParameter(2));
-//       obs.widthSingleCoreErr = fg->GetParError(2);
-//     } else {
-//       obs.widthSingleCore = -99.;
-//       obs.widthSingleCoreErr = -99.;
-//       cerr << "WARNING: single-core Gaussian fit failed for view = " << tag << " status = " << (int)fgResult << endl;
-//     }
-
-//     delete fg;
-//   } else {
-//     obs.widthSingleCore = -99.;
-//     obs.widthSingleCoreErr = -99.;
-//   }
-
-//   delete s.amp;
-//   delete s.mean;
-//   delete s.sigma;
-//   delete s.chi2;
-
-//   return obs;
-// }
-
-ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFitSelection = false, int maxFitStatusAccepted = 1, int minCovMatrixStatusAccepted = 2){
+ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFitSelection = false, int maxFitStatusAccepted = 1, int minCovMatrixStatusAccepted = 2, TDirectory *sliceOutDir = nullptr){
   ObservableResult obs;
   if (!h2) {
     SetBadObservableResult(obs);
@@ -735,6 +608,8 @@ ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFit
     delete s.chi2;
     return obs;
   }
+
+  WriteSliceFitResult(s, sliceOutDir);
 
   const double xmin = s.mean->GetXaxis()->GetXmin();
   const double xmax = s.mean->GetXaxis()->GetXmax();
@@ -801,25 +676,17 @@ ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFit
         obs.widthSingleCore    = -99.;
         obs.widthSingleCoreErr = -99.;
     } else {
-
-        TF1 *fg = new TF1(
-            Form("fg_singleCore_%s", tag.Data()),
-            "gaus",
-            fitMin,
-            fitMax
-        );
-
-        TFitResultPtr fgResult = s.mean->Fit(fg, "RQS0");
-
-        if (fgResult.Get() && (int)fgResult <= 1) {
-            obs.widthSingleCore    = fabs(fg->GetParameter(2));
-            obs.widthSingleCoreErr = fg->GetParError(2);
-        } else {
-            obs.widthSingleCore    = -99.;
-            obs.widthSingleCoreErr = -99.;
-            cerr << "WARNING: single-core Gaussian cross-check failed for view = " << tag << " status = " << (int)fgResult << endl;
-        }
-        delete fg;
+      TF1 *fg = new TF1(Form("fg_singleCore_%s", tag.Data()), "gaus", fitMin, fitMax);
+      TFitResultPtr fgResult = s.mean->Fit(fg, "RQS0");
+      if (fgResult.Get() && (int)fgResult <= 1) {
+        obs.widthSingleCore    = fabs(fg->GetParameter(2));
+        obs.widthSingleCoreErr = fg->GetParError(2);
+      } else {
+        obs.widthSingleCore    = -99.;
+        obs.widthSingleCoreErr = -99.;
+        cerr << "WARNING: single-core Gaussian cross-check failed for view = " << tag << " status = " << (int)fgResult << endl;
+      }
+      delete fg;
     }
   } else {
     obs.widthSingleCore    = -99.;
@@ -834,43 +701,43 @@ ObservableResult ComputeObservablesFitSlice(TH2F *h2, TString tag, bool applyFit
   return obs;
 }
 
-ObservableResult DoObsRatio(ObservableResult obs_tot, vector<ObservableResult> obs_block, int iblk){
+ObservableResult DoObsRatio(const ObservableResult &obs_tot, const vector<ObservableResult> &obs_block, size_t idx){
   ObservableResult obsratio;
       
   obsratio.entries = 0.;
-  obsratio.charge = fabs(obs_tot.charge)>0 ? obs_block.at(iblk).charge/obs_tot.charge : -99;
+  obsratio.charge = fabs(obs_tot.charge)>0 ? obs_block.at(idx).charge/obs_tot.charge : -99;
   obsratio.chargeErr = 0.;
-  obsratio.spot = fabs(obs_tot.spot)>0 ? obs_block.at(iblk).spot/obs_tot.spot : -99;
+  obsratio.spot = fabs(obs_tot.spot)>0 ? obs_block.at(idx).spot/obs_tot.spot : -99;
   obsratio.spotErr = 0.;
   obsratio.spotErrCons = 0.;
-  obsratio.width = fabs(obs_tot.width)>0 ? obs_block.at(iblk).width/obs_tot.width : -99;
+  obsratio.width = fabs(obs_tot.width)>0 ? obs_block.at(idx).width/obs_tot.width : -99;
   obsratio.widthErr = 0.;
-  obsratio.widthCore = fabs(obs_tot.widthCore)>0 ? obs_block.at(iblk).widthCore/obs_tot.widthCore : -99;
+  obsratio.widthCore = fabs(obs_tot.widthCore)>0 ? obs_block.at(idx).widthCore/obs_tot.widthCore : -99;
   obsratio.widthCoreErr = 0.;
-  obsratio.widthTail = fabs(obs_tot.widthTail)>0 ? obs_block.at(iblk).widthTail/obs_tot.widthTail : -99;
+  obsratio.widthTail = fabs(obs_tot.widthTail)>0 ? obs_block.at(idx).widthTail/obs_tot.widthTail : -99;
   obsratio.widthTailErr = 0.;
-  obsratio.widthSingleCore = fabs(obs_tot.widthSingleCore)>0 ? obs_block.at(iblk).widthSingleCore/obs_tot.widthSingleCore : -99;
+  obsratio.widthSingleCore = fabs(obs_tot.widthSingleCore)>0 ? obs_block.at(idx).widthSingleCore/obs_tot.widthSingleCore : -99;
   obsratio.widthSingleCoreErr = 0.;
 
   return obsratio;
 }
 
-ObservableResult DoObsRatioBlocks(vector<ObservableResult> obs_block1, vector<ObservableResult> obs_block2, int iblk){
+ObservableResult DoObsRatioBlocks(const vector<ObservableResult> &obs_block1, const vector<ObservableResult> &obs_block2, size_t idx){
   ObservableResult obsratio;
       
   obsratio.entries = 0.;
-  obsratio.charge = fabs(obs_block1.at(iblk).charge)>0 ? obs_block2.at(iblk).charge/obs_block1.at(iblk).charge : -99;
+  obsratio.charge = fabs(obs_block1.at(idx).charge)>0 ? obs_block2.at(idx).charge/obs_block1.at(idx).charge : -99;
   obsratio.chargeErr = 0.;
-  obsratio.spot = fabs(obs_block1.at(iblk).spot)>0 ? obs_block2.at(iblk).spot/obs_block1.at(iblk).spot : -99;
+  obsratio.spot = fabs(obs_block1.at(idx).spot)>0 ? obs_block2.at(idx).spot/obs_block1.at(idx).spot : -99;
   obsratio.spotErr = 0.;
   obsratio.spotErrCons = 0.;
-  obsratio.width = fabs(obs_block1.at(iblk).width)>0 ? obs_block2.at(iblk).width/obs_block1.at(iblk).width : -99;
+  obsratio.width = fabs(obs_block1.at(idx).width)>0 ? obs_block2.at(idx).width/obs_block1.at(idx).width : -99;
   obsratio.widthErr = 0.;
-  obsratio.widthCore = fabs(obs_block1.at(iblk).widthCore)>0 ? obs_block2.at(iblk).widthCore/obs_block1.at(iblk).widthCore : -99;
+  obsratio.widthCore = fabs(obs_block1.at(idx).widthCore)>0 ? obs_block2.at(idx).widthCore/obs_block1.at(idx).widthCore : -99;
   obsratio.widthCoreErr = 0.;
-  obsratio.widthTail = fabs(obs_block1.at(iblk).widthTail)>0 ? obs_block2.at(iblk).widthTail/obs_block1.at(iblk).widthTail : -99;
+  obsratio.widthTail = fabs(obs_block1.at(idx).widthTail)>0 ? obs_block2.at(idx).widthTail/obs_block1.at(idx).widthTail : -99;
   obsratio.widthTailErr = 0.;
-  obsratio.widthSingleCore = fabs(obs_block1.at(iblk).widthSingleCore)>0 ? obs_block2.at(iblk).widthSingleCore/obs_block1.at(iblk).widthSingleCore : -99;
+  obsratio.widthSingleCore = fabs(obs_block1.at(idx).widthSingleCore)>0 ? obs_block2.at(idx).widthSingleCore/obs_block1.at(idx).widthSingleCore : -99;
   obsratio.widthSingleCoreErr = 0.;
 
   return obsratio;
@@ -882,19 +749,8 @@ void InitGraphPair(TGraphErrors *g[2]){
 }
 
 void InitTH2Pair(TH2F *h[2], TString baseName, TString title, int xbin, double xmin, double xmax, int ybin, double ymin, double ymax, TString xtitle, TString ytitle){
-  h[0] = new TH2F(
-    Form("%s", baseName.Data()),
-    Form("%s;%s;%s", title.Data(), xtitle.Data(), ytitle.Data()),
-    xbin, xmin, xmax,
-    ybin, ymin, ymax
-  );
-
-  h[1] = new TH2F(
-    Form("%sFitSlices", baseName.Data()),
-    Form("%s FitSlices;%s;%s", title.Data(), xtitle.Data(), ytitle.Data()),
-    xbin, xmin, xmax,
-    ybin, ymin, ymax
-  );
+  h[0] = new TH2F(Form("%s", baseName.Data()), Form("%s;%s;%s", title.Data(), xtitle.Data(), ytitle.Data()), xbin, xmin, xmax, ybin, ymin, ymax);
+  h[1] = new TH2F(Form("%sFitSlices", baseName.Data()), Form("%s FitSlices;%s;%s", title.Data(), xtitle.Data(), ytitle.Data()), xbin, xmin, xmax, ybin, ymin, ymax);
 }
 
 void FillTH2Pair(TH2F *h[2], double x_direct, double y_direct, double x_fitslices, double y_fitslices){
@@ -902,45 +758,45 @@ void FillTH2Pair(TH2F *h[2], double x_direct, double y_direct, double x_fitslice
   if (h[1]) h[1]->Fill(x_fitslices, y_fitslices);
 }
 
-void TGraphAttributePair(TGraphErrors *g[2], TString baseName, TString view, TString ytitle, int markerstyle, int color){
-  TGraphAttribute(g[0], Form("g_Block%s_%s", baseName.Data(), view.Data()), "block", ytitle, markerstyle, color);
-  TGraphAttribute(g[1], Form("g_Block%sFitSlices_%s", baseName.Data(), view.Data()), "block", ytitle, markerstyle, color);
-}
+void TGraphAttributePair(TGraphErrors *g[2], TString baseName, TString view, TString xtitle, TString ytitle, int markerstyle, int color, TString prefix = "Block"){
+  TGraphAttribute(g[0],Form("g_%s%s_%s",prefix.Data(),baseName.Data(),view.Data()),xtitle,ytitle,markerstyle,color);
+  TGraphAttribute(g[1],Form("g_%s%sFitSlices_%s",prefix.Data(),baseName.Data(),view.Data()),xtitle,ytitle,markerstyle,color);
+}AddGraphPoint
 
-void FillGraphPair(TGraphErrors *gSpot[2],TGraphErrors *gWidth[2],TGraphErrors *gSingleWidthCore[2],TGraphErrors *gCharge[2],int ip,int iblk,const vector<ObservableResult> obs[2],bool convertChargeToPC = false){
-for (int im = 0; im < 2; ++im) {
+void FillGraphPair(TGraphErrors *gSpot[2], TGraphErrors *gWidth[2], TGraphErrors *gSingleWidthCore[2], TGraphErrors *gCharge[2], int ip, double x, const vector<ObservableResult> obs[2], bool convertChargeToPC = false, double ex = 0.){
+  for (int im = 0; im < 2; ++im) {
     if (obs[im].empty()) continue;
 
     const ObservableResult &o = obs[im].back();
     const double qScale = convertChargeToPC ? ADC_TO_PC : 1.0;
 
-    AddGraphPoint(gSpot[im],            ip, iblk, o.spot,               o.spotErr);
-    AddGraphPoint(gWidth[im],           ip, iblk, o.width,              o.widthErr);
-    AddGraphPoint(gSingleWidthCore[im], ip, iblk, o.widthSingleCore,    o.widthSingleCoreErr);
-    AddGraphPoint(gCharge[im],          ip, iblk, o.charge * qScale,    o.chargeErr* qScale);
+    AddGraphPoint(gSpot[im], ip, x, o.spot, o.spotErr, ex);
+    AddGraphPoint(gWidth[im], ip, x, o.width, o.widthErr, ex);
+    AddGraphPoint(gSingleWidthCore[im], ip, x, o.widthSingleCore, o.widthSingleCoreErr, ex);
+    AddGraphPoint(gCharge[im], ip, x, o.charge * qScale, o.chargeErr * qScale, ex);
   }
 }
 
-void FillRatioGraph(TGraphErrors *g, int ip, int iblk, double num, double numErr, double den, double denErr){
+void FillRatioGraph(TGraphErrors *g, int ip, double x, double num, double numErr, double den, double denErr, double ex = 0.){
   if (!g) return;
 
   const double r  = RatioValue(num, den);
   const double er = RatioError(num, numErr, den, denErr);
 
-  AddGraphPoint(g, ip, iblk, r, er);
+  AddGraphPoint(g, ip, x, r, er, ex);
 }
 
-void FillXYRatioGraphs(TGraphErrors *gXYratio[2], TGraphErrors *gSigmaXsigmaYratio[2], TGraphErrors *gQXQYratio[2], int ip, int iblk, const vector<ObservableResult> obs[TMMCH_N_Readout][2]){
-  for (int im = 0; im < 2; ++im) {
+void FillXYRatioGraphs(TGraphErrors *gXYratio[2], TGraphErrors *gSigmaXsigmaYratio[2], TGraphErrors *gQXQYratio[2], int ip, double x, const vector<ObservableResult> obs[TMMCH_N_Readout][2], double ex = 0.){
+    for (int im = 0; im < 2; ++im) {
     if (obs[0][im].empty()) continue;
     if (obs[1][im].empty()) continue;
 
     const ObservableResult &ox = obs[0][im].back();
     const ObservableResult &oy = obs[1][im].back();
 
-    FillRatioGraph(gXYratio[im], ip, iblk, ox.spot, ox.spotErr, oy.spot, oy.spotErr);
-    FillRatioGraph(gSigmaXsigmaYratio[im], ip, iblk, ox.width, ox.widthErr, oy.width, oy.widthErr);
-    FillRatioGraph(gQXQYratio[im], ip, iblk, ox.charge, ox.chargeErr, oy.charge, oy.chargeErr);
+    FillRatioGraph(gXYratio[im], ip, x, ox.spot, ox.spotErr, oy.spot, oy.spotErr, ex);
+    FillRatioGraph(gSigmaXsigmaYratio[im], ip, x, ox.width, ox.widthErr, oy.width, oy.widthErr, ex);
+    FillRatioGraph(gQXQYratio[im], ip, x, ox.charge, ox.chargeErr, oy.charge, oy.chargeErr, ex);
   }
 }
 
@@ -1022,6 +878,7 @@ void PrintObservableResult(const TString &label, const ObservableResult obs[2]){
 
     TString method = (im == 0) ? "Direct" : "FitSlicesY";
 
+    cout << "===================================================" << endl;
     cout << "  Method: " << method << endl;
     cout << "    nentries          = " << obs[im].entries  << endl;
     cout << "    spot              = " << obs[im].spot << " +/- " << obs[im].spotErr << endl;
@@ -1030,6 +887,7 @@ void PrintObservableResult(const TString &label, const ObservableResult obs[2]){
     cout << "    widthTail         = " << obs[im].widthTail << " +/- " << obs[im].widthTailErr << endl;
     cout << "    widthSingleCore   = " << obs[im].widthSingleCore << " +/- " << obs[im].widthSingleCoreErr << endl;
     cout << "    charge            = " << obs[im].charge << " +/- " << obs[im].chargeErr << endl;
+    cout << "===================================================" << endl;
     cout << endl;
   }
 }
@@ -1060,13 +918,13 @@ void AnalysisTMM(const char *InputFileName){
     return;
   }
 
-  TDirectory *dGraphsRawOut          = dGraphsOut->mkdir("Raw");
-  TDirectory *dGraphsBlockCalOut     = dGraphsOut->mkdir("Calib_block");
-  TDirectory *dGraphsExtCalOverallOut = dGraphsOut->mkdir("Calib_external");
-  TDirectory *dGraphsRunCalOverallOut = dGraphsOut->mkdir("Calib_run");
+  TDirectory *dGraphsBlockOut         = dGraphsOut->mkdir("Block");
+  TDirectory *dBlockGraphsRawOut      = dGraphsBlockOut->mkdir("Raw");
+  TDirectory *dBlockGraphsBlockCalOut      = dGraphsBlockOut->mkdir("Calib_block");
+  TDirectory *dBlockGraphsExtCalOverallOut = dGraphsBlockOut->mkdir("Calib_external");
+  TDirectory *dBlockGraphsRunCalOverallOut = dGraphsBlockOut->mkdir("Calib_run");
   TDirectory *dRatioOut              = dGraphsOut->mkdir("Ratio");
   TDirectory *dRatioRawOut           = dRatioOut->mkdir("Raw");
-  TDirectory *dRatioBlockCalOut      = dRatioOut->mkdir("Calib_block");
   TDirectory *dRatioExtCalOverallOut = dRatioOut->mkdir("Calib_external");
   TDirectory *dRatioRunCalOverallOut = dRatioOut->mkdir("Calib_run");
   TDirectory *dRatioBlockCal_ExtCalOverallOut  = dRatioOut->mkdir("Calib_block_external");
@@ -1077,8 +935,8 @@ void AnalysisTMM(const char *InputFileName){
   TDirectory *dTH2RunCalOverallOut   = dTH2Out->mkdir("Calib_run");
 
 
-  if (!dGraphsRawOut || !dGraphsBlockCalOut || !dGraphsExtCalOverallOut || !dGraphsRunCalOverallOut ) {
-    cerr << "ERROR: cannot create/get Graphs subdirectories" << endl;
+  if (!dBlockGraphsRawOut || !dBlockGraphsBlockCalOut || !dBlockGraphsExtCalOverallOut || !dBlockGraphsRunCalOverallOut ) {
+    cerr << "ERROR: cannot create/get Block-based Graphs subdirectories" << endl;
     fout->Close();
     fin->Close();
     return;
@@ -1096,6 +954,40 @@ void AnalysisTMM(const char *InputFileName){
   TDirectory *dOverallInRunCal = (TDirectory*)dOverallIn->Get("Calib_run");
   
   TDirectory *dBlocksIn        = (TDirectory*)fin->Get("Blocks");
+
+  // ============================================================
+  // Block - daq time association
+  // ============================================================
+  // get the graph produced by RecoTMM
+  TGraphErrors *gBlockMeanDaqTime =(TGraphErrors*)( dBlocksIn->Get("g_BlockMeanDaqTime"));
+
+  if (!gBlockMeanDaqTime) {
+    cerr << "ERROR: cannot find Blocks/g_BlockMeanDaqTime" << endl;
+    fout->Close();
+    fin->Close();
+    return;
+  }
+
+  // convert the graph into an easy lookup:
+  // block ID -> mean DAQ time
+  map<int, double> blockMeanDaqTime;
+  map<int, double> blockDaqTimeHalfWidth;
+
+  for (int ip = 0; ip < gBlockMeanDaqTime->GetN(); ++ip) {
+    double blockId = 0.;
+    double meanDaqTimeTmp = 0.;
+
+    gBlockMeanDaqTime->GetPoint(ip, blockId, meanDaqTimeTmp);
+
+    const int iblk = (int)llround(blockId);
+
+    blockMeanDaqTime[iblk] = meanDaqTimeTmp;
+    blockDaqTimeHalfWidth[iblk] = gBlockMeanDaqTime->GetErrorY(ip);
+}
+
+  // cout << "DEBUG: DAQ-time associations loaded = " << blockMeanDaqTime.size() << endl;
+  // for (const auto &p : blockMeanDaqTime) cout << "Block " << p.first << " -> DAQ time " << p.second << endl;
+
 
   TString views[TMMCH_N_Readout] = {"X", "Y"};
 
@@ -1147,26 +1039,34 @@ void AnalysisTMM(const char *InputFileName){
   // Blocks
   // ============================================================
 
-  //prepare TGraphs and struct for the block analysis (runs over possible analysis methods)
+  //prepare TGraphs and struct for the block analysis as a function of the timestamp (runs over possible analysis methods)
   TGraphErrors *gSpotRaw[TMMCH_N_Readout][2];
   TGraphErrors *gWidthRaw[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreRaw[TMMCH_N_Readout][2];
   TGraphErrors *gChargeRaw[TMMCH_N_Readout][2];
+
+  // TGraphErrors *gChargeRaw_TreeInd[TMMCH_N_Readout][2];
 
   TGraphErrors *gSpotBlockCal[TMMCH_N_Readout][2];
   TGraphErrors *gWidthBlockCal[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreBlockCal[TMMCH_N_Readout][2];
   TGraphErrors *gChargeBlockCal[TMMCH_N_Readout][2];
 
+  // TGraphErrors *gChargeBlockCal_TreeInd[TMMCH_N_Readout][2];
+
   TGraphErrors *gSpotExtCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gWidthExtCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreExtCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gChargeExtCalOverall[TMMCH_N_Readout][2];
 
+  // TGraphErrors *gChargeExtCalOverall_TreeInd[TMMCH_N_Readout][2];
+
   TGraphErrors *gSpotRunCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gWidthRunCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreRunCalOverall[TMMCH_N_Readout][2];
   TGraphErrors *gChargeRunCalOverall[TMMCH_N_Readout][2];
+
+  // TGraphErrors *gChargeRunCalOverall_TreeInd[TMMCH_N_Readout][2];
 
   // TH2 for X-Y comparison 
   TH2F *hXvsYRaw[2];
@@ -1278,6 +1178,11 @@ void AnalysisTMM(const char *InputFileName){
     InitGraphPair(gSingleWidthCoreRunCalOverall[iv]);
     InitGraphPair(gChargeRunCalOverall[iv]);
 
+    // InitGraphPair(gChargeRaw_TreeInd[iv]);
+    // InitGraphPair(gChargeBlockCal_TreeInd[iv]);
+    // InitGraphPair(gChargeExtCalOverall_TreeInd[iv]);
+    // InitGraphPair(gChargeRunCalOverall_TreeInd[iv]);
+    
     gQFitSliceQDirRaw[iv] = new TGraphErrors();
     gQFitSliceQDirBlockCal[iv] = new TGraphErrors();
     gQFitSliceQDirExtCalOverall[iv] = new TGraphErrors();
@@ -1292,48 +1197,54 @@ void AnalysisTMM(const char *InputFileName){
     gFitStatusRunCalOverall[iv] = new TGraph();
     gCovStatusRunCalOverall[iv] = new TGraph();
 
-    TGraphAttributePair(gSpotRaw[iv],            "BeamSpotRaw",        v, Form("%s [mm]", v.Data()),       20, kRed+1);
-    TGraphAttributePair(gWidthRaw[iv],           "BeamSpreadRaw",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
-    TGraphAttributePair(gSingleWidthCoreRaw[iv], "SingleCoreWidthRaw", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
-    TGraphAttributePair(gChargeRaw[iv],          "BeamChargeRaw",      v, Form("Q_{%s} [pC]", v.Data()),       20, kRed+1);
+    // tgraph attribute pair for physics quantities monitorign
+    TGraphAttributePair(gSpotRaw[iv],            "BeamSpotRaw",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kRed+1);
+    TGraphAttributePair(gWidthRaw[iv],           "BeamSpreadRaw",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
+    TGraphAttributePair(gSingleWidthCoreRaw[iv], "SingleCoreWidthRaw", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
+    TGraphAttributePair(gChargeRaw[iv],          "BeamChargeRaw",      v, "Time [s]", Form("Q_{%s} [pC]", v.Data()),       20, kRed+1);
 
-    TGraphAttributePair(gSpotBlockCal[iv],            "BeamSpotBlockCal",        v, Form("%s [mm]", v.Data()),       20, kBlue+1);
-    TGraphAttributePair(gWidthBlockCal[iv],           "BeamSpreadBlockCal",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlue+1);
-    TGraphAttributePair(gSingleWidthCoreBlockCal[iv], "SingleCoreWidthBlockCal", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlue+1);
-    TGraphAttributePair(gChargeBlockCal[iv],          "BeamChargeBlockCal",      v, Form("Q_{%s} [pC]", v.Data()),       20, kBlue+1);
+    TGraphAttributePair(gSpotBlockCal[iv],            "BeamSpotBlockCal",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kBlue+1);
+    TGraphAttributePair(gWidthBlockCal[iv],           "BeamSpreadBlockCal",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kBlue+1);
+    TGraphAttributePair(gSingleWidthCoreBlockCal[iv], "SingleCoreWidthBlockCal", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlue+1);
+    TGraphAttributePair(gChargeBlockCal[iv],          "BeamChargeBlockCal",      v, "Time [s]", Form("Q_{%s} [pC]", v.Data()),       20, kBlue+1);
 
-    TGraphAttributePair(gSpotExtCalOverall[iv],            "BeamSpotExtCalOverall",        v, Form("%s [mm]", v.Data()),       20, kViolet-3);
-    TGraphAttributePair(gWidthExtCalOverall[iv],           "BeamSpreadExtCalOverall",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
-    TGraphAttributePair(gSingleWidthCoreExtCalOverall[iv], "SingleCoreWidthExtCalOverall", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
-    TGraphAttributePair(gChargeExtCalOverall[iv],          "BeamChargeExtCalOverall",      v, Form("Q_{%s} [pC]", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gSpotExtCalOverall[iv],            "BeamSpotExtCalOverall",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gWidthExtCalOverall[iv],           "BeamSpreadExtCalOverall",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
+    TGraphAttributePair(gSingleWidthCoreExtCalOverall[iv], "SingleCoreWidthExtCalOverall", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
+    TGraphAttributePair(gChargeExtCalOverall[iv],          "BeamChargeExtCalOverall",      v, "Time [s]", Form("Q_{%s} [pC]", v.Data()),       20, kViolet-3);
   
-    TGraphAttributePair(gSpotRunCalOverall[iv],            "BeamSpotRunCalOverall",        v, Form("%s [mm]", v.Data()),       20, kSpring-1);
-    TGraphAttributePair(gWidthRunCalOverall[iv],           "BeamSpreadRunCalOverall",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
-    TGraphAttributePair(gSingleWidthCoreRunCalOverall[iv], "SingleCoreWidthRunCalOverall", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
-    TGraphAttributePair(gChargeRunCalOverall[iv],          "BeamChargeRunCalOverall",      v, Form("Q_{%s} [pC]", v.Data()),       20, kSpring-1);
+    TGraphAttributePair(gSpotRunCalOverall[iv],            "BeamSpotRunCalOverall",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kSpring-1);
+    TGraphAttributePair(gWidthRunCalOverall[iv],           "BeamSpreadRunCalOverall",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
+    TGraphAttributePair(gSingleWidthCoreRunCalOverall[iv], "SingleCoreWidthRunCalOverall", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
+    TGraphAttributePair(gChargeRunCalOverall[iv],          "BeamChargeRunCalOverall",      v, "Time [s]", Form("Q_{%s} [pC]", v.Data()),       20, kSpring-1);
   
+    // TGraphAttributePair(gChargeRaw_TreeInd[iv],           "gChargeRaw_TreeInd",           v, "Loop Index", Form("Q_{%s} [pC]", v.Data()), 20, kRed+1);
+    // TGraphAttributePair(gChargeBlockCal_TreeInd[iv],      "gChargeBlockCal_TreeInd",      v, "Loop Index", Form("Q_{%s} [pC]", v.Data()), 20, kBlue+1);
+    // TGraphAttributePair(gChargeExtCalOverall_TreeInd[iv], "gChargeExtCalOverall_TreeInd", v, "Loop Index", Form("Q_{%s} [pC]", v.Data()), 20, kViolet-3);
+    // TGraphAttributePair(gChargeRunCalOverall_TreeInd[iv], "gChargeRunCalOverall_TreeInd", v, "Loop Index", Form("Q_{%s} [pC]", v.Data()), 20, kSpring-1);
+
     // TGraphMethods
-    TGraphAttribute(gQFitSliceQDirRaw[iv], "gQFitSliceQDirRaw_"+v, "block", "QFit/Qdir", 20, kRed+1);
-    TGraphAttribute(gQFitSliceQDirBlockCal[iv], "gQFitSliceQDirBlockCal_"+v, "block", "QFit/Qdir", 20, kBlue+1);
-    TGraphAttribute(gQFitSliceQDirExtCalOverall[iv], "gQFitSliceQDirExtCalOverall_"+v, "block", "QFit/Qdir", 20, kViolet-3);
-    TGraphAttribute(gQFitSliceQDirRunCalOverall[iv], "gQFitSliceQDirRunCalOverall_"+v, "block", "QFit/Qdir", 20, kSpring-1);
+    TGraphAttribute(gQFitSliceQDirRaw[iv], "gQFitSliceQDirRaw_"+v, "Time [s]", "QFit/Qdir", 20, kRed+1);
+    TGraphAttribute(gQFitSliceQDirBlockCal[iv], "gQFitSliceQDirBlockCal_"+v, "Time [s]", "QFit/Qdir", 20, kBlue+1);
+    TGraphAttribute(gQFitSliceQDirExtCalOverall[iv], "gQFitSliceQDirExtCalOverall_"+v, "Time [s]", "QFit/Qdir", 20, kViolet-3);
+    TGraphAttribute(gQFitSliceQDirRunCalOverall[iv], "gQFitSliceQDirRunCalOverall_"+v, "Time [s]", "QFit/Qdir", 20, kSpring-1);
 
     gFitStatusRaw[iv]->SetName(Form("gFitStatusRaw_%s", v.Data()));
-    gFitStatusRaw[iv]->SetTitle(Form("Voigt fit status Raw %s;block;fit status", v.Data()));
+    gFitStatusRaw[iv]->SetTitle(Form("Voigt fit status Raw %s;Time [s];fit status", v.Data()));
     gCovStatusRaw[iv]->SetName(Form("gCovStatusRaw_%s", v.Data()));
-    gCovStatusRaw[iv]->SetTitle(Form("Voigt covariance status Raw %s;block;covariance status", v.Data()));
+    gCovStatusRaw[iv]->SetTitle(Form("Voigt covariance status Raw %s;Time [s];covariance status", v.Data()));
     gFitStatusBlockCal[iv]->SetName(Form("gFitStatusBlockCal_%s", v.Data()));
-    gFitStatusBlockCal[iv]->SetTitle(Form("Voigt fit status BlockCal %s;block;fit status", v.Data()));
+    gFitStatusBlockCal[iv]->SetTitle(Form("Voigt fit status BlockCal %s;Time [s];fit status", v.Data()));
     gCovStatusBlockCal[iv]->SetName(Form("gCovStatusBlockCal_%s", v.Data()));
-    gCovStatusBlockCal[iv]->SetTitle(Form("Voigt covariance status BlockCal %s;block;covariance status", v.Data()));
+    gCovStatusBlockCal[iv]->SetTitle(Form("Voigt covariance status BlockCal %s;Time [s];covariance status", v.Data()));
     gFitStatusExtCalOverall[iv]->SetName(Form("gFitStatusExtCalOverall_%s", v.Data()));
-    gFitStatusExtCalOverall[iv]->SetTitle(Form("Voigt fit status ExtCalOverall %s;block;fit status", v.Data()));
+    gFitStatusExtCalOverall[iv]->SetTitle(Form("Voigt fit status ExtCalOverall %s;Time [s];fit status", v.Data()));
     gCovStatusExtCalOverall[iv]->SetName(Form("gCovStatusExtCalOverall_%s", v.Data()));
-    gCovStatusExtCalOverall[iv]->SetTitle(Form("Voigt covariance status ExtCalOverall %s;block;covariance status", v.Data()));
+    gCovStatusExtCalOverall[iv]->SetTitle(Form("Voigt covariance status ExtCalOverall %s;Time [s];covariance status", v.Data()));
     gFitStatusRunCalOverall[iv]->SetName(Form("gFitStatusRunCalOverall_%s", v.Data()));
-    gFitStatusRunCalOverall[iv]->SetTitle(Form("Voigt fit status RunCalOverall %s;block;fit status", v.Data()));
+    gFitStatusRunCalOverall[iv]->SetTitle(Form("Voigt fit status RunCalOverall %s;Time [s];fit status", v.Data()));
     gCovStatusRunCalOverall[iv]->SetName(Form("gCovStatusRunCalOverall_%s", v.Data()));
-    gCovStatusRunCalOverall[iv]->SetTitle(Form("Voigt covariance status RunCalOverall %s;block;covariance status", v.Data()));
+    gCovStatusRunCalOverall[iv]->SetTitle(Form("Voigt covariance status RunCalOverall %s;Time [s];covariance status", v.Data()));
     
     // initializing TH2 per view comparison
     InitTH2Pair(hSpotvsSigmaRaw[iv], Form("hSpotvsSigmaRaw_%s", v.Data()), Form("spot vs #sigma-Raw %s", v.Data()), 100, -20.025, 19.975, 125, -0.025, 49.975, Form("%s [mm]",v.Data()), Form("#sigma_{%s} [mm]",v.Data()));
@@ -1377,20 +1288,20 @@ void AnalysisTMM(const char *InputFileName){
   InitGraphPair(gQXQYratioExtCalOverall);
   InitGraphPair(gQXQYratioRunCalOverall);
 
-  TGraphAttributePair(gXYratioRaw, "BeamSpotXYratioRaw", views[0]+views[1], "X/Y", 20, kRed+1);
-  TGraphAttributePair(gXYratioBlockCal, "BeamSpotXYratioBlockCal", views[0]+views[1], "X/Y", 20, kBlue+1);
-  TGraphAttributePair(gXYratioExtCalOverall, "BeamSpotXYratioExtCalOverll", views[0]+views[1], "X/Y", 20, kViolet-3);
-  TGraphAttributePair(gXYratioRunCalOverall, "BeamSpotXYratioRunCalOverll", views[0]+views[1], "X/Y", 20, kSpring-1);
+  TGraphAttributePair(gXYratioRaw, "BeamSpotXYratioRaw", views[0]+views[1], "Time [s]", "X/Y", 20, kRed+1);
+  TGraphAttributePair(gXYratioBlockCal, "BeamSpotXYratioBlockCal", views[0]+views[1], "Time [s]", "X/Y", 20, kBlue+1);
+  TGraphAttributePair(gXYratioExtCalOverall, "BeamSpotXYratioExtCalOverll", views[0]+views[1], "Time [s]", "X/Y", 20, kViolet-3);
+  TGraphAttributePair(gXYratioRunCalOverall, "BeamSpotXYratioRunCalOverll", views[0]+views[1], "Time [s]", "X/Y", 20, kSpring-1);
 
-  TGraphAttributePair(gsigmaXsigmaYratioRaw, "BeamSpreadXYratioRaw", views[0]+views[1], "#sigma_{X}/#sigma_{Y}", 20, kRed+1);
-  TGraphAttributePair(gsigmaXsigmaYratioBlockCal, "BeamSpreadXYratioBlockCal", views[0]+views[1], "#sigma_{X}/#sigma_{Y}", 20, kBlue+1);
-  TGraphAttributePair(gsigmaXsigmaYratioExtCalOverall, "BeamSpreadXYratioExtCalOverll", views[0]+views[1], "#sigma_{X}/#sigma_{Y}", 20, kViolet-3);
-  TGraphAttributePair(gsigmaXsigmaYratioRunCalOverall, "BeamSpreadXYratioRunCalOverll", views[0]+views[1], "#sigma_{X}/#sigma_{Y}", 20, kSpring-1);
+  TGraphAttributePair(gsigmaXsigmaYratioRaw, "BeamSpreadXYratioRaw", views[0]+views[1], "Time [s]", "#sigma_{X}/#sigma_{Y}", 20, kRed+1);
+  TGraphAttributePair(gsigmaXsigmaYratioBlockCal, "BeamSpreadXYratioBlockCal", views[0]+views[1], "Time [s]", "#sigma_{X}/#sigma_{Y}", 20, kBlue+1);
+  TGraphAttributePair(gsigmaXsigmaYratioExtCalOverall, "BeamSpreadXYratioExtCalOverll", views[0]+views[1], "Time [s]", "#sigma_{X}/#sigma_{Y}", 20, kViolet-3);
+  TGraphAttributePair(gsigmaXsigmaYratioRunCalOverall, "BeamSpreadXYratioRunCalOverll", views[0]+views[1], "Time [s]", "#sigma_{X}/#sigma_{Y}", 20, kSpring-1);
 
-  TGraphAttributePair(gQXQYratioRaw, "BeamChargeXYratioRaw", views[0]+views[1], "Q_{X}/Q_{Y}", 20, kRed+1);
-  TGraphAttributePair(gQXQYratioBlockCal, "BeamChargeXYratioBlockCal", views[0]+views[1], "Q_{X}/Q_{Y}", 20, kBlue+1);
-  TGraphAttributePair(gQXQYratioExtCalOverall, "BeamChargeXYratioExtCalOverall", views[0]+views[1], "Q_{X}/Q_{Y}", 20, kViolet-3);
-  TGraphAttributePair(gQXQYratioRunCalOverall, "BeamChargeXYratioRunCalOverall", views[0]+views[1], "Q_{X}/Q_{Y}", 20, kSpring-1);
+  TGraphAttributePair(gQXQYratioRaw, "BeamChargeXYratioRaw", views[0]+views[1], "Time [s]", "Q_{X}/Q_{Y}", 20, kRed+1);
+  TGraphAttributePair(gQXQYratioBlockCal, "BeamChargeXYratioBlockCal", views[0]+views[1], "Time [s]", "Q_{X}/Q_{Y}", 20, kBlue+1);
+  TGraphAttributePair(gQXQYratioExtCalOverall, "BeamChargeXYratioExtCalOverall", views[0]+views[1], "Time [s]", "Q_{X}/Q_{Y}", 20, kViolet-3);
+  TGraphAttributePair(gQXQYratioRunCalOverall, "BeamChargeXYratioRunCalOverall", views[0]+views[1], "Time [s]", "Q_{X}/Q_{Y}", 20, kSpring-1);
 
   // Initializing TH2 X-y
   InitTH2Pair(hXvsYRaw, "hXvsYRaw", "X vs Y-Raw", 100, -20.025, 19.975, 100, -20.025, 19.975, "X [mm]", "Y [mm]");
@@ -1413,11 +1324,22 @@ void AnalysisTMM(const char *InputFileName){
   InitTH2Pair(hSigmaSCoreXvsSigmaSCoreYRunCalOverall, "hSigmaSCoreXvsSigmaSCoreYRunCalOverall", "SingleGaussian #sigma_{X} vs #sigma_{Y}-RunCalOverall", 125, -0.025, 49.975, 125, -0.025, 49.975, "X single-core width [mm]", "Y single-core width [mm]");
   InitTH2Pair(hQXvsQYRunCalOverall, "hQXvsQYRunCalOverall", "Q_{X} vs Q_{Y}-RunCalOverall", 300, -0.5, 150000, 300, -0.5, 150000, "Q_{X} [pC]", "Q_{Y} [pC]");
 
-  
+  vector<int> processedBlocks;
+
+  // first block loop
   for (size_t i = 0; i < blocks.size(); ++i) {
 
     const int iblk = blocks[i];
-    cout << "Processing block: " << blocks[i] << endl;
+    cout << "################################ Processing block: " << blocks[i] << endl;
+    
+    auto itTime = blockMeanDaqTime.find(iblk);
+    if (itTime == blockMeanDaqTime.end()) {
+      cerr << "WARNING: no DAQ time found for block " << iblk << endl;
+      continue;
+    }
+    const double meanDaqTime = itTime->second;
+    const double daqTimeHalfWidth = blockDaqTimeHalfWidth[iblk];
+
     TDirectory *dBIn = (TDirectory*)dBlocksIn->Get(Form("block_%04d", iblk));
     if (!dBIn) {
       cerr << "WARNING: missing input block directory block_" << setw(4) << setfill('0') << iblk << setfill(' ') << endl;
@@ -1451,6 +1373,9 @@ void AnalysisTMM(const char *InputFileName){
       continue;
     }
 
+    const size_t resultIndex = processedBlocks.size();
+    processedBlocks.push_back(iblk);
+
     for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
 
       TString v = views[iv];
@@ -1461,34 +1386,37 @@ void AnalysisTMM(const char *InputFileName){
       TH2F *h2RunCalOverallBlock = GetH2F(dBRunCalOvIn,Form("hBlockqmaxstripFull_runcal%s_block%04d", v.Data(), iblk));
 
       BlockRawObs[iv][0].push_back(ComputeObservables(h2RawBlock, v));
-      BlockRawObs[iv][1].push_back(ComputeObservablesFitSlice(h2RawBlock, true, 1, 2));
+      BlockRawObs[iv][1].push_back(ComputeObservablesFitSlice(h2RawBlock, Form("Raw_%s_block%04d", v.Data(), iblk), true, 1, 2, dBlocksRawOut));
 
       BlockCalObs[iv][0].push_back(ComputeObservables(h2BlockCalBlock, v));
-      BlockCalObs[iv][1].push_back(ComputeObservablesFitSlice(h2BlockCalBlock, true, 1, 2));
+      BlockCalObs[iv][1].push_back(ComputeObservablesFitSlice(h2BlockCalBlock, Form("BlockCal_%s_block%04d", v.Data(), iblk), true, 1, 2, dBlocksBlockCalOut));
 
       BlockExtCalOverallObs[iv][0].push_back(ComputeObservables(h2ExtCalOverallBlock, v));
-      BlockExtCalOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2ExtCalOverallBlock, true, 1, 2));
+      BlockExtCalOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2ExtCalOverallBlock, Form("ExtCalOverall_%s_block%04d", v.Data(), iblk), true, 1, 2, dBlocksExtCalOverallOut));
 
       BlockRunCalOverallObs[iv][0].push_back(ComputeObservables(h2RunCalOverallBlock, v));
-      BlockRunCalOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2RunCalOverallBlock, true, 1, 2));
+      BlockRunCalOverallObs[iv][1].push_back(ComputeObservablesFitSlice(h2RunCalOverallBlock, Form("RunCalOverall_%s_block%04d", v.Data(), iblk), true, 1, 2, dBlocksRunCalOverallOut));
 
       const ObservableResult &fitRaw = BlockRawObs[iv][1].back();
       const ObservableResult &fitBlockCal = BlockCalObs[iv][1].back();
       const ObservableResult &fitExtCal = BlockExtCalOverallObs[iv][1].back();
       const ObservableResult &fitRunCal = BlockRunCalOverallObs[iv][1].back();
 
+      // TIME representation
       FillGraphPair(gSpotRaw[iv],
           gWidthRaw[iv], gSingleWidthCoreRaw[iv],
           gChargeRaw[iv],
-          i, iblk,
+          resultIndex, meanDaqTime,
           BlockRawObs[iv],
           true
       );
+      // AddGraphPoint(gChargeRaw_TreeInd[0], resultIndex, iev, BlockRawObs[iv][0].back().charge * qScale, BlockRawObs[iv][0].back().chargeErr * qScale, 0);
+      // AddGraphPoint(gChargeRaw_TreeInd[1], resultIndex, iev, BlockRawObs[iv][1].back().charge * qScale, BlockRawObs[iv][0].back().chargeErr * qScale, 0);
 
       FillGraphPair(gSpotBlockCal[iv],
           gWidthBlockCal[iv], gSingleWidthCoreBlockCal[iv],
           gChargeBlockCal[iv], 
-          i, iblk,
+          resultIndex, meanDaqTime,
           BlockCalObs[iv],
           true
       );
@@ -1496,7 +1424,7 @@ void AnalysisTMM(const char *InputFileName){
       FillGraphPair(gSpotExtCalOverall[iv],
           gWidthExtCalOverall[iv], gSingleWidthCoreExtCalOverall[iv],
           gChargeExtCalOverall[iv],
-          i, iblk,
+          resultIndex, meanDaqTime,
           BlockExtCalOverallObs[iv],
           true
       );
@@ -1504,7 +1432,7 @@ void AnalysisTMM(const char *InputFileName){
       FillGraphPair(gSpotRunCalOverall[iv],
           gWidthRunCalOverall[iv], gSingleWidthCoreRunCalOverall[iv],
           gChargeRunCalOverall[iv],
-          i, iblk,
+          resultIndex, meanDaqTime,
           BlockRunCalOverallObs[iv],
           true
       );
@@ -1529,35 +1457,30 @@ void AnalysisTMM(const char *InputFileName){
         BlockRunCalOverallObs[iv]
       );
 
-      gFitStatusRaw[iv]->SetPoint(gFitStatusRaw[iv]->GetN(), iblk, fitRaw.fitStatus );
-      gCovStatusRaw[iv]->SetPoint(gCovStatusRaw[iv]->GetN(), iblk, fitRaw.covStatus);
-      gFitStatusBlockCal[iv]->SetPoint(gFitStatusBlockCal[iv]->GetN(), iblk, fitBlockCal.fitStatus);
-      gCovStatusBlockCal[iv]->SetPoint(gCovStatusBlockCal[iv]->GetN(), iblk, fitBlockCal.covStatus);
-      gFitStatusExtCalOverall[iv]->SetPoint(gFitStatusExtCalOverall[iv]->GetN(), iblk, fitExtCal.fitStatus);
-      gCovStatusExtCalOverall[iv]->SetPoint(gCovStatusExtCalOverall[iv]->GetN(), iblk, fitExtCal.covStatus);
-      gFitStatusRunCalOverall[iv]->SetPoint(gFitStatusRunCalOverall[iv]->GetN(), iblk, fitRunCal.fitStatus);
-      gCovStatusRunCalOverall[iv]->SetPoint(gCovStatusRunCalOverall[iv]->GetN(), iblk, fitRunCal.covStatus);
+      gFitStatusRaw[iv]->SetPoint(gFitStatusRaw[iv]->GetN(), meanDaqTime, fitRaw.fitStatus);
+      gCovStatusRaw[iv]->SetPoint(gCovStatusRaw[iv]->GetN(), meanDaqTime, fitRaw.covStatus);
+      gFitStatusBlockCal[iv]->SetPoint(gFitStatusBlockCal[iv]->GetN(), meanDaqTime, fitBlockCal.fitStatus);
+      gCovStatusBlockCal[iv]->SetPoint(gCovStatusBlockCal[iv]->GetN(), meanDaqTime, fitBlockCal.covStatus);
+      gFitStatusExtCalOverall[iv]->SetPoint(gFitStatusExtCalOverall[iv]->GetN(), meanDaqTime, fitExtCal.fitStatus);
+      gCovStatusExtCalOverall[iv]->SetPoint(gCovStatusExtCalOverall[iv]->GetN(), meanDaqTime, fitExtCal.covStatus);
+      gFitStatusRunCalOverall[iv]->SetPoint(gFitStatusRunCalOverall[iv]->GetN(), meanDaqTime, fitRunCal.fitStatus);
+      gCovStatusRunCalOverall[iv]->SetPoint(gCovStatusRunCalOverall[iv]->GetN(), meanDaqTime, fitRunCal.covStatus);
 
       double eRaw = RatioError(BlockRawObs[iv][1].back().charge, BlockRawObs[iv][1].back().chargeErr, BlockRawObs[iv][0].back().charge, BlockRawObs[iv][0].back().chargeErr);
       double eBlockCal = RatioError(BlockCalObs[iv][1].back().charge, BlockCalObs[iv][1].back().chargeErr, BlockCalObs[iv][0].back().charge, BlockCalObs[iv][0].back().chargeErr);
       double eExtCalOverall = RatioError(BlockExtCalOverallObs[iv][1].back().charge, BlockExtCalOverallObs[iv][1].back().chargeErr, BlockExtCalOverallObs[iv][0].back().charge, BlockExtCalOverallObs[iv][0].back().chargeErr);
       double eRunCalOverall = RatioError(BlockRunCalOverallObs[iv][1].back().charge, BlockRunCalOverallObs[iv][1].back().chargeErr, BlockRunCalOverallObs[iv][0].back().charge, BlockRunCalOverallObs[iv][0].back().chargeErr);
-      AddGraphPoint(gQFitSliceQDirRaw[iv], i, iblk, BlockRawObs[iv][1].back().charge/BlockRawObs[iv][0].back().charge, eRaw);
-      AddGraphPoint(gQFitSliceQDirBlockCal[iv], i, iblk, BlockCalObs[iv][1].back().charge/BlockCalObs[iv][0].back().charge, eBlockCal);
-      AddGraphPoint(gQFitSliceQDirExtCalOverall[iv], i, iblk, BlockExtCalOverallObs[iv][1].back().charge/BlockExtCalOverallObs[iv][0].back().charge, eExtCalOverall);
-      AddGraphPoint(gQFitSliceQDirRunCalOverall[iv], i, iblk, BlockRunCalOverallObs[iv][1].back().charge/BlockRunCalOverallObs[iv][0].back().charge, eRunCalOverall);
+      AddGraphPoint(gQFitSliceQDirRaw[iv], resultIndex, meanDaqTime, BlockRawObs[iv][1].back().charge/BlockRawObs[iv][0].back().charge, eRaw);
+      AddGraphPoint(gQFitSliceQDirBlockCal[iv], resultIndex, meanDaqTime, BlockCalObs[iv][1].back().charge/BlockCalObs[iv][0].back().charge, eBlockCal);
+      AddGraphPoint(gQFitSliceQDirExtCalOverall[iv], resultIndex, meanDaqTime, BlockExtCalOverallObs[iv][1].back().charge/BlockExtCalOverallObs[iv][0].back().charge, eExtCalOverall);
+      AddGraphPoint(gQFitSliceQDirRunCalOverall[iv], resultIndex, meanDaqTime, BlockRunCalOverallObs[iv][1].back().charge/BlockRunCalOverallObs[iv][0].back().charge, eRunCalOverall);
 
-      dBlocksOut->cd();
-      WriteSliceFit(h2RawBlock, Form("Raw_%s_block%04d", v.Data(), iblk), dBlocksRawOut);
-      WriteSliceFit(h2BlockCalBlock, Form("BlockCal_%s_block%04d", v.Data(), iblk), dBlocksBlockCalOut);
-      WriteSliceFit(h2ExtCalOverallBlock, Form("ExtCalOverall_%s_block%04d", v.Data(), iblk), dBlocksExtCalOverallOut);
-      WriteSliceFit(h2RunCalOverallBlock, Form("RunCalOverall_%s_block%04d", v.Data(), iblk), dBlocksRunCalOverallOut);
     }
 
-    FillXYRatioGraphs(gXYratioRaw, gsigmaXsigmaYratioRaw, gQXQYratioRaw, i, iblk, BlockRawObs);
-    FillXYRatioGraphs(gXYratioBlockCal, gsigmaXsigmaYratioBlockCal, gQXQYratioBlockCal, i, iblk, BlockCalObs);
-    FillXYRatioGraphs(gXYratioExtCalOverall, gsigmaXsigmaYratioExtCalOverall, gQXQYratioExtCalOverall, i, iblk, BlockExtCalOverallObs);
-    FillXYRatioGraphs(gXYratioRunCalOverall, gsigmaXsigmaYratioRunCalOverall, gQXQYratioRunCalOverall, i, iblk, BlockRunCalOverallObs);
+    FillXYRatioGraphs(gXYratioRaw, gsigmaXsigmaYratioRaw, gQXQYratioRaw, resultIndex, meanDaqTime, BlockRawObs);
+    FillXYRatioGraphs(gXYratioBlockCal, gsigmaXsigmaYratioBlockCal, gQXQYratioBlockCal, resultIndex, meanDaqTime, BlockCalObs);
+    FillXYRatioGraphs(gXYratioExtCalOverall, gsigmaXsigmaYratioExtCalOverall, gQXQYratioExtCalOverall, resultIndex, meanDaqTime, BlockExtCalOverallObs);
+    FillXYRatioGraphs(gXYratioRunCalOverall, gsigmaXsigmaYratioRunCalOverall, gQXQYratioRunCalOverall, resultIndex, meanDaqTime, BlockRunCalOverallObs);
     
     FillTH2XYComparison(hXvsYRaw,
       hSigmaXvsSigmaYRaw, hSigmaSCoreXvsSigmaSCoreYRaw,
@@ -1595,11 +1518,6 @@ void AnalysisTMM(const char *InputFileName){
   TGraphErrors *gSingleWidthCoreRawRatio[TMMCH_N_Readout][2];
   TGraphErrors *gChargeRawRatio[TMMCH_N_Readout][2];
 
-  TGraphErrors *gSpotBlockCalRatio[TMMCH_N_Readout][2];
-  TGraphErrors *gWidthBlockCalRatio[TMMCH_N_Readout][2];
-  TGraphErrors *gSingleWidthCoreBlockCalRatio[TMMCH_N_Readout][2];
-  TGraphErrors *gChargeBlockCalRatio[TMMCH_N_Readout][2];
-
   TGraphErrors *gSpotExtCalOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gWidthExtCalOverallRatio[TMMCH_N_Readout][2];
   TGraphErrors *gSingleWidthCoreExtCalOverallRatio[TMMCH_N_Readout][2];
@@ -1616,7 +1534,6 @@ void AnalysisTMM(const char *InputFileName){
   TGraphErrors *gChargeBlockCal_ExtCalOverallRatio[TMMCH_N_Readout][2];
 
   vector<ObservableResult> ObsRawRatio[TMMCH_N_Readout][2];
-  vector<ObservableResult> ObsBlockCalRatio[TMMCH_N_Readout][2];
   vector<ObservableResult> ObsExtCalOverallRatio[TMMCH_N_Readout][2];
   vector<ObservableResult> ObsRunCalOverallRatio[TMMCH_N_Readout][2];
   vector<ObservableResult> ObsBlockCal_ExtCalOverallRatio[TMMCH_N_Readout][2];
@@ -1627,11 +1544,6 @@ void AnalysisTMM(const char *InputFileName){
     InitGraphPair(gWidthRawRatio[iv]);
     InitGraphPair(gSingleWidthCoreRawRatio[iv]);
     InitGraphPair(gChargeRawRatio[iv]);
-
-    InitGraphPair(gSpotBlockCalRatio[iv]);
-    InitGraphPair(gWidthBlockCalRatio[iv]);
-    InitGraphPair(gSingleWidthCoreBlockCalRatio[iv]);
-    InitGraphPair(gChargeBlockCalRatio[iv]);
 
     InitGraphPair(gSpotExtCalOverallRatio[iv]);
     InitGraphPair(gWidthExtCalOverallRatio[iv]);
@@ -1648,74 +1560,80 @@ void AnalysisTMM(const char *InputFileName){
     InitGraphPair(gSingleWidthCoreBlockCal_ExtCalOverallRatio[iv]);
     InitGraphPair(gChargeBlockCal_ExtCalOverallRatio[iv]);
 
-    TGraphAttributePair(gSpotRawRatio[iv],            "BeamSpotRawRatio",        v, Form("%s [mm]", v.Data()),       20, kRed+1);
-    TGraphAttributePair(gWidthRawRatio[iv],           "BeamSpreadRawRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
-    TGraphAttributePair(gSingleWidthCoreRawRatio[iv], "SingleCoreWidthRawRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
-    TGraphAttributePair(gChargeRawRatio[iv],          "BeamChargeRawRatio",      v, Form("Q_{%s}", v.Data()),       20, kRed+1);
+    TGraphAttributePair(gSpotRawRatio[iv],            "BeamSpotRawRatio",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kRed+1);
+    TGraphAttributePair(gWidthRawRatio[iv],           "BeamSpreadRawRatio",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kRed+1);
+    TGraphAttributePair(gSingleWidthCoreRawRatio[iv], "SingleCoreWidthRawRatio", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kRed+1);
+    TGraphAttributePair(gChargeRawRatio[iv],          "BeamChargeRawRatio",      v, "Time [s]", Form("Q_{%s}", v.Data()),       20, kRed+1);
 
-    TGraphAttributePair(gSpotBlockCalRatio[iv],            "BeamSpotBlockCalRatio",        v, Form("%s [mm]", v.Data()),       20, kBlue+1);
-    TGraphAttributePair(gWidthBlockCalRatio[iv],           "BeamSpreadBlockCalRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlue+1);
-    TGraphAttributePair(gSingleWidthCoreBlockCalRatio[iv], "SingleCoreWidthBlockCalRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlue+1);
-    TGraphAttributePair(gChargeBlockCalRatio[iv],          "BeamChargeBlockCalRatio",      v, Form("Q_{%s}", v.Data()),       20, kBlue+1);
+    TGraphAttributePair(gSpotExtCalOverallRatio[iv],            "BeamSpotExtCalOverallRatio",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gWidthExtCalOverallRatio[iv],           "BeamSpreadExtCalOverallRatio",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
+    TGraphAttributePair(gSingleWidthCoreExtCalOverallRatio[iv], "SingleCoreWidthExtCalOverallRatio", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
+    TGraphAttributePair(gChargeExtCalOverallRatio[iv],          "BeamChargeExtCalOverallRatio",      v, "Time [s]", Form("Q_{%s}", v.Data()),       20, kViolet-3);
 
-    TGraphAttributePair(gSpotExtCalOverallRatio[iv],            "BeamSpotExtCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kViolet-3);
-    TGraphAttributePair(gWidthExtCalOverallRatio[iv],           "BeamSpreadExtCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kViolet-3);
-    TGraphAttributePair(gSingleWidthCoreExtCalOverallRatio[iv], "SingleCoreWidthExtCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kViolet-3);
-    TGraphAttributePair(gChargeExtCalOverallRatio[iv],          "BeamChargeExtCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kViolet-3);
+    TGraphAttributePair(gSpotRunCalOverallRatio[iv],            "BeamSpotRunCalOverallRatio",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kSpring-1);
+    TGraphAttributePair(gWidthRunCalOverallRatio[iv],           "BeamSpreadRunCalOverallRatio",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
+    TGraphAttributePair(gSingleWidthCoreRunCalOverallRatio[iv], "SingleCoreWidthRunCalOverallRatio", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
+    TGraphAttributePair(gChargeRunCalOverallRatio[iv],          "BeamChargeRunCalOverallRatio",      v, "Time [s]", Form("Q_{%s}", v.Data()),       20, kSpring-1);
 
-    TGraphAttributePair(gSpotRunCalOverallRatio[iv],            "BeamSpotRunCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kSpring-1);
-    TGraphAttributePair(gWidthRunCalOverallRatio[iv],           "BeamSpreadRunCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kSpring-1);
-    TGraphAttributePair(gSingleWidthCoreRunCalOverallRatio[iv], "SingleCoreWidthRunCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kSpring-1);
-    TGraphAttributePair(gChargeRunCalOverallRatio[iv],          "BeamChargeRunCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kSpring-1);
-
-    TGraphAttributePair(gSpotBlockCal_ExtCalOverallRatio[iv],            "BeamSpotBlockCal_ExtCalOverallRatio",        v, Form("%s [mm]", v.Data()),       20, kBlack);
-    TGraphAttributePair(gWidthBlockCal_ExtCalOverallRatio[iv],           "BeamSpreadBlockCal_ExtCalOverallRatio",      v, Form("#sigma_{%s} [mm]", v.Data()),      20, kBlack);
-    TGraphAttributePair(gSingleWidthCoreBlockCal_ExtCalOverallRatio[iv], "SingleCoreWidthBlockCal_ExtCalOverallRatio", v, Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlack);
-    TGraphAttributePair(gChargeBlockCal_ExtCalOverallRatio[iv],          "BeamChargeBlockCal_ExtCalOverallRatio",      v, Form("Q_{%s}", v.Data()),       20, kBlack);
+    TGraphAttributePair(gSpotBlockCal_ExtCalOverallRatio[iv],            "BeamSpotBlockCal_ExtCalOverallRatio",        v, "Time [s]", Form("%s [mm]", v.Data()),       20, kBlack);
+    TGraphAttributePair(gWidthBlockCal_ExtCalOverallRatio[iv],           "BeamSpreadBlockCal_ExtCalOverallRatio",      v, "Time [s]", Form("#sigma_{%s} [mm]", v.Data()),      20, kBlack);
+    TGraphAttributePair(gSingleWidthCoreBlockCal_ExtCalOverallRatio[iv], "SingleCoreWidthBlockCal_ExtCalOverallRatio", v, "Time [s]", Form("single-core #sigma_{%s} [mm]", v.Data()), 20, kBlack);
+    TGraphAttributePair(gChargeBlockCal_ExtCalOverallRatio[iv],          "BeamChargeBlockCal_ExtCalOverallRatio",      v, "Time [s]", Form("Q_{%s}", v.Data()),       20, kBlack);
 
   }
-
-  for (size_t i = 0; i < blocks.size(); ++i) {
-    const int iblk = blocks[i];   
+  
+  // second block loop
+  for (size_t i = 0; i < processedBlocks.size(); ++i) {
+    
+    const int iblk = processedBlocks[i];
+    // cout << "Processing block: " << iblk << endl;
+    
+    auto itTime = blockMeanDaqTime.find(iblk);
+    if (itTime == blockMeanDaqTime.end()) {
+      cerr << "WARNING: no DAQ time found for block " << iblk << endl;
+      continue;
+    }
+    const double meanDaqTime = itTime->second;
+    const double daqTimeHalfWidth = blockDaqTimeHalfWidth[iblk];
 
     for (int iv = 0; iv < TMMCH_N_Readout; ++iv) {
       TString v = views[iv];
 
-      ObsRawRatio[iv][0].push_back(DoObsRatio(RawObs[iv][0], BlockRawObs[iv][0], iblk));
-      ObsRawRatio[iv][1].push_back(DoObsRatio(RawObs[iv][1], BlockRawObs[iv][1], iblk));
-      ObsExtCalOverallRatio[iv][0].push_back(DoObsRatio(ExtCalObs[iv][0], BlockExtCalOverallObs[iv][0], iblk));
-      ObsExtCalOverallRatio[iv][1].push_back(DoObsRatio(ExtCalObs[iv][1], BlockExtCalOverallObs[iv][1], iblk));
-      ObsRunCalOverallRatio[iv][0].push_back(DoObsRatio(RunCalObs[iv][0], BlockRunCalOverallObs[iv][0], iblk));
-      ObsRunCalOverallRatio[iv][1].push_back(DoObsRatio(RunCalObs[iv][1], BlockRunCalOverallObs[iv][1], iblk));
+      ObsRawRatio[iv][0].push_back(DoObsRatio(RawObs[iv][0], BlockRawObs[iv][0], i));
+      ObsRawRatio[iv][1].push_back(DoObsRatio(RawObs[iv][1], BlockRawObs[iv][1], i));
+      ObsExtCalOverallRatio[iv][0].push_back(DoObsRatio(ExtCalObs[iv][0], BlockExtCalOverallObs[iv][0], i));
+      ObsExtCalOverallRatio[iv][1].push_back(DoObsRatio(ExtCalObs[iv][1], BlockExtCalOverallObs[iv][1], i));
+      ObsRunCalOverallRatio[iv][0].push_back(DoObsRatio(RunCalObs[iv][0], BlockRunCalOverallObs[iv][0], i));
+      ObsRunCalOverallRatio[iv][1].push_back(DoObsRatio(RunCalObs[iv][1], BlockRunCalOverallObs[iv][1], i));
       
-      ObsBlockCal_ExtCalOverallRatio[iv][0].push_back(DoObsRatioBlocks(BlockCalObs[iv][0], BlockExtCalOverallObs[iv][0], iblk));
-      ObsBlockCal_ExtCalOverallRatio[iv][1].push_back(DoObsRatioBlocks(BlockCalObs[iv][1], BlockExtCalOverallObs[iv][1], iblk));
+      ObsBlockCal_ExtCalOverallRatio[iv][0].push_back(DoObsRatioBlocks(BlockCalObs[iv][0], BlockExtCalOverallObs[iv][0], i));
+      ObsBlockCal_ExtCalOverallRatio[iv][1].push_back(DoObsRatioBlocks(BlockCalObs[iv][1], BlockExtCalOverallObs[iv][1], i));
       
       FillGraphPair(gSpotRawRatio[iv],
           gWidthRawRatio[iv], gSingleWidthCoreRawRatio[iv],
           gChargeRawRatio[iv], 
-          i, iblk,
+          i, meanDaqTime,
           ObsRawRatio[iv]
       );
       
       FillGraphPair(gSpotExtCalOverallRatio[iv],
           gWidthExtCalOverallRatio[iv], gSingleWidthCoreExtCalOverallRatio[iv],
           gChargeExtCalOverallRatio[iv], 
-          i, iblk,
+          i, meanDaqTime,
           ObsExtCalOverallRatio[iv]
       );
       
       FillGraphPair(gSpotRunCalOverallRatio[iv],
           gWidthRunCalOverallRatio[iv], gSingleWidthCoreRunCalOverallRatio[iv],
           gChargeRunCalOverallRatio[iv], 
-          i, iblk,
+          i, meanDaqTime,
           ObsRunCalOverallRatio[iv]
       );
       
       FillGraphPair(gSpotBlockCal_ExtCalOverallRatio[iv],
           gWidthBlockCal_ExtCalOverallRatio[iv], gSingleWidthCoreBlockCal_ExtCalOverallRatio[iv],
           gChargeBlockCal_ExtCalOverallRatio[iv], 
-          i, iblk,
+          i, meanDaqTime,
           ObsBlockCal_ExtCalOverallRatio[iv]
       );
     }
@@ -1724,8 +1642,11 @@ void AnalysisTMM(const char *InputFileName){
   fout->cd();
   dGraphsOut->cd();
 
+  // ============================================================
+  // Time-based monitoring graphs
+  // ============================================================
   WriteMeasurementGraphs(
-    dGraphsRawOut,
+    dBlockGraphsRawOut,
     gSpotRaw,
     gWidthRaw,
     gSingleWidthCoreRaw,
@@ -1733,7 +1654,7 @@ void AnalysisTMM(const char *InputFileName){
   );
 
   WriteMeasurementGraphs(
-    dGraphsBlockCalOut,
+    dBlockGraphsBlockCalOut,
     gSpotBlockCal,
     gWidthBlockCal,
     gSingleWidthCoreBlockCal,
@@ -1741,7 +1662,7 @@ void AnalysisTMM(const char *InputFileName){
   );
 
   WriteMeasurementGraphs(
-    dGraphsExtCalOverallOut,
+    dBlockGraphsExtCalOverallOut,
     gSpotExtCalOverall,
     gWidthExtCalOverall,
     gSingleWidthCoreExtCalOverall,
@@ -1749,7 +1670,7 @@ void AnalysisTMM(const char *InputFileName){
   );
 
   WriteMeasurementGraphs(
-    dGraphsRunCalOverallOut,
+    dBlockGraphsRunCalOverallOut,
     gSpotRunCalOverall,
     gWidthRunCalOverall,
     gSingleWidthCoreRunCalOverall,

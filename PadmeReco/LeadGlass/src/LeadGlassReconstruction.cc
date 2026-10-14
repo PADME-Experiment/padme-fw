@@ -10,17 +10,37 @@
 
 #define LEADGLASS_BOARD 14
 #define LEADGLASS_CHANNEL 31
+#define SECOND_LEADGLASS_BOARD 21
+#define SECOND_LEADGLASS_CHANNEL 31
+
+PadmeVRecoConfig *cfg;
 
 LeadGlassReconstruction::LeadGlassReconstruction(TFile* HistoFile, TString ConfigFileName)
   : PadmeVReconstruction(HistoFile, "LeadGlass", ConfigFileName)
 {
 
   printf("LeadGlassReconstruction::Initialize - Initializing\n");
+ 
+  cfg = new PadmeVRecoConfig(fConfigParser,ConfigFileName);
+  Int_t nLG = cfg->GetNBoards();
+  printf("\nNBoards = %d\n", nLG);  
+  std::vector<Short_t> *LGBoards = cfg->GetBoards();
+  //std::cout << "Boards = " ;//<< (int)&LGBoards[0] << " " << (int)&LGBoards[1] << std::endl << std::endl;
+  for(auto it = LGBoards->begin(); it != LGBoards->end(); ++it) {
+    //std::cout << (*it) << "   ";
+  }
+  //std::cout << std::endl;
+  //InitChannelID(cfg);
+  //std::cout << std::endl;
+  
 
   // Get pedestal and charge reconstruction parameters from config file
   fPedestalSamples = fConfigParser->HasConfig("RECO","PedestalSamples")?std::stoi(fConfigParser->GetSingleArg("RECO","PedestalSamples")):100;
-  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):200;
-  fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):600;
+  fSignalSamplesStart = fConfigParser->HasConfig("RECO","SignalSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesStart")):100;
+  fSignalSamplesEnd = fConfigParser->HasConfig("RECO","SignalSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","SignalSamplesEnd")):450;
+
+  fLEDSamplesStart = fConfigParser->HasConfig("RECO","LEDSamplesStart")?std::stoi(fConfigParser->GetSingleArg("RECO","LEDSamplesStart")):500;
+  fLEDSamplesEnd = fConfigParser->HasConfig("RECO","LEDSamplesEnd")?std::stoi(fConfigParser->GetSingleArg("RECO","LEDSamplesEnd")):850;
 
   // Get charge-to-NPoTs conversion factor from config file. Complain if not found
   fChargeToNPoTs = 0.239; // Value for 402MeV and LeadGlass at 650V
@@ -79,32 +99,77 @@ void LeadGlassReconstruction::HistoInit()
 void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 {
 
-  fLeadGlassFound = false;
+  // Reset list of LeadGlass blocks found in this event
+  for(UChar_t il = 0; il<N_LEADGLASS; il++) fLeadGlassFound[il] = false;
 
   if(fTriggerProcessor) {
     BuildTriggerInfo(rawEv);
-    //    if (TriggerToBeSkipped()) return;
+    if (TriggerToBeSkipped()) {
+      return;
+    }
   }
 
-  // Find LeadGlass channel in RawEvent (Board 14 Channel 31)
+  // Find LeadGlass channel in RawEvent (Board 14 Channel 31 || Board 21 Channel 31)
   //UChar_t lg_b,lg_c;
+  // Loop through the boards
   for(UChar_t b = 0; b < rawEv->GetNADCBoards(); b++) {
-    if (rawEv->ADCBoard(b)->GetBoardId() == LEADGLASS_BOARD) {
+    TADCBoard* adcB = rawEv->ADCBoard(b);
+    
+    // Leadglass-ON-BEAM
+    if (adcB->GetBoardId() == LEADGLASS_BOARD) {
+      leadglassID = 0;
+      // Get StartIndexCell
+      UChar_t nTrg = adcB->GetNADCTriggers();
+      for(UChar_t trig=0; trig<nTrg; trig++){
+        TADCTrigger *adcTrig = adcB->ADCTrigger(trig);
+        UChar_t nGroup = adcTrig->GetGroupNumber();
+        if (nGroup == 3) {
+          fLGStartIndexCell[leadglassID] = adcB->ADCTrigger(trig)->GetStartIndexCell();
+        }
+      }
+
+      // Loop through the channels
+      for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
+        //RecoVChannelID *chanID = new RecoVChannelID();
+	      if (adcB->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
+	        fLeadGlassFound[0] = true;
+	        //lg_c = c;
+	        // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
+	        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
+	      }
+      }
+    }
+
+    // Leadglass OFF-BEAM
+    if (adcB->GetBoardId() == SECOND_LEADGLASS_BOARD) {  
       //lg_b = b;
-      for(UChar_t c = 0; c < rawEv->ADCBoard(b)->GetNADCChannels(); c++) {
-	if (rawEv->ADCBoard(b)->ADCChannel(c)->GetChannelNumber() == LEADGLASS_CHANNEL) {
-	  fLeadGlassFound = true;
-	  //lg_c = c;
-	  // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
-	  AnalyzeChannel(rawEv->ADCBoard(b)->ADCChannel(c)->GetSamplesArray());
-	  //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
-	}
+      leadglassID = 1;
+      // Get StartIndexCell
+      UChar_t nTrg = adcB->GetNADCTriggers();
+      //printf("Ntrig = %u\n",nTrg);
+      for(UChar_t trig=0; trig<nTrg; trig++){
+        TADCTrigger *adcTrig = adcB->ADCTrigger(trig);
+        UChar_t nGroup = adcTrig->GetGroupNumber();
+        if (nGroup == 3) {
+          fLGStartIndexCell[leadglassID] = adcB->ADCTrigger(trig)->GetStartIndexCell();
+          //printf("trig = %u -- group = %u -- startIndex = %u\n", trig, nGroup, startIndexCell);
+        }
+      }
+      
+      for(UChar_t c = 0; c < adcB->GetNADCChannels(); c++) {
+        if (adcB->ADCChannel(c)->GetChannelNumber() == SECOND_LEADGLASS_CHANNEL) {
+        fLeadGlassFound[1] = true;
+        //lg_c = c;
+        // Compute pedestal, total charge, nPoTs, bunch length from ADC samples
+        AnalyzeChannel(leadglassID,adcB->ADCChannel(c)->GetSamplesArray());
+        //printf("Pedestal %f PedestalRMS %f Charge %f NPoTs %f BunchLength %f\n",fLGPedestal,fLGPedRMS,fLGCharge,fLGNPoTs,fBunchLength);
+        }
       }
     }
   }
 
   //Processing is over, let's analyze what's here, if requested
-  if (fLeadGlassFound && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
+  if (fLeadGlassFound[0] && fGlobalRecoConfigOptions->IsMonitorMode()) AnalyzeEvent(rawEv);
 
   /*
   if (rawEv->GetEventNumber() == 110) {
@@ -132,64 +197,155 @@ void LeadGlassReconstruction::ProcessEvent(TRawEvent* rawEv)
 
 Bool_t LeadGlassReconstruction::TriggerToBeSkipped()
 {
-  // Only analyze BTF triggers
-  if ( !(GetTriggerProcessor()->IsBTFTrigger()) ) return true;
-  return false; 
+  // Only analyze BTF triggers and LED triggers 
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    return false; 
+  }
+  else if(GetTriggerProcessor()->IsLEDTrigger()) {
+    return false;
+  }
+  else {
+    return true; 
+  }
 }
 
 void LeadGlassReconstruction::AnalyzeEvent(TRawEvent* rawEv)
 {
-  fHLGPedestal->Fill(fLGPedestal);
-  fHLGPedRMS->Fill(fLGPedRMS);
-  fHLGTotCharge->Fill(fLGCharge);
+  fHLGPedestal->Fill(fLGPedestal[0]);
+  fHLGPedRMS->Fill(fLGPedRMS[0]);
+  fHLGTotCharge->Fill(fLGCharge[0]);
   fHLGNPoTs->Fill(fLGNPoTs);
   fHLGBunchLength->Fill(fBunchLength);
   fHLGBunchBBQ->Fill(fBunchBBQ);
 }
 
-void LeadGlassReconstruction::AnalyzeChannel(Short_t* samples)
+void LeadGlassReconstruction::AnalyzeChannel(UChar_t lgID, Short_t* samples)
 {
 
-  // Compute pedestal and total charge in leadglass
-  ComputeTotalCharge(samples);
+  // Compute pedestal and total charge in leadglass -- for BTF triggers
+  ComputeTotalCharge(lgID,samples);
 
-  // Compute lenght of bunch (period above a given thershold)
-  ComputeBunchLength(samples);
+  // Compute lenght of bunch (period above a given thershold) -- only for the LG-on-beam
+  if(lgID == 0) ComputeBunchLength(samples);
 
   // Evaluate total energy from total charge
-  fLGEnergy = fLGCharge*fChargeToEnergy;
+  fLGEnergy[lgID] = fLGCharge[lgID]*fChargeToEnergy;
 
-  // Compute number of positrons on target from total charge
-  fLGNPoTs = fLGCharge/fChargeToNPoTs;
+  // Compute number of positrons on target from total charge -- only for the LG-on-beam
+  if(lgID == 0) fLGNPoTs = fLGCharge[0]/fChargeToNPoTs;
 
 }
 
-void LeadGlassReconstruction::ComputeTotalCharge(Short_t* samples)
+void LeadGlassReconstruction::ComputeTotalCharge(UChar_t lgID, Short_t* samples)
 {
-
-  // Get total signal area using first fPedestalSamples samples as pedestal
   Int_t sum = 0;
+  Int_t sum_v2 = 0;
   Int_t sum_ped = 0;
+  Int_t sum_ped_v2 = 0;
   ULong_t sum2_ped = 0;
-  for(UInt_t s = 0; s<1024; s++) {
-    if (s<fPedestalSamples) {
-      sum_ped += samples[s];
-      sum2_ped += samples[s]*samples[s];
-    } else if (s >= fSignalSamplesStart) {
-      if (s < fSignalSamplesEnd) {
-        sum += samples[s];
-      } else {
-        break;
+  ULong_t sum2_ped_v2 = 0;
+
+  // BTF triggers:
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    // Get total signal area using first fPedestalSamples samples as pedestal
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s<fPedestalSamples) {
+        sum_ped += samples[s];
+        sum2_ped += samples[s]*samples[s];
+      } else if (s >= fSignalSamplesStart) {
+        if (s < fSignalSamplesEnd) {
+          sum += samples[s];
+        } else {
+          break;
+        }
       }
     }
+    fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+    fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
   }
 
-  fLGPedestal = (Double_t)sum_ped/(Double_t)fPedestalSamples;
-  fLGPedRMS = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal)/((Double_t)fPedestalSamples-1.)); //CONTROLLARE
-  fLGCharge = fLGPedestal*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
+  // LED triggers:
+  if (GetTriggerProcessor()->IsLEDTrigger()) { 
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s<fPedestalSamples) {
+        sum_ped += samples[s];
+        sum2_ped += samples[s]*samples[s];
+      } else if (s >= fLEDSamplesStart) {
+        if (s < fLEDSamplesEnd) {
+          sum += samples[s];
+        } else {
+          break;
+        }
+      }
+    }
+    fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+    fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fLEDSamplesEnd-fLEDSamplesStart)-(Double_t)sum;
+  }
+
+  // BTF triggers -- pedestal method 2:
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s >= (fSignalSamplesStart-fPedestalSamples/2)) {
+        if (s < fSignalSamplesStart) {
+          sum_ped_v2 += samples[s];
+          sum2_ped_v2 += samples[s]*samples[s];
+        } else if (s >= fSignalSamplesStart) {
+          if (s < fSignalSamplesEnd) {
+            sum_v2 += samples[s];
+          } else if (s >= fSignalSamplesEnd) {
+            if (s < (fSignalSamplesEnd+fPedestalSamples/2)) {
+              sum_ped_v2 += samples[s];
+              sum2_ped_v2 += samples[s]*samples[s];
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+    fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
+    fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge_v2[lgID] = fLGPedestal_v2[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum_v2;
+  }
+
+  // LED triggers -- pedestal method 2:
+  if (GetTriggerProcessor()->IsLEDTrigger()) {
+    for(UInt_t s = 0; s<1024; s++) {
+      if (s >= (fLEDSamplesStart-fPedestalSamples/2)) {
+        if (s < fLEDSamplesStart) {
+          sum_ped_v2 += samples[s];
+          sum2_ped_v2 += samples[s]*samples[s];
+        } else if (s >= fLEDSamplesStart) {
+          if (s < fLEDSamplesEnd) {
+            sum_v2 += samples[s];
+          } else if (s >= fLEDSamplesEnd) {
+            if (s < (fLEDSamplesEnd+fPedestalSamples/2)) {
+              sum_ped_v2 += samples[s];
+              sum2_ped_v2 += samples[s]*samples[s];
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    }
+    fLGPedestal_v2[lgID] = (Double_t)sum_ped_v2/(Double_t)fPedestalSamples;
+    fLGPedRMS_v2[lgID] = sqrt(((Double_t)sum2_ped_v2 - (Double_t)sum_ped_v2*fLGPedestal_v2[lgID])/((Double_t)fPedestalSamples-1.));
+    fLGCharge_v2[lgID] = fLGPedestal_v2[lgID]*(Double_t)(fLEDSamplesEnd-fLEDSamplesStart)-(Double_t)sum_v2;
+  }
+
+  //fLGPedestal[lgID] = (Double_t)sum_ped/(Double_t)fPedestalSamples;
+  //fLGPedRMS[lgID] = sqrt(((Double_t)sum2_ped - (Double_t)sum_ped*fLGPedestal[lgID])/((Double_t)fPedestalSamples-1.));
+  //fLGCharge[lgID] = fLGPedestal[lgID]*(Double_t)(fSignalSamplesEnd-fSignalSamplesStart)-(Double_t)sum;
+  
   // Convert counts to charge in pC
   //charge = counts/(4096.*50.)*(1.E-9/1.E-12);
-  fLGCharge *= 4.8828E-3;
+  //fLGCharge[lgID] *= 4.8828E-3;
+  //fLGCharge_v2[lgID] *= 4.8828E-3;
+  fLGCharge[lgID] *= (1.E3/(4096.*50.));
+  fLGCharge_v2[lgID] *= (1.E3/(4096.*50.));
 }
 
 void LeadGlassReconstruction::ComputeBunchLength(Short_t* samples)
@@ -202,22 +358,24 @@ void LeadGlassReconstruction::ComputeBunchLength(Short_t* samples)
   UInt_t bunchEnd = 0.;
   Int_t sum = 0;
   ULong_t sum2 = 0;
-  for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
-    if (bunch) {
-      if (fLGPedestal-(Double_t)samples[s] < fBunchLengthThreshold) {
-        if (s-bunchStart > 1) { // Ignore noise fluctuations
-          bunchEnd = s;
-          break;
+  if (GetTriggerProcessor()->IsBTFTrigger()) {
+    for(UInt_t s = fSignalSamplesStart; s<fSignalSamplesEnd; s++) {
+      if (bunch) {
+        if (fLGPedestal[0]-(Double_t)samples[s] < fBunchLengthThreshold) {
+          if (s-bunchStart > 1) { // Ignore noise fluctuations
+            bunchEnd = s;
+            break;
+          }
+          sum += samples[s];
+          sum2 += samples[s]*samples[s];
         }
-	sum += samples[s];
-	sum2 += samples[s]*samples[s];
-      }
-    } else {
-      if (fLGPedestal-(Double_t)samples[s] > fBunchLengthThreshold) {
-        bunch = true;
-        bunchStart = s;
-	sum = samples[s];
-	sum2 = samples[s]*samples[s];
+      } else {
+        if (fLGPedestal[0]-(Double_t)samples[s] > fBunchLengthThreshold) {
+          bunch = true;
+          bunchStart = s;
+          sum = samples[s];
+          sum2 = samples[s]*samples[s];
+        }
       }
     }
   }

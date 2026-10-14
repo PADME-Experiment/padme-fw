@@ -31,6 +31,7 @@
 #include "TETagRecoEvent.hh"
 //#include "TTPixRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TLeadGlass2RecoEvent.hh"
 #include "TMMRecoEvent.hh"
 
 #include "TargetReconstruction.hh"
@@ -79,6 +80,7 @@ PadmeReconstruction::PadmeReconstruction(TObjArray* InputFileNameList, TString C
   fETagRecoEvent    = 0;
   fTPixRecoEvent    = 0;
   fLeadGlassRecoEvent = 0;
+  fLeadGlass2RecoEvent = 0;
   fMMRecoEvent = 0;
 
   fGlobalRecoConfigOptions=NULL;

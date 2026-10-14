@@ -26,8 +26,14 @@ RecoVRootIO::~RecoVRootIO(){;
 
 void RecoVRootIO::SaveEvent(){
 
-  //std::cout<<this->GetName()<<" in RecoVRootIO::SaveEvent"<<std::endl;
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  // Ugly patch to handle second LeadGlass block
+  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco;
+  if (this->GetName() == "LeadGlass2") {
+    MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
+  } else {
+    MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  }
 
   if (MyReco->writeHits()){
     fEvent->Clear();
@@ -61,7 +67,14 @@ void RecoVRootIO::NewRun(Int_t nRun, TFile* hfile){
   // Create branch to hold PVeto Hits and Digis for this run
   fEventTree = (RecoRootIOManager::GetInstance())->GetEventTree();
 
-  PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  // Ugly patch to handle second LeadGlass block
+  //PadmeVReconstruction* MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  PadmeVReconstruction* MyReco;
+  if (this->GetName() == "LeadGlass2") {
+    MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco("LeadGlass");
+  } else {
+    MyReco = (PadmeVReconstruction*) RecoRootIOManager::GetInstance()->GetReconstruction()->FindReco(this->GetName());
+  }
   if (MyReco->writeHits()){
     std::cout << "Preparing the branches in  " << fEventTree << std::endl;
     std::string brHname = std::string(this->GetName())+"_Hits";

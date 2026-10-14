@@ -11,6 +11,7 @@
 #include "TargetRecoRootIO.hh"
 #include "ECalRecoRootIO.hh"
 #include "LeadGlassRecoRootIO.hh"
+#include "LeadGlass2RecoRootIO.hh"
 #include "MMRecoRootIO.hh"
 
 RecoRootIOManager* RecoRootIOManager::fInstance = 0;
@@ -58,8 +59,10 @@ RecoRootIOManager::RecoRootIOManager(TString ConfFileName)
     fRootIOList.push_back(new TargetRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "ECal"    ,1) && fConfig->GetParOrDefault("RECOALGORITHMS", "ECal"    ,1))
     fRootIOList.push_back(new ECalRecoRootIO);
-  if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1) && fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1))
+  if (fConfig->GetParOrDefault("RECOOutput", "LeadGlass", 1) && fConfig->GetParOrDefault("RECOALGORITHMS", "LeadGlass" ,1)) {
     fRootIOList.push_back(new LeadGlassRecoRootIO);
+    fRootIOList.push_back(new LeadGlass2RecoRootIO);
+}
   //if (fConfig->GetParOrDefault("RECOOutput", "TPix"    ,0))fRootIOList.push_back(new ECalRecoRootIO);
   if (fConfig->GetParOrDefault("RECOOutput", "MM", 1) && fConfig->GetParOrDefault("RECOALGORITHMS", "MM" ,1))
     fRootIOList.push_back(new MMRecoRootIO);

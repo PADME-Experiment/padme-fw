@@ -347,7 +347,7 @@ void RecoEvents::Loop()
 
       }
 
-      // maximum searching in the Hough tranaform space
+      // maximum searching in the Hough transformed space
       double SlpMax[2] = {-999, -999}; // slope max xy
       double InterMax[2] = {-999, -999}; // intercept max xy
 
@@ -406,7 +406,7 @@ void RecoEvents::Loop()
       }
 
       //preparing graphs and variables for the event display
-      bool saveEventDisplay = false;
+      bool saveEventDisplay = true ? (event == 35355) : false;
       TGraph* gTrack[2] = {nullptr, nullptr};
       TF1* fTrack[2] = {nullptr, nullptr};
 
@@ -529,7 +529,7 @@ void RecoEvents::Loop()
          for(int ip = 0; ip < 2; ++ip) MVP_hNHit_Sel[ip][i]->Fill(hitCounterMVP_Sel[ip][i]);
       }
 
-      bool saveEventDisplaySel = false;
+      bool saveEventDisplaySel = true ? (event == 35355) : false;
       for (size_t iH = 0; iH < nhits; ++iH) {
          if(!acceptedHits.at(iH)) continue;
          // saveEventDisplaySel = true;

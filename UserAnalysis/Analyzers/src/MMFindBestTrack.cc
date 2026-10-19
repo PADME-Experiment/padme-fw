@@ -149,6 +149,16 @@ Bool_t MMFindBestTrack::Process(){
 
   return true;
 }
+
+Double_t MMFindBestTrack::PurityFunc_LowMultiplicity(Double_t x, Double_t *p)
+{
+  double sig = TMath::Exp(-0.5 * (x - p[1]) * (x - p[1]) / (p[2] * p[2]));
+  double bkg = TMath::Exp(-0.5 * (x - p[4]) * (x - p[4]) / (p[5] * p[5]));
+  
+  return p[0] * sig / (p[0] * sig + p[3] * bkg + p[6]);
+}
+
+
 Double_t MMFindBestTrack::PurityFunc(Double_t x, Double_t y, Double_t *p)
 {
 
@@ -178,43 +188,79 @@ void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t 
   // dTheta = TMath::ATan(track->slope_lvl0[0]) - TMath::ATan(track->slope_lvl0[1]);
   // }
   double purity = -999;
-  if (track->level == 0)
-  {
-    if (track->pchi2 < 0.6)
-    return;
-    else
+
+  if(!LOW_MULTIPLICITY) {
+    if (track->level == 0)
       {
-	if (track->nhit == 3)
+	if (track->pchi2 < 0.6)
+	  return;
+	else
 	  {
-	    purity = PurityFunc(track->pchi2, dR, pars_3h_lvl0);
-	  }
-	if (track->nhit == 4)
-	  {
-	    purity = PurityFunc(track->pchi2, dR, pars_4h_lvl0);
+	    if (track->nhit == 3)
+	      {
+		purity = PurityFunc(track->pchi2, dR, pars_3h_lvl0);
+	      }
+	    if (track->nhit == 4)
+	      {
+		purity = PurityFunc(track->pchi2, dR, pars_4h_lvl0);
+	      }
 	  }
       }
-  }
-  else
-  { // track->level == 1
-    if(track->pchi2 < 0.1) return;
     else
-      {
-	if(track->nhit == 4) {
-	  purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
+      { // track->level == 1
+	if(track->pchi2 < 0.1) return;
+	else
+	  {
+	    if(track->nhit == 4) {
+	      purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
+	    }
+	  }
+	if (track->pchi2 < 0.6) return;
+	else {  
+	  if (track->nhit == 5)
+	    {
+	      purity = PurityFunc(track->pchi2, dR, pars_5h_lvl1);
+	    }
+	  if (track->nhit > 5)
+	    {
+	      purity = PurityFunc(track->pchi2, dR, pars_6ph_lvl1);
+	    }
 	}
       }
-    if (track->pchi2 < 0.6) return;
-    else {  
-      if (track->nhit == 5)
-	{
-	  purity = PurityFunc(track->pchi2, dR, pars_5h_lvl1);
-	}
-      if (track->nhit > 5)
-	{
-	  purity = PurityFunc(track->pchi2, dR, pars_6ph_lvl1);
-	}
+  } //end !LOW MULTIPLICITY if
+  else {
+    int islice = 0;
+    if(track->pchi2 >= 0.1 && track->pchi2 < 0.2) islice = 1;
+    if(track->pchi2 >= 0.2 && track->pchi2 < 0.3) islice = 2;
+    if(track->pchi2 >= 0.3 && track->pchi2 < 0.4) islice = 3;
+    if(track->pchi2 >= 0.4 && track->pchi2 < 0.5) islice = 4;
+    if(track->pchi2 >= 0.5 && track->pchi2 < 0.6) islice = 5;
+    if(track->pchi2 >= 0.6 && track->pchi2 < 0.7) islice = 6;
+    if(track->pchi2 >= 0.7 && track->pchi2 < 0.8) islice = 7;
+    if(track->pchi2 >= 0.8 && track->pchi2 < 0.9) islice = 8;
+    if(track->pchi2 >= 0.9 && track->pchi2 < 1.)  islice = 9;
+
+    if(track->level == 0) {
+      if(track->nhit == 3) {	
+	purity = PurityFunc_LowMultiplicity(dR,pars_3h_lvl0_LM[islice]);
+      }
+      if(track->nhit == 4) {
+	purity = PurityFunc_LowMultiplicity(dR,pars_4h_lvl0_LM[islice]);
+      }
+    }
+    else { //track level == 1
+      if(track->nhit == 4) {	
+	purity = PurityFunc_LowMultiplicity(dR,pars_4h_lvl1_LM[islice]);
+      }
+      if(track->nhit == 5) {	
+	purity = PurityFunc_LowMultiplicity(dR,pars_5h_lvl1_LM[islice]);
+      }
+      if(track->nhit > 5) {	
+	purity = PurityFunc_LowMultiplicity(dR,pars_6ph_lvl1_LM[islice]);
+      }
     }
   }
+  
   track->purity= purity;
   return;
 }

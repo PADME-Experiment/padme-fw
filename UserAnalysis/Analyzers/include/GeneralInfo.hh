@@ -9,6 +9,7 @@
 #include "TVector3.h"
 
 #define DEBUG true
+#define LOW_MULTIPLICITY true
 
 using namespace std;
 

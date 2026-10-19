@@ -76,9 +76,11 @@ clean:
 
 cleanall:
 	@echo Cleaning all...
+	rm -f $(DDIR)/*.ccd
 	rm -f $(ODIR)/*.o
 	rm -f $(LIBRARY)
-	rm -f PersistencyDict.*
+	rm -f PersistencyDict.cc
+	rm -f $(DICTIONARY)
 
 try:
 	@echo Current make parameters:

@@ -146,10 +146,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
           MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
           tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
           tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
-          for(size_t i = 0; i < nSec; i++) {
+
+	  // add G4TrackID of first secondary at this vertex
+	  fMCTruthManager->AddG4TrackSecondaryToNewVertex(step->GetTrack()->GetTrackID(),0);
+	  
+	  for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
           }
-          if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
+
+	  // add G4TrackID of i-th secondary at this vertex in outgoing position i+1 
+	  fMCTruthManager->AddG4TrackSecondaryToNewVertex((*sec)[i]->GetTrackID(),i+1);
+
+	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
         }
             }
             if (proc == "annihil") {
@@ -161,6 +169,9 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
           tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
           for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+
+	    // add G4TrackID of i-th secondary at this vertex in outgoing position i
+	    fMCTruthManager->AddG4TrackSecondaryToNewVertex((*sec)[i]->GetTrackID(),i);
           }
           if (nSec!=2) printf("WARNING annihil with %d secondaries",nSec);
         }

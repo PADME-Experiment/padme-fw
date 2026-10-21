@@ -36,7 +36,10 @@
 #include "G4MuonPlus.hh"
 #include "G4MuonMinus.hh"
 #include "G4PionZero.hh"
-
+#include "MCTruthManager.hh"
+#include "MyParticleInfo.hh"
+#include "G4PrimaryParticle.hh"
+#include "G4ParticleTable.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 StackingAction::StackingAction()
@@ -77,7 +80,91 @@ extern double Nmuons;
 G4ClassificationOfNewTrack
 StackingAction::ClassifyNewTrack(const G4Track* track)
 {
+  G4ThreeVector postrack = track->GetPosition();
+  G4double timetrack = track->GetGlobalTime();
+  MCTruthManager* mctm = MCTruthManager::GetInstance();
 
+  if (mctm->IsEnabled()){
+    G4String processId = "";
+    G4ThreeVector parentmomtrack;
+    G4double parentenergytrack;
+    int ifound = -1;
+    int caseid = -1;
+    // case1: a primary track from bby, bbygg, bhabha
+    if (track->GetParentID()==0) {
+      const G4PrimaryParticle* primary = track->GetDynamicParticle()->GetPrimaryParticle();
+      if (primary) {
+        // Retrieve your custom information
+        auto* info = static_cast<const MyParticleInfo*>(primary->GetUserInformation());
+        if (info) {
+	  processId = info->GetProcessID();
+	  parentmomtrack = info->GetParentMomentum();
+	  parentenergytrack = info->GetParentEnergy();
+	  caseid = 0;
+	}
+      }
+    }
+    
+    // check if this vertex already exists in MCTruthManager
+    if (caseid != -1) {
+      G4int nvtx = mctm->GetNVertices();
+      for (int i=0; i<nvtx; i++) {
+	MCTruthVertex* vtx = MCTruthManager::GetInstance()->Vertex(i);
+	int nparticlesIn = vtx->GetNParticlesIn();
+	if (nparticlesIn != 1) continue;
+	G4ThreeVector posvtx = vtx->GetPosition();
+	double distance = (posvtx-postrack).mag();
+	G4ThreeVector parentmomvtx = vtx->ParticleIn(0)->GetMomentum();
+	double momdifference = (parentmomvtx-parentmomtrack).mag();
+	if (distance > 1e-6 || momdifference > 1e-6) continue;
+
+	G4cout << "Inside classifyNewTrack "<< track->GetTrackID()
+	       << " " << track->GetPosition().x() << " " << track->GetPosition().y() << " " << track->GetPosition().z()
+	       << " " << track->GetMomentum().x() << " " << track->GetMomentum().y() << " " << track->GetMomentum().z()
+	       << " " << track->GetTotalEnergy() << " " << track->GetDefinition()->GetPDGEncoding()  << " time = " << timetrack
+	       << " process " << processId << "  parent mom " << parentmomtrack.x() << " " << parentmomtrack.y() << " " << parentmomtrack.z()
+	       << " distance " << distance << " momdiff = " << momdifference << " parentEnergy " << parentenergytrack <<
+	  G4endl;
+	
+	ifound = i;
+	break;
+      }
+
+      if (ifound != -1) {
+	// add particlesout to this vertex
+	MCTruthVertex* oldvtx = mctm->Vertex(ifound);
+	oldvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),track->GetTotalEnergy(),track->GetMomentum());
+	// add G4TrackID of first secondary at this vertex
+	mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),ifound,oldvtx->GetNParticlesOut()-1);
+      }
+      else {
+	// create a new vertex
+	G4cout << "Create a new vertex " << G4endl;
+	MCTruthVertex* newvtx = mctm->AddVertex(processId,postrack,timetrack);
+	newvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),parentenergytrack,parentmomtrack);
+	newvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),track->GetTotalEnergy(),track->GetMomentum());
+	// add G4TrackID of first secondary at this vertex
+	mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),mctm->GetNVertices()-1,0);
+      }
+    }
+  }
+//tobe uncommented  // check parent
+//tobe uncommented  if (track->GetParentID() == 0){
+//tobe uncommented  // check in the mctruthmanager vertex and compare position
+//tobe uncommented    G4ThreeVector postrack = track->GetPosition();
+//tobe uncommented    
+//tobe uncommented    if (nvtx) {
+//tobe uncommented      MCTruthVertex* vtx = MCTruthManager::GetInstance()->Vertex(nvtx-1);
+//tobe uncommented      G4ThreeVector posvtx = vtx->GetPosition();
+//tobe uncommented      double distance = (posvtx-postrack).mag();
+//tobe uncommented    }
+//tobe uncommented  // check pdgid according to process name
+//tobe uncommented  // establish position in the outgoing particles of the mctruthvertex
+//tobe uncommented  // store the link with G4Track
+
+
+
+  
   // If we are not in TurboMode, do nothing
   if (! fTurboMode) return fUrgent;
 

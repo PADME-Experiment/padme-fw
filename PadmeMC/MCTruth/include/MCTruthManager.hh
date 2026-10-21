@@ -38,9 +38,9 @@ public:
   G4int GetNVertices() { return fVertex.size(); }
   MCTruthVertex* AddVertex(G4String,G4ThreeVector,G4double);
 
-  void AddG4TrackSecondaryToNewVertex(G4int it, G4int position){
-    std::pair<G4int,G4int> pairin = {it,position};
-    std::pair<G4int,std::pair<G4int,G4int>> mapvalue = {(G4int)fVertex.size()-1,pairin};
+  void AddG4TrackSecondaryToVertex(G4int it, G4int iv, G4int position){
+    std::pair<G4int,G4int> pairin = {iv,position};
+    std::pair<G4int,std::pair<G4int,G4int>> mapvalue = {it,pairin};
     fG4TrackSecondaryMap.insert(mapvalue);
   }
 

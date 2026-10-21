@@ -112,7 +112,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
     //const G4LogicalVolume* lVolume = volume->GetLogicalVolume();
     //const G4VPhysicalVolume* mother = preStepTouch->GetVolume(1);
    
-    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && ((step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") || (name =="TargetSupport")) ) {
+    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && ((step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") || (name =="TargetSupport")) ) { // name is from preStep? 
       G4Track* track = step->GetTrack();
       G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
       // Enable for some debug printout
@@ -148,14 +148,15 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
           tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
 
 	  // add G4TrackID of first secondary at this vertex
-	  fMCTruthManager->AddG4TrackSecondaryToNewVertex(step->GetTrack()->GetTrackID(),0);
+	  fMCTruthManager->AddG4TrackSecondaryToVertex(step->GetTrack()->GetTrackID(),fMCTruthManager->GetNVertices()-1,0);
 	  
 	  for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
+
+	    // add G4TrackID of i-th secondary at this vertex in outgoing position i+1 
+	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i+1);
           }
 
-	  // add G4TrackID of i-th secondary at this vertex in outgoing position i+1 
-	  fMCTruthManager->AddG4TrackSecondaryToNewVertex((*sec)[i]->GetTrackID(),i+1);
 
 	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
         }
@@ -171,7 +172,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
 
 	    // add G4TrackID of i-th secondary at this vertex in outgoing position i
-	    fMCTruthManager->AddG4TrackSecondaryToNewVertex((*sec)[i]->GetTrackID(),i);
+	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i);
           }
           if (nSec!=2) printf("WARNING annihil with %d secondaries",nSec);
         }
@@ -265,12 +266,34 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   }
   
 
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
+       step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="world_volume_PV") {
+      
+      if (fMCTruthManager->IsG4TrackInVertex(track->GetTrackID())){
+	std::cout << "G4TrackID " << track->GetTrackID() << " is in the vertex list ";
+	std::pair<G4int, G4int> vtxpos = fMCTruthManager->GetG4TrackInVertex(track->GetTrackID());
+	std::cout << " in position " << vtxpos.first << " for the vertex number " << vtxpos.second << std::endl;
+
+	// create a new vertex with 1 particleIn and 1 particleOut
+	// vertex name "ECal"
+	// particleIn momentum is the momentumOut of the vtx matched
+	// particleOut is the present track momentum
+	// vertex position = track position
+	
+      }
+    }
+  }
+  
   //Analyze ECal tracks
   if (fEnableECalAnalysis) {
     if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
       if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
 	 step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="World") {
-      
+	  
+	
+
+
 	////PRENDI LE VARIABILI DALLA GEOMETRIA PLZ!!!!!!!!!!!!!!!!!!!!!
 	if(abs(step->GetPostStepPoint()->GetPosition().x())>5.*cm ||    
 	   abs(step->GetPostStepPoint()->GetPosition().y())>5.*cm){

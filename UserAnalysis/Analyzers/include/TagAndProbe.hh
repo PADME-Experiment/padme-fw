@@ -42,6 +42,8 @@ struct TagAndProbeEvent{
   Double_t EnergyRange[2];
   Double_t RadiusRange[2];
   TVector3 cog, targ, cluPos[2], cluPosExp; // cog of the selected clusters
+  Int_t Hit_ix[25], Hit_iy[25];
+  Double_t Hit_E[25];
   TLorentzVector labP[2]; // lab momenta
   TLorentzVector cmP[2]; // cm momenta
   TLorentzVector trueLabP[2]; //mctruth

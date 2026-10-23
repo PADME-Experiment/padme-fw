@@ -196,7 +196,8 @@ Bool_t MMTrackDevel::Process(){
 
   // retrieve ecal info
   //fvTracks.clear();
-
+  if(fEvent->MMRecoEvent) fMMClusteringInstance->Init(fEvent->MMRecoEvent);
+  else return false;
   TRecoVClusCollection* ECal_clEvent = fEvent->ECalRecoCl;
   std::vector<int> cluIndices;
   std::vector<double> cluTime_avg;
@@ -238,13 +239,13 @@ Bool_t MMTrackDevel::Process(){
   //long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime().GetSec();
   if(trigMask & (1 << 0)) {
   }
-
+  
   //int nclus = fEvent->MMRecoCl->GetNElements();
   int nhits = fEvent->MMRecoEvent->GetNHits();
   //fHS->FillHisto2List("MMTrackDevel","MM_Nclus_vs_NHits",nhits,nclus,1.);
 
   fMMClusteringInstance->Clear();
-  fMMClusteringInstance->Init(fEvent->MMRecoEvent);
+  
   fMMClusteringInstance->Clusterize();
 
   // plot NHit vs apv vs boardid Nhit vs (apvid + 2*boardid)

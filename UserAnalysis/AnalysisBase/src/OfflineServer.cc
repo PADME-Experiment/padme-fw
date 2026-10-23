@@ -54,9 +54,13 @@ OfflineServer::OfflineServer()
       rInfo.sigmaCOGX>>rInfo.errsigmaCOGX>>rInfo.sigmaCOGY>>rInfo.errsigmaCOGY>>
       rInfo.E1E2>>rInfo.errE1E2>>rInfo.dt>>rInfo.errdt>>rInfo.sigmaE1E2>>rInfo.errsigmaE1E2>>rInfo.dsigmadt>>rInfo.errsigmadt>>
       rInfo.period>>rInfo.LGCorr;
-    if(rInfo.RunID> 80000) inputDBFile>> rInfo.targetflag >> rInfo.ecalflag; //target in/out 1/0, ecal HV not ok/ok/partially ok during the run 0/1/2
+    if(rInfo.RunID> 80000){ 
+      inputDBFile>> rInfo.targetflag >> rInfo.ecalflag; //target in/out 1/0, ecal HV not ok/ok/partially ok during the run 0/1/2
+      if(rInfo.RunID< 90000) inputDBFile>> rInfo.TMMrunStartTime >> rInfo.TMMrunStopTime ; //BField in Tesla, only for runs with BField on
+    }
     //std::cout<<"Printing target and ecal flags: "<<rInfo.targetflag<<" "<< rInfo.ecalflag <<std::endl;
     // sets EOF flag if no value found
+  
     if(rInfo.RunID> 90000) inputDBFile>>rInfo.BField;
     rInfo.quadrantTemperature[0] = tempQuadTL;
     rInfo.quadrantTemperature[1] = tempQuadTR;

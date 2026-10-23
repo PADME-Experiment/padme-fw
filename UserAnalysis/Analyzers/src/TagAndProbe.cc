@@ -105,6 +105,9 @@ Bool_t TagAndProbe::InitHistos()
   ftree->Branch("cluEnergy",&tpEvent->cluEnergy,"cluEnergy[2]/D");
   ftree->Branch("Eexp",&tpEvent->Eexp,"Eexp[2]/D");
   ftree->Branch("cluTime",&tpEvent->cluTime,"cluTime[2]/D");
+  ftree->Branch("Hit_ix",&tpEvent->Hit_ix,"Hit_ix[25]/I");
+  ftree->Branch("Hit_iy",&tpEvent->Hit_iy,"Hit_iy[25]/I");
+  ftree->Branch("Hit_E",&tpEvent->Hit_E,"Hit_E[25]/D");
   ftree->Branch("phiCM",&tpEvent->phiCM,"phiCM[2]/D");
   ftree->Branch("thetaCM",&tpEvent->thetaCM,"thetaCM[2]/D");
   ftree->Branch("Ebeam",&tpEvent->Ebeam,"Ebeam/D");
@@ -861,7 +864,13 @@ Int_t TagAndProbe::TagAndProbeSelection()
 
       }
     }
-     
+    for (int i =0; i<tempClu[0]->GetNHitsInClus(); i++)
+    { int hitel = tempClu[0]->GetHitVecInClus().at(i);
+      TRecoVHit* hit = fECal_hitEvent->Hit(hitel);
+      tpEvent->Hit_ix[i] = hit->GetChannelId()/100;
+      tpEvent->Hit_iy[i] = hit->GetChannelId()%100;
+      tpEvent->Hit_E[i] = hit->GetEnergy();
+    }
     tpEvent->cluEnergy[0] = cluEnergy[0];
     tpEvent->cluPos[0] = cluPos[0];
     tpEvent->cluTime[0] = cluTime[0];

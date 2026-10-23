@@ -99,6 +99,7 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
   vector<TRecoVHit *> &Hits  = GetRecoHits();
   //fill the hit vector from MC digis
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
+      if (gRandom->Uniform() < 0.10) continue;
       TMCVDigi* digi = tEvent->Digi(i); 
       //std::cout << "MMReconstruction::ProcessEvent - Found digi with energy " << digi->GetEnergy() << " in channel " << digi->GetChannelId() << std::endl;
       int brdNum = digi->GetChannelId()/1000; //first decode from MC saving format: channelid is encoded as (boardNum*1000 + channelNum) 
@@ -110,16 +111,18 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
       //std::cout<<HitChargeThreshold<<" "<<HitChargeSaturation<<std::endl;
       if(HitChargeSaturation==0) HitChargeSaturation = fDefaultHitChargeSaturation; // if saturation value is not set for this channel, use default
       if(HitChargeThreshold==0) HitChargeThreshold = fDefaultHitChargeThreshold; // if threshold value is not set for this channel, use default
-      if(digi->GetEnergy()/fADCUnitToCharge<HitChargeThreshold) continue; // zero suppression //should be channel based 
-      if(digi->GetEnergy()/fADCUnitToCharge>HitChargeSaturation) continue; // saturation
+      double QtoMaxConv = (1./fADCUnitToCharge)*(27*pow(TMath::E(),-3)*(fAPVTimeBin/fTimeTau)/6); // conversion factor from charge to maximum of the shaper output, for a given time binning and shaper time constant. N.B. assumes that the shaper output is sampled at its maximum.
+
       chNum |= (brdNum << 8);
+      if(digi->GetEnergy()*QtoMaxConv<HitChargeThreshold) continue; // zero suppression //should be channel based 
+      if(digi->GetEnergy()*QtoMaxConv>HitChargeSaturation) continue; // saturation
 
       TRecoVHit *Hit = new TRecoVHit();
       Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
       Double_t sigma = fTimeTau/5;//sqrt(12); // sigma of the time smearing
       Double_t DetTime=r->Gaus(0.,sigma); //ns
       Hit->SetTime(digi->GetTime()+DetTime); // ns to be smeared
-      double QtoMaxConv = (1./fADCUnitToCharge)*27*pow(TMath::E(),-3)*(fAPVTimeBin/fTimeTau)/6; // conversion factor from charge to maximum of the shaper output, for a given time binning and shaper time constant. N.B. assumes that the shaper output is sampled at its maximum.
+      
       Hit->SetEnergy(digi->GetEnergy()*QtoMaxConv); // ADC
       Hits.push_back(Hit);
     } //pile-up of digis is alreadt handled in the digi creation --> confirmed by Occupancy plots

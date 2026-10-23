@@ -31,7 +31,9 @@ Bool_t MMFindBestTrack::Init(PadmeAnalysisEvent* event){
 Bool_t MMFindBestTrack::Process(){
   fvTracks.clear();
   fMMClusteringInstance->Clear();
-  fMMClusteringInstance->Init(fEvent->MMRecoEvent);
+  if(fEvent->MMRecoEvent) fMMClusteringInstance->Init(fEvent->MMRecoEvent);
+  else return false;
+  //fMMClusteringInstance->Init(fEvent->MMRecoEvent);
 
   
   fMMClusteringInstance->Clusterize();

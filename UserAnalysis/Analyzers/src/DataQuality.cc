@@ -147,7 +147,7 @@ Bool_t DataQuality::Process(){
         Value = fEvent->LeadGlassRecoEvent->GetBunchLength();
 
       }else if((iter->name).CompareTo("LGPed")==0){
-        Value = fEvent->LeadGlassRecoEvent->GetPedestal();
+        Value = fEvent->LeadGlassRecoEvent->GetPedestal(0);
 
       }else if((iter->name).CompareTo("POTTarg")==0){
         if(fEvent->TargetRecoBeam!=0) Value = fEvent->TargetRecoBeam->getnPOT();

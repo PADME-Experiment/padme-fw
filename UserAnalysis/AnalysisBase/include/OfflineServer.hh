@@ -28,7 +28,9 @@
 struct RunInfo{
   int RunID;
   long long int runStartTime; //run start time in seconds UTC
+  long long int TMMrunStartTime; //run start time in seconds UnixTime
   long long int runStopTime;  //run end time in seconds UTC
+  long long int TMMrunStopTime;  //run end time in seconds UnixTime
   float DHSTB01Energy; //MeV
   float DHSTB02Energy; //MeV
   int nFiles; // number of files for the run
@@ -65,6 +67,8 @@ private:
 
 public:
   long long int getRunStartTime(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).runStartTime;} //seconds
+  long long int getTMMRunStartTime(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).TMMrunStartTime;} //seconds
+  long long int getTMMRunStopTime(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).TMMrunStopTime;} //seconds
   long long int getRunStopTime(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).runStopTime;} //seconds
   float getDHSTB01Energy(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).DHSTB01Energy;} //MeV
   float getDHSTB02Energy(int runID){if (runIndex[runID] == -1) {return 0;} return runInfos.at(runIndex[runID]).DHSTB02Energy;} //MeV

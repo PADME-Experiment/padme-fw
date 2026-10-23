@@ -97,6 +97,7 @@ ECalReconstruction::ECalReconstruction(TFile *HistoFile, TString ConfigFileName)
   fEnergyResolutionSmearB = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "EnergyResolutionSmearB", 0.00003);
   fEnergyResolutionSmearC = (Double_t)fConfig->GetParOrDefault("RECOCLUSTER", "EnergyResolutionSmearC", 0.012);
 
+  
   // smearing of hit-level energy resolution (active only for MC)
 
   fDeteriorateHitEnResolution = (Int_t)fConfig->GetParOrDefault("RECO", "SmearMCHitEnResolution", 0);
@@ -1353,8 +1354,8 @@ Bool_t ECalReconstruction::SimulateBrokenSU(Int_t x, Int_t y)
   //Run IV broken SU
   if (x == 21 && y == 22)
        BrSU = true;
-   if (x == 22 && y == 19)
-       BrSU = true;
+  //  if (x == 22 && y == 19)
+  //      BrSU = true;
    if (x == 20 && y == 12)
        BrSU = true;
    if (x == 22 && y == 8)

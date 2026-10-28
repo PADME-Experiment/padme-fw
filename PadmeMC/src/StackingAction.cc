@@ -36,7 +36,10 @@
 #include "G4MuonPlus.hh"
 #include "G4MuonMinus.hh"
 #include "G4PionZero.hh"
-
+#include "MCTruthManager.hh"
+#include "MyParticleInfo.hh"
+#include "G4PrimaryParticle.hh"
+#include "G4ParticleTable.hh"
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 StackingAction::StackingAction()
@@ -54,7 +57,7 @@ StackingAction::StackingAction()
   fEmKillEnergy = 10.*CLHEP::MeV;
   fGKillEnergy  =  1.*CLHEP::MeV;
   fNKillEnergy  = 10.*CLHEP::MeV;
-
+  fECalKineticEnergyThresholdEnergyMCTruth = 1*CLHEP::MeV;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -77,7 +80,93 @@ extern double Nmuons;
 G4ClassificationOfNewTrack
 StackingAction::ClassifyNewTrack(const G4Track* track)
 {
+  G4ThreeVector postrack = track->GetPosition();
+  G4double timetrack = track->GetGlobalTime();
+  MCTruthManager* mctm = MCTruthManager::GetInstance();
 
+  if (mctm->IsEnabled()){
+    G4String processId = "";
+    G4ThreeVector parentmomtrack;
+    G4double parentenergytrack;
+    int ifound = -1;
+    int caseid = -1;
+
+    // check if this G4Track is a primary track from bby, bbygg, bhabha, if so store it in a map
+
+    if (track->GetParentID()==0) {
+      const G4PrimaryParticle* primary = track->GetDynamicParticle()->GetPrimaryParticle();
+      if (primary) {
+        // Retrieve your custom information
+        auto* info = static_cast<const MyParticleInfo*>(primary->GetUserInformation());
+        if (info) {
+	  processId = info->GetProcessID();
+	  parentmomtrack = info->GetParentMomentum();
+	  parentenergytrack = info->GetParentEnergy();
+	  caseid = 0;
+	}
+      }
+    } else { // check if the parent of this G4Track had been stored in the map, if so store it
+      if (mctm->IsG4TrackInVertex(track->GetParentID(), 0)){
+	//	G4cout << "track " << track->GetTrackID() << " has a parent with id = " << track->GetParentID() << " who is in the map  and is in volume " << track->GetVolume()->GetName();
+	G4int vtxOfParentID = mctm->GetG4TrackInVertex(track->GetParentID(),0).first;
+	G4int posOfParentID = mctm->GetG4TrackInVertex(track->GetParentID(),0).second;
+	//	G4cout << " with links " << vtxOfParentID << " and " << posOfParentID << G4endl;
+	if (track->GetVolume()->GetName() != "ECalCry" && track->GetVolume()->GetName() != "LeadGlass" && track->GetKineticEnergy() > fECalKineticEnergyThresholdEnergyMCTruth){ // avoid wasting time with daughters generated while showering or with too soft particles
+	  mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),vtxOfParentID,posOfParentID,1);
+	}
+      }
+    }
+    
+    // check if this vertex already exists in MCTruthManager
+
+    if (caseid != -1) {
+      G4int nvtx = mctm->GetNVertices();
+      for (int i=0; i<nvtx; i++) {
+	MCTruthVertex* vtx = mctm->Vertex(i);
+	int nparticlesIn = vtx->GetNParticlesIn();
+	if (nparticlesIn != 1) continue;
+	G4ThreeVector posvtx = vtx->GetPosition();
+	double distance = (posvtx-postrack).mag();
+	G4ThreeVector parentmomvtx = vtx->ParticleIn(0)->GetMomentum();
+	double momdifference = (parentmomvtx-parentmomtrack).mag();
+	if (distance > 1e-6 || momdifference > 1e-6) continue;
+
+	ifound = i;
+	break;
+      }
+
+      if (ifound != -1) { // if it exists already, just add particlesout to this vertex
+	MCTruthVertex* oldvtx = mctm->Vertex(ifound);
+	oldvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),track->GetTotalEnergy(),track->GetMomentum());
+	// store G4TrackID in the map as connected to the vertex in a given position out of it
+	mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),ifound,oldvtx->GetNParticlesOut()-1,0);
+      }
+      else { // create a new vertex
+	MCTruthVertex* newvtx = mctm->AddVertex(processId,postrack,timetrack);
+	newvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),parentenergytrack,parentmomtrack);
+	newvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),track->GetTotalEnergy(),track->GetMomentum());
+	// store G4TrackID in the map as connected to the new vertex as first secondary 
+	mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),mctm->GetNVertices()-1,0,0);
+      }
+    }
+  }
+//tobe uncommented  // check parent
+//tobe uncommented  if (track->GetParentID() == 0){
+//tobe uncommented  // check in the mctruthmanager vertex and compare position
+//tobe uncommented    G4ThreeVector postrack = track->GetPosition();
+//tobe uncommented    
+//tobe uncommented    if (nvtx) {
+//tobe uncommented      MCTruthVertex* vtx = MCTruthManager::GetInstance()->Vertex(nvtx-1);
+//tobe uncommented      G4ThreeVector posvtx = vtx->GetPosition();
+//tobe uncommented      double distance = (posvtx-postrack).mag();
+//tobe uncommented    }
+//tobe uncommented  // check pdgid according to process name
+//tobe uncommented  // establish position in the outgoing particles of the mctruthvertex
+//tobe uncommented  // store the link with G4Track
+
+
+
+  
   // If we are not in TurboMode, do nothing
   if (! fTurboMode) return fUrgent;
 

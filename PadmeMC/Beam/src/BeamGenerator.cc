@@ -789,15 +789,15 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
     G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
 
     // Create annihilation vertex in MCTruth
-    MCTruthVertex* tvtx;
-    if (fMCTruthMgr->IsEnabled()) {
-      if (decayLength == 0.) {
-	tvtx = fMCTruthMgr->AddVertex("Bhabha",G4ThreeVector(Dx,Dy,Dz),Dt);
-      } else {
-	tvtx = fMCTruthMgr->AddVertex("BhabhaAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
-      }
-      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
-    }
+//    MCTruthVertex* tvtx;
+//    if (fMCTruthMgr->IsEnabled()) {
+//      if (decayLength == 0.) {
+//	tvtx = fMCTruthMgr->AddVertex("Bhabha",G4ThreeVector(Dx,Dy,Dz),Dt);
+//      } else {
+//	tvtx = fMCTruthMgr->AddVertex("BhabhaAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
+//      }
+//      tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+//    }
 
     if (decayLength > 0.) {
       // Displace vertex according to decay length defined by user
@@ -812,8 +812,8 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
     G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
        
     // If decay vertex is displaced, store it in MCTruth
-    if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
-      tvtx = fMCTruthMgr->AddVertex("BhabhaDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
+//    if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
+//      tvtx = fMCTruthMgr->AddVertex("BhabhaDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
 
     // Decode input line
     std::istringstream iss(Line);
@@ -873,13 +873,15 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
 					lepOutMom[j].X(),lepOutMom[j].Y(),lepOutMom[j].Z(),lepOutMom[j].E());
 	//        std::cout<<"Bhabha treated Electron Px,Py,Pz " << lepOutMom[j].X() << " , " << lepOutMom[j].Y() << " , " << lepOutMom[j].Z() << std::endl;
       }
+      MyParticleInfo* info = new MyParticleInfo("Bhabha",fPositron.p,fPositron.E);
+      lepton->SetUserInformation(info);
       vtx->SetPrimary(lepton);
 
        // Store lepton in MCTruth
-     if (fMCTruthMgr->IsEnabled()) {
-        if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),p[0],lepton_p);
-        else      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),p[0],lepton_p);
-      }
+//     if (fMCTruthMgr->IsEnabled()) {
+//        if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),p[0],lepton_p);
+//        else      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("e-")->GetPDGEncoding(),p[0],lepton_p);
+//      }
 
     }
 
@@ -1024,7 +1026,7 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   for(G4int j=0; j<ngoodparticles; j++) {
     G4PrimaryParticle* lepton; 
 
-    G4cout << "before creating primary particle " << j << " "<< Dx << " " << Dy << " " << Dz << " " << particles[j].X() << " " << particles[j].Y() << " " << particles[j].Z() << " " << particles[j].E() << G4endl;
+    //    G4cout << "before creating primary particle " << j << " "<< Dx << " " << Dy << " " << Dz << " " << particles[j].X() << " " << particles[j].Y() << " " << particles[j].Z() << " " << particles[j].E() << G4endl;
     
     if (j==0)      lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e+"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
     else if (j==1) lepton = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("e-"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
@@ -1143,15 +1145,15 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
   G4double Dt = fPositron.t+s_decay/(c_light*fPositron.P/fPositron.E);
 
     // Create annihilation vertex in MCTruth
-  MCTruthVertex* tvtx;
-  if (fMCTruthMgr->IsEnabled()) {
-    if (decayLength == 0.) {
-      tvtx = fMCTruthMgr->AddVertex("BabayagaGG",G4ThreeVector(Dx,Dy,Dz),Dt);
-    } else {
-      tvtx = fMCTruthMgr->AddVertex("BabayagaGGAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
-    }
-    tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
-  }
+//  MCTruthVertex* tvtx;
+//  if (fMCTruthMgr->IsEnabled()) {
+//    if (decayLength == 0.) {
+//      tvtx = fMCTruthMgr->AddVertex("BabayagaGG",G4ThreeVector(Dx,Dy,Dz),Dt);
+//    } else {
+//      tvtx = fMCTruthMgr->AddVertex("BabayagaGGAnnihil",G4ThreeVector(Dx,Dy,Dz),Dt);
+//    }
+//    tvtx->AddParticleIn(G4ParticleTable::GetParticleTable()->FindParticle("e+")->GetPDGEncoding(),fPositron.E,fPositron.p);
+//  }
 
   if (decayLength > 0.) {
     // Displace vertex according to decay length defined by user
@@ -1166,8 +1168,8 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
   G4PrimaryVertex* vtx = new G4PrimaryVertex(G4ThreeVector(Dx,Dy,Dz),Dt);
        
     // If decay vertex is displaced, store it in MCTruth
-  if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
-    tvtx = fMCTruthMgr->AddVertex("BabayagaGGDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
+  //  if ( fMCTruthMgr->IsEnabled() & (decayLength > 0.) )
+  //    tvtx = fMCTruthMgr->AddVertex("BabayagaGGDecay",G4ThreeVector(Dx,Dy,Dz),Dt);
 
     // Decode input line
     //    G4cout << "Babayaga line to be decoded: ---" << Line << "---" << G4endl;
@@ -1185,15 +1187,18 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
     else if (j==1) photon = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
     else           photon = new G4PrimaryParticle(G4ParticleTable::GetParticleTable()->FindParticle("gamma"),particles[j].X(),particles[j].Y(),particles[j].Z(),particles[j].E());
      
+    MyParticleInfo* info = new MyParticleInfo("BabayagaGGDecay",fPositron.p,fPositron.E);
+    photon->SetUserInformation(info);
+
     vtx->SetPrimary(photon);
 
     G4ThreeVector photon_p = G4ThreeVector(particles[j].X(),particles[j].Y(),particles[j].Z());
     // Store info in MCTruth
-    if (fMCTruthMgr->IsEnabled()) {
-      if (j==0)      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
-      else if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
-      else           tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
-    }
+//    if (fMCTruthMgr->IsEnabled()) {
+//      if (j==0)      tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
+//      else if (j==1) tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
+//      else           tvtx->AddParticleOut(G4ParticleTable::GetParticleTable()->FindParticle("gamma")->GetPDGEncoding(),particles[j].E(),photon_p);
+//    }
   }
   // Add primary vertex to event
   fEvent->AddPrimaryVertex(vtx);

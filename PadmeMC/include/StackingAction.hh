@@ -63,6 +63,7 @@ public:
   void SetEmKillEnergy(G4double v) { fEmKillEnergy = v; }
   void SetGKillEnergy(G4double v)  { fGKillEnergy = v; }
   void SetNKillEnergy(G4double v)  { fNKillEnergy = v; }
+  void SetECalKineticEnergyThresholdEnergyMCTruth(G4double v) { fECalKineticEnergyThresholdEnergyMCTruth = v;}
   G4double GetEpKillEnergyutG4() { return fEpKillEnergy; }
   G4double GetEmKillEnergyutG4() { return fEmKillEnergy; }
   G4double GetGKillEnergyutG4()  { return fGKillEnergy; }
@@ -86,7 +87,7 @@ private:
   G4double fEmKillEnergy; // Cut on kinetic energy of electrons
   G4double fGKillEnergy; // Cut on energy of gammas
   G4double fNKillEnergy; // Cut on kinetic energy of neutrons
-
+  G4double fECalKineticEnergyThresholdEnergyMCTruth; // Cut on the kinetic energy for the MC trutch of daughters of the "leading" particles
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

@@ -12,6 +12,7 @@
 #include "G4RunManager.hh"
 #include "HistoManager.hh"
 #include "MCTruthManager.hh"
+#include "MCTruthParticle.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -148,17 +149,17 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
           tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
 
 	  // add G4TrackID of first secondary at this vertex
-	  fMCTruthManager->AddG4TrackSecondaryToVertex(step->GetTrack()->GetTrackID(),fMCTruthManager->GetNVertices()-1,0);
+	  fMCTruthManager->AddG4TrackSecondaryToVertex(step->GetTrack()->GetTrackID(),fMCTruthManager->GetNVertices()-1,0,0);
 	  
 	  for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
 
 	    // add G4TrackID of i-th secondary at this vertex in outgoing position i+1 
-	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i+1);
+	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i+1,0);
           }
 
 
-	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",nSec);
+	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",(int)nSec);
         }
             }
             if (proc == "annihil") {
@@ -172,9 +173,9 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
 
 	    // add G4TrackID of i-th secondary at this vertex in outgoing position i
-	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i);
+	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i,0);
           }
-          if (nSec!=2) printf("WARNING annihil with %d secondaries",nSec);
+          if (nSec!=2) printf("WARNING annihil with %d secondaries",(int)nSec);
         }
       }
     }
@@ -269,18 +270,31 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
     if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
        step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="world_volume_PV") {
-      
-      if (fMCTruthManager->IsG4TrackInVertex(track->GetTrackID())){
-	std::cout << "G4TrackID " << track->GetTrackID() << " is in the vertex list ";
-	std::pair<G4int, G4int> vtxpos = fMCTruthManager->GetG4TrackInVertex(track->GetTrackID());
-	std::cout << " in position " << vtxpos.first << " for the vertex number " << vtxpos.second << std::endl;
+      for (int itype = 0; itype < 2; itype++){
+	if (fMCTruthManager->IsG4TrackInVertex(track->GetTrackID(),itype)){
+	  std::pair<G4int, G4int> vtxpos = fMCTruthManager->GetG4TrackInVertex(track->GetTrackID(),itype);
+	  //	  std::cout << "G4TrackID " << track->GetTrackID() << " is in the vertex list type = " << itype;
+	  //	  std::cout << " in position " << vtxpos.second << " for the vertex number " << vtxpos.first << std::endl;
+	  G4int oldvtxid = vtxpos.first;
+	  G4int oldvtxparticlepos = vtxpos.second;
+	  MCTruthVertex* oldvtx = fMCTruthManager->Vertex(oldvtxid);
+	  G4String oldvtxprocess = oldvtx->GetProcess();
+	  MCTruthParticle* oldparticle = oldvtx->ParticleOut(oldvtxparticlepos);
+	  
+	  // create a new vertex with 1 particleIn and 1 particleOut
+	  // vertex name "AtECal" and can be parsed
+	  G4String processName = "AtECal_"+oldvtxprocess+"_VtxID_"+std::to_string(oldvtxid)+"_Outposition_"+std::to_string(oldvtxparticlepos)+"_type_"+std::to_string(itype);
 
-	// create a new vertex with 1 particleIn and 1 particleOut
-	// vertex name "ECal"
-	// particleIn momentum is the momentumOut of the vtx matched
-	// particleOut is the present track momentum
-	// vertex position = track position
-	
+	  //	  G4cout << "Creating vertex name " << processName << " particleIn " << oldparticle->GetPDGCode() << " Energy = " << oldparticle->GetEnergy() << " particleOut " <<
+	  //	    track->GetDefinition()->GetPDGEncoding() << " Energy = " << track->GetTotalEnergy() << " old nvtx = " << fMCTruthManager->GetNVertices();
+	  // vertex position = track position
+	  MCTruthVertex* newvtx = fMCTruthManager->AddVertex(processName,track->GetPosition(),track->GetGlobalTime());
+	  // particleIn momentum is the momentumOut of the vtx matched
+	  //G4cout << " new nvtx " << fMCTruthManager->GetNVertices() << G4endl;
+	  newvtx->AddParticleIn(oldparticle->GetPDGCode(),oldparticle->GetEnergy(),oldparticle->GetMomentum());
+	  // particleOut is the present track momentum
+	  newvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),track->GetTotalEnergy(),track->GetMomentum());
+	}
       }
     }
   }
@@ -368,7 +382,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	      }else if(lastProc=="eIoni"){
 		ProcID=3.;
 		//		track->SetTrackStatus(fStopAndKill);
-		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
+		//              G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;
 	      }else{
 		ProcID=-1.;
 		//		G4cout<<" else Process: "<<lastProc<< " code " << ProcID << " " <<BeamPartE<<G4endl;

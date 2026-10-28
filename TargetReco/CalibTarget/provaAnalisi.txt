@@ -1,0 +1,36 @@
+Run Number: 80534 - Ebeam: 294.250000 MeV
+Input ROOT: ../prova.root
+Reconstruction time bins: 100
+Accepted events: 1728
+Populated bins: 2
+Time bin to analysis point: 1:1
+Central physical strips: X=7 Y=20
+Run time interval UNIX: 1759228411.000000000 -> 1759230411.000000000
+QLG: 729.525231 +/- 1.957547 pC
+QXTar raw(-1,0,+1): (2.729976 +/- 0.316363, 291.415953 +/- 0.912110, 58.406010 +/- 0.742212) pC
+QYTar raw(-1,0,+1): (7.164428 +/- 0.486701, 224.947283 +/- 1.185426, 14.968242 +/- 0.353214) pC
+QXTar calibrated(-1,0,+1): (5.159655 +/- 0.608058, 567.678276 +/- 9.178375, 112.665194 +/- 2.730592) pC
+QX total raw: 352.551939 +/- 1.217748 pC
+QY total raw: 247.079953 +/- 1.329238 pC
+QX total calibrated: 685.503125 +/- 9.595229 pC
+QX fitted raw: 412.265096 +/- 1.473750 pC
+QY fitted raw: 279.301752 +/- 1.606995 pC
+QX fitted calibrated: 801.494940 +/- 11.060262 pC
+X weighted mean raw: 0.842077 +/- 0.002095 mm
+Y weighted mean raw: -4.968416 +/- 0.002463 mm
+X weighted mean calibrated: 0.843173 +/- 0.004092 mm
+X fitted raw: 0.772433 +/- 0.004342 mm
+Y fitted raw: -4.945401 +/- 0.004775 mm
+X fitted calibrated: 0.772562 +/- 0.005213 mm
+sigmaX raw: 0.323992 +/- 0.003809 mm
+sigmaY raw: 0.323054 +/- 0.002601 mm
+sigmaX calibrated: 0.322631 +/- 0.004075 mm
+QXtot/QLG raw: 0.483262 +/- 0.002114
+QYtot/QLG raw: 0.338686 +/- 0.002036
+QXtot/QLG calibrated: 0.939656 +/- 0.013392
+QXfit/QLG raw: 0.565114 +/- 0.002526
+QYfit/QLG raw: 0.382854 +/- 0.002431
+QXfit/QLG calibrated: 1.098653 +/- 0.015445
+Global fit status X raw: MIGRAD=0 covariance=3
+Global fit status Y raw: MIGRAD=0 covariance=3
+Global fit status X calibrated: MIGRAD=0 covariance=3

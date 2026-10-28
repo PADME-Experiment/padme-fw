@@ -13,11 +13,11 @@
 
 #include "TDirectory.h"
 #include "TFile.h"
-#include "TF1.h"
 #include "TGraphErrors.h"
 #include "TH1D.h"
 #include "TMath.h"
 #include "TMinuit.h"
+#include "TParameter.h"
 #include "TString.h"
 #include "TTree.h"
 
@@ -31,8 +31,7 @@ namespace {
 
 constexpr int kNChannels = 32;
 constexpr int kNStripsPerView = 16;
-constexpr int kEventsPerBlock = 100;
-constexpr int kBlocksPerPeriod = 100;
+// One time bin in Blocks produces one analysis time point.
 
 constexpr double kStripWidthMm = 0.850;
 constexpr double kStripPitchMm = 1.0;
@@ -44,6 +43,8 @@ constexpr int kExpectedXLocal = 8;
 constexpr int kExpectedYLocal = 9;
 
 constexpr double kCalibrationEnergyMeV = 298.5;
+
+constexpr double kpCToNPoT = 0.239;
 
 // ADC <-> physical-strip mapping inherited from the old analysis.
 constexpr array<int, kNChannels> kADCToPhysics = {15, 13, 11,  9,  7,  5,  3,  1, 0,  2,  4,  6,  8, 10, 12, 14, 22, 20, 18, 16, 17, 19, 21, 23, 25, 27, 29, 31, 30, 28, 26, 24 };
@@ -58,9 +59,9 @@ array<double, kNStripsPerView> gXCalibErr{};
 // =============================================================================
 
 struct GoodnessOfFit {
-    double chi2 = numeric_limits<double>::quiet_NaN();
-    double edm = numeric_limits<double>::quiet_NaN();
-    double errdef = numeric_limits<double>::quiet_NaN();
+    double chi2 = 0.0;
+    double edm = 0.0;
+    double errdef = 0.0;
     int nvpar = 0;
     int nparx = 0;
 
@@ -73,31 +74,57 @@ struct GoodnessOfFit {
 
     // Return value of TMinuit::Migrad().
     // 0 means MIGRAD completed successfully.
-    int migradStatus = -999;
+    int migradStatus = 0; // 0 for empty bins (no fit attempted); see hasEvents.
 };
 
 struct FitResult {
-    array<double, 3> par{
-        numeric_limits<double>::quiet_NaN(), numeric_limits<double>::quiet_NaN(), numeric_limits<double>::quiet_NaN() };
-
-    array<double, 3> err{
-        numeric_limits<double>::quiet_NaN(), numeric_limits<double>::quiet_NaN(), numeric_limits<double>::quiet_NaN() };
+    array<double, 3> par{};
+    array<double, 3> err{};
 
     GoodnessOfFit gof;
     bool usable = false;
+};
+
+// Event-level charge fluctuations are used only to estimate uncertainties;
+// Target central values MUST come from Blocks.targetQ (charge of averaged waveform).
+struct TargetEventMoments {
+    Long64_t n = 0;
+    array<double, kNChannels> mean{};
+    array<double, kNChannels> m2{};
+
+    void Add(const Double_t q[kNChannels]) {
+        ++n;
+        const double count = static_cast<double>(n);
+        for (int ch = 0; ch < kNChannels; ++ch) {
+            const double difference = q[ch] - mean[ch];
+            mean[ch] += difference / count;
+            m2[ch] += difference * (q[ch] - mean[ch]);
+        }
+    }
+    double Sem(int ch) const {
+        if (n < 2) return 0.0;
+        return sqrt(max(0.0, m2[ch] / static_cast<double>(n - 1) / static_cast<double>(n)));
+    }
 };
 
 struct BlockData {
     int run = -1;
     Long64_t blockId = -1;
     int nEvents = 0;
-
+    bool hasEvents = false;
+    double binStart = 0.0;     // Relative to tStartUnix.
+    double binStop = 0.0;
+    double binCenter = 0.0;
     double firstTimeUnix = 0.0;
     double meanTimeUnix = 0.0;
     double lastTimeUnix = 0.0;
-
+    double meanTimeInBin = 0.0;
+    double meanTimeInBinErr = 0.0;
     array<double, kNChannels> targetQ{};
+    array<double, kNChannels> targetQSem{};
     double lgQMean = 0.0;
+    double lgQStd = 0.0;
+    double lgQSem = 0.0;
 };
 
 struct PeriodResult {
@@ -108,10 +135,14 @@ struct PeriodResult {
     double firstTimeUnix = 0.0;
     double meanTimeUnix = 0.0;
     double lastTimeUnix = 0.0;
-    double timeHalfWidth = 0.0;
+    double timeError = 0.0;  // SEM of the mean event timestamp; zero by convention for N<=1.
+    int nEvents = 0;
+    bool hasEvents = false;
 
     double qLG = 0.0;
     double dqLG = 0.0;
+    double NPOTLG = 0.0;
+    double dNPOTLG = 0.0;
 
     array<double, 3> qXRaw{};
     array<double, 3> dqXRaw{};
@@ -157,6 +188,8 @@ struct PeriodResult {
 struct RunSummary {
     double qLG = 0.0;
     double dqLG = 0.0;
+    double NPOTLG = 0.0;
+    double dNPOTLG = 0.0;
 
     array<double, 3> qXRaw{};
     array<double, 3> dqXRaw{};
@@ -184,31 +217,6 @@ struct RunSummary {
 // =============================================================================
 // Statistics / propagation helpers
 // =============================================================================
-
-void MeanAndSem(const vector<double>& values, double& mean, double& sem) {
-    if (values.empty()) {
-        mean = 0.0;
-        sem = 0.0;
-        return;
-    }
-
-    const double n = static_cast<double>(values.size());
-    mean = accumulate(values.begin(), values.end(), 0.0) / n;
-
-    if (values.size() == 1) {
-        sem = 0.0;
-        return;
-    }
-
-    double sumSq = 0.0;
-    for (const double x : values) {
-        const double dx = x - mean;
-        sumSq += dx * dx;
-    }
-
-    const double sampleVariance = sumSq / static_cast<double>(values.size() - 1);
-    sem = sqrt(max(0.0, sampleVariance)) / sqrt(n);
-}
 
 double Quadrature3(const array<double, 3>& values) {
     return sqrt( values[0] * values[0] + values[1] * values[1] + values[2] * values[2] );
@@ -369,7 +377,7 @@ FitResult FitBeamOnce( const array<double, 3>& q, const array<double, 3>& dq, co
         minuit.GetParameter( i, result.par[i], result.err[i] );
     }
 
-    result.usable = result.gof.migradStatus == 0 && isfinite(result.par[0]) && isfinite(result.par[1]) && isfinite(result.par[2]) && result.par[2] > 0.0 && isfinite(result.gof.chi2);
+    result.usable = result.gof.migradStatus == 0 && isfinite(result.par[0]) && isfinite(result.par[1]) && isfinite(result.par[2]) && result.par[2] > 0.0 && isfinite(result.gof.chi2) && isfinite(result.err[0]) && isfinite(result.err[1]) && isfinite(result.err[2]);
     return result;
 }
 
@@ -387,134 +395,147 @@ FitResult FitBeam( const array<double, 3>& q, const array<double, 3>& dq, const 
 // Input
 // =============================================================================
 
-bool ReadCompleteBlocks( const string& inputFile, int requestedRun, vector<BlockData>& blocks) {
-    TFile* file = TFile::Open( inputFile.c_str(), "READ" );
-
+bool ReadTimeBins(const string& inputFile, int requestedRun, vector<BlockData>& blocks, TargetEventMoments& allTargetMoments, double& tStartUnix, double& tStopUnix, int& nBins) {
+    TFile* file = TFile::Open(inputFile.c_str(), "READ");
     if (!file || file->IsZombie()) {
         cerr << "ERROR: cannot open reconstruction file " << inputFile << endl;
-
-        if (file) {
-            file->Close();
-            delete file;
-        }
+        if (file) { file->Close(); delete file; }
         return false;
     }
+    auto Close = [&]() { file->Close(); delete file; };
 
-    TTree* tree = dynamic_cast<TTree*>( file->Get("Blocks") );
-    if (!tree) {
-        cerr << "ERROR: tree 'Blocks' not found in " << inputFile << endl;
-
-        file->Close();
-        delete file;
-        return false;
+    auto* startParameter = dynamic_cast<TParameter<double>*>(file->Get("tStartUnix"));
+    auto* stopParameter = dynamic_cast<TParameter<double>*>(file->Get("tStopUnix"));
+    auto* binsParameter = dynamic_cast<TParameter<int>*>(file->Get("nBins"));
+    if (!startParameter || !stopParameter || !binsParameter) {
+        cerr << "ERROR: missing tStartUnix/tStopUnix/nBins ROOT metadata. This analysis requires time-binned reconstruction." << endl;
+        Close(); return false;
     }
-
-    const vector<string> requiredBranches = {"run", "blockId", "complete", "nEvents", "firstTimeUnix", "meanTimeUnix", "lastTimeUnix", "targetQ", "lgQMean" };
-
-    for (const string& branchName : requiredBranches) {
-        if (!tree->GetBranch(branchName.c_str())) {
-            cerr << "ERROR: required branch '" << branchName << "' not found in Blocks tree." << endl;
-
-            file->Close();
-            delete file;
-            return false;
-        }
+    tStartUnix = startParameter->GetVal();
+    tStopUnix = stopParameter->GetVal();
+    nBins = binsParameter->GetVal();
+    if (!isfinite(tStartUnix) || !isfinite(tStopUnix) || tStopUnix <= tStartUnix || nBins <= 0) {
+        cerr << "ERROR: invalid reconstruction time-bin metadata." << endl;
+        Close(); return false;
     }
+    auto* truncationFlag = dynamic_cast<TParameter<int>*>(file->Get("inputTruncated"));
+    if (truncationFlag && truncationFlag->GetVal() != 0) {
+        cerr << "WARNING: reconstruction was run with -n/-e test selection. Empty bins may be unprocessed bins." << endl;
+    }
+    TTree* tree = dynamic_cast<TTree*>(file->Get("Blocks"));
+    TTree* events = dynamic_cast<TTree*>(file->Get("Events"));
+    if (!tree || !events) { cerr << "ERROR: both 'Blocks' and 'Events' trees are required." << endl; Close(); return false; }
+
+    const vector<string> requiredBranches = {"run", "blockId", "hasEvents", "nEvents", "binStart", "binStop", "binCenter", "firstTime", "meanTime", "lastTime", "meanTimeInBin", "meanTimeInBinErr", "targetQ", "lgQMean", "lgQStd", "lgQSem"};
+    for (const string& name : requiredBranches) {
+        if (!tree->GetBranch(name.c_str())) { cerr << "ERROR: missing branch Blocks." << name << endl; Close(); return false; }
+    }
+    for (const char* name : {"run", "blockId", "targetQ"}) {
+        if (!events->GetBranch(name)) { cerr << "ERROR: missing branch Events." << name << endl; Close(); return false; }
+    }
+    const Long64_t nEntries = tree->GetEntries();
+    if (nEntries != nBins) { cerr << "ERROR: Blocks has " << nEntries << " entries, but metadata specifies " << nBins << " time bins." << endl; Close(); return false; }
 
     Int_t run = -1;
     Long64_t blockId = -1;
-    Bool_t complete = false;
+    Bool_t hasEvents = false;
     Int_t nEvents = 0;
-
-    Double_t firstTimeUnix = 0.0;
-    Double_t meanTimeUnix = 0.0;
-    Double_t lastTimeUnix = 0.0;
-
-    Double_t targetQ[kNChannels] = {0.0};
-    Double_t lgQMean = 0.0;
-
+    Double_t binStart = 0.0, binStop = 0.0, binCenter = 0.0;
+    Double_t firstTime = 0.0, meanTime = 0.0, lastTime = 0.0;
+    Double_t meanTimeInBin = 0.0, meanTimeInBinErr = 0.0;
+    Double_t targetQ[kNChannels]{};
+    Double_t lgQMean = 0.0, lgQStd = 0.0, lgQSem = 0.0;
     tree->SetBranchStatus("*", 0);
-
-    for (const string& branchName : requiredBranches) {
-        tree->SetBranchStatus( branchName.c_str(), 1 );
-    }
-
+    for (const string& name : requiredBranches) tree->SetBranchStatus(name.c_str(), 1);
     tree->SetBranchAddress("run", &run);
     tree->SetBranchAddress("blockId", &blockId);
-    tree->SetBranchAddress("complete", &complete);
+    tree->SetBranchAddress("hasEvents", &hasEvents);
     tree->SetBranchAddress("nEvents", &nEvents);
-    tree->SetBranchAddress( "firstTimeUnix", &firstTimeUnix );
-    tree->SetBranchAddress( "meanTimeUnix", &meanTimeUnix );
-    tree->SetBranchAddress( "lastTimeUnix", &lastTimeUnix );
-    tree->SetBranchAddress( "targetQ", targetQ );
-    tree->SetBranchAddress( "lgQMean", &lgQMean );
-
-    const Long64_t nEntries = tree->GetEntries();
+    tree->SetBranchAddress("binStart", &binStart);
+    tree->SetBranchAddress("binStop", &binStop);
+    tree->SetBranchAddress("binCenter", &binCenter);
+    tree->SetBranchAddress("firstTime", &firstTime);
+    tree->SetBranchAddress("meanTime", &meanTime);
+    tree->SetBranchAddress("lastTime", &lastTime);
+    tree->SetBranchAddress("meanTimeInBin", &meanTimeInBin);
+    tree->SetBranchAddress("meanTimeInBinErr", &meanTimeInBinErr);
+    tree->SetBranchAddress("targetQ", targetQ);
+    tree->SetBranchAddress("lgQMean", &lgQMean);
+    tree->SetBranchAddress("lgQStd", &lgQStd);
+    tree->SetBranchAddress("lgQSem", &lgQSem);
 
     blocks.clear();
-    blocks.reserve( static_cast<size_t>(nEntries) );
-
-    Long64_t nIncomplete = 0;
-    Long64_t nWrongRun = 0;
-    Long64_t nWrongSize = 0;
-
+    blocks.reserve(static_cast<size_t>(nBins));
+    int nEmpty = 0;
+    Long64_t totalEvents = 0;
     for (Long64_t entry = 0; entry < nEntries; ++entry) {
-
         tree->GetEntry(entry);
-
+        if (blockId != entry || nEvents < 0 || static_cast<bool>(hasEvents) != (nEvents > 0)) {
+            cerr << "ERROR: inconsistent blockId/hasEvents/nEvents in Blocks entry " << entry << endl; Close(); return false;
+        }
         if (requestedRun > 0 && run != requestedRun) {
-            ++nWrongRun;
-            continue;
+            cerr << "ERROR: Blocks entry " << entry << " has run=" << run << " instead of " << requestedRun << endl; Close(); return false;
         }
-
-        if (!complete) {
-            ++nIncomplete;
-            continue;
+        if (!isfinite(binStart) || !isfinite(binStop) || binStop <= binStart || !isfinite(meanTime) || !isfinite(meanTimeInBinErr)) {
+            cerr << "ERROR: invalid time definition in Blocks entry " << entry << endl; Close(); return false;
         }
-
-        if (nEvents != kEventsPerBlock) {
-            ++nWrongSize;
-            continue;
-        }
-
         BlockData block;
-
         block.run = run;
         block.blockId = blockId;
         block.nEvents = nEvents;
-
-        block.firstTimeUnix = firstTimeUnix;
-        block.meanTimeUnix = meanTimeUnix;
-        block.lastTimeUnix = lastTimeUnix;
-
-        for (int ch = 0; ch < kNChannels; ++ch) {
-            block.targetQ[ch] = max( 0.0, static_cast<double>( targetQ[ch] ) );
-        }
-
+        block.hasEvents = hasEvents;
+        block.binStart = binStart;
+        block.binStop = binStop;
+        block.binCenter = binCenter;
+        block.firstTimeUnix = tStartUnix + firstTime;
+        block.meanTimeUnix = tStartUnix + meanTime;
+        block.lastTimeUnix = tStartUnix + lastTime;
+        block.meanTimeInBin = meanTimeInBin;
+        block.meanTimeInBinErr = max(0.0, meanTimeInBinErr);
+        for (int ch = 0; ch < kNChannels; ++ch) block.targetQ[ch] = targetQ[ch];
         block.lgQMean = lgQMean;
+        block.lgQStd = lgQStd;
+        block.lgQSem = lgQSem;
+        if (!block.hasEvents) ++nEmpty;
+        totalEvents += nEvents;
         blocks.push_back(block);
     }
 
-    file->Close();
-    delete file;
-
-    cout << "Blocks tree: " << nEntries << " entries, " << blocks.size() << " complete usable blocks";
-
-    if (nIncomplete > 0) {
-        cout << ", skipped incomplete=" << nIncomplete;
+    // Only a handful of doubles are accumulated per time bin; never store the event tree in memory.
+    vector<TargetEventMoments> moments(static_cast<size_t>(nBins));
+    Int_t eventRun = -1;
+    Long64_t eventBlockId = -1;
+    Double_t eventTargetQ[kNChannels]{};
+    events->SetBranchStatus("*", 0);
+    events->SetBranchStatus("run", 1);
+    events->SetBranchStatus("blockId", 1);
+    events->SetBranchStatus("targetQ", 1);
+    events->SetBranchAddress("run", &eventRun);
+    events->SetBranchAddress("blockId", &eventBlockId);
+    events->SetBranchAddress("targetQ", eventTargetQ);
+    for (Long64_t entry = 0; entry < events->GetEntries(); ++entry) {
+        events->GetEntry(entry);
+        if ((requestedRun > 0 && eventRun != requestedRun) || eventBlockId < 0 || eventBlockId >= nBins) {
+            cerr << "ERROR: inconsistent run/bin index in Events entry " << entry << endl; Close(); return false;
+        }
+        for (int ch = 0; ch < kNChannels; ++ch) {
+            if (!isfinite(eventTargetQ[ch])) { cerr << "ERROR: non-finite Events.targetQ at entry " << entry << endl; Close(); return false; }
+        }
+        moments[static_cast<size_t>(eventBlockId)].Add(eventTargetQ);
+        allTargetMoments.Add(eventTargetQ);
     }
-
-    if (nWrongRun > 0) {
-        cout << ", skipped other-run=" << nWrongRun;
+    if (allTargetMoments.n != totalEvents) {
+        cerr << "ERROR: Events has " << allTargetMoments.n << " entries, Blocks report " << totalEvents << " events." << endl; Close(); return false;
     }
-
-    if (nWrongSize > 0) {
-        cout << ", skipped invalid-size=" << nWrongSize;
+    for (int i = 0; i < nBins; ++i) {
+        if (moments[static_cast<size_t>(i)].n != blocks[static_cast<size_t>(i)].nEvents) {
+            cerr << "ERROR: Events/Blocks population mismatch in time bin " << i << endl; Close(); return false;
+        }
+        for (int ch = 0; ch < kNChannels; ++ch) blocks[static_cast<size_t>(i)].targetQSem[ch] = moments[static_cast<size_t>(i)].Sem(ch);
     }
-
-    cout << endl;
-
-    return !blocks.empty();
+    Close();
+    cout << "Loaded " << blocks.size() << " time bins (" << nEmpty << " empty), " << totalEvents << " accepted events. UNIX time: [" << setprecision(16) << tStartUnix << ", " << tStopUnix << ")" << endl;
+    return totalEvents > 0;
 }
 
 // =============================================================================
@@ -528,7 +549,7 @@ bool DetermineCentralStrips( const vector<BlockData>& blocks, int& centerXPhys, 
     for (const BlockData& block : blocks) {
         for (int adc = 0; adc < kNChannels; ++adc) {
             const int phys = kADCToPhysics[adc];
-            const double q = block.targetQ[adc];
+            const double q = block.targetQ[adc] * static_cast<double>(block.nEvents);
             if (phys < 16) totalX[phys] += q;
             else totalY[phys - 16] += q;
         }
@@ -549,153 +570,109 @@ bool DetermineCentralStrips( const vector<BlockData>& blocks, int& centerXPhys, 
 }
 
 // =============================================================================
-// Build one period from 100 complete reconstruction blocks
+// Build one monitoring point from one fixed-duration reconstruction time bin
 // =============================================================================
 
-PeriodResult BuildPeriod( const vector<BlockData>& blocks, size_t begin, int periodId, int centerXPhys, int centerYPhys, const array<double, 3>* previousXRaw, const array<double, 3>* previousYRaw, const array<double, 3>* previousXCal) {
+PeriodResult BuildPeriod(const BlockData& block, int centerXPhys, int centerYPhys, const array<double, 3>* previousXRaw, const array<double, 3>* previousYRaw, const array<double, 3>* previousXCal) {
     PeriodResult result;
+    result.periodId = static_cast<int>(block.blockId);
+    result.firstBlockId = block.blockId;
+    result.lastBlockId = block.blockId;
+    result.firstTimeUnix = block.firstTimeUnix;
+    result.meanTimeUnix = block.meanTimeUnix;
+    result.lastTimeUnix = block.lastTimeUnix;
+    result.timeError = block.meanTimeInBinErr;
+    result.nEvents = block.nEvents;
+    result.hasEvents = block.hasEvents;
+    if (!block.hasEvents) return result; // Nominal time retained, all physics stays zero.
 
-    result.periodId = periodId;
-    const size_t end = begin + kBlocksPerPeriod;
-    result.firstBlockId = blocks[begin].blockId;
-    result.lastBlockId = blocks[end - 1].blockId;
-    result.firstTimeUnix = blocks[begin].firstTimeUnix;
-    result.lastTimeUnix = blocks[end - 1].lastTimeUnix;
-
-    vector<double> blockTimes;
-    vector<double> lgValues;
-
-    array<vector<double>, 3> xValues;
-    array<vector<double>, 3> yValues;
-
-    blockTimes.reserve(kBlocksPerPeriod);
-    lgValues.reserve(kBlocksPerPeriod);
-
-    for (auto& v : xValues) {
-        v.reserve(kBlocksPerPeriod);
-    }
-
-    for (auto& v : yValues) {
-        v.reserve(kBlocksPerPeriod);
-    }
-
-    const array<int, 3> xADC = { kPhysicsToADC[centerXPhys - 1], kPhysicsToADC[centerXPhys], kPhysicsToADC[centerXPhys + 1] };
-
-    const array<int, 3> yADC = { kPhysicsToADC[centerYPhys - 1], kPhysicsToADC[centerYPhys], kPhysicsToADC[centerYPhys + 1] };
-
-    for (size_t i = begin; i < end; ++i) {
-        const BlockData& block = blocks[i];
-        blockTimes.push_back( block.meanTimeUnix );
-        lgValues.push_back( block.lgQMean );
-        for (int j = 0; j < 3; ++j) {
-            xValues[j].push_back( block.targetQ[xADC[j]] );
-            yValues[j].push_back( block.targetQ[yADC[j]] );
-        }
-    }
-
-    double dummyTimeSem = 0.0;
-    MeanAndSem( blockTimes, result.meanTimeUnix, dummyTimeSem );
-    result.timeHalfWidth = 0.5 * max( 0.0, result.lastTimeUnix - result.firstTimeUnix );
-    MeanAndSem( lgValues, result.qLG, result.dqLG );
-
+    result.qLG = block.lgQMean;
+    result.dqLG = block.lgQSem;
+    result.NPOTLG = block.lgQMean * kpCToNPoT;
+    result.dNPOTLG = block.lgQSem * kpCToNPoT;
+    const array<int, 3> xADC = {kPhysicsToADC[centerXPhys - 1], kPhysicsToADC[centerXPhys], kPhysicsToADC[centerXPhys + 1]};
+    const array<int, 3> yADC = {kPhysicsToADC[centerYPhys - 1], kPhysicsToADC[centerYPhys], kPhysicsToADC[centerYPhys + 1]};
     for (int j = 0; j < 3; ++j) {
-        MeanAndSem( xValues[j], result.qXRaw[j], result.dqXRaw[j] );
-        MeanAndSem( yValues[j], result.qYRaw[j], result.dqYRaw[j] );
-    }
-
-    const array<int, 3> xPhys = { centerXPhys - 1, centerXPhys, centerXPhys + 1 };
-
-    for (int j = 0; j < 3; ++j) {
-        const int strip = xPhys[j];
+        result.qXRaw[j] = block.targetQ[xADC[j]];
+        result.dqXRaw[j] = block.targetQSem[xADC[j]];
+        result.qYRaw[j] = block.targetQ[yADC[j]];
+        result.dqYRaw[j] = block.targetQSem[yADC[j]];
+        const int strip = centerXPhys - 1 + j;
         const double c = gXCalib[strip];
         const double dc = gXCalibErr[strip];
         result.qXCal[j] = result.qXRaw[j] * c;
-        result.dqXCal[j] = hypot( result.dqXRaw[j] * c, result.qXRaw[j] * dc );
+        result.dqXCal[j] = hypot(result.dqXRaw[j] * c, result.qXRaw[j] * dc);
     }
-
     result.qXTotRaw = result.qXRaw[0] + result.qXRaw[1] + result.qXRaw[2];
-    result.dqXTotRaw = Quadrature3( result.dqXRaw );
+    result.dqXTotRaw = Quadrature3(result.dqXRaw);
     result.qYTotRaw = result.qYRaw[0] + result.qYRaw[1] + result.qYRaw[2];
-    result.dqYTotRaw = Quadrature3( result.dqYRaw );
+    result.dqYTotRaw = Quadrature3(result.dqYRaw);
     result.qXTotCal = result.qXCal[0] + result.qXCal[1] + result.qXCal[2];
-    result.dqXTotCal = Quadrature3( result.dqXCal );
-    result.qXRatioRaw = SafeRatio( result.qXTotRaw, result.qLG );
-    result.dqXRatioRaw = RatioError( result.qXTotRaw, result.dqXTotRaw, result.qLG, result.dqLG );
-    result.qYRatioRaw = SafeRatio( result.qYTotRaw, result.qLG );
-    result.dqYRatioRaw = RatioError( result.qYTotRaw, result.dqYTotRaw, result.qLG, result.dqLG );
-    result.qXRatioCal = SafeRatio( result.qXTotCal, result.qLG );
-    result.dqXRatioCal = RatioError( result.qXTotCal, result.dqXTotCal, result.qLG, result.dqLG );
-
-    WeightedMeanMu3Strips( result.qXRaw, result.dqXRaw, result.muXWRaw, result.dMuXWRaw );
-    WeightedMeanMu3Strips( result.qYRaw, result.dqYRaw, result.muYWRaw, result.dMuYWRaw );
-    WeightedMeanMu3Strips( result.qXCal, result.dqXCal, result.muXWCal, result.dMuXWCal );
-   
-    result.fitXRaw = FitBeam( result.qXRaw, result.dqXRaw, kRawFitConfig, previousXRaw );
-    result.fitYRaw = FitBeam( result.qYRaw, result.dqYRaw, kRawFitConfig, previousYRaw );
-    result.fitXCal = FitBeam( result.qXCal, result.dqXCal, kCalFitConfig, previousXCal );
-
+    result.dqXTotCal = Quadrature3(result.dqXCal);
+    result.qXRatioRaw = SafeRatio(result.qXTotRaw, result.qLG);
+    result.dqXRatioRaw = RatioError(result.qXTotRaw, result.dqXTotRaw, result.qLG, result.dqLG);
+    result.qYRatioRaw = SafeRatio(result.qYTotRaw, result.qLG);
+    result.dqYRatioRaw = RatioError(result.qYTotRaw, result.dqYTotRaw, result.qLG, result.dqLG);
+    result.qXRatioCal = SafeRatio(result.qXTotCal, result.qLG);
+    result.dqXRatioCal = RatioError(result.qXTotCal, result.dqXTotCal, result.qLG, result.dqLG);
+    if (result.qXTotRaw > 0.0) WeightedMeanMu3Strips(result.qXRaw, result.dqXRaw, result.muXWRaw, result.dMuXWRaw);
+    if (result.qYTotRaw > 0.0) WeightedMeanMu3Strips(result.qYRaw, result.dqYRaw, result.muYWRaw, result.dMuYWRaw);
+    if (result.qXTotCal > 0.0) WeightedMeanMu3Strips(result.qXCal, result.dqXCal, result.muXWCal, result.dMuXWCal);
+    if (result.qXTotRaw > 0.0) result.fitXRaw = FitBeam(result.qXRaw, result.dqXRaw, kRawFitConfig, previousXRaw);
+    if (result.qYTotRaw > 0.0) result.fitYRaw = FitBeam(result.qYRaw, result.dqYRaw, kRawFitConfig, previousYRaw);
+    if (result.qXTotCal > 0.0) result.fitXCal = FitBeam(result.qXCal, result.dqXCal, kCalFitConfig, previousXCal);
     return result;
 }
 
-// =============================================================================
-// Whole-run result from all complete reconstruction blocks
-// =============================================================================
-
-RunSummary BuildRunSummary( const vector<BlockData>& blocks, int centerXPhys, int centerYPhys) {
+// Whole-run results: weight bin charge means by their ACTUAL accepted-event populations.
+// Target uncertainties are estimated from the event-level charge distribution;
+// LG uncertainty uses exact pooled LG variance (including bin-to-bin variations).
+RunSummary BuildRunSummary(const vector<BlockData>& blocks, const TargetEventMoments& allTargetMoments, int centerXPhys, int centerYPhys) {
     RunSummary result;
-
-    const array<int, 3> xADC = { kPhysicsToADC[centerXPhys - 1], kPhysicsToADC[centerXPhys], kPhysicsToADC[centerXPhys + 1] };
-
-    const array<int, 3> yADC = { kPhysicsToADC[centerYPhys - 1], kPhysicsToADC[centerYPhys], kPhysicsToADC[centerYPhys + 1] };
-
-    vector<double> lgValues;
-    array<vector<double>, 3> xValues;
-    array<vector<double>, 3> yValues;
-
-    lgValues.reserve(blocks.size());
-
-    for (auto& v : xValues) {
-        v.reserve(blocks.size());
-    }
-
-    for (auto& v : yValues) {
-        v.reserve(blocks.size());
-    }
-
+    const array<int, 3> xADC = {kPhysicsToADC[centerXPhys - 1], kPhysicsToADC[centerXPhys], kPhysicsToADC[centerXPhys + 1]};
+    const array<int, 3> yADC = {kPhysicsToADC[centerYPhys - 1], kPhysicsToADC[centerYPhys], kPhysicsToADC[centerYPhys + 1]};
+    double nTotal = 0.0;
     for (const BlockData& block : blocks) {
-
-        lgValues.push_back( block.lgQMean );
+        const double weight = static_cast<double>(block.nEvents);
+        if (!block.hasEvents) continue;
+        nTotal += weight;
+        result.qLG += weight * block.lgQMean;
         for (int j = 0; j < 3; ++j) {
-            xValues[j].push_back( block.targetQ[xADC[j]] );
-            yValues[j].push_back( block.targetQ[yADC[j]] );
+            result.qXRaw[j] += weight * block.targetQ[xADC[j]];
+            result.qYRaw[j] += weight * block.targetQ[yADC[j]];
         }
     }
-
-    MeanAndSem( lgValues, result.qLG, result.dqLG );
-
+    if (nTotal <= 0.0) return result;
+    result.qLG /= nTotal;
+    result.NPOTLG = result.qLG * kpCToNPoT;
     for (int j = 0; j < 3; ++j) {
-        MeanAndSem( xValues[j], result.qXRaw[j], result.dqXRaw[j] );
-        MeanAndSem( yValues[j], result.qYRaw[j], result.dqYRaw[j] );
+        result.qXRaw[j] /= nTotal;
+        result.qYRaw[j] /= nTotal;
+        result.dqXRaw[j] = allTargetMoments.Sem(xADC[j]);
+        result.dqYRaw[j] = allTargetMoments.Sem(yADC[j]);
     }
-
-    const array<int, 3> xPhys = { centerXPhys - 1, centerXPhys, centerXPhys + 1 };
-
+    double lgSumSquares = 0.0;
+    for (const BlockData& block : blocks) {
+        if (!block.hasEvents) continue;
+        const double n = static_cast<double>(block.nEvents);
+        lgSumSquares += (n - 1.0) * block.lgQStd * block.lgQStd;
+        lgSumSquares += n * pow(block.lgQMean - result.qLG, 2);
+    }
+    result.dqLG = nTotal > 1.0 ? sqrt(max(0.0, lgSumSquares / ((nTotal - 1.0) * nTotal))) : 0.0;
+    result.dNPOTLG = result.dqLG * kpCToNPoT;
     for (int j = 0; j < 3; ++j) {
-        const int strip = xPhys[j];
+        const int strip = centerXPhys - 1 + j;
         const double c = gXCalib[strip];
         const double dc = gXCalibErr[strip];
         result.qXCal[j] = result.qXRaw[j] * c;
-        result.dqXCal[j] = hypot( result.dqXRaw[j] * c, result.qXRaw[j] * dc );
+        result.dqXCal[j] = hypot(result.dqXRaw[j] * c, result.qXRaw[j] * dc);
     }
-
-    WeightedMeanMu3Strips( result.qXRaw, result.dqXRaw, result.muXWRaw, result.dMuXWRaw );
-    WeightedMeanMu3Strips( result.qYRaw, result.dqYRaw, result.muYWRaw, result.dMuYWRaw );
-    WeightedMeanMu3Strips( result.qXCal, result.dqXCal, result.muXWCal, result.dMuXWCal );
-
-    result.fitXRaw = FitBeam( result.qXRaw, result.dqXRaw, kRawFitConfig );
-    result.fitYRaw = FitBeam( result.qYRaw, result.dqYRaw, kRawFitConfig );
-    result.fitXCal = FitBeam( result.qXCal, result.dqXCal, kCalFitConfig );
-
+    WeightedMeanMu3Strips(result.qXRaw, result.dqXRaw, result.muXWRaw, result.dMuXWRaw);
+    WeightedMeanMu3Strips(result.qYRaw, result.dqYRaw, result.muYWRaw, result.dMuYWRaw);
+    WeightedMeanMu3Strips(result.qXCal, result.dqXCal, result.muXWCal, result.dMuXWCal);
+    if (result.qXRaw[0] + result.qXRaw[1] + result.qXRaw[2] > 0.0) result.fitXRaw = FitBeam(result.qXRaw, result.dqXRaw, kRawFitConfig);
+    if (result.qYRaw[0] + result.qYRaw[1] + result.qYRaw[2] > 0.0) result.fitYRaw = FitBeam(result.qYRaw, result.dqYRaw, kRawFitConfig);
+    if (result.qXCal[0] + result.qXCal[1] + result.qXCal[2] > 0.0) result.fitXCal = FitBeam(result.qXCal, result.dqXCal, kCalFitConfig);
     return result;
 }
 
@@ -717,11 +694,11 @@ TGraphErrors* MakeTrendGraph( const TString& name, const TString& yLabel, const 
     const int n = static_cast<int>( values.size() );
     vector<double> xErrors( static_cast<size_t>(n), 0.0 );
     TGraphErrors* graph = new TGraphErrors( n, periodIndex.data(), values.data(), xErrors.data(), errors.data() );
-    SetGraphAttributes( graph, name, "Period", yLabel, markerStyle, color );
+    SetGraphAttributes( graph, name, "Time bin ID", yLabel, markerStyle, color );
     return graph;
 }
 
-TGraphErrors* CloneTrendVsTime( const TGraphErrors* source, const vector<double>& meanTimes, const vector<double>& timeHalfWidths) {
+TGraphErrors* CloneTrendVsTime( const TGraphErrors* source, const vector<double>& meanTimes, const vector<double>& timeErrors) {
     const int n = source->GetN();
     TGraphErrors* graph = new TGraphErrors(n);
     TString name = source->GetName();
@@ -740,7 +717,7 @@ TGraphErrors* CloneTrendVsTime( const TGraphErrors* source, const vector<double>
         double y = 0.0;
         source->GetPoint( i, oldX, y );
         graph->SetPoint( i, meanTimes[static_cast<size_t>(i)], y );
-        graph->SetPointError( i, timeHalfWidths[static_cast<size_t>(i)], source->GetErrorY(i) );
+        graph->SetPointError( i, timeErrors[static_cast<size_t>(i)], source->GetErrorY(i) );
     }
 
     return graph;
@@ -765,66 +742,29 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     }
 
     vector<BlockData> blocks;
+    TargetEventMoments allTargetMoments;
+    double tStartUnix = 0.0, tStopUnix = 0.0;
+    int nBins = 0;
+    if (!ReadTimeBins(inputRoot, runNumber, blocks, allTargetMoments, tStartUnix, tStopUnix, nBins)) return false;
 
-    if (!ReadCompleteBlocks( inputRoot, runNumber, blocks)) {
-        return false;
-    }
+    int centerXPhys = -1, centerYPhys = -1;
+    if (!DetermineCentralStrips(blocks, centerXPhys, centerYPhys)) return false;
 
-    int centerXPhys = -1;
-    int centerYPhys = -1;
-
-    if (!DetermineCentralStrips( blocks, centerXPhys, centerYPhys)) {
-        return false;
-    }
-    const size_t nPeriods = blocks.size() / static_cast<size_t>( kBlocksPerPeriod );
-    const size_t leftoverBlocks = blocks.size() % static_cast<size_t>( kBlocksPerPeriod );
-    cout << "Complete blocks: " << blocks.size() << endl;
-    cout << "Analysis periods (" << kBlocksPerPeriod << " blocks/period): " << nPeriods << endl;
-
-    if (leftoverBlocks > 0) {
-        cout << "Complete blocks not entering a trend period: " << leftoverBlocks << " (they ARE included in the whole-run summary)" << endl;
-    }
-
-    if (nPeriods == 0) {
-        cerr << "ERROR: fewer than " << kBlocksPerPeriod << " complete blocks. " << "No trend point can be produced." << endl;
-
-        return false;
-    }
-
+    // One reconstruction time bin produces one point. Empty bins are NOT discarded.
+    const size_t nPeriods = blocks.size();
     vector<PeriodResult> periods;
     periods.reserve(nPeriods);
-
-    array<double, 3> previousXRaw{};
-    array<double, 3> previousYRaw{};
-    array<double, 3> previousXCal{};
-
-    bool havePreviousXRaw = false;
-    bool havePreviousYRaw = false;
-    bool havePreviousXCal = false;
-
-    for (size_t period = 0; period < nPeriods; ++period) {
-        const size_t begin = period * static_cast<size_t>( kBlocksPerPeriod );
-        PeriodResult result = BuildPeriod( blocks, begin, static_cast<int>(period), centerXPhys, centerYPhys, havePreviousXRaw ? &previousXRaw : nullptr, havePreviousYRaw ? &previousYRaw : nullptr, havePreviousXCal ? &previousXCal : nullptr );
-
-        if (result.fitXRaw.usable) {
-            previousXRaw = result.fitXRaw.par;
-            havePreviousXRaw = true;
-        }
-
-        if (result.fitYRaw.usable) {
-            previousYRaw = result.fitYRaw.par;
-            havePreviousYRaw = true;
-        }
-
-        if (result.fitXCal.usable) {
-            previousXCal = result.fitXCal.par;
-            havePreviousXCal = true;
-        }
-
+    array<double, 3> previousXRaw{}, previousYRaw{}, previousXCal{};
+    bool havePreviousXRaw = false, havePreviousYRaw = false, havePreviousXCal = false;
+    for (const BlockData& block : blocks) {
+        PeriodResult result = BuildPeriod(block, centerXPhys, centerYPhys, havePreviousXRaw ? &previousXRaw : nullptr, havePreviousYRaw ? &previousYRaw : nullptr, havePreviousXCal ? &previousXCal : nullptr);
+        if (result.fitXRaw.usable) { previousXRaw = result.fitXRaw.par; havePreviousXRaw = true; }
+        if (result.fitYRaw.usable) { previousYRaw = result.fitYRaw.par; havePreviousYRaw = true; }
+        if (result.fitXCal.usable) { previousXCal = result.fitXCal.par; havePreviousXCal = true; }
         periods.push_back(result);
     }
-
-    const RunSummary summary = BuildRunSummary( blocks, centerXPhys, centerYPhys );
+    const RunSummary summary = BuildRunSummary(blocks, allTargetMoments, centerXPhys, centerYPhys);
+    cout << "Analysis points: " << nPeriods << " (one per fixed time bin)." << endl;
 
     // -------------------------------------------------------------------------
     // Convert PeriodResult objects into plotting arrays.
@@ -834,10 +774,13 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
 
     vector<double> idx(n);
     vector<double> meanTimes(n);
-    vector<double> timeHalfWidths(n);
+    vector<double> timeErrors(n);
+    vector<double> nEventsTrend(n), hasEventsTrend(n);
 
     vector<double> qLG(n), dqLG(n);
     vector<double> qLGEcorr(n), dqLGEcorr(n);
+    vector<double> NPOTLG(n), dNPOTLG(n);
+    vector<double> NPOTLGEcorr(n), dNPOTLGEcorr(n);
 
     vector<double> qXTotRaw(n), dqXTotRaw(n);
     vector<double> qYTotRaw(n), dqYTotRaw(n);
@@ -906,15 +849,22 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
 
         idx[i] = static_cast<double>(i);
         meanTimes[i] = p.meanTimeUnix;
-        timeHalfWidths[i] = p.timeHalfWidth;
+        timeErrors[i] = p.timeError;
+        nEventsTrend[i] = p.nEvents;
+        hasEventsTrend[i] = p.hasEvents ? 1.0 : 0.0;
         qLG[i] = p.qLG;
         dqLG[i] = p.dqLG;
+        NPOTLG[i] = p.NPOTLG;
+        dNPOTLG[i] = p.dNPOTLG;
+
 
         const double lgEnergyScale = kCalibrationEnergyMeV / beamEnergyMeV;
         const double ratioEnergyScale = beamEnergyMeV / kCalibrationEnergyMeV;
 
         qLGEcorr[i] = p.qLG * lgEnergyScale;
         dqLGEcorr[i] = p.dqLG * fabs(lgEnergyScale);
+        NPOTLGEcorr[i] = p.NPOTLG * lgEnergyScale;
+        dNPOTLGEcorr[i] = p.dNPOTLG * fabs(lgEnergyScale);
         qXTotRaw[i] = p.qXTotRaw;
         dqXTotRaw[i] = p.dqXTotRaw;
         qYTotRaw[i] = p.qYTotRaw;
@@ -964,45 +914,54 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
         dqY0OverLGGRaw[i] = RatioError( p.qYRaw[1], p.dqYRaw[1], p.qLG, p.dqLG );
         qX0OverLGGCal[i] = SafeRatio( p.qXCal[1], p.qLG );
         dqX0OverLGGCal[i] = RatioError( p.qXCal[1], p.dqXCal[1], p.qLG, p.dqLG );
-        xWRaw[i] = PadmeXmm( centerXPhys, p.muXWRaw );
-        dxWRaw[i] = fabs(p.dMuXWRaw) * kStripPitchMm;
-        yWRaw[i] = PadmeYmm( centerYPhys, p.muYWRaw );
-        dyWRaw[i] = fabs(p.dMuYWRaw) * kStripPitchMm;
-        xWCal[i] = PadmeXmm( centerXPhys, p.muXWCal );
-        dxWCal[i] = fabs(p.dMuXWCal) * kStripPitchMm;
-        xFitRaw[i] = PadmeXmm( centerXPhys, p.fitXRaw.par[1] );
-        dxFitRaw[i] = fabs( p.fitXRaw.err[1] ) * kStripPitchMm;
-        yFitRaw[i] = PadmeYmm( centerYPhys, p.fitYRaw.par[1] );
-        dyFitRaw[i] = fabs( p.fitYRaw.err[1] ) * kStripPitchMm;
-        xFitCal[i] = PadmeXmm( centerXPhys, p.fitXCal.par[1] );
-        dxFitCal[i] = fabs( p.fitXCal.err[1] ) * kStripPitchMm;
-        deltaXRaw[i] = xFitRaw[i] - xWRaw[i];
-        dDeltaXRaw[i] = hypot( dxFitRaw[i], dxWRaw[i] );
-        deltaYRaw[i] = yFitRaw[i] - yWRaw[i];
-        dDeltaYRaw[i] = hypot( dyFitRaw[i], dyWRaw[i] );
-        deltaXCal[i] = xFitCal[i] - xWCal[i];
-        dDeltaXCal[i] = hypot( dxFitCal[i], dxWCal[i] );
-        sigmaXRaw[i] = max( fabs(p.fitXRaw.par[2]), widthFloor );
-        dSigmaXRaw[i] = fabs(p.fitXRaw.par[2]) > widthFloor ? fabs(p.fitXRaw.err[2]) : 0.0;
-        sigmaYRaw[i] = max( fabs(p.fitYRaw.par[2]), widthFloor );
-        dSigmaYRaw[i] = fabs(p.fitYRaw.par[2]) > widthFloor ? fabs(p.fitYRaw.err[2]) : 0.0;
-        sigmaXCal[i] = max( fabs(p.fitXCal.par[2]), widthFloor );
-        dSigmaXCal[i] = fabs(p.fitXCal.par[2]) > widthFloor ? fabs(p.fitXCal.err[2]) : 0.0;
-        chi2XRaw[i] = p.fitXRaw.gof.chi2;
-        chi2YRaw[i] = p.fitYRaw.gof.chi2;
-        chi2XCal[i] = p.fitXCal.gof.chi2;
+        if (p.hasEvents && p.qXTotRaw > 0.0) {
+            xWRaw[i] = PadmeXmm(centerXPhys, p.muXWRaw);
+            dxWRaw[i] = fabs(p.dMuXWRaw) * kStripPitchMm;
+        }
+        if (p.hasEvents && p.qYTotRaw > 0.0) {
+            yWRaw[i] = PadmeYmm(centerYPhys, p.muYWRaw);
+            dyWRaw[i] = fabs(p.dMuYWRaw) * kStripPitchMm;
+        }
+        if (p.hasEvents && p.qXTotCal > 0.0) {
+            xWCal[i] = PadmeXmm(centerXPhys, p.muXWCal);
+            dxWCal[i] = fabs(p.dMuXWCal) * kStripPitchMm;
+        }
+        if (p.fitXRaw.usable) {
+            xFitRaw[i] = PadmeXmm(centerXPhys, p.fitXRaw.par[1]);
+            dxFitRaw[i] = fabs(p.fitXRaw.err[1]) * kStripPitchMm;
+            sigmaXRaw[i] = max(fabs(p.fitXRaw.par[2]), widthFloor);
+            dSigmaXRaw[i] = fabs(p.fitXRaw.par[2]) > widthFloor ? fabs(p.fitXRaw.err[2]) : 0.0;
+        }
+        if (p.fitYRaw.usable) {
+            yFitRaw[i] = PadmeYmm(centerYPhys, p.fitYRaw.par[1]);
+            dyFitRaw[i] = fabs(p.fitYRaw.err[1]) * kStripPitchMm;
+            sigmaYRaw[i] = max(fabs(p.fitYRaw.par[2]), widthFloor);
+            dSigmaYRaw[i] = fabs(p.fitYRaw.par[2]) > widthFloor ? fabs(p.fitYRaw.err[2]) : 0.0;
+        }
+        if (p.fitXCal.usable) {
+            xFitCal[i] = PadmeXmm(centerXPhys, p.fitXCal.par[1]);
+            dxFitCal[i] = fabs(p.fitXCal.err[1]) * kStripPitchMm;
+            sigmaXCal[i] = max(fabs(p.fitXCal.par[2]), widthFloor);
+            dSigmaXCal[i] = fabs(p.fitXCal.par[2]) > widthFloor ? fabs(p.fitXCal.err[2]) : 0.0;
+        }
+        if (p.fitXRaw.usable) { deltaXRaw[i] = xFitRaw[i] - xWRaw[i]; dDeltaXRaw[i] = hypot(dxFitRaw[i], dxWRaw[i]); }
+        if (p.fitYRaw.usable) { deltaYRaw[i] = yFitRaw[i] - yWRaw[i]; dDeltaYRaw[i] = hypot(dyFitRaw[i], dyWRaw[i]); }
+        if (p.fitXCal.usable) { deltaXCal[i] = xFitCal[i] - xWCal[i]; dDeltaXCal[i] = hypot(dxFitCal[i], dxWCal[i]); }
+        chi2XRaw[i] = isfinite(p.fitXRaw.gof.chi2) ? p.fitXRaw.gof.chi2 : 0.0;
+        chi2YRaw[i] = isfinite(p.fitYRaw.gof.chi2) ? p.fitYRaw.gof.chi2 : 0.0;
+        chi2XCal[i] = isfinite(p.fitXCal.gof.chi2) ? p.fitXCal.gof.chi2 : 0.0;
         covXRaw[i] = p.fitXRaw.gof.covStatus;
         covYRaw[i] = p.fitYRaw.gof.covStatus;
         covXCal[i] = p.fitXCal.gof.covStatus;
         migradXRaw[i] = p.fitXRaw.gof.migradStatus;
         migradYRaw[i] = p.fitYRaw.gof.migradStatus;
         migradXCal[i] = p.fitXCal.gof.migradStatus;
-        fittedQXRaw[i] = p.fitXRaw.par[0];
-        dFittedQXRaw[i] = fabs(p.fitXRaw.err[0]);
-        fittedQYRaw[i] = p.fitYRaw.par[0];
-        dFittedQYRaw[i] = fabs(p.fitYRaw.err[0]);
-        fittedQXCal[i] = p.fitXCal.par[0];
-        dFittedQXCal[i] = fabs(p.fitXCal.err[0]);
+        fittedQXRaw[i] = p.fitXRaw.usable ? p.fitXRaw.par[0] : 0.0;
+        dFittedQXRaw[i] = p.fitXRaw.usable ? fabs(p.fitXRaw.err[0]) : 0.0;
+        fittedQYRaw[i] = p.fitYRaw.usable ? p.fitYRaw.par[0] : 0.0;
+        dFittedQYRaw[i] = p.fitYRaw.usable ? fabs(p.fitYRaw.err[0]) : 0.0;
+        fittedQXCal[i] = p.fitXCal.usable ? p.fitXCal.par[0] : 0.0;
+        dFittedQXCal[i] = p.fitXCal.usable ? fabs(p.fitXCal.err[0]) : 0.0;
         fittedRatioXRaw[i] = SafeRatio( fittedQXRaw[i], p.qLG );
         dFittedRatioXRaw[i] = RatioError( fittedQXRaw[i], dFittedQXRaw[i], p.qLG, p.dqLG );
         fittedRatioYRaw[i] = SafeRatio( fittedQYRaw[i], p.qLG );
@@ -1068,6 +1027,7 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     TH1D* hMigradStatusXCal = new TH1D( "hMigradStatusX", "MIGRAD status X calibrated", 11, -0.5, 10.5 );
 
     for (size_t i = 0; i < n; ++i) {
+        if (!periods[i].hasEvents) continue; // Zero-valued empty bins stay in trends, not distributions.
         hChargeXRaw->Fill( qXTotRaw[i] );
         hChargeYRaw->Fill( qYTotRaw[i] );
         hChargeXCal->Fill( qXTotCal[i] );
@@ -1080,15 +1040,15 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
         hQTarX0Cal->Fill( qX0Cal[i] );
         hQTarXm1Cal->Fill( qXm1Cal[i] );
         hQTarXp1Cal->Fill( qXp1Cal[i] );
-        hChi2XRaw->Fill( chi2XRaw[i] );
-        hChi2YRaw->Fill( chi2YRaw[i] );
-        hChi2XCal->Fill( chi2XCal[i] );
-        hFitStatusXRaw->Fill( covXRaw[i] );
-        hFitStatusYRaw->Fill( covYRaw[i] );
-        hFitStatusXCal->Fill( covXCal[i] );
-        hMigradStatusXRaw->Fill( migradXRaw[i] );
-        hMigradStatusYRaw->Fill( migradYRaw[i] );
-        hMigradStatusXCal->Fill( migradXCal[i] );
+        if (periods[i].fitXRaw.usable) hChi2XRaw->Fill( chi2XRaw[i] );
+        if (periods[i].fitYRaw.usable) hChi2YRaw->Fill( chi2YRaw[i] );
+        if (periods[i].fitXCal.usable) hChi2XCal->Fill( chi2XCal[i] );
+        if (periods[i].qXTotRaw > 0.0) hFitStatusXRaw->Fill( covXRaw[i] );
+        if (periods[i].qYTotRaw > 0.0) hFitStatusYRaw->Fill( covYRaw[i] );
+        if (periods[i].qXTotCal > 0.0) hFitStatusXCal->Fill( covXCal[i] );
+        if (periods[i].qXTotRaw > 0.0) hMigradStatusXRaw->Fill( migradXRaw[i] );
+        if (periods[i].qYTotRaw > 0.0) hMigradStatusYRaw->Fill( migradYRaw[i] );
+        if (periods[i].qXTotCal > 0.0) hMigradStatusXCal->Fill( migradXCal[i] );
     }
 
     hChargeXRaw->Write();
@@ -1131,6 +1091,10 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
             return graph;
         };
 
+    const vector<double> zeroBinErrors(n, 0.0);
+    AddTrend("gNEvents", "Accepted events / time bin", nEventsTrend, zeroBinErrors, 20, kBlack);
+    AddTrend("gHasEvents", "1 = populated time bin", hasEventsTrend, zeroBinErrors, 20, kBlack);
+    AddTrend("gMeanTimeInBinErr", "SEM of bin mean time [s]", timeErrors, zeroBinErrors, 20, kBlack);
     AddTrend( "gXTar_raw", "X_{fit} raw [mm]", xFitRaw, dxFitRaw, 20, kRed + 2 );
     AddTrend( "gYTar_raw", "Y_{fit} raw [mm]", yFitRaw, dyFitRaw, 20, kRed + 2 );
     AddTrend( "gXTar", "X_{fit} calibrated [mm]", xFitCal, dxFitCal, 20, kBlue + 2 );
@@ -1141,15 +1105,16 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     AddTrend( "gDeltaY_fit_minus_wmean_raw", "Y_{fit}-Y_{wmean} raw [mm]", deltaYRaw, dDeltaYRaw, 20, kRed + 2 );
     AddTrend( "gDeltaX_fit_minus_wmean", "X_{fit}-X_{wmean} calibrated [mm]", deltaXCal, dDeltaXCal, 20, kBlue + 2 );
     
-    TGraphErrors* gQLG = AddTrend( "gQLG", "Q_{LG} [pC]", qLG, dqLG, 20, kBlue + 2 );
-    
+    AddTrend( "gQLG", "Q_{LG} [pC]", qLG, dqLG, 20, kBlue + 2 );
     AddTrend( "gQLG_ECorr", "Q_{LG} energy-corrected [pC]", qLGEcorr, dqLGEcorr, 20, kBlue + 2 );
+    AddTrend( "gNPOTLG", "N^{POT}_{LG} [e^{+}/event]", NPOTLG, dNPOTLG, 20, kBlue + 2 );
+    AddTrend( "gNPOTLG_ECorr", "N^{POT}_{LG} energy-corrected [e^{+}/event]", NPOTLGEcorr, dNPOTLGEcorr, 20, kBlue + 2 );
     
-    TGraphErrors* gQXTotRaw = AddTrend( "gQXTot_target_raw", "Q_{X-Tar} raw [pC]", qXTotRaw, dqXTotRaw, 20, kRed + 2 );
+    AddTrend( "gQXTot_target_raw", "Q_{X-Tar} raw [pC]", qXTotRaw, dqXTotRaw, 20, kRed + 2 );
     
     AddTrend( "gQYTot_target_raw", "Q_{Y-Tar} raw [pC]", qYTotRaw, dqYTotRaw, 20, kRed + 2 );
     
-    TGraphErrors* gQXTotCal = AddTrend( "gQXTot_target_cal", "Q_{X-Tar} calibrated [pC]", qXTotCal, dqXTotCal, 20, kBlue + 2 );
+    AddTrend( "gQXTot_target_cal", "Q_{X-Tar} calibrated [pC]", qXTotCal, dqXTotCal, 20, kBlue + 2 );
 
     AddTrend( "gQm1_Xtarget_raw", "Q_{X-1} raw [pC]", qXm1Raw, dqXm1Raw, 20, kRed + 2 );
     AddTrend( "gQ0_Xtarget_raw", "Q_{X0} raw [pC]", qX0Raw, dqX0Raw, 20, kRed + 2 );
@@ -1164,7 +1129,7 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     AddTrend( "gQY0_QLG_raw", "Q_{Y0}/Q_{LG} raw", qY0OverLGGRaw, dqY0OverLGGRaw, 20, kRed + 2 );
     AddTrend( "gQX0_QLG_cal", "Q_{X0}/Q_{LG} calibrated", qX0OverLGGCal, dqX0OverLGGCal, 20, kBlue + 2 );
 
-    TGraphErrors* gQXRatioCal = AddTrend( "gQXratio_cal", "Q_{X-Tar}/Q_{LG} calibrated", qXRatioCal, dqXRatioCal, 20, kBlue + 2 );
+    AddTrend( "gQXratio_cal", "Q_{X-Tar}/Q_{LG} calibrated", qXRatioCal, dqXRatioCal, 20, kBlue + 2 );
 
     AddTrend( "gQXratio_raw", "Q_{X-Tar}/Q_{LG} raw", qXRatioRaw, dqXRatioRaw, 20, kRed + 2 );
     AddTrend( "gQYratio_raw", "Q_{Y-Tar}/Q_{LG} raw", qYRatioRaw, dqYRatioRaw, 20, kRed + 2 );
@@ -1203,25 +1168,27 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     // Keep the old pol0-normalization concept.
     // -------------------------------------------------------------------------
 
-    TF1 p0LG( "p0LG", "pol0", 0.0, static_cast<double>(n) );
-    TF1 p0XCal( "p0XCal", "pol0", 0.0, static_cast<double>(n) );
-    TF1 p0XRaw( "p0XRaw", "pol0", 0.0, static_cast<double>(n) );
-    TF1 p0RatioCal( "p0RatioCal", "pol0", 0.0, static_cast<double>(n) );
-
-    gQLG->Fit( &p0LG, "Q0R" );
-    gQXTotCal->Fit( &p0XCal, "Q0R" );
-    gQXTotRaw->Fit( &p0XRaw, "Q0R" );
-    gQXRatioCal->Fit( &p0RatioCal, "Q0R" );
-
+    // Constant-normalization estimate using populated bins only. The weighted
+    // mean is the analytic pol0 least-squares solution and avoids fitting zeros.
+    auto Pol0Normalization = [&](const vector<double>& values, const vector<double>& errors) {
+        double weightedSum = 0.0, sumWeights = 0.0;
+        for (size_t i = 0; i < n; ++i) {
+            if (!periods[i].hasEvents || !isfinite(values[i])) continue;
+            const double err = errors[i];
+            const double weight = (err > 0.0 && isfinite(err)) ? 1.0 / (err * err) : 1.0;
+            weightedSum += weight * values[i];
+            sumWeights += weight;
+        }
+        return sumWeights > 0.0 ? weightedSum / sumWeights : 0.0;
+    };
     vector<double> qLGNorm(n), dqLGNorm(n);
     vector<double> qXCalNorm(n), dqXCalNorm(n);
     vector<double> qXRawNorm(n), dqXRawNorm(n);
     vector<double> qXRatioCalNorm(n), dqXRatioCalNorm(n);
-
-    const double normLG = p0LG.GetParameter(0);
-    const double normXCal = p0XCal.GetParameter(0);
-    const double normXRaw = p0XRaw.GetParameter(0);
-    const double normRatioCal = p0RatioCal.GetParameter(0);
+    const double normLG = Pol0Normalization(qLG, dqLG);
+    const double normXCal = Pol0Normalization(qXTotCal, dqXTotCal);
+    const double normXRaw = Pol0Normalization(qXTotRaw, dqXTotRaw);
+    const double normRatioCal = Pol0Normalization(qXRatioCal, dqXRatioCal);
 
     for (size_t i = 0; i < n; ++i) {
         qLGNorm[i] = SafeRatio( qLG[i], normLG );
@@ -1255,7 +1222,7 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     timeTrends.reserve( periodTrends.size() );
 
     for (const TGraphErrors* graph : periodTrends) {
-        TGraphErrors* timeGraph = CloneTrendVsTime( graph, meanTimes, timeHalfWidths );
+        TGraphErrors* timeGraph = CloneTrendVsTime( graph, meanTimes, timeErrors );
         timeGraph->Write();
         timeTrends.push_back(timeGraph);
     }
@@ -1265,44 +1232,27 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     // -------------------------------------------------------------------------
 
     const double qXTotalRaw = summary.qXRaw[0] + summary.qXRaw[1] + summary.qXRaw[2];
-
     const double dqXTotalRaw = Quadrature3( summary.dqXRaw );
-
     const double qYTotalRaw = summary.qYRaw[0] + summary.qYRaw[1] + summary.qYRaw[2];
-
     const double dqYTotalRaw = Quadrature3( summary.dqYRaw );
-
     const double qXTotalCal = summary.qXCal[0] + summary.qXCal[1] + summary.qXCal[2];
-
     const double dqXTotalCal = Quadrature3( summary.dqXCal );
-
     const double qLGEcorrSummary = summary.qLG * kCalibrationEnergyMeV / beamEnergyMeV;
-
     const double dqLGEcorrSummary = summary.dqLG * fabs( kCalibrationEnergyMeV / beamEnergyMeV );
-
+    const double NPOTLGEcorrSummary = summary.NPOTLG * kCalibrationEnergyMeV / beamEnergyMeV;
+    const double dNPOTLGEcorrSummary = summary.dNPOTLG * fabs( kCalibrationEnergyMeV / beamEnergyMeV );
     const double qXRatioRawSummary = SafeRatio( qXTotalRaw, summary.qLG );
-
     const double dqXRatioRawSummary = RatioError( qXTotalRaw, dqXTotalRaw, summary.qLG, summary.dqLG );
-
     const double qYRatioRawSummary = SafeRatio( qYTotalRaw, summary.qLG );
-
     const double dqYRatioRawSummary = RatioError( qYTotalRaw, dqYTotalRaw, summary.qLG, summary.dqLG );
-
     const double qXRatioCalSummary = SafeRatio( qXTotalCal, summary.qLG );
-
     const double dqXRatioCalSummary = RatioError( qXTotalCal, dqXTotalCal, summary.qLG, summary.dqLG );
-
-    const double qXFitRawSummary = summary.fitXRaw.par[0];
-
-    const double dqXFitRawSummary = fabs( summary.fitXRaw.err[0] );
-
-    const double qYFitRawSummary = summary.fitYRaw.par[0];
-
-    const double dqYFitRawSummary = fabs( summary.fitYRaw.err[0] );
-
-    const double qXFitCalSummary = summary.fitXCal.par[0];
-
-    const double dqXFitCalSummary = fabs( summary.fitXCal.err[0] );
+    const double qXFitRawSummary = summary.fitXRaw.usable ? summary.fitXRaw.par[0] : 0.0;
+    const double dqXFitRawSummary = summary.fitXRaw.usable ? fabs(summary.fitXRaw.err[0]) : 0.0;
+    const double qYFitRawSummary = summary.fitYRaw.usable ? summary.fitYRaw.par[0] : 0.0;
+    const double dqYFitRawSummary = summary.fitYRaw.usable ? fabs(summary.fitYRaw.err[0]) : 0.0;
+    const double qXFitCalSummary = summary.fitXCal.usable ? summary.fitXCal.par[0] : 0.0;
+    const double dqXFitCalSummary = summary.fitXCal.usable ? fabs(summary.fitXCal.err[0]) : 0.0;
     const double qXFitRatioRawSummary = SafeRatio( qXFitRawSummary, summary.qLG );
     const double dqXFitRatioRawSummary = RatioError( qXFitRawSummary, dqXFitRawSummary, summary.qLG, summary.dqLG );
     const double qYFitRatioRawSummary = SafeRatio( qYFitRawSummary, summary.qLG );
@@ -1316,18 +1266,18 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
     const double dyWRawSummary = fabs( summary.dMuYWRaw ) * kStripPitchMm;
     const double xWCalSummary = PadmeXmm( centerXPhys, summary.muXWCal );
     const double dxWCalSummary = fabs( summary.dMuXWCal ) * kStripPitchMm;
-    const double xFitRawSummary = PadmeXmm( centerXPhys, summary.fitXRaw.par[1] );
-    const double dxFitRawSummary = fabs( summary.fitXRaw.err[1] ) * kStripPitchMm;
-    const double yFitRawSummary = PadmeYmm( centerYPhys, summary.fitYRaw.par[1] );
-    const double dyFitRawSummary = fabs( summary.fitYRaw.err[1] ) * kStripPitchMm;
-    const double xFitCalSummary = PadmeXmm( centerXPhys, summary.fitXCal.par[1] );
-    const double dxFitCalSummary = fabs( summary.fitXCal.err[1] ) * kStripPitchMm;
-    const double sigmaXRawSummary = max( fabs(summary.fitXRaw.par[2]), widthFloor );
-    const double dSigmaXRawSummary = fabs(summary.fitXRaw.par[2]) > widthFloor ? fabs(summary.fitXRaw.err[2]) : 0.0;
-    const double sigmaYRawSummary = max( fabs(summary.fitYRaw.par[2]), widthFloor );
-    const double dSigmaYRawSummary = fabs(summary.fitYRaw.par[2]) > widthFloor ? fabs(summary.fitYRaw.err[2]) : 0.0;
-    const double sigmaXCalSummary = max( fabs(summary.fitXCal.par[2]), widthFloor );
-    const double dSigmaXCalSummary = fabs(summary.fitXCal.par[2]) > widthFloor ? fabs(summary.fitXCal.err[2]) : 0.0;
+    const double xFitRawSummary = summary.fitXRaw.usable ? PadmeXmm(centerXPhys, summary.fitXRaw.par[1]) : 0.0;
+    const double dxFitRawSummary = summary.fitXRaw.usable ? fabs(summary.fitXRaw.err[1]) * kStripPitchMm : 0.0;
+    const double yFitRawSummary = summary.fitYRaw.usable ? PadmeYmm(centerYPhys, summary.fitYRaw.par[1]) : 0.0;
+    const double dyFitRawSummary = summary.fitYRaw.usable ? fabs(summary.fitYRaw.err[1]) * kStripPitchMm : 0.0;
+    const double xFitCalSummary = summary.fitXCal.usable ? PadmeXmm(centerXPhys, summary.fitXCal.par[1]) : 0.0;
+    const double dxFitCalSummary = summary.fitXCal.usable ? fabs(summary.fitXCal.err[1]) * kStripPitchMm : 0.0;
+    const double sigmaXRawSummary = summary.fitXRaw.usable ? max(fabs(summary.fitXRaw.par[2]), widthFloor) : 0.0;
+    const double dSigmaXRawSummary = summary.fitXRaw.usable && fabs(summary.fitXRaw.par[2]) > widthFloor ? fabs(summary.fitXRaw.err[2]) : 0.0;
+    const double sigmaYRawSummary = summary.fitYRaw.usable ? max(fabs(summary.fitYRaw.par[2]), widthFloor) : 0.0;
+    const double dSigmaYRawSummary = summary.fitYRaw.usable && fabs(summary.fitYRaw.par[2]) > widthFloor ? fabs(summary.fitYRaw.err[2]) : 0.0;
+    const double sigmaXCalSummary = summary.fitXCal.usable ? max(fabs(summary.fitXCal.par[2]), widthFloor) : 0.0;
+    const double dSigmaXCalSummary = summary.fitXCal.usable && fabs(summary.fitXCal.par[2]) > widthFloor ? fabs(summary.fitXCal.err[2]) : 0.0;
 
     summaryDir->cd();
 
@@ -1342,6 +1292,8 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
 
     AddSummary( "gQLGTot", "Q_{LG} whole run [pC]", summary.qLG, summary.dqLG, 20, kBlue + 2 );
     AddSummary( "gQLGTot_ECorr", "Q_{LG} whole run energy-corrected [pC]", qLGEcorrSummary, dqLGEcorrSummary, 20, kBlue + 2 );
+    AddSummary( "gNPOTLGTot", "Q_{LG} whole run [pC]", summary.NPOTLG, summary.dNPOTLG, 20, kBlue + 2 );
+    AddSummary( "gNPOTLGTot_ECorr", "Q_{LG} whole run energy-corrected [pC]", NPOTLGEcorrSummary, dNPOTLGEcorrSummary, 20, kBlue + 2 );
     AddSummary( "gQXTot_raw", "Q_{X-Tar} raw whole run [pC]", qXTotalRaw, dqXTotalRaw, 20, kRed + 2 );
     AddSummary( "gQYTot_raw", "Q_{Y-Tar} raw whole run [pC]", qYTotalRaw, dqYTotalRaw, 20, kRed + 2 );
     AddSummary( "gQXTot_cal", "Q_{X-Tar} calibrated whole run [pC]", qXTotalCal, dqXTotalCal, 20, kBlue + 2 );
@@ -1388,11 +1340,14 @@ bool AnalyseRun( int runNumber, double beamEnergyMeV, const string& inputRoot, c
         textOutput << fixed << setprecision(6);
         textOutput << "Run Number: " << runNumber << " - Ebeam: " << beamEnergyMeV << " MeV\n";
         textOutput << "Input ROOT: " << inputRoot << "\n";
-        textOutput << "Complete reconstruction blocks: " << blocks.size() << "\n";
-        textOutput << "Trend periods: " << nPeriods << " (" << kBlocksPerPeriod << " blocks/period)\n";
+        textOutput << "Reconstruction time bins: " << blocks.size() << "\n";
+        textOutput << "Accepted events: " << allTargetMoments.n << "\n";
+        textOutput << "Populated bins: " << count_if(blocks.begin(), blocks.end(), [](const BlockData& b) { return b.hasEvents; }) << "\n";
+        textOutput << "Time bin to analysis point: 1:1\n";
         textOutput << "Central physical strips: X=" << centerXPhys << " Y=" << centerYPhys << "\n";
-        textOutput << "Run time interval UNIX: " << blocks.front().firstTimeUnix << " -> " << blocks.back().lastTimeUnix << "\n";
+        textOutput << "Run time interval UNIX: " << setprecision(9) << tStartUnix << " -> " << tStopUnix << "\n" << setprecision(6);
         textOutput << "QLG: " << summary.qLG << " +/- " << summary.dqLG << " pC\n";
+        textOutput << "NPOTLG: " << summary.NPOTLG << " +/- " << summary.dNPOTLG << "\n";
         textOutput << "QXTar raw(-1,0,+1): (" << summary.qXRaw[0] << " +/- " << summary.dqXRaw[0] << ", " << summary.qXRaw[1] << " +/- " << summary.dqXRaw[1] << ", " << summary.qXRaw[2] << " +/- " << summary.dqXRaw[2] << ") pC\n";
         textOutput << "QYTar raw(-1,0,+1): (" << summary.qYRaw[0] << " +/- " << summary.dqYRaw[0] << ", " << summary.qYRaw[1] << " +/- " << summary.dqYRaw[1] << ", " << summary.qYRaw[2] << " +/- " << summary.dqYRaw[2] << ") pC\n";
         textOutput << "QXTar calibrated(-1,0,+1): (" << summary.qXCal[0] << " +/- " << summary.dqXCal[0] << ", " << summary.qXCal[1] << " +/- " << summary.dqXCal[1] << ", " << summary.qXCal[2] << " +/- " << summary.dqXCal[2] << ") pC\n";

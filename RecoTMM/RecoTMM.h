@@ -1,5 +1,5 @@
 #ifndef RecoTMM_h
-#define RecoTMMh
+#define RecoTMM_h
 
 #include "TRandom.h"
 #include "TRandom3.h"
@@ -8,6 +8,7 @@
 #include "TCanvas.h"
 #include "TDirectory.h"
 #include "TFile.h"
+#include "TParameter.h"
 #include "TChain.h"
 #include "TTree.h"
 #include "TTreeIndex.h"
@@ -15,8 +16,8 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TH1.h"
-#include "TH1F.h"
 #include "TH2.h"
+#include "TH3.h"
 #include "TProfile.h"
 #include "TMath.h"
 #include "TGraph.h"
@@ -46,6 +47,8 @@
 #include <cstddef>
 #include <fstream>
 #include <iomanip>
+#include <limits>
+#include <memory>
 #include <iostream>
 #include <map>
 #include <numeric>
@@ -66,36 +69,6 @@ struct SliceFitResult {
   TH1D *chi2 = nullptr;  
 };
 
-struct BlockTimeInfo {
-
-  Long64_t nEvents = 0;
-
-  ULong64_t firstEvt = 0;
-  ULong64_t lastEvt  = 0;
-
-  Long64_t firstTreeIndex = -1;
-  Long64_t lastTreeIndex = -1;
-  long double sumTreeIndex = 0.;
-  double meanTreeIndex = -1.;
-
-  double firstSrs = 0.;
-  double lastSrs  = 0.;
-  double meanSrs  = 0.;
-
-  double firstDaqSec = 0.;   // daqTimeSec + 1e-6 * daqTimeMicroSec
-  double lastDaqSec  = 0.;
-  double meanDaqSec  = 0.;
-
-  double firstDaq = 0.;   // daqTimeSec + 1e-6 * daqTimeMicroSec
-  double lastDaq  = 0.;
-  double meanDaq  = 0.;
-
-  // temporary accumulators
-  long double sumSrs = 0.;
-  long double sumDaq = 0.;
-  long double sumDaqSec = 0.;
-};
-
 class RecoTMM {
 public :
    TChain         *fTree;      //! pointer to the analyzed TTree
@@ -105,7 +78,14 @@ public :
    int            maxEvents=0;
    TString        outputFileName = "RecoTMM.root";
 
-   // Path to external calibration constants (mode 2 in overall, mode 2 in block view).
+   // Common UNIX-time selection shared with RecoTarget.
+   // Both bounds are absolute seconds; tStopUnix is EXCLUSIVE.
+   // NaN means "not supplied" (legacy fallback to the TMM chain extrema).
+   double         tStartUnix = std::numeric_limits<double>::quiet_NaN();
+   double         tStopUnix  = std::numeric_limits<double>::quiet_NaN();
+   int            nBins = 100; // Shared TMM/Target time-bin count, configurable from the launcher.
+
+   // Path to external calibration constants (mode 2 in overall view).
    // Settable from outside before LoopFileList; falls back to the historical default.
    // TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibration_run677_CalibrationConstant.txt";
    TString        externalCalibFile = "/home/mancinima/BeamMonitorRun4/padme-fw/TMM_Calibration/outputTMM/TMMCalibrationVoigt_run677_CalibrationConstant.txt";
@@ -146,7 +126,13 @@ public :
    TBranch         *b_max_q;   //!
    TBranch         *b_t_max_q;   //!
   
-   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0, TString outputFileName="RecoTMM.root");   
+   // New optional trailing args allow scripts to specify common time boundaries,
+   // without breaking existing 5-argument constructors.
+   RecoTMM(TObjArray *inputFileNameList, int RunID=0, int DetRunID=0, int maxEvents=0,
+           TString outputFileName="RecoTMM.root",
+           double tStartUnix=std::numeric_limits<double>::quiet_NaN(),
+           double tStopUnix=std::numeric_limits<double>::quiet_NaN(),
+           int nBins=100);   
    virtual ~RecoTMM();
    virtual Int_t    GetEntry(Long64_t entry);
    virtual Long64_t LoadTree(Long64_t entry);
@@ -158,13 +144,12 @@ public :
    // so calibration arrays indexed by strip number can be used unambiguously.
    virtual void     CoordinateFinder(int iStrip, const vector<short> &camp, int &iReadout, double &x_strip, double &q_strip, int &iStripLocal);
    virtual void     GlobalCoordinate(int iReadout, double &x_strip);
-   virtual void     LoopFileList(TObjArray &inputFileNameList, int NevtBlock=10000);
+   virtual void     LoopFileList(TObjArray &inputFileNameList);
    virtual bool     LoadCalibrationConstants(const string &filename);
    virtual void     BuildFitRatio(TH1D *hMeanFull, TH1D *hSigmaFull, TF1 *fit, TGraphErrors *gRatio, TGraphErrors *gDiff);
-   // virtual void     FillBlockGraphsFromSlices(int iReadout);
    virtual bool     IsFitAccepted(TFitResultPtr fitResult, int maxFitStatusAccepted = 1,int minCovMatrixStatusAccepted = 2);
 
-   virtual SliceFitResult RunFitSlicesY(TH2F *h2, TString tag);
+   virtual SliceFitResult RunFitSlicesY(TH2D *h2, TString tag);
    virtual TF1*     FitDoubleGaussian(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
    virtual double   VoigtIntegralPDF(double *x, double *par);
    virtual TF1*     FitVoigt(TH1D *h, TString name, double xmin, double xmax, TFitResultPtr &fitResult);
@@ -177,6 +162,9 @@ public :
    const int maxStripApv = 128;                                                                                      
    // xmax = maxStripApv*pitch = 32 mm is wrong for the FULL detector axis
    float xFullmm = MAXSTRIP * pitch;   // 358 * 0.250 = 89.5 mm
+
+   // Th3 time binning
+   
    
    double d_firstcross_lastcross_strips = 89.262; //mm
    double X_metrology_corr = 2.770; //mm
@@ -227,25 +215,30 @@ public :
    vector<double> FitFullDiff[TMMCH_N_Readout];
    vector<double> FitFullRatio[TMMCH_N_Readout];
 
+   // Dynamic arrays indexed by TH3 Y-bin minus one; one count per readable DAQ event.
+   // unique_ptr<T[]> retains vtsum[k] syntax while supporting runtime nBins.
+   std::unique_ptr<double[]> vtsum;
+   std::unique_ptr<double[]> vtsum2;
+   std::unique_ptr<int[]> vnn;
+   int nTimeUnderflow = 0;
+   int nTimeOverflow = 0;
+
    // tf1 di fit
    // vector<TF1*> f;
-
-   // per-block time info - struct with srstimestamp, daqtime, first/last/mean --> this serves to derive the correct variable for the time association
-   vector<BlockTimeInfo> blockTimeInfo;
   
    /////// HISTOGRAMS //////
    // ---- Overall, event based ----
    // Mode 1: RAW
-   TH2F *hqmaxstrip[TMMCH_N_Readout]      = {0}; //qmax vs xstrip (even strips only)
-   TH2F *hqmaxstripFull[TMMCH_N_Readout]  = {0}; //qmax vs xstrip (all strips)
+   TH3F *hqmaxstrip[TMMCH_N_Readout]      = {0}; //qmax vs xstrip (even strips only)
+   TH3F *hqmaxstripFull[TMMCH_N_Readout]  = {0}; //qmax vs xstrip (all strips)
 
    // Mode 2: external txt calibration
-   TH2F *hqmaxstrip_extcal[TMMCH_N_Readout]     = {0};
-   TH2F *hqmaxstripFull_extcal[TMMCH_N_Readout] = {0};
+   // TH3F *hqmaxstrip_extcal[TMMCH_N_Readout]     = {0};
+   TH3F *hqmaxstripFull_extcal[TMMCH_N_Readout] = {0};
 
    // Mode 3: run-based overall calibration (from g_RawCalibFullRatio)
-   TH2F *hqmaxstrip_runcal[TMMCH_N_Readout]     = {0};
-   TH2F *hqmaxstripFull_runcal[TMMCH_N_Readout] = {0};
+   // TH3F *hqmaxstrip_runcal[TMMCH_N_Readout]     = {0};
+   TH3F *hqmaxstripFull_runcal[TMMCH_N_Readout] = {0};
    
    // event based FitSlicesY() histograms
    TH1D *hAmpslice[TMMCH_N_Readout]        = {0};
@@ -257,99 +250,30 @@ public :
    TH1D *hSigmasliceFull[TMMCH_N_Readout]  = {0};
    TH1D *hChi2sliceFull[TMMCH_N_Readout]   = {0};
 
-   // ---- Block based ----
-   // Mode 1: RAW
-   vector<TH2F*> hBlockqmaxstrip[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull[TMMCH_N_Readout];
-    
-   // FitSlicesY() per block
-   vector<TH1D*> hBlockAmpslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockMeanslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockSigmaslice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockChi2slice[TMMCH_N_Readout];
-   vector<TH1D*> hBlockAmpsliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockMeansliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockSigmasliceFull[TMMCH_N_Readout];
-   vector<TH1D*> hBlockChi2sliceFull[TMMCH_N_Readout];
-
-   // Mode 2 (block): external txt calibration
-   vector<TH2F*> hBlockqmaxstrip_extcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_extcal[TMMCH_N_Readout];
-
-   // Mode 3 (block): overall run-based calibration (same graph used in overall mode 3)
-   vector<TH2F*> hBlockqmaxstrip_runcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_runcal[TMMCH_N_Readout];
-
-   // Mode 4 (block): per-block calibration (from g_BlockRawCalibFullRatio)
-   vector<TH2F*> hBlockqmaxstrip_blockcal[TMMCH_N_Readout];
-   vector<TH2F*> hBlockqmaxstripFull_blockcal[TMMCH_N_Readout];
-   
-   ////// GRAPHS //////
-   // block based graphs
-   TGraphErrors *g_BlockBeamSpot[TMMCH_N_Readout]   = {0};
-   TGraphErrors *g_BlockBeamSpread[TMMCH_N_Readout] = {0};
-   TGraphErrors *g_BlockBeamChargeFit[TMMCH_N_Readout] = {0};
-   TGraphErrors *g_BlockBeamChargeIntegral[TMMCH_N_Readout] = {0};
-   
-   // block based graphs - association of the average time of the entire block with the first-look observables (beam spot, spread, charge)
-   TGraphErrors *g_DaqSecBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTimeSec
-   TGraphErrors *g_DaqSecBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTimeSec
-   TGraphErrors *g_DaqSecBeamChargeFit[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
-   TGraphErrors *g_DaqSecBeamChargeIntegral[TMMCH_N_Readout] = {0}; // beam charge vs DaqTimeSec
-
-   // non può funzionare perché non è garantita la conseguenzialità degli eventi nel tree in termini temporali
-   TGraphErrors *g_DaqTimeBeamSpot[TMMCH_N_Readout] = {0}; // beam spot vs DaqTime
-   TGraphErrors *g_DaqTimeBeamSpread[TMMCH_N_Readout] = {0}; // beam spread vs DaqTime
-   TGraphErrors *g_DaqTimeBeamChargeFit[TMMCH_N_Readout] = {0}; // fit-integral charge vs DaqTime
-   TGraphErrors *g_DaqTimeBeamChargeIntegral[TMMCH_N_Readout] = {0}; // fit-integral charge vs DaqTime
-   TGraphErrors *g_TreeIndexBeamChargeFit[TMMCH_N_Readout] = {0}; // fit-integral charge vs mean tree index
-   TGraphErrors *g_TreeIndexBeamChargeIntegral[TMMCH_N_Readout] = {0}; // fit-integral charge vs mean tree index
-
-   // TGraphErrors *g_SrsTimeBeamSpot[TMMCH_N_Readout]   = {0};
-   // TGraphErrors *g_SrsTimeBeamSpread[TMMCH_N_Readout] = {0};
-   // TGraphErrors *g_SrsTimeBeamChargeFit[TMMCH_N_Readout] = {0};
-   // TGraphErrors *g_SrsTimeBeamChargeIntegral[TMMCH_N_Readout] = {0};
-
    //TGraphs for strip calibration (overall run-based)
    TGraphErrors *g_RawCalibFullDiff[TMMCH_N_Readout]  = {0};
    TGraphErrors *g_RawCalibFullRatio[TMMCH_N_Readout] = {0};
 
    // TGraphs with time vs iev association (iev indice del loop sulle entry)
-   TGraphErrors *g_SrsTimeStamp_iev = 0;
-   TGraphErrors *g_DaqTimeSec_iev = 0;
-   TGraphErrors *g_DaqTimeMicroSec_iev = 0;
+   // TGraphErrors *g_SrsTimeStamp_iev = 0;
+   // TGraphErrors *g_DaqTimeSec_iev = 0;
+   // TGraphErrors *g_DaqTimeMicroSec_iev = 0;
    TGraphErrors *g_DaqTime_iev = 0; // combines Sec and MicroSec into a thin separated time 
 
    // TGraphs with time vs iev association (iev indice del loop sulle entry)
-   TGraphErrors *g_SrsTimeStamp_evt = 0;
-   TGraphErrors *g_DaqTimeSec_evt = 0;
-   TGraphErrors *g_DaqTimeMicroSec_evt = 0;
+   // TGraphErrors *g_SrsTimeStamp_evt = 0;
+   // TGraphErrors *g_DaqTimeSec_evt = 0;
+   // TGraphErrors *g_DaqTimeMicroSec_evt = 0;
    TGraphErrors *g_DaqTime_evt = 0; // combines Sec and MicroSec into a thin separated time 
 
    // evt iev association
    TGraphErrors *g_evt_vs_iev = 0;
+   TGraphErrors *g_TStart_Tstop = 0;
 
-   TGraphErrors *g_DaqTimeBeamChargeFitTotal = 0;
-   TGraphErrors *g_DaqTimeBeamChargeIntegralTotal = 0;
-   TGraphErrors *g_TreeIndexBeamChargeFitTotal = 0;
-   TGraphErrors *g_TreeIndexBeamChargeIntegralTotal = 0;
-   
-   //block based TGraphs for strip calibration (per-block)
-   vector<TGraphErrors*> g_BlockRawCalibFullDiff[TMMCH_N_Readout];
-   vector<TGraphErrors*> g_BlockRawCalibFullRatio[TMMCH_N_Readout];
-
-   // block based TGraphs with time vs event id association
-   vector<TGraphErrors*> g_BlockSrsTimeStamp;
-   vector<TGraphErrors*> g_BlockDaqTimeSec;
-   vector<TGraphErrors*> g_BlockDaqTimeMicroSec;
-   vector<TGraphErrors*> g_BlockDaqTime;
-
-   // block id time association
-   TGraphErrors *g_BlockMeanDaqSec = 0;
-   TGraphErrors *g_BlockMeanDaqTime = 0;
-   TGraphErrors *g_BlockMeanSrsTime = 0;
-   TGraphErrors *g_BlockMeanTreeIndex = 0;
-
+   // tgrapherrors for the time binning 
+   TGraphErrors *g_vtsum  = 0;
+   TGraphErrors *g_vtsum2 = 0;
+   TGraphErrors *g_vnn    = 0;
 };
 
 #endif
@@ -359,13 +283,19 @@ RecoTMM::RecoTMM(TObjArray *inputFileNameList,
                  int RunID,
                  int DetRunID,
                  int maxEvents,
-                 TString outputFileName) :
+                 TString outputFileName,
+                 double tStartUnix,
+                 double tStopUnix,
+                 int nBins) :
    fTree(0),
    fOwnChain(kFALSE),
    RunID(RunID),
    DetRunID(DetRunID),
    maxEvents(maxEvents),
-   outputFileName(outputFileName)
+   outputFileName(outputFileName),
+   tStartUnix(tStartUnix),
+   tStopUnix(tStopUnix),
+   nBins(nBins)
 {
 
    if (!inputFileNameList || inputFileNameList->GetEntries() == 0) {

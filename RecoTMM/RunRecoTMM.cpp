@@ -12,17 +12,17 @@
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <limits>
+#include <cmath>
+#include <cerrno>
+#include <iomanip>
 
 using namespace std;
 
-// bool IsRemoteFile(const TString& name)
-// {
-//   return name.BeginsWith("root://") ||
-//          name.BeginsWith("http://") ||
-//          name.BeginsWith("https://") ||
-//          name.BeginsWith("xroot://") ||
-//          name.BeginsWith("davs://");
-// }
+bool IsRemoteFile(const TString& name)
+{
+  return name.BeginsWith("root://") || name.BeginsWith("http://") || name.BeginsWith("https://") || name.BeginsWith("xroot://") || name.BeginsWith("davs://");
+}
 
 bool FileExists(const TString& name)
 {
@@ -42,11 +42,14 @@ void PrintUsage(const char* progname)
   cout << "Options:" << endl;
   cout << "  -i <file>     Add one input ROOT file. Can be repeated." << endl;
   cout << "  -l <list>     Text file containing one input ROOT file per line." << endl;
-  cout << "  -o <file>     Output ROOT file name. Default: Monitor_TMM.root" << endl;
+  cout << "  -o <file>     Output ROOT file name. Default: RecoTMM_run0000000.root" << endl;
   cout << "  -n <N>        Maximum number of events to reconstruct. Default: 0 = all." << endl;
   cout << "  -r <RunID>    PADME run ID, used as label/output metadata." << endl;
   cout << "  -d <DetRunID> Detector run ID, used as label/output metadata." << endl;
-  cout << "  -b <NBlock>   Block size in events. Default: 10000." << endl;
+  cout << "  -s <time>     External inclusive UNIX start time [s]; requires -t." << endl;
+  cout << "  -t <time>     External exclusive UNIX stop time [s]; requires -s." << endl;
+  cout << "  -b <N>        Number of time bins. Default: 100." << endl;
+  cout << "  -h            Show this help." << endl;
   cout << endl;
 }
 
@@ -58,7 +61,11 @@ int main(int argc, char* argv[])
   int RunID = 0;
   int DetRunID = 0;
   int maxEvents = 0;
-  int NevtBlock = 10000;
+  int nBins = 100;
+  double tStartUnix = std::numeric_limits<double>::quiet_NaN();
+  double tStopUnix = std::numeric_limits<double>::quiet_NaN();
+  bool haveTStart = false;
+  bool haveTStop = false;
 
   TString inputFileName;
   TString outputFileName = "RecoTMM_run0000000.root";
@@ -66,7 +73,7 @@ int main(int argc, char* argv[])
   TObjArray inputFileNameList;
   inputFileNameList.SetOwner(kTRUE);
 
-  while ((opt = getopt(argc, argv, "i:l:o:n:r:d:b:")) != -1) {
+  while ((opt = getopt(argc, argv, "i:l:o:n:r:d:s:t:b:h")) != -1) {
 
     switch (opt) {
 
@@ -144,14 +151,44 @@ int main(int argc, char* argv[])
         break;
       }
 
-      case 'b': {
-        NevtBlock = atoi(optarg);
-        if (NevtBlock <= 0) {
-          cerr << "ERROR: NevtBlock must be > 0" << endl;
+      case 's': {
+        char* end = nullptr;
+        tStartUnix = strtod(optarg, &end);
+        if (end == optarg || *end != '\0' || !std::isfinite(tStartUnix)) {
+          cerr << "ERROR: invalid -s UNIX timestamp: " << optarg << endl;
           return 1;
         }
-        cout << "Block size set to: "<< NevtBlock << " events" << endl;
+        haveTStart = true;
         break;
+      }
+
+      case 't': {
+        char* end = nullptr;
+        tStopUnix = strtod(optarg, &end);
+        if (end == optarg || *end != '\0' || !std::isfinite(tStopUnix)) {
+          cerr << "ERROR: invalid -t UNIX timestamp: " << optarg << endl;
+          return 1;
+        }
+        haveTStop = true;
+        break;
+      }
+
+      case 'b': {
+        char* end = nullptr;
+        errno = 0;
+        const long parsed = strtol(optarg, &end, 10);
+        if (errno == ERANGE || end == optarg || *end != '\0' ||
+            parsed < 1 || parsed > std::numeric_limits<int>::max()) {
+          cerr << "ERROR: invalid -b number of time bins: " << optarg << endl;
+          return 1;
+        }
+        nBins = static_cast<int>(parsed);
+        break;
+      }
+
+      case 'h': {
+        PrintUsage(argv[0]);
+        return 0;
       }
 
       default: {
@@ -179,18 +216,34 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  if (haveTStart != haveTStop) {
+    cerr << "ERROR: -s and -t must be supplied together" << endl;
+    return 1;
+  }
+
+  if (haveTStart && tStopUnix <= tStartUnix) {
+    cerr << "ERROR: -t must be greater than -s" << endl;
+    return 1;
+  }
+
   cout << endl;
   cout << "=== === === Reconstruction settings === === ===" << endl;
   cout << "RunID          = " << RunID << endl;
   cout << "DetRunID       = " << DetRunID << endl;
   cout << "maxEvents      = " << maxEvents << endl;
-  cout << "NevtBlock      = " << NevtBlock << endl;
+  cout << "nBins          = " << nBins << endl;
+  if (haveTStart) {
+    cout << setprecision(17) << "tStartUnix     = " << tStartUnix << endl;
+    cout << setprecision(17) << "tStopUnix      = " << tStopUnix << endl;
+  } else {
+    cout << "tStartUnix/tStopUnix = TMM chain-derived bounds (legacy fallback)" << endl;
+  }
   cout << "outputFileName = " << outputFileName << endl;
   cout << endl;
 
   {
-    RecoTMM reco(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName);
-    reco.LoopFileList(inputFileNameList, NevtBlock);    
+    RecoTMM reco(&inputFileNameList, RunID, DetRunID, maxEvents, outputFileName, tStartUnix, tStopUnix, nBins);
+    reco.LoopFileList(inputFileNameList);    
   }
 
   cout << endl;

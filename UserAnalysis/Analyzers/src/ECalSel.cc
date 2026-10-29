@@ -2188,7 +2188,6 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("phi", &bremev->phi, "phi[2]/D");
   ftree->Branch("thetaCM", &bremev->thetaCM, "thetaCM[2]/D");
   ftree->Branch("thetaCMinfo", &bremev->thetaCMinfo, "thetaCMinfo[2]/D");
-  ftree->Branch("thetaCM", &bremev->thetaCM, "thetaCM[2]/D");
   ftree->Branch("thetaLab", &bremev->thetaLab, "thetaLab[2]/D");
   ftree->Branch("seedenergy", &bremev->seedenergy, "seedenergy[2]/D");
   ftree->Branch("seedposition_0","TVector2", &bremev->seedposition[0]);
@@ -2209,8 +2208,8 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("trueCMP_0", "TLorentzVector", &bremev->trueCMP[0]);
   ftree->Branch("trueCMP_1", "TLorentzVector", &bremev->trueCMP[1]);
 
-  ftree->Branch("truePos_0","TVector3", &bremev->truePos[0]);
-  ftree->Branch("truePos_1","TVector3", &bremev->truePos[1]);
+  ftree->Branch("truePos_0","TVector2", &bremev->truePos[0]);
+  ftree->Branch("truePos_1","TVector2", &bremev->truePos[1]);
 
   ftree->Branch("processID", &bremev->processID, "processID[2]/I");
 

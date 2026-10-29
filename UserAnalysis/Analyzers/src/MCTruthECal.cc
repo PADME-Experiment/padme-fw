@@ -257,7 +257,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
 
   //Loop on vertex
   for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
-      
+    
       Int_t CluPcleOut[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1}; //2 is the maximum number of plces out from a vertex, initialized to -1 so that when a pcle is associated with a cluster the value becomes 1
       Int_t CluPcleOutFlag[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1};  //2 is the maximum number of plces out from a vertex, initialized to -1 so that when a pcle is associated with a cluster the value becomes 1
       Int_t Extrapolation[NPcles]={-1,-1, -1,-1, -1,-1, -1,-1, -1,-1}; 
@@ -268,6 +268,7 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
       mcVtx = fEvent->MCTruthEvent->Vertex(iV);
       
       VtxPos = mcVtx->GetPosition();
+      if (VtxPos.Z() > 0) continue; // skip vertices in the ECal
       //add
       fHS->FillHistoList("MCTruthECal","NPcleOut",mcVtx->GetNParticleOut(),1.);	
        if(mcVtx->GetProcess() =="eBrem"){

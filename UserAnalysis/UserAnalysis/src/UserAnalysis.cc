@@ -18,6 +18,7 @@
 #include "DataQuality.hh" //EDM TS
 #include "MCTruth.hh"     //MR
 #include "MCTruthECal.hh"     //EDM
+#include "MCTruthImprovedECal.hh"     //EDM TS
 #include "MMTrackDevel.hh" //MM study
 #include "MMFindBestTrack.hh" //EDM TS
 #include "HistoSvc.hh"
@@ -38,7 +39,7 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
   fMCTruth      = MCTruth::GetInstance();
   fMCTruthECal      = MCTruthECal::GetInstance();
-
+  fMCTruthImprovedECal = MCTruthImprovedECal::GetInstance();
 
   //Physics analysis last reviewed by M. Raggi 05/22
   fNPoTAnalysis = NPoTAnalysis::GetInstance();
@@ -90,6 +91,7 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
   if(fEvent->MCTruthEvent){
      fMCTruth->Init(fEvent);
      fMCTruthECal->Init(fEvent);
+     fMCTruthImprovedECal->Init(fEvent);
   }
   fGeneralInfo->Init(fEvent, DBRunNumber);
   fNPoTAnalysis->Init(fEvent);
@@ -147,6 +149,7 @@ Bool_t UserAnalysis::Process(){
   fGeneralInfo->Process();
   fNPoTAnalysis->Process();
   if(fEvent->MCTruthEvent) fMCTruthECal->Process();
+  if(fEvent->MCTruthEvent) fMCTruthImprovedECal->Process();
   //  if(fNPoTAnalysis->GetNPoT()<5000.) return true;   //cut on events with less than 5000 POTs //Commented by Beth 20/9/21 for X17 analysis
   fECalCalib->Process(fEvent);
   if(!(fEvent->RecoEvent->GetEventStatusBit(TRECOEVENT_STATUSBIT_SIMULATED))){
@@ -227,6 +230,7 @@ Bool_t UserAnalysis::Finalize()
   if(fEvent->MCTruthEvent){
      fMCTruth->Finalize();
      fMCTruthECal->Finalize();
+     fMCTruthImprovedECal->Finalize();
 
   }
   fNPoTAnalysis->Finalize();

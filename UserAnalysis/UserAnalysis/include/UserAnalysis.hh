@@ -19,6 +19,7 @@ class ETagAn;
 class ETagAnalysis;
 class MCTruth;
 class MCTruthECal;
+class MCTruthImprovedECal;
 class DataQuality;
 class MMTrackDevel;
 class MMFindBestTrack;
@@ -60,6 +61,7 @@ private:
   ETagAnalysis* fETagAnalysis;
   MCTruth* fMCTruth;
   MCTruthECal* fMCTruthECal;
+  MCTruthImprovedECal* fMCTruthImprovedECal;
   ECalCalib* fECalCalib;
   DataQuality *fDataQuality;
   MMTrackDevel *fMMTrackDevel;

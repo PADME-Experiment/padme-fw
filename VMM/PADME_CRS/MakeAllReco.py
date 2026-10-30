@@ -40,9 +40,10 @@ def find_available_runs(directory: Path) -> list[str]:
 
 def main() -> int:
     working_directory = Path(__file__).resolve().parent
-
-    input_directory = working_directory / "Events"
-    output_directory = working_directory / "RecoEvents"
+    file_directory = Path("/data9Vd1/padme/wnatale/VMMStudy")
+    
+    input_directory = file_directory / "Events"
+    output_directory = file_directory / "RecoEvents"
 
     source_file = working_directory / "RecoVMM.C"
     header_file = working_directory / "RecoVMM.h"

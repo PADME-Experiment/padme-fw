@@ -124,9 +124,10 @@ def process_single_run(
 
 def main() -> int:
     working_directory = Path(__file__).resolve().parent
-
-    input_directory = working_directory / "VMMRaw"
-    output_directory = working_directory / "Events"
+    file_directory = Path("/data9Vd1/padme/wnatale/VMMStudy")
+    
+    input_directory = file_directory / "VMMRaw"
+    output_directory = file_directory / "Events"
 
     source_file = working_directory / "VMMRawtoEvents.C"
     header_file = working_directory / "VMMRawtoEvents.h"

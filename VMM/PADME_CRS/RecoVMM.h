@@ -32,11 +32,29 @@ public :
    Int_t           fCurrent; //!current Tree number in a TChain
    TString  fRunName = "";
 
-   double DriftVelocity = 0.047; // mm/ns
-   double T0 = 93100; // ns 
-   double driftgap = 50; // mm
-   double pitch = 1.2; // mm
+  //double T0 = 92566; // ns   //a occhio da fittare per favore
+  //  double DriftVelocity = 0.047; // mm/ns
 
+  
+  //double DriftVelocity = 0.01; // mm/ns
+  
+  
+
+  //double T0 = 92528; //ns                 //run349  drift=750 V
+  //double DriftVelocity = 0.0144;          //run349  drift=750 V
+  
+  double T0 = 92475; //ns                 //run350  drift=1000 V
+  double DriftVelocity = 0.0212; // mm/ns //run350  drift=1000 V
+
+  //double T0 = 92552; //ns                 //run351  drift=1250 V
+  //double DriftVelocity = 0.0284;          //run351  drift=1250 V
+
+  //double T0 = 92546; //ns                 //run352  drift=1500 V
+  //double DriftVelocity = 0.0336;          //run352  drift=1500 V
+  
+  double driftgap = 50; // mm
+  double pitch = 1.2; // mm
+  
    // Fixed size dimensions of array or collections stored in the TTree if any.
 
    // Declaration of leaf types
@@ -102,6 +120,8 @@ public :
    virtual void     Loop();
    virtual bool     Notify();
    virtual void     Show(Long64_t entry = -1);
+   virtual double     DoubleFermiDiracFunc(double *x, double *par);
+
 };
 
 #endif

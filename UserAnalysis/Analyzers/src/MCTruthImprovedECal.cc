@@ -71,11 +71,8 @@ Bool_t MCTruthImprovedECal::Init(PadmeAnalysisEvent* event){
     exit(1);
   }
 
-  InitHistos();
-
-  
   fProcessIDsMap={{"eIoni",0}, {"eBrem",1}, {"annihil",2}, {"Bhabha",3}, {"Babayaga",4}, {"NoVtx",5}, {"BabayagaGG",6}};
-
+  InitHistos();
   
   return true;
 }
@@ -97,6 +94,28 @@ Bool_t MCTruthImprovedECal::InitHistos(){
     fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",i),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("EinVsEout_type%d",i),100,0.,300.,100,0.,300.);
   }
+
+  fpdgcodes[0] = -11;
+  fpdgcodes[1] = 11;
+  fpdgcodes[2] = 22; 
+  std::map<TString, int>::iterator it;
+  for (it = fProcessIDsMap.begin(); it != fProcessIDsMap.end(); it++){
+    for (int i=0; i<3; i++){
+      // efficiency to find an associated cluster Y vs X
+      TString histoNameXY = Form("InAccYvsX_%s_%d",it->first.Data(),fpdgcodes[i]);
+      fHS->BookHisto2List("MCTruthImprovedECal",histoNameXY.Data(),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNameXY.Data()),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameXY.Data()),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
+      // efficiency to find an associated cluster E vs phi
+      TString histoNameEQ = Form("InAccEvsPhi_%s_%d",it->first.Data(),fpdgcodes[i]);
+      fHS->BookHisto2List("MCTruthImprovedECal",histoNameEQ.Data(),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
+      // Distance true impact point vs reconstructed centroid given an associated cluster
+      TString histoNamedRR = Form("InAccdRvsR_%s_%d",it->first.Data(),fpdgcodes[i]);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRR.Data()),fNXBins,0.,fXMax,100,-200.,200.);
+    }
+  }
   return true;
 }
 
@@ -116,10 +135,9 @@ Bool_t MCTruthImprovedECal::Process(){
 
 
 Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
-  CluVtxCorr.clear(); //cluster-vertex couple 1-1. correspondence
-  VtxCluCorr.clear(); //vertex-list of clusters associated to the vertex
-  CluPcleCorr.clear();  //cluster-list of particles candidates (particle out from the vertex) couple
-  CluECalVtxCorr.clear();//cluster-id of ECalVertex
+  VtxKeyMap.clear(); // vertex, MatchingStruct vector pair 
+  CluKeyMap.clear(); // cluster,MatchingStruct vector pair 
+  VtxPclePairKeyMap.clear(); // {vtx,pcle}, MatchingStruct vector pair
   
 //  TVector3 cluPos, VtxPos;
 //  TRecoVCluster* clu;
@@ -184,9 +202,8 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     // retrieve momentum/energy of particle incoming (the original)
     TLorentzVector ecalvtxPcleInMom(mcVtx->ParticleIn(0)->GetMomentum(), mcVtx->ParticleIn(0)->GetEnergy());
     
-    // match with ECal clusters
-    Int_t cluIdx =-1;
-    //Loop on clu
+    // match with ECal clusters, loop on cluster list
+
     for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
       TRecoVCluster* clu = fECal_clEvent->Element((int)h1);
       double cluEnergy = clu->GetEnergy();
@@ -206,76 +223,172 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("EinVsEout_type%d",ecalvtxtype),ecalvtxPcleMom.E(),ecalvtxPcleInMom.E(),1.);
+
+	insertMatching(iV,h1,originalvtxid,originalpcleoutid,ecalvtxtype); // fill all the maps, with keys: vtxid, cluid, {vtxid,particleid}
       }
     } //ECal cluster loop
   } //MCTruth Vtx Loop
       
+  //  DumpMapWithVtxKey();
 
-  return true;
+  // to check the performance, must apply acceptance criteria
 
+  //Loop on vertex
+  for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
+    TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);      
+    TVector3 VtxPos = mcVtx->GetPosition();
+    if (VtxPos.Z() > 0) continue; // skip vertices in the ECal
 
+    std::map<TString,int>::iterator it = fProcessIDsMap.find(mcVtx->GetProcess());
+    if (it == fProcessIDsMap.end()) {
+      std::cout << "Process not found name = ---" << mcVtx->GetProcess().Data() << "---" << endl;
+      continue;
+    }
+    
+    for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+      TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
+      TVector3 pclePos =mcVtx->GetPosition();
+      TVector3 pcleMom =mcOPart->GetMomentum();
+      TLorentzVector pcle(pcleMom.X(),pcleMom.Y(),pcleMom.Z(),mcOPart->GetEnergy());
+      TVector3 VtxPosAtCalo;
+      VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
+      VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
+      VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));      
+      int pdgcode = mcVtx->ParticleOut(iO)->GetPDGCode();
+      // acceptance condition: extrapolates to an ECal crystal
+      int icellX = VtxPosAtCalo.X()/cellSize + ncells/2;
+      int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
+      if(icellX>ncells || icellX<0) continue;
+      if(icellY>ncells || icellY<0) continue;
+      if(fCellMap[100*icellX+icellY]!=1) continue; // ECal map to remove holes and external parts
 
-}
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());      
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());      
 
+      // retrieve list of clusters associated to vertex from mctruth
+      std::vector<Int_t> cluidvec = GetClusFromVtxPclePair(iV,iO);
 
-Int_t MCTruthImprovedECal::GetVtxFromCluID(Int_t CluId){
-  map<Int_t, Int_t>::iterator it;
-  it = CluVtxCorr.find(CluId);
-  if(it!= CluVtxCorr.end()){
-    return it->second;
-  }else{
-    return -1;
-  }  
-}
-  
-std::vector<Int_t> MCTruthImprovedECal::GetClusFromVtx(Int_t VtxId){
-  map<Int_t, std::vector<Int_t>>::iterator it;
-  it = VtxCluCorr.find(VtxId);
-  if(it!= VtxCluCorr.end()){
-    return it->second;
-  }else{
-    return {}; //returns empty vector if no clusters are associated with the vertex
-  }  
-}
+      if (cluidvec.size()) {
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_ass",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_ass",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
 
-std::vector<Int_t> MCTruthImprovedECal::GetPcleFromCluID(Int_t CluId){
-map<Int_t, std::vector<Int_t>>::iterator it;
-    it = CluPcleCorr.find(CluId);
-    if(it!= CluPcleCorr.end()){
-      return it->second;
-    }else{
-      return {}; //returns empty vector if no particles are associated with the cluster
-    }  
-  }
+	for (int ic = 0; ic < (int) cluidvec.size(); ic++){
+	  // quality of the reco clu
+	  TRecoVCluster* clu = fECal_clEvent->Element((int)cluidvec.at(ic));
+	  TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
+	  TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
+	  cluDir *= (1./cluDir.Mag()); // normalize vector
 
-Int_t MCTruthImprovedECal::GetCluFromPcle(Int_t VtxId, Int_t PcleId){
-  
-  std::map<Int_t, std::vector<Int_t>>::iterator it;
-  it = VtxCluCorr.find(VtxId);
-  if(it!= VtxCluCorr.end()){
-    std::vector<Int_t> associatedClusters = it->second;
-    for(Int_t cluId : associatedClusters){
-      std::map<Int_t, std::vector<Int_t>>::iterator pcleIt;
-      pcleIt = CluPcleCorr.find(cluId);
-      if(pcleIt != CluPcleCorr.end()){
-        std::vector<Int_t> associatedParticles = pcleIt->second;
-        if(std::find(associatedParticles.begin(), associatedParticles.end(), PcleId) != associatedParticles.end()){
-          return cluId; //returns the cluster ID associated with the given vertex and particle
-        }
+	  int ecalvtxid = GetECalVtxFromCluID(cluidvec.at(ic));
+	  if (ecalvtxid == -1) {
+	    std::cout << "MCTruthImprovedECal.cc: cannot retrieve ecalvtx id from cluster " << cluidvec.at(ic) << " " << ic << std::endl;
+	    continue;
+	  }
+	  TVector3 diffRecoTrue = cluPos;
+	  diffRecoTrue -= fEvent->MCTruthEvent->Vertex(ecalvtxid)->GetPosition();
+	  // component along reco distance
+	  double parallelComp = diffRecoTrue.Dot(cluDir);
+	  // ortogonal component
+	  TVector3 ortogonalComp = diffRecoTrue;
+	  ortogonalComp -= parallelComp*cluDir;
+	  double ortogonalDist = ortogonalComp.Mag();
+	  TVector3 crosso = ortogonalComp.Cross(cluDir);
+	  if (crosso.Z() > 0) ortogonalDist *= -1; // shift towards "closing" to the IP
+	  fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsR_%s_%d_ass",it->first.Data(),pdgcode),cluPos.Perp(),ortogonalDist);
+	}
       }
     }
   }
-  return -1; //returns -1 if no cluster is found for the given vertex and particle
 
-} //returns the cluster associated to a vertex and a particle out from that vertex
+  
+  return true;
+}
+
+
+//Int_t MCTruthImprovedECal::GetVtxFromCluID(Int_t CluId){
+//  map<Int_t, Int_t>::iterator it;
+//  it = CluVtxCorr.find(CluId);
+//  if(it!= CluVtxCorr.end()){
+//    return it->second;
+//  }else{
+//    return -1;
+//  }  
+//}
+//  
+//std::vector<Int_t> MCTruthImprovedECal::GetClusFromVtx(Int_t VtxId){
+//  map<Int_t, std::vector<Int_t>>::iterator it;
+//  it = VtxCluCorr.find(VtxId);
+//  if(it!= VtxCluCorr.end()){
+//    return it->second;
+//  }else{
+//    return {}; //returns empty vector if no clusters are associated with the vertex
+//  }  
+//}
+//
+//std::vector<Int_t> MCTruthImprovedECal::GetPcleFromCluID(Int_t CluId){
+//map<Int_t, std::vector<Int_t>>::iterator it;
+//    it = CluPcleCorr.find(CluId);
+//    if(it!= CluPcleCorr.end()){
+//      return it->second;
+//    }else{
+//      return {}; //returns empty vector if no particles are associated with the cluster
+//    }  
+//  }
+//
+//Int_t MCTruthImprovedECal::GetCluFromPcle(Int_t VtxId, Int_t PcleId){
+//  
+//  std::map<Int_t, std::vector<Int_t>>::iterator it;
+//  it = VtxCluCorr.find(VtxId);
+//  if(it!= VtxCluCorr.end()){
+//    std::vector<Int_t> associatedClusters = it->second;
+//    for(Int_t cluId : associatedClusters){
+//      std::map<Int_t, std::vector<Int_t>>::iterator pcleIt;
+//      pcleIt = CluPcleCorr.find(cluId);
+//      if(pcleIt != CluPcleCorr.end()){
+//        std::vector<Int_t> associatedParticles = pcleIt->second;
+//        if(std::find(associatedParticles.begin(), associatedParticles.end(), PcleId) != associatedParticles.end()){
+//          return cluId; //returns the cluster ID associated with the given vertex and particle
+//        }
+//      }
+//    }
+//  }
+//  return -1; //returns -1 if no cluster is found for the given vertex and particle
+//
+//} //returns the cluster associated to a vertex and a particle out from that vertex
 
 
 
 
 Bool_t MCTruthImprovedECal::Finalize()
-{
-  
+{  
+  TString tagnames[2] = {"YvsX","EvsPhi"};
   if (fVerbose) printf("---> Finalizing MCTruthImprovedECal\n");
+
+  for (int itag = 0; itag<2; itag++){ 
+    std::map<TString, int>::iterator it;
+    for (it = fProcessIDsMap.begin(); it != fProcessIDsMap.end(); it++){
+      for (int i=0; i<3; i++){
+	TString histoName = Form("InAcc%s_%s_%d",tagnames[itag].Data(),it->first.Data(),fpdgcodes[i]);
+	TH2D* denoH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",histoName.Data());
+	//	if (denoH->GetEntries() < 10000) continue;
+	TH2D* numeH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_ass",histoName.Data()));
+	TH2D* effiH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_eff",histoName.Data()));
+      
+	for (int i=0; i<denoH->GetXaxis()->GetNbins(); i++){
+	  for (int j=0; j<denoH->GetYaxis()->GetNbins(); j++){
+	    if (denoH->GetBinContent(i+1,j+1) > 10) {
+	      double effi = numeH->GetBinContent(i+1,j+1)*100./denoH->GetBinContent(i+1,j+1)/30.;
+	      // std::cout << "effi = " << effi << " nume = " << numeH->GetBinContent(i+1,j+1) << " deno = " << denoH->GetBinContent(i+1,j+1) << endl;
+	      effiH->SetBinContent(i+1,j+1,effi);
+	    }
+	  }
+	}
+	
+      }
+    }
+  }
+
+
   return 1;
 }
 

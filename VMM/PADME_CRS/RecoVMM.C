@@ -432,10 +432,12 @@ void RecoVMM::Loop()
             const double vpos2 = pos->at(iHH) * pitch;
             const double z2 = GetZ(time->at(iHH), trigger_time->at(iHH));
             const double deltaZ = z - z2;
-            if (fabs(deltaZ) < 1.e-9) continue;
 
-            const double slope = (vpos - vpos2) / deltaZ;
-            const double inter = vpos2 - slope * z2;
+	    double slope;
+	    if (fabs(deltaZ) < 1.e-9) slope = 0;
+	    else slope = (vpos - vpos2) / deltaZ;
+
+	    const double inter = vpos2 - slope * z2;
 
             if (fabs(slope - SlpMax[iv]) < 0.02 && fabs(inter - InterMax[iv]) < 3.) {
                acceptedHits[iH] = true;

@@ -97,6 +97,8 @@ void MMReconstruction::HistoInit()
 void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
   ClearHits();
   vector<TRecoVHit *> &Hits  = GetRecoHits();
+  Double_t TimeMatchingPlane1 = r->Gaus(0.,50.); //ns
+  Double_t TimeMatchingPlane2 = r->Gaus(0.,50.); //ns
   //fill the hit vector from MC digis
   for (Int_t i=0; i<tEvent->GetNDigi(); ++i) {
       if (gRandom->Uniform() < 0.10) continue;
@@ -121,7 +123,10 @@ void MMReconstruction::ProcessEvent(TMCVEvent* tEvent,TMCEvent* tMCEvent) {
       Hit->SetChannelId(chNum);      // will be used to determine the geometrical position by the MMGeometry method ComputePositions using GlobalPosition(ich)
       Double_t sigma = fTimeTau/5;//sqrt(12); // sigma of the time smearing
       Double_t DetTime=r->Gaus(0.,sigma); //ns
-      Hit->SetTime(digi->GetTime()+DetTime); // ns to be smeared
+      if(brdNum%8==0) Hit->SetTime(digi->GetTime()+TimeMatchingPlane1+DetTime); // ns to be smeared
+      else Hit->SetTime(digi->GetTime()+TimeMatchingPlane2+DetTime); // ns to be smeared
+      
+      //Hit->SetTime(digi->GetTime()+DetTime); // ns to be smeared
       
       Hit->SetEnergy(digi->GetEnergy()*QtoMaxConv); // ADC
       Hits.push_back(Hit);

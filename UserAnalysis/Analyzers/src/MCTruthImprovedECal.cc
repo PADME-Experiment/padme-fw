@@ -60,11 +60,11 @@ Bool_t MCTruthImprovedECal::Init(PadmeAnalysisEvent* event){
   std::ifstream MapFile(mapname.Data());
   std::string line;
   if(MapFile.is_open()){
-    int SU,px,py,BN,CH;
+    int SU,px,py,BN,CH, isdead;
     while(getline(MapFile,line)){
-      std::stringstream(line) >> SU >> px >> py >> BN >> CH;
-      fCellMap[100*px+py] = 1;
-      
+      std::stringstream(line) >> SU >> px >> py >> BN >> CH >> isdead;
+      fCellMap[100*px+py] = isdead+1;
+      if (isdead) fdeadcells.push_back(100*px+py);
       }
   }else{
     std::cout<<"file 'Analyzers/ECal_map_2.txt' not found -->check your paths"<<std::endl;
@@ -113,7 +113,10 @@ Bool_t MCTruthImprovedECal::InitHistos(){
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
       // Distance true impact point vs reconstructed centroid given an associated cluster
       TString histoNamedRR = Form("InAccdRvsR_%s_%d",it->first.Data(),fpdgcodes[i]);
+      TString histoNamedRDeadCell = Form("InAccdRvsdistanceToDeadCell_%s_%d",it->first.Data(),fpdgcodes[i]);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRR.Data()),fNXBins,0.,fXMax,100,-200.,200.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass_noecalvtx",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
     }
   }
   return true;
@@ -138,6 +141,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
   VtxKeyMap.clear(); // vertex, MatchingStruct vector pair 
   CluKeyMap.clear(); // cluster,MatchingStruct vector pair 
   VtxPclePairKeyMap.clear(); // {vtx,pcle}, MatchingStruct vector pair
+  VtxPclePairKeyMapToEcalvtx.clear(); // {vtx,pcle}, all ecal vertices pair
   
 //  TVector3 cluPos, VtxPos;
 //  TRecoVCluster* clu;
@@ -201,7 +205,8 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     double ecalVtxTime = mcVtx->GetTime();
     // retrieve momentum/energy of particle incoming (the original)
     TLorentzVector ecalvtxPcleInMom(mcVtx->ParticleIn(0)->GetMomentum(), mcVtx->ParticleIn(0)->GetEnergy());
-    
+    insertMatchingVtxPcleToEcalvtx(iV,originalvtxid,originalpcleoutid); // fill all the maps, with keys: vtxid, cluid, {vtxid,particleid}
+
     // match with ECal clusters, loop on cluster list
 
     for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
@@ -260,7 +265,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
       if(icellX>ncells || icellX<0) continue;
       if(icellY>ncells || icellY<0) continue;
-      if(fCellMap[100*icellX+icellY]!=1) continue; // ECal map to remove holes and external parts
+      if(fCellMap[100*icellX+icellY]<=0) continue; // ECal map to remove holes and external parts
 
       fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());      
       fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());      
@@ -269,34 +274,91 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       std::vector<Int_t> cluidvec = GetClusFromVtxPclePair(iV,iO);
 
       if (cluidvec.size()) {
-	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_ass",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
-	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_ass",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
+        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_ass",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
+        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_ass",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
 
-	for (int ic = 0; ic < (int) cluidvec.size(); ic++){
-	  // quality of the reco clu
-	  TRecoVCluster* clu = fECal_clEvent->Element((int)cluidvec.at(ic));
-	  TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
-	  TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
-	  cluDir *= (1./cluDir.Mag()); // normalize vector
+        for (int ic = 0; ic < (int) cluidvec.size(); ic++){
+          // quality of the reco clu
+          TRecoVCluster* clu = fECal_clEvent->Element((int)cluidvec.at(ic));
+          TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
+          TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
+          cluDir *= (1./cluDir.Mag()); // normalize vector
 
-	  int ecalvtxid = GetECalVtxFromCluID(cluidvec.at(ic));
-	  if (ecalvtxid == -1) {
-	    std::cout << "MCTruthImprovedECal.cc: cannot retrieve ecalvtx id from cluster " << cluidvec.at(ic) << " " << ic << std::endl;
-	    continue;
-	  }
-	  TVector3 diffRecoTrue = cluPos;
-	  diffRecoTrue -= fEvent->MCTruthEvent->Vertex(ecalvtxid)->GetPosition();
-	  // component along reco distance
-	  double parallelComp = diffRecoTrue.Dot(cluDir);
-	  // ortogonal component
-	  TVector3 ortogonalComp = diffRecoTrue;
-	  ortogonalComp -= parallelComp*cluDir;
-	  double ortogonalDist = ortogonalComp.Mag();
-	  TVector3 crosso = ortogonalComp.Cross(cluDir);
-	  if (crosso.Z() > 0) ortogonalDist *= -1; // shift towards "closing" to the IP
-	  fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsR_%s_%d_ass",it->first.Data(),pdgcode),cluPos.Perp(),ortogonalDist);
-	}
-      }
+          int ecalvtxid = GetECalVtxFromCluID(cluidvec.at(ic));
+          if (ecalvtxid == -1) {
+            std::cout << "MCTruthImprovedECal.cc: cannot retrieve ecalvtx id from cluster " << cluidvec.at(ic) << " " << ic << std::endl;
+            continue;
+          }
+          TVector3 diffRecoTrue = cluPos;
+          diffRecoTrue -= fEvent->MCTruthEvent->Vertex(ecalvtxid)->GetPosition();
+          // component along reco distance
+          double parallelComp = diffRecoTrue.Dot(cluDir);
+          // ortogonal component
+          TVector3 ortogonalComp = diffRecoTrue;
+          ortogonalComp -= parallelComp*cluDir;
+          double ortogonalDist = ortogonalComp.Mag();
+          TVector3 crosso = ortogonalComp.Cross(cluDir);
+          if (crosso.Z() > 0) ortogonalDist *= -1; // shift towards "closing" to the IP
+          fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsR_%s_%d_ass",it->first.Data(),pdgcode),cluPos.Perp(),ortogonalDist);
+        }
+      } 
+      else {
+        std::vector<Int_t> ecalvtxids = GetECalVtxFromVtxPclePair(iV,iO);
+        Double_t distanceToDeadCell = 9999.0; // Initialize with a large value
+        
+        if (ecalvtxids.size() == 0) {
+
+          for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
+              int deadCellX = *itdead / 100;
+              int deadCellY = *itdead % 100;
+              double deadCellCenterX = (deadCellX - ncells/2 + 0.5) * cellSize;
+              double deadCellCenterY = (deadCellY - ncells/2 + 0.5) * cellSize;
+              TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
+              double distanceToDeadCell_temp = (VtxPosAtCalo - deadCellPos).Perp();
+              if (distanceToDeadCell_temp < distanceToDeadCell) {
+                  distanceToDeadCell = distanceToDeadCell_temp;
+              }
+            }
+          } else {
+            for (std::vector<Int_t>::iterator itvtx = ecalvtxids.begin(); itvtx != ecalvtxids.end(); ++itvtx) {
+              for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
+                int deadCellX = *itdead / 100;
+                int deadCellY = *itdead % 100;
+                double deadCellCenterX = (deadCellX - ncells/2 + 0.5) * cellSize;
+                double deadCellCenterY = (deadCellY - ncells/2 + 0.5) * cellSize;
+                TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
+                double distanceToDeadCell_temp = (fEvent->MCTruthEvent->Vertex(*itvtx)->GetPosition() - deadCellPos).Perp();
+                if (distanceToDeadCell_temp < distanceToDeadCell) {
+                  distanceToDeadCell = distanceToDeadCell_temp;
+                }
+              }
+            }
+          }  
+          std::vector<Int_t> cluIds = GetClusFromVtx(iV);
+
+         for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
+
+            if (std::find(cluIds.begin(), cluIds.end(), h1) == cluIds.end()) {
+              continue; // skip clusters not associated with this vertex
+            }
+            TRecoVCluster* clu = fECal_clEvent->Element((int)h1);
+            double cluEnergy = clu->GetEnergy();
+            double cluTime = clu->GetTime();
+            TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
+      //      TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
+      //      cludir *= (1./cluDir.Mag());
+                    
+          TVector3 cluDiff = cluPos-VtxPosAtCalo;
+          if(ecalvtxids.size() > 0) {
+            std::cout << "MCTruthImprovedECal.cc: ecalvtxids.size() > 0 No ecalvtx found for vertex " << iV << " particle " << iO << ", distance to dead cell: " << distanceToDeadCell <<"cluDiff.Perp()" << cluDiff.Perp() << std::endl;
+
+          }else{
+            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_noecalvtx",it->first.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
+
+          }
+          }// no associated cluster found
+        }
+      
     }
   }
 

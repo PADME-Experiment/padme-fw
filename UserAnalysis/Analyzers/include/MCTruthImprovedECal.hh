@@ -34,6 +34,21 @@ public:
   Bool_t CorrelateVtxClu();
   Bool_t TagAndProbeFromVertex();
 
+  void insertMatchingVtxPcleToEcalvtx(Int_t ecalvtxid, Int_t originalvtxid, Int_t originalpcleout){
+    // find vector of ecalvtxids given vtx, pcle 
+    std::pair<Int_t,Int_t> pairkey = {originalvtxid,originalpcleout};
+    auto itvtxpclepair = VtxPclePairKeyMapToEcalvtx.find(pairkey);
+    if (itvtxpclepair == VtxPclePairKeyMapToEcalvtx.end()) {
+      std::vector<Int_t> VtxPclePairKeyMapValue;
+      VtxPclePairKeyMapValue.push_back(ecalvtxid);
+      std::pair<std::pair<Int_t,Int_t>,std::vector<Int_t>> vtxpclepairmapval = {pairkey,VtxPclePairKeyMapValue};
+      VtxPclePairKeyMapToEcalvtx.insert(vtxpclepairmapval);
+    } else {
+      itvtxpclepair->second.push_back(ecalvtxid);
+    }
+
+  }
+
   void insertMatching(Int_t ecalvtxid, Int_t cluid, Int_t originalvtxid, Int_t originalpcleout, Int_t type){
     // fill matching struct
     MatchingStruct mstruct;
@@ -57,7 +72,6 @@ public:
     auto itclu = CluKeyMap.find(cluid);
     if (itclu == CluKeyMap.end()) {
       std::vector<MatchingStruct> CluKeyMapValue;
-      CluKeyMapValue = itclu->second;
       CluKeyMapValue.push_back(mstruct);
       std::pair<Int_t,std::vector<MatchingStruct>> clumapval = {cluid,CluKeyMapValue};
       CluKeyMap.insert(clumapval);
@@ -70,7 +84,6 @@ public:
     auto itvtxpclepair = VtxPclePairKeyMap.find(pairkey);
     if (itvtxpclepair == VtxPclePairKeyMap.end()) {
       std::vector<MatchingStruct> VtxPclePairKeyMapValue;
-      VtxPclePairKeyMapValue = itvtxpclepair->second;
       VtxPclePairKeyMapValue.push_back(mstruct);
       std::pair<std::pair<Int_t,Int_t>,std::vector<MatchingStruct>> vtxpclepairmapval = {pairkey,VtxPclePairKeyMapValue};
       VtxPclePairKeyMap.insert(vtxpclepairmapval);
@@ -140,7 +153,25 @@ public:
     }
     return clusarray; // vector with clusters (no repetitions)
   }
+  std::vector<Int_t> GetECalVtxFromVtxPclePair(Int_t vtxid, Int_t pcleid){ //returns the list of ecal vertices associated to a vertex and a particle out from that vertex
+    std::vector<Int_t> ecalvtxarray;
+    std::pair<Int_t,Int_t> pairin = {vtxid,pcleid};
+    auto itpair = VtxPclePairKeyMapToEcalvtx.find(pairin);
+    if (itpair == VtxPclePairKeyMapToEcalvtx.end()) return {}; // empty vector
 
+    std::vector<Int_t> VtxPclePairKeyMapValue = itpair->second;
+    std::map <Int_t, Int_t> ecalvtxfound;
+    
+    for (int i=0; i < (int) VtxPclePairKeyMapValue.size(); i++){
+      Int_t ecalvtxid = VtxPclePairKeyMapValue.at(i);
+      auto itecalvtx = ecalvtxfound.find(ecalvtxid);
+      if (itecalvtx == ecalvtxfound.end()) { // first time this cluster appears
+        ecalvtxarray.push_back(ecalvtxid);
+        ecalvtxfound.insert(std::pair{ecalvtxid,1});
+      } 
+    }
+    return ecalvtxarray; // vector with ecal vertices (no repetitions)
+  }
 
   void DumpMapWithVtxKey(){
     std::cout <<"MCTruthImprovedECal: Dump map with vtxid as key: size " << VtxKeyMap.size() << std::endl;
@@ -165,6 +196,7 @@ private:
   GeneralInfo* fGeneralInfo;
   Int_t fpdgcodes[3];//e+,e-,gamma
   Int_t fCellMap[4000]={-1};
+  std::vector<Int_t> fdeadcells;
   PadmeAnalysisEvent* fEvent;
   utl::ConfigParser* fCfgParser;
   HistoSvc* fHS;
@@ -172,7 +204,7 @@ private:
   std::map<Int_t, std::vector<MatchingStruct>> VtxKeyMap; //vertex, MatchingStruct vector pair
   std::map<Int_t, std::vector<MatchingStruct>> CluKeyMap; //cluster, MatchingStruct vector pair
   std::map<std::pair<Int_t,Int_t>, std::vector<MatchingStruct> > VtxPclePairKeyMap; //{vtx,pcle}, MatchingStruct pair
-
+  std::map<std::pair<Int_t,Int_t>, std::vector<Int_t> > VtxPclePairKeyMapToEcalvtx; //{vtx,pcle}, all ecal vertices pair
 
   std::map<TString,int> fProcessIDsMap; // Map of the processName, internal index of the process
   Double_t fXMin;

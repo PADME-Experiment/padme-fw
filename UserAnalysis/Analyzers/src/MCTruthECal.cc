@@ -58,9 +58,9 @@ Bool_t MCTruthECal::Init(PadmeAnalysisEvent* event){
   std::ifstream MapFile(mapname.Data());
   std::string line;
   if(MapFile.is_open()){
-    int SU,px,py,BN,CH;
+    int SU,px,py,BN,CH, isdead;
     while(getline(MapFile,line)){
-      std::stringstream(line) >> SU >> px >> py >> BN >> CH;
+      std::stringstream(line) >> SU >> px >> py >> BN >> CH >> isdead;
       fCellMap[100*px+py] = 1;
       
       }

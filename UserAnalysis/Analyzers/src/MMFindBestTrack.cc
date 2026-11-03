@@ -214,7 +214,7 @@ void MMFindBestTrack::AssignPurity(MMBestTrack* track, TVector3 cluPos,Double_t 
 	else
 	  {
 	    if(track->nhit == 4) {
-	      purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
+	      //	      purity = PurityFunc_4HitL1(dR, pars_4h_lvl1);
 	    }
 	  }
 	if (track->pchi2 < 0.6) return;

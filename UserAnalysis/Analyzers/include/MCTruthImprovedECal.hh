@@ -210,16 +210,12 @@ private:
   Double_t fXMin;
   Double_t fXMax;
   Double_t fXW;
-  Int_t fNXBins;
+  Int_t ncells;
   Double_t fYMin;
   Double_t fYMax;
   Double_t fYW;
-  Int_t fNYBins;
+  double cellSize;
   TH2D *hBrem, *heIoni, *hAnnihil;
-  const double cellSize = 21+0.12;//mm + crystal gap                                                                                                                                                                        
-  const int ncells = 29; // per row or column                                                                                                                                                            
-  double ecalEdge = (ncells/2+0.5)*cellSize; // 304.5mm                                                                                                                                                  
-  const int nhole = 5; // 5x5 matrix is not instrumented                  
 
   TRecoVClusCollection* fECal_clEvent;
   TRecoEvent*           fRecoEvent;

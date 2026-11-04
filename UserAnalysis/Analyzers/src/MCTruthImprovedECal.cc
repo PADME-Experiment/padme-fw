@@ -45,14 +45,12 @@ Bool_t MCTruthImprovedECal::Init(PadmeAnalysisEvent* event){
   fEvent = event;
   fECal_clEvent = fEvent->ECalRecoCl; 
   fGeneralInfo = GeneralInfo::GetInstance();
-  fXMin = -21.*(14+0.5);
-  fXMax = 21.*(14+0.5);
-  fXW = 21; // mm
-  fNXBins = (fXMax-fXMin)/fXW;
-  fYMin = -21.*(14+0.5);
-  fYMax = 21.*(14+0.5);
-  fYW = 21; // mm
-  fNYBins = (fYMax-fYMin)/fYW;
+  cellSize = 21 + 0.115 + 0.12;//mm + paint + crystal gap
+  fXMin = -cellSize*(14+0.5);
+  fXMax =  cellSize*(14+0.5);
+  fYMin = -cellSize*(14+0.5);
+  fYMax =  cellSize*(14+0.5);
+  ncells = (fXMax-fXMin)/cellSize+0.5;
 
   TString mapname = "Analyzers/ECal_map_2.txt";
   
@@ -86,12 +84,13 @@ Bool_t MCTruthImprovedECal::InitHistos(){
   fHS->CreateList("MCTruthImprovedECal");
   for (int i=0; i<2; i++){
     fHS->BookHistoList ("MCTruthImprovedECal",Form("DTCluVtx_type%d",i),100,-5,5.);
+    fHS->BookHistoList ("MCTruthImprovedECal",Form("DrCluVtx_type%d",i),300,0.,300.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
 
-    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",i),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
-    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",i),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
-    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",i),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",i),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",i),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",i),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("EinVsEout_type%d",i),100,0.,300.,100,0.,300.);
   }
 
@@ -103,19 +102,26 @@ Bool_t MCTruthImprovedECal::InitHistos(){
     for (int i=0; i<3; i++){
       // efficiency to find an associated cluster Y vs X
       TString histoNameXY = Form("InAccYvsX_%s_%d",it->first.Data(),fpdgcodes[i]);
-      fHS->BookHisto2List("MCTruthImprovedECal",histoNameXY.Data(),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
-      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNameXY.Data()),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
-      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameXY.Data()),fNXBins,fXMin,fXMax,fNYBins,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",histoNameXY.Data(),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_assMCOK",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_effMCOK",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_totalEMC",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_totalElossMC",histoNameXY.Data()),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+
       // efficiency to find an associated cluster E vs phi
       TString histoNameEQ = Form("InAccEvsPhi_%s_%d",it->first.Data(),fpdgcodes[i]);
       fHS->BookHisto2List("MCTruthImprovedECal",histoNameEQ.Data(),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_assMCOK",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_effMCOK",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_eff",histoNameEQ.Data()),100,-TMath::Pi(),TMath::Pi(),40,0.,400.);
       // Distance true impact point vs reconstructed centroid given an associated cluster
       TString histoNamedRR = Form("InAccdRvsR_%s_%d",it->first.Data(),fpdgcodes[i]);
       TString histoNamedRDeadCell = Form("InAccdRvsdistanceToDeadCell_%s_%d",it->first.Data(),fpdgcodes[i]);
-      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRR.Data()),fNXBins,0.,fXMax,100,-200.,200.);
-      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRR.Data()),ncells,0.,fXMax,100,-200.,200.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass_siecalvtx",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass_noecalvtx",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
     }
   }
@@ -205,7 +211,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     double ecalVtxTime = mcVtx->GetTime();
     // retrieve momentum/energy of particle incoming (the original)
     TLorentzVector ecalvtxPcleInMom(mcVtx->ParticleIn(0)->GetMomentum(), mcVtx->ParticleIn(0)->GetEnergy());
-    insertMatchingVtxPcleToEcalvtx(iV,originalvtxid,originalpcleoutid); // fill all the maps, with keys: vtxid, cluid, {vtxid,particleid}
+    insertMatchingVtxPcleToEcalvtx(iV,originalvtxid,originalpcleoutid); // fill the map with keys {vtxid,particleid} providing the ecalvtxid
 
     // match with ECal clusters, loop on cluster list
 
@@ -223,6 +229,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       fHS->FillHistoList ("MCTruthImprovedECal",Form("DTCluVtx_type%d",ecalvtxtype),cluTime-ecalVtxTime,1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",ecalvtxtype),cluPos.X(),cluPos.X()-ecalvtxPosition.X(),1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("DrCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),1.);
       if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < 15) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());
@@ -249,6 +256,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       std::cout << "Process not found name = ---" << mcVtx->GetProcess().Data() << "---" << endl;
       continue;
     }
+    TString processName = it->first;
     
     for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
       TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
@@ -261,21 +269,37 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));      
       int pdgcode = mcVtx->ParticleOut(iO)->GetPDGCode();
       // acceptance condition: extrapolates to an ECal crystal
-      int icellX = VtxPosAtCalo.X()/cellSize + ncells/2;
-      int icellY = VtxPosAtCalo.Y()/cellSize + ncells/2;
-      if(icellX>ncells || icellX<0) continue;
-      if(icellY>ncells || icellY<0) continue;
+      int icellX = (VtxPosAtCalo.X() - fXMin)/cellSize;//    VtxPosAtCalo.X()/cellSize + ncells/2;
+      int icellY = (VtxPosAtCalo.Y() - fYMin)/cellSize;//    VtxPosAtCalo.Y()/cellSize + ncells/2;
+      if(icellX>=ncells || icellX<0) continue;
+      if(icellY>=ncells || icellY<0) continue;
       if(fCellMap[100*icellX+icellY]<=0) continue; // ECal map to remove holes and external parts
 
-      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());      
-      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());      
+      std::vector<Int_t> ecalvtxids = GetECalVtxFromVtxPclePair(iV,iO);
+      // evaluate total energy that according to MCtruth, enters the ECal [primary, daughters]
+      double totalEnergyMC = 0;
+      for (std::vector<Int_t>::iterator itecalvtxids = ecalvtxids.begin(); itecalvtxids != ecalvtxids.end(); ++itecalvtxids){
+	totalEnergyMC += fEvent->MCTruthEvent->Vertex(*itecalvtxids)->ParticleOut(0)->GetEnergy();
+      }
+      
+      
+      
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());      
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d",processName.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());      
 
+      if (ecalvtxids.size()) {
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_assMCOK",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());      
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_assMCOK",processName.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_totalEMC",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y(),totalEnergyMC);      
+	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_totalElossMC",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y(),mcOPart->GetEnergy()-totalEnergyMC);      
+      }
+      
       // retrieve list of clusters associated to vertex from mctruth
       std::vector<Int_t> cluidvec = GetClusFromVtxPclePair(iV,iO);
 
       if (cluidvec.size()) {
-        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_ass",it->first.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
-        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_ass",it->first.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
+        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_ass",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
+        fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_ass",processName.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
 
         for (int ic = 0; ic < (int) cluidvec.size(); ic++){
           // quality of the reco clu
@@ -299,41 +323,41 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
           double ortogonalDist = ortogonalComp.Mag();
           TVector3 crosso = ortogonalComp.Cross(cluDir);
           if (crosso.Z() > 0) ortogonalDist *= -1; // shift towards "closing" to the IP
-          fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsR_%s_%d_ass",it->first.Data(),pdgcode),cluPos.Perp(),ortogonalDist);
+          fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsR_%s_%d_ass",processName.Data(),pdgcode),cluPos.Perp(),ortogonalDist);
         }
       } 
-      else {
-        std::vector<Int_t> ecalvtxids = GetECalVtxFromVtxPclePair(iV,iO);
+      else { // no cluster associated
         Double_t distanceToDeadCell = 9999.0; // Initialize with a large value
         
-        if (ecalvtxids.size() == 0) {
-
+        if (ecalvtxids.size() == 0) { // from MCtruth, no particle (primary, daughter) enters the ECal
+	  // evaluate minimum distance from any deadcell of the extrapolated position
           for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
-              int deadCellX = *itdead / 100;
-              int deadCellY = *itdead % 100;
-              double deadCellCenterX = (deadCellX - ncells/2 + 0.5) * cellSize;
-              double deadCellCenterY = (deadCellY - ncells/2 + 0.5) * cellSize;
-              TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
-              double distanceToDeadCell_temp = (VtxPosAtCalo - deadCellPos).Perp();
-              if (distanceToDeadCell_temp < distanceToDeadCell) {
-                  distanceToDeadCell = distanceToDeadCell_temp;
-              }
-            }
-          } else {
-            for (std::vector<Int_t>::iterator itvtx = ecalvtxids.begin(); itvtx != ecalvtxids.end(); ++itvtx) {
-              for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
-                int deadCellX = *itdead / 100;
-                int deadCellY = *itdead % 100;
-                double deadCellCenterX = (deadCellX - ncells/2 + 0.5) * cellSize;
-                double deadCellCenterY = (deadCellY - ncells/2 + 0.5) * cellSize;
-                TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
-                double distanceToDeadCell_temp = (fEvent->MCTruthEvent->Vertex(*itvtx)->GetPosition() - deadCellPos).Perp();
-                if (distanceToDeadCell_temp < distanceToDeadCell) {
-                  distanceToDeadCell = distanceToDeadCell_temp;
-                }
-              }
-            }
-          }  
+	    int deadCellX = *itdead / 100;
+	    int deadCellY = *itdead % 100;
+	    double deadCellCenterX = deadCellX*cellSize + fXMin;
+	    double deadCellCenterY = deadCellY*cellSize + fYMin;
+	    TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
+	    double distanceToDeadCell_temp = (VtxPosAtCalo - deadCellPos).Perp();
+	    if (distanceToDeadCell_temp < distanceToDeadCell) {
+	      distanceToDeadCell = distanceToDeadCell_temp;
+	    }
+	  }
+	} else { // some particle entered the ECal
+	  // evaluate minimum distance from any deadcell of the particles that entered the ecal
+	  for (std::vector<Int_t>::iterator itvtx = ecalvtxids.begin(); itvtx != ecalvtxids.end(); ++itvtx) {
+	    for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
+	      int deadCellX = *itdead / 100;
+	      int deadCellY = *itdead % 100;
+	      double deadCellCenterX = deadCellX*cellSize + fXMin;
+	      double deadCellCenterY = deadCellY*cellSize + fYMin;
+	      TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
+	      double distanceToDeadCell_temp = (fEvent->MCTruthEvent->Vertex(*itvtx)->GetPosition() - deadCellPos).Perp();
+	      if (distanceToDeadCell_temp < distanceToDeadCell) {
+		distanceToDeadCell = distanceToDeadCell_temp;
+	      }
+	    }
+	  }
+	}  
           std::vector<Int_t> cluIds = GetClusFromVtx(iV);
 
          for (int h1=0; h1< fECal_clEvent->GetNElements(); ++h1) {
@@ -350,10 +374,9 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
                     
           TVector3 cluDiff = cluPos-VtxPosAtCalo;
           if(ecalvtxids.size() > 0) {
-            std::cout << "MCTruthImprovedECal.cc: ecalvtxids.size() > 0 No ecalvtx found for vertex " << iV << " particle " << iO << ", distance to dead cell: " << distanceToDeadCell <<"cluDiff.Perp()" << cluDiff.Perp() << std::endl;
-
+            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_siecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
           }else{
-            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_noecalvtx",it->first.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
+            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_noecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
 
           }
           }// no associated cluster found
@@ -423,35 +446,32 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 
 Bool_t MCTruthImprovedECal::Finalize()
 {  
-  TString tagnames[2] = {"YvsX","EvsPhi"};
   if (fVerbose) printf("---> Finalizing MCTruthImprovedECal\n");
 
-  for (int itag = 0; itag<2; itag++){ 
-    std::map<TString, int>::iterator it;
-    for (it = fProcessIDsMap.begin(); it != fProcessIDsMap.end(); it++){
-      for (int i=0; i<3; i++){
-	TString histoName = Form("InAcc%s_%s_%d",tagnames[itag].Data(),it->first.Data(),fpdgcodes[i]);
-	TH2D* denoH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",histoName.Data());
-	//	if (denoH->GetEntries() < 10000) continue;
-	TH2D* numeH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_ass",histoName.Data()));
-	TH2D* effiH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_eff",histoName.Data()));
-      
-	for (int i=0; i<denoH->GetXaxis()->GetNbins(); i++){
-	  for (int j=0; j<denoH->GetYaxis()->GetNbins(); j++){
-	    if (denoH->GetBinContent(i+1,j+1) > 10) {
-	      double effi = numeH->GetBinContent(i+1,j+1)*100./denoH->GetBinContent(i+1,j+1)/30.;
-	      // std::cout << "effi = " << effi << " nume = " << numeH->GetBinContent(i+1,j+1) << " deno = " << denoH->GetBinContent(i+1,j+1) << endl;
-	      effiH->SetBinContent(i+1,j+1,effi);
-	    }
-	  }
-	}
-	
-      }
-    }
-  }
-
-
-  return 1;
+  //  TString tagnames[2] = {"YvsX","EvsPhi"};
+//  for (int itag = 0; itag<2; itag++){ 
+//    std::map<TString, int>::iterator it;
+//    for (it = fProcessIDsMap.begin(); it != fProcessIDsMap.end(); it++){
+//      for (int i=0; i<3; i++){
+//	TString histoName = Form("InAcc%s_%s_%d",tagnames[itag].Data(),it->first.Data(),fpdgcodes[i]);
+//	TH2D* denoH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",histoName.Data());
+//	//	if (denoH->GetEntries() < 10000) continue;
+//	TH2D* numeH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_ass",histoName.Data()));
+//	TH2D* effiH = (TH2D*) fHS->GetHisto2List("MCTruthImprovedECal",Form("%s_eff",histoName.Data()));
+//      
+//	for (int i=0; i<denoH->GetXaxis()->GetNbins(); i++){
+//	  for (int j=0; j<denoH->GetYaxis()->GetNbins(); j++){
+//	    if (denoH->GetBinContent(i+1,j+1) > 10) {
+//	      double effi = numeH->GetBinContent(i+1,j+1)*100./denoH->GetBinContent(i+1,j+1)/30.;
+//	      // std::cout << "effi = " << effi << " nume = " << numeH->GetBinContent(i+1,j+1) << " deno = " << denoH->GetBinContent(i+1,j+1) << endl;
+//	      effiH->SetBinContent(i+1,j+1,effi);
+//	    }
+//	  }
+//	}
+//	
+//      }
+//    }
+  return true;
 }
 
 

@@ -229,7 +229,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       fHS->FillHistoList ("MCTruthImprovedECal",Form("DTCluVtx_type%d",ecalvtxtype),cluTime-ecalVtxTime,1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",ecalvtxtype),cluPos.X(),cluPos.X()-ecalvtxPosition.X(),1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
-      fHS->FillHisto2List("MCTruthImprovedECal",Form("DrCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),1.);
+      fHS->FillHistoList("MCTruthImprovedECal",Form("DrCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),1.);
       if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < 15) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());

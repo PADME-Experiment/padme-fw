@@ -83,8 +83,7 @@ Bool_t MCTruthImprovedECal::InitHistos(){
 
   fHS->CreateList("MCTruthImprovedECal");
   for (int i=0; i<2; i++){
-    fHS->BookHistoList ("MCTruthImprovedECal",Form("DTCluVtx_type%d",i),100,-5,5.);
-    fHS->BookHistoList ("MCTruthImprovedECal",Form("DrCluVtx_type%d",i),300,0.,300.);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",i),300,0.,300.,200,-10.,10.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
 
@@ -226,10 +225,9 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 //      double cluDelta = cluDiff.Dot(cluDir); // projection of the vector "difference" along the cluster direction
 //      TVector3 cluDiffOrt(cluDiff.X(),cluDiff.Y(),cluDiff.Z());
 //      cluDiffOrt -= cluDelta*cluDir; // CDA vector: difference component ortogonal to the cluster "direction"
-      fHS->FillHistoList ("MCTruthImprovedECal",Form("DTCluVtx_type%d",ecalvtxtype),cluTime-ecalVtxTime,1.);
+      fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",ecalvtxtype),cluPos.X(),cluPos.X()-ecalvtxPosition.X(),1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
-      fHS->FillHistoList("MCTruthImprovedECal",Form("DrCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),1.);
       if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < 15) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());

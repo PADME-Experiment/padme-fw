@@ -7,7 +7,7 @@ if len(sys.argv) < 5:
 
 print("########################## building  #############################\n\n")
 
-os.system("make -j16")
+#os.system("make -j16")
 
 runName = sys.argv[1]
 runNumber = sys.argv[2]

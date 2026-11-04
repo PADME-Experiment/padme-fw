@@ -217,7 +217,7 @@ Bool_t ECalCalib22::Finalize()
     std::cout << "This run is MC, Cosmics checks do not apply" << std::endl;
     return false;
   }
-  //ChannelLandauFit();
+  ChannelLandauFit();
 
   return true;
 }
@@ -336,7 +336,7 @@ Bool_t ECalCalib22::ChannelLandauFit()
         BadCalib->cd();
         ECalChHistoVert[iCh]->Write();
         float NonEmpty = ECalChHisto[iCh]->Integral();
-        if (NonEmpty > 200)
+        if (NonEmpty > 50)
         {
           // double _maxPeak = 0;
           // double RealPeak = 0;
@@ -368,7 +368,7 @@ Bool_t ECalCalib22::ChannelLandauFit()
           fHS->FillHistoList("ECalCalib22", "CRMPV", ECalChMVP[iCh]);
           LandauFun->ReleaseParameter(1);
           Double_t Chi2 = LandauFun->GetChisquare() / LandauFun->GetNDF();
-          if (Chi2 > 3.5 || ECalChMVP[iCh] < 10 || ECalChMVP[iCh] > 25)
+          if (Chi2 > 3.5 || ECalChMVP[iCh] < 16 || ECalChMVP[iCh] > 22)
           {
             ErrFile << ECalChNum[iCh] << "\t" << ECalChMVP[iCh] << " \t" << Chi2 << endl;
             BadCalib->cd();

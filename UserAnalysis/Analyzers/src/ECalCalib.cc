@@ -162,12 +162,14 @@ Int_t ECalCalib::CorrectEScale(Int_t corrLevel){
   else EScale = fGeneralInfo->GetGlobalESlope();
   
   // apply energy scale correction
-
+  // bool correct_y_shift = kFALSE;
+  // double corr_y_shift = -5.32; // mm, to be applied to the cluster position in Y, to correct for the misalignment of the calorimeter with respect to the beam axis in reconstruction
   for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++) {
     double eECal    =  fEvent->ECalRecoCl->Element(ical)->GetEnergy();
     if(corrLevel) {
       if (EScale > 0) eECal /=  EScale;  //Data ECal energy Need the reco to be calibrated
       fEvent->ECalRecoCl->Element(ical)->SetEnergy(eECal);
+      // if(correct_y_shift) fEvent->ECalRecoCl->Element(ical)->SetPosition(fEvent->ECalRecoCl->Element(ical)->GetPosition() + TVector3(0, corr_y_shift, 0)); 
     }
   }
 

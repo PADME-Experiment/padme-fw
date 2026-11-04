@@ -12,6 +12,7 @@
 *.pcm
 *.heprep
 *.save
+*.bkp
 run_*
 PersistencyDict.cc
 PersistencyDict.h

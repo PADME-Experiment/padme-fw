@@ -1796,6 +1796,10 @@ Int_t ECalSel::TwoClusters_couples(){
 	  bremev->trackSlope[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->slope : -999;
 	  bremev->trackInter[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->inter : -999;
 	  bremev->trackInter[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->inter : -999;
+	  bremev->trackLevel[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->level : -999;
+	  bremev->trackLevel[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->level : -999;
+	  bremev->trackNhit[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->nhit : -999;
+	  bremev->trackNhit[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->nhit : -999;
 	}
 
 	
@@ -2215,6 +2219,8 @@ Bool_t ECalSel::InitHistos()
 
   ftree->Branch("purity",&bremev->purity,"purity[2][2]/D");
   ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");
+  ftree->Branch("trackLevel[2][2]",&bremev->trackLevel,"trackLevel[2][2]/D");
+  ftree->Branch("trackNhit[2][2]",&bremev->trackNhit,"trackNhit[2][2]/D");
   ftree->Branch("trackSlope[2][2]", &bremev->trackSlope, "trackSlope[2][2]/D");
   ftree->Branch("trackInter[2][2]", &bremev->trackInter, "trackInter[2][2]/D");
   ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");

@@ -76,9 +76,11 @@ struct ECalBremEvent{
   TLorentzVector trueCMP[2]; // true cm momenta
   TLorentzVector cmP[2]; // cm momenta
   Double32_t purity[2][2]; // indices of the etag association [pointer to the association array] (could become a std vector)
+  int trackLevel[2][2]; //level of associated track 0 or 1
+  int trackNhit[2][2]; //Number of hits of the associated tracks
   int processID[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
   Double32_t purity_comb[2]; // indices of the etag association [pointer to the association array] (could become a std vector)
-    TVector3 trackPosAtECal[2][2]; // position of the track at the ecal
+  TVector3 trackPosAtECal[2][2]; // position of the track at the ecal
   TVector3 trackPosAtTarget[2][2]; // position of the track at the target
   Double_t trackSlope[2][2]; // slope of the track
   Double_t trackInter[2][2]; // intercept of the track

@@ -45,7 +45,7 @@ Bool_t MCTruthImprovedECal::Init(PadmeAnalysisEvent* event){
   fEvent = event;
   fECal_clEvent = fEvent->ECalRecoCl; 
   fGeneralInfo = GeneralInfo::GetInstance();
-  cellSize = 21 + 0.115 + 0.12;//mm + paint + crystal gap
+  cellSize = 21 + 0.115 + 0.35;//mm + paint + crystal gap
   fXMin = -cellSize*(14+0.5);
   fXMax =  cellSize*(14+0.5);
   fYMin = -cellSize*(14+0.5);
@@ -84,6 +84,7 @@ Bool_t MCTruthImprovedECal::InitHistos(){
   fHS->CreateList("MCTruthImprovedECal");
   for (int i=0; i<2; i++){
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",i),300,0.,300.,200,-10.,10.);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d_deadcells",i),300,0.,300.,200,-10.,10.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
 
@@ -122,6 +123,8 @@ Bool_t MCTruthImprovedECal::InitHistos(){
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass",histoNamedRR.Data()),ncells,0.,fXMax,100,-200.,200.);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass_siecalvtx",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
       fHS->BookHisto2List("MCTruthImprovedECal",Form("%s_ass_noecalvtx",histoNamedRDeadCell.Data()),300,0.,fXMax,100,0.,300.);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("XY_%s_%d_not_ass_siecalvtx",it->first.Data(),fpdgcodes[i]),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("XY_%s_%d_not_ass_noecalvtx",it->first.Data(),fpdgcodes[i]),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
     }
   }
   return true;
@@ -220,15 +223,22 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       double cluTime = clu->GetTime();
       TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
 //      TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
-//      cludir *= (1./cluDir.Mag());
-      TVector3 cluDiff = cluPos-ecalvtxPosition; // vector "difference": from the true ecal position to the cluster
+      TVector3 ecalvtxPositionDir = ecalvtxPosition-mcVtxOriginal->GetPosition(); // direction of the cluster wrt original vtx pos
+      ecalvtxPositionDir *= (1./ecalvtxPositionDir.Mag());
+      TVector3 ecalvtxPositionCorr;
+      ecalvtxPositionCorr.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
+      ecalvtxPositionCorr.SetX(mcVtxOriginal->GetPosition().X()+((ecalvtxPositionDir.X()/ecalvtxPositionDir.Z())*(ecalvtxPositionCorr.Z()-mcVtxOriginal->GetPosition().Z())));
+      ecalvtxPositionCorr.SetY(mcVtxOriginal->GetPosition().Y()+((ecalvtxPositionDir.Y()/ecalvtxPositionDir.Z())*(ecalvtxPositionCorr.Z()-mcVtxOriginal->GetPosition().Z())));     
+      TVector3 cluDiff = cluPos-ecalvtxPositionCorr; // vector "difference": from the true ecal position to the cluster
 //      double cluDelta = cluDiff.Dot(cluDir); // projection of the vector "difference" along the cluster direction
 //      TVector3 cluDiffOrt(cluDiff.X(),cluDiff.Y(),cluDiff.Z());
 //      cluDiffOrt -= cluDelta*cluDir; // CDA vector: difference component ortogonal to the cluster "direction"
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",ecalvtxtype),cluPos.X(),cluPos.X()-ecalvtxPosition.X(),1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
-      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < 15) {
+      if(fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2)  fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d_deadcells",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
+
+      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && ((cluDiff.Perp() < 20.) || (fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2) && (cluDiff.Perp() < 30.)) ) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y());
@@ -272,7 +282,6 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       if(icellX>=ncells || icellX<0) continue;
       if(icellY>=ncells || icellY<0) continue;
       if(fCellMap[100*icellX+icellY]<=0) continue; // ECal map to remove holes and external parts
-
       std::vector<Int_t> ecalvtxids = GetECalVtxFromVtxPclePair(iV,iO);
       // evaluate total energy that according to MCtruth, enters the ECal [primary, daughters]
       double totalEnergyMC = 0;
@@ -326,7 +335,8 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       } 
       else { // no cluster associated
         Double_t distanceToDeadCell = 9999.0; // Initialize with a large value
-        
+        Double_t Xval = VtxPosAtCalo.X();
+        Double_t Yval = VtxPosAtCalo.Y();
         if (ecalvtxids.size() == 0) { // from MCtruth, no particle (primary, daughter) enters the ECal
 	  // evaluate minimum distance from any deadcell of the extrapolated position
           for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
@@ -335,10 +345,12 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 	    double deadCellCenterX = deadCellX*cellSize + fXMin;
 	    double deadCellCenterY = deadCellY*cellSize + fYMin;
 	    TVector3 deadCellPos(deadCellCenterX, deadCellCenterY, fGeneralInfo->GetCOG().Z());
+  
 	    double distanceToDeadCell_temp = (VtxPosAtCalo - deadCellPos).Perp();
 	    if (distanceToDeadCell_temp < distanceToDeadCell) {
 	      distanceToDeadCell = distanceToDeadCell_temp;
 	    }
+
 	  }
 	} else { // some particle entered the ECal
 	  // evaluate minimum distance from any deadcell of the particles that entered the ecal
@@ -369,14 +381,16 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
             TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
       //      TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
       //      cludir *= (1./cluDir.Mag());
-                    
-          TVector3 cluDiff = cluPos-VtxPosAtCalo;
-          if(ecalvtxids.size() > 0) {
-            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_siecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
-          }else{
-            fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_noecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
+        
+            TVector3 cluDiff = cluPos-VtxPosAtCalo;
+            if(ecalvtxids.size() > 0) {
+              fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_siecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
+              fHS->FillHisto2List("MCTruthImprovedECal",Form("XY_%s_%d_not_ass_siecalvtx",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
+            }else{
+              fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccdRvsdistanceToDeadCell_%s_%d_ass_noecalvtx",processName.Data(),pdgcode),distanceToDeadCell,cluDiff.Perp());
+              fHS->FillHisto2List("MCTruthImprovedECal",Form("XY_%s_%d_not_ass_noecalvtx",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y());
 
-          }
+            }
           }// no associated cluster found
         }
       

@@ -85,6 +85,8 @@ Bool_t MCTruthECal::InitHistos(){
   TString processIDs[NprocessAvailable]={"eIoni", "eBrem", "annihil", "Bhabha","Babayaga","NoVtx"};
 
   fHS->CreateList("MCTruthECal");
+  fHS->BookHisto2List("MCTruthECal", "VtxPosXY", 400, -100, 100,400, -100, 100);
+
   fHS->BookHistoList("MCTruthECal","DTCluVtx",100,-10.,10.); 
   fHS->BookHistoList("MCTruthECal","NPcleOut",10,0,10);	
   fHS->BookHistoList("MCTruthECal","ProcessID",7,-0.5,6.5);	
@@ -300,6 +302,8 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
       Double_t enTrue =0;
       Double_t enTrue_atcalo =0;
       int npclesass=0;
+      fHS->FillHisto2List("MCTruthECal", "VtxPosXY", VtxPos.X(), VtxPos.Y());
+
       fHS->FillHistoList("MCTruthECal", "NPcles", mcVtx->GetNParticleOut()-2);
 
       for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {

@@ -26,7 +26,7 @@ TMCTruthEvent::~TMCTruthEvent()
 void TMCTruthEvent::Clear(Option_t * option)
 {
   fNVertex = 0;
-  if(fVertex) fVertex->Clear(option);
+  if(fVertex)fVertex->Delete(); //was fVertex->Clear(option);
 }
 
 TMCVertex* TMCTruthEvent::AddVertex()

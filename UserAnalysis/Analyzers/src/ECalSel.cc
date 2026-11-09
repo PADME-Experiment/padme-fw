@@ -1800,6 +1800,11 @@ Int_t ECalSel::TwoClusters_couples(){
 	  bremev->trackLevel[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->level : -999;
 	  bremev->trackNhit[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->nhit : -999;
 	  bremev->trackNhit[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->nhit : -999;
+	  bremev->trackDR[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z())[1-vw] - cluPos[0][1-vw] : -999;
+	  bremev->trackDR[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z())[1-vw] - cluPos[0][1-vw] : -999;
+	  bremev->trackPchi2[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->pchi2 : -999;
+	  bremev->trackPchi2[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->pchi2 : -999;
+	  
 	}
 
 	
@@ -2223,6 +2228,8 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("trackNhit[2][2]",&bremev->trackNhit,"trackNhit[2][2]/I");
   ftree->Branch("trackSlope[2][2]", &bremev->trackSlope, "trackSlope[2][2]/D");
   ftree->Branch("trackInter[2][2]", &bremev->trackInter, "trackInter[2][2]/D");
+  ftree->Branch("trackDR[2][2]", &bremev->trackDR, "trackDR[2][2]/D");
+  ftree->Branch("trackPchi2[2][2]", &bremev->trackPchi2, "trackPchi2[2][2]/D");
   ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");
   ftree->Branch("trackPosAtECal1VY","TVector3",&bremev->trackPosAtECal[0][1]);//,"trackPosAtECal[2][2]/D");
   ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[1][0]);//,"trackPosAtECal[2][2]/D");
@@ -2231,7 +2238,7 @@ Bool_t ECalSel::InitHistos()
   ftree->Branch("trackPosAtTarget0VY","TVector3",&bremev->trackPosAtTarget[0][1]);//,"trackPosAtTarget[2][2]/D");
   ftree->Branch("trackPosAtTarget1VX","TVector3",&bremev->trackPosAtTarget[1][0]);//,"trackPosAtTarget[2][2]/D");
   ftree->Branch("trackPosAtTarget1VY","TVector3",&bremev->trackPosAtTarget[1][1]);//,"trackPosAtTarget[2][2]/D");
-
+  
 
 
   

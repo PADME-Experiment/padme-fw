@@ -84,6 +84,8 @@ struct ECalBremEvent{
   TVector3 trackPosAtTarget[2][2]; // position of the track at the target
   Double_t trackSlope[2][2]; // slope of the track
   Double_t trackInter[2][2]; // intercept of the track
+  Double_t trackDR[2][2];
+  Double_t trackPchi2[2][2];
 };
 
 struct BadTimeInterval {

@@ -149,15 +149,19 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
           tvtx->AddParticleOut(track->GetDefinition()->GetPDGEncoding(),step->GetPostStepPoint()->GetTotalEnergy(),step->GetPostStepPoint()->GetMomentum());
 
 	  // add G4TrackID of first secondary at this vertex
+	  //TEST G4cout << "SteppingAction Created a vertex id = " << fMCTruthManager->GetNVertices()-1 << " proc = " << proc.data() << " trackid = " << step->GetTrack()->GetTrackID() << " volume = " << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << " secondaries " << nSec ;
+
 	  fMCTruthManager->AddG4TrackSecondaryToVertex(step->GetTrack()->GetTrackID(),fMCTruthManager->GetNVertices()-1,0,0);
 	  
 	  for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
-
-	    // add G4TrackID of i-th secondary at this vertex in outgoing position i+1 
-	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i+1,0);
+	    // cannot add G4TrackID of i-th secondary at this vertex in outgoing position i+1, BUT HERE THE GetTrackID() IS ZERO BECAUSE THE TRACK IS NOT ON STACK, WILL BE UPDATED IN STACKING ACTION
+	    //	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i+1,0);
+	    // this is done in StackingAction
+	    
+	    //TEST G4cout << " secondary " << i << " secondary trackid " << (*sec)[i]->GetTrackID();
           }
-
+	  //TEST G4cout << G4endl;
 
 	  if (nSec!=1) printf("WARNING eBrem or eIoni with %d secondaries",(int)nSec);
         }
@@ -169,12 +173,17 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
         if (nSec>0) {
           MCTruthVertex* tvtx = fMCTruthManager->AddVertex(proc,step->GetPostStepPoint()->GetPosition(),step->GetPostStepPoint()->GetGlobalTime());
           tvtx->AddParticleIn(track->GetDefinition()->GetPDGEncoding(),step->GetPreStepPoint()->GetTotalEnergy(),step->GetPreStepPoint()->GetMomentum());
+
+	  //TEST G4cout << "SteppingAction Created a vertex id " << fMCTruthManager->GetNVertices()-1 << " proc = " << proc.data() << " trackid = " << step->GetTrack()->GetTrackID() << " volume = " << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << " secondaries " << nSec ;
           for(size_t i = 0; i < nSec; i++) {
             tvtx->AddParticleOut((*sec)[i]->GetDefinition()->GetPDGEncoding(),(*sec)[i]->GetTotalEnergy(),(*sec)[i]->GetMomentum());
 
-	    // add G4TrackID of i-th secondary at this vertex in outgoing position i
-	    fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i,0);
+	    // cannot add G4TrackID of i-th secondary at this vertex in outgoing position i, SINCE HERE THE GetTrackID() IS ZERO BECAUSE THE TRACK IS NOT ON STACK, WILL BE UPDATED IN STACKING ACTION
+	    // fMCTruthManager->AddG4TrackSecondaryToVertex((*sec)[i]->GetTrackID(),fMCTruthManager->GetNVertices()-1,i,0);
+
+	    //TEST G4cout << " secondary << " << i << " secondary trackid " << (*sec)[i]->GetTrackID();
           }
+	  //TEST G4cout << G4endl;
           if (nSec!=2) printf("WARNING annihil with %d secondaries",(int)nSec);
         }
       }

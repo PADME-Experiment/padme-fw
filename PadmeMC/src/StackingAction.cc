@@ -81,13 +81,14 @@ G4ClassificationOfNewTrack
 StackingAction::ClassifyNewTrack(const G4Track* track)
 {
   G4ThreeVector postrack = track->GetPosition();
+  G4ThreeVector momtrack = track->GetMomentum();
   G4double timetrack = track->GetGlobalTime();
   MCTruthManager* mctm = MCTruthManager::GetInstance();
 
   if (mctm->IsEnabled()){
     G4String processId = "";
-    G4ThreeVector parentmomtrack;
-    G4double parentenergytrack;
+    G4ThreeVector parentmomtrack(0,0,0);
+    G4double parentenergytrack = 0;
     int ifound = -1;
     int caseid = -1;
 
@@ -105,14 +106,50 @@ StackingAction::ClassifyNewTrack(const G4Track* track)
 	  caseid = 0;
 	}
       }
-    } else { // check if the parent of this G4Track had been stored in the map, if so store it
-      if (mctm->IsG4TrackInVertex(track->GetParentID(), 0)){
+    } else {
+      // check if this G4Track is IDENTICAL to an outgoing particle stored in the target or target support, if so, ONLY store the MCTRUTH
+      int ivfound = -1;
+      int itfound = -1;
+      if (track->GetVolume()->GetName() == "Target" || track->GetVolume()->GetName() == "TargetSupport"){ 
+	G4int nvtx = mctm->GetNVertices();
+	for (int i=0; i<nvtx; i++) {
+	  MCTruthVertex* vtx = mctm->Vertex(i);
+	  if (G4StrUtil::starts_with(vtx->GetProcess(),"AtECal")) continue; // only interested in "primary" vertices	  
+
+	  G4ThreeVector posvtx = vtx->GetPosition();
+	  double distance = (posvtx-postrack).mag();
+	  if (distance > 1e-6) continue; // same position
+
+	  int nparticlesIn = vtx->GetNParticlesIn();
+	  if (nparticlesIn != 1) continue;
+	  int nparticlesOut = vtx->GetNParticlesOut();
+	  for (int j=0; j<nparticlesOut; j++){
+	    G4ThreeVector momatvtx = vtx->ParticleOut(j)->GetMomentum();
+	    double momdifference = (momatvtx-momtrack).mag();
+	    if (momdifference > 1e-6) continue; // same momentum
+	    itfound = j;
+	    break;
+	  }
+	  if (itfound != -1) {
+	    ivfound = i;
+	    break;
+	  }
+	}
+      }
+
+      if (ivfound != -1 && itfound != -1) {
+	//TEST G4cout << "Stacking action: Add secondary track which was presumably missing from the vertex " << ivfound << " track in pos " << itfound << " G4TrackID = " << track->GetTrackID() << " ParentID = " << track->GetParentID() << G4endl;
+	mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),ivfound,itfound,0);
+      }
+      else if (mctm->IsG4TrackInVertex(track->GetParentID(), 0)){ // check if the parent of this G4Track had been stored in the map, if so store it
 	//	G4cout << "track " << track->GetTrackID() << " has a parent with id = " << track->GetParentID() << " who is in the map  and is in volume " << track->GetVolume()->GetName();
 	G4int vtxOfParentID = mctm->GetG4TrackInVertex(track->GetParentID(),0).first;
 	G4int posOfParentID = mctm->GetG4TrackInVertex(track->GetParentID(),0).second;
 	//	G4cout << " with links " << vtxOfParentID << " and " << posOfParentID << G4endl;
 	if (track->GetVolume()->GetName() != "ECalCry" && track->GetVolume()->GetName() != "LeadGlass" && track->GetKineticEnergy() > fECalKineticEnergyThresholdEnergyMCTruth){ // avoid wasting time with daughters generated while showering or with too soft particles
 	  mctm->AddG4TrackSecondaryToVertex(track->GetTrackID(),vtxOfParentID,posOfParentID,1);
+
+	  //TEST G4cout << " In Stacking Action caso !primary: Parent!= 0, id " << track->GetParentID() << " trackid " << track->GetTrackID() << " vtxOfParentID " << vtxOfParentID << " posOfParent = " << posOfParentID << " pdgcode " << track->GetDefinition()->GetPDGEncoding() << " volume " << track->GetVolume()->GetName() << G4endl;
 	}
       }
     }

@@ -2219,8 +2219,8 @@ Bool_t ECalSel::InitHistos()
 
   ftree->Branch("purity",&bremev->purity,"purity[2][2]/D");
   ftree->Branch("purity_combined",&bremev->purity_comb,"purity_combined[2]/D");
-  ftree->Branch("trackLevel[2][2]",&bremev->trackLevel,"trackLevel[2][2]/D");
-  ftree->Branch("trackNhit[2][2]",&bremev->trackNhit,"trackNhit[2][2]/D");
+  ftree->Branch("trackLevel[2][2]",&bremev->trackLevel,"trackLevel[2][2]/I");
+  ftree->Branch("trackNhit[2][2]",&bremev->trackNhit,"trackNhit[2][2]/I");
   ftree->Branch("trackSlope[2][2]", &bremev->trackSlope, "trackSlope[2][2]/D");
   ftree->Branch("trackInter[2][2]", &bremev->trackInter, "trackInter[2][2]/D");
   ftree->Branch("trackPosAtECal0VX","TVector3",&bremev->trackPosAtECal[0][0]);//,"trackPosAtECal[2][2]/D");

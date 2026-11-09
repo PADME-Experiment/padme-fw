@@ -251,7 +251,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     } //ECal cluster loop
   } //MCTruth Vtx Loop
       
-  //  DumpMapWithVtxKey();
+  DumpMapWithVtxKey();
 
   // to check the performance, must apply acceptance criteria
 

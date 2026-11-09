@@ -180,7 +180,7 @@ public:
       std::cout << "Key = " << it->first << " has " << it->second.size() << " entries " << std::endl;
       for (int it2 = 0; it2 < (int) it->second.size(); it2++){
 	std::cout << "entry " << it2 <<
-	  " content " << it->second.at(it2).originalvtxid <<
+	  " content " << it->second.at(it2).originalvtxid << "process: "<< fEvent->MCTruthEvent->Vertex(it->second.at(it2).originalvtxid)->GetProcess() <<
 	  " cluid " << it->second.at(it2).cluid <<
 	  " originalpcluout " << it->second.at(it2).originalpcleout <<
 	  " ecalvtxid " << it->second.at(it2).ecalvtxid << " type " << it->second.at(it2).type << std::endl;

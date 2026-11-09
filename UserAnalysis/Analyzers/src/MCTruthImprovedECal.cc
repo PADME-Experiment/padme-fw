@@ -238,7 +238,9 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
       if(fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2)  fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d_deadcells",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
 
-      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && ((cluDiff.Perp() < 20.) || (fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2) && (cluDiff.Perp() < 30.)) ) {
+      double perplimit = 20.;
+      if (fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2) perplimit = 30.;
+      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < perplimit) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y());

@@ -1801,7 +1801,7 @@ Int_t ECalSel::TwoClusters_couples(){
 	  bremev->trackNhit[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->nhit : -999;
 	  bremev->trackNhit[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->nhit : -999;
 	  bremev->trackDR[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z())[1-vw] - cluPos[0][1-vw] : -999;
-	  bremev->trackDR[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z())[1-vw] - cluPos[0][1-vw] : -999;
+	  bremev->trackDR[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->BestTrackExtrapolationAtZ(fGeneralInfo->GetCOG().Z())[1-vw] - cluPos[1][1-vw] : -999;
 	  bremev->trackPchi2[0][vw] = asstracks[0]->tracks[vw] ? asstracks[0]->tracks[vw]->pchi2 : -999;
 	  bremev->trackPchi2[1][vw] = asstracks[1]->tracks[vw] ? asstracks[1]->tracks[vw]->pchi2 : -999;
 	  

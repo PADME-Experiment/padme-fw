@@ -28,6 +28,27 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fBeamGeneratorDir = new G4UIdirectory("/beam/");
   fBeamGeneratorDir->SetGuidance("UI commands to control Beam generation");
 
+  fEnableIntensityProfileCmd = new G4UIcmdWithABool("/beam/intensity_profile_on",this);
+  fEnableIntensityProfileCmd->SetGuidance("Enable (true) or disable (false) poissonian spread for the number of positrons in each bunch.");
+  fEnableIntensityProfileCmd->SetParameterName("IP",true);
+  fEnableIntensityProfileCmd->SetDefaultValue(false);
+  fEnableIntensityProfileCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetIntensityProfileFilenameCmd = new G4UIcmdWithAString("/beam/intensity_profile_file",this);
+  fSetIntensityProfileFilenameCmd->SetParameterName("TPF",false);
+  fSetIntensityProfileFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  
+  fEnableInputGunCmd = new G4UIcmdWithABool("/beam/input_gun_on",this);
+  fEnableInputGunCmd->SetGuidance("Enable (true) or disable (false) using input gun for MC beam generation.");
+  fEnableInputGunCmd->SetParameterName("IG",true);
+  fEnableInputGunCmd->SetDefaultValue(false);
+  fEnableInputGunCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetInputGunFilenameCmd = new G4UIcmdWithAString("/beam/input_gun_file",this);
+  fSetInputGunFilenameCmd->SetParameterName("IGF",false);
+  fSetInputGunFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
@@ -381,6 +402,10 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
 
 BeamMessenger::~BeamMessenger()
 {
+  delete fEnableIntensityProfileCmd;
+  delete fSetIntensityProfileFilenameCmd;
+  delete fEnableInputGunCmd;
+  delete fSetInputGunFilenameCmd;
 
   delete fSetNPositronsPerBunchCmd;
   delete fEnableNPositronsPerBunchSpreadCmd;
@@ -446,8 +471,24 @@ BeamMessenger::~BeamMessenger()
 
 void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
-
-  if ( cmd == fSetNPositronsPerBunchCmd )
+  // profile template for the POTs
+  if ( cmd == fEnableIntensityProfileCmd ) {
+    if (fEnableIntensityProfileCmd->GetNewBoolValue(par)) fBeamParameters->BeamEnableIntensityProfile();
+    else                                                  fBeamParameters->BeamDisableIntensityProfile();
+  }
+  else if ( cmd == fSetIntensityProfileFilenameCmd ) {
+    fBeamParameters->SetIntensityProfileFilename(par);
+  }
+  // gun from external file
+  else if ( cmd == fEnableInputGunCmd ) {
+    if (fEnableInputGunCmd->GetNewBoolValue(par)) fBeamParameters->BeamEnableInputGun();
+    else                                          fBeamParameters->BeamDisableInputGun();
+  }
+  else if ( cmd == fSetInputGunFilenameCmd ) {
+    fBeamParameters->SetInputGunFilename(par);
+  }
+  // value of positron per bunch
+  else if ( cmd == fSetNPositronsPerBunchCmd )
     fBeamParameters->SetNPositronsPerBunch(fSetNPositronsPerBunchCmd->GetNewIntValue(par));
 
   else if ( cmd == fEnableNPositronsPerBunchSpreadCmd ) {
@@ -649,7 +690,19 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   G4String cv;
 
-  if ( cmd == fSetNPositronsPerBunchCmd )
+  if ( cmd == fEnableIntensityProfileCmd) {
+    cv = fEnableIntensityProfileCmd->ConvertToString(fBeamParameters->BeamApplyIntensityProfile());
+  }
+  else if ( cmd == fSetIntensityProfileFilenameCmd) {
+    cv = fBeamParameters->GetIntensityProfileFilename();  
+  }
+  if ( cmd == fEnableInputGunCmd) {
+    cv = fEnableInputGunCmd->ConvertToString(fBeamParameters->BeamApplyInputGun());
+  }
+  else if ( cmd == fSetInputGunFilenameCmd) {
+    cv = fBeamParameters->GetInputGunFilename();  
+  }
+  else if ( cmd == fSetNPositronsPerBunchCmd )
     cv = fSetNPositronsPerBunchCmd->ConvertToString(fBeamParameters->GetNPositronsPerBunch());
 
   else if ( cmd == fEnableNPositronsPerBunchSpreadCmd )

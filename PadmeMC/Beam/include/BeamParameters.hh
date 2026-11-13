@@ -33,13 +33,28 @@ public:
   void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
-  void EnableBeamLine() { fBeamLineEnabled = true; }
-  void DisableBeamLine() { fBeamLineEnabled = false; }
+  void EnableBeamLine()    { fBeamLineEnabled = true; }
+  void DisableBeamLine()   { fBeamLineEnabled = false; }
   G4bool BeamLineEnabled() { return fBeamLineEnabled; }
-
+  // intensity profile mode
+  void BeamEnableIntensityProfile()  { fIntensityProfileEnabled = true; }
+  void BeamDisableIntensityProfile() { fIntensityProfileEnabled = false; }
+  G4bool BeamApplyIntensityProfile() { return fIntensityProfileEnabled; }
+  // intensity profile filename
+  G4String GetIntensityProfileFilename()        { return fIntensityProfileFilename; }
+  void SetIntensityProfileFilename(G4String f)  { fIntensityProfileFilename = f; }
+  // input gun mode
+  void BeamEnableInputGun()  { fInputGunEnabled = true; }
+  void BeamDisableInputGun() { fInputGunEnabled = false; }
+  G4bool BeamApplyInputGun() { return fInputGunEnabled; }
+  // input beam filename
+  G4String GetInputGunFilename()        { return fInputGunFilename; }
+  void SetInputGunFilename(G4String f)  { fInputGunFilename = f; }
+  
+  
   G4int GetNPositronsPerBunch()        { return fNPositronsPerBunch; }
   void  SetNPositronsPerBunch(G4int n) { fNPositronsPerBunch = n;    }
-
+  
   void NPositronsPerBunchEnableSpread()  { fNPositronsPerBunchApplySpread = true;  }
   void NPositronsPerBunchDisableSpread() { fNPositronsPerBunchApplySpread = false; }
   G4bool NPositronsPerBunchApplySpread() { return fNPositronsPerBunchApplySpread;  }
@@ -214,6 +229,14 @@ private:
 
   G4bool fBeamLineEnabled;
 
+  // Intensity profile mode
+  G4bool   fIntensityProfileEnabled;
+  G4String fIntensityProfileFilename;
+
+  // Input gun mode
+  G4bool   fInputGunEnabled;
+  G4String fInputGunFilename;
+  
   // Average number of positrons in each bunch
   G4int  fNPositronsPerBunch;
   G4bool fNPositronsPerBunchApplySpread; // Poisson distribution

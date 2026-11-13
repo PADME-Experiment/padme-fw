@@ -255,7 +255,7 @@ Bool_t ECalSel::Process()
   fFillLocalHistograms = true;
   fFillCalibHistograms = false;
   fECalEvents.clear();
-  fSigmaCut = 3.;
+  fSigmaCut = 5.; //was 3. -> enlarge the cut on phi angle for efficiency/counting studies                  wnatale
   int NAvg = 200;
   long long t = (long long)fEvent->RecoEvent->GetEventTime().GetSec();
 

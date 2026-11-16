@@ -22,6 +22,14 @@ BeamParameters::BeamParameters()
   fDetectorSetup = 10;
   fBeamLineEnabled = false;
 
+  // Intensity profile from an input histogram
+  fIntensityProfileEnabled = false;
+  fIntensityProfileFilename = "";
+  
+  // Input gun from an input TTree
+  fInputGunEnabled = false;
+  fInputGunFilename = "";
+  
   // Average number of positrons in each bunch
   fNPositronsPerBunch = 25000;
   fNPositronsPerBunchApplySpread = true;

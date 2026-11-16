@@ -41,6 +41,11 @@ private:
 
   G4UIdirectory* fBeamGeneratorDir;
 
+  G4UIcmdWithABool* fEnableIntensityProfileCmd;
+  G4UIcmdWithAString* fSetIntensityProfileFilenameCmd;
+  G4UIcmdWithABool* fEnableInputGunCmd;
+  G4UIcmdWithAString* fSetInputGunFilenameCmd;
+
   G4UIcmdWithAnInteger* fSetNPositronsPerBunchCmd;
   G4UIcmdWithABool* fEnableNPositronsPerBunchSpreadCmd;
 

@@ -87,6 +87,13 @@ BeamParameters::BeamParameters()
   fBabayagaGGLinesToSkip = 0;
 
 
+  // Primary positrons from external ROOT TTree (file must be set from macro)
+  fBeamInputFileOn = false;
+  fBeamInputFilename = "";
+  fBeamInputTreeName = "BeamFlag";
+  fBeamInputFlag = 3;
+  fBeamInputFirstEntry = 0;
+
   // Decay length for displaced vertex (currently used only for TwoGamma events)
   fDecayLength = 0.*mm;
 

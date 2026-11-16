@@ -27,6 +27,7 @@
 #include "TMath.h"
 #include "TLorentzVector.h"
 #include "MyParticleInfo.hh"
+#include "BeamFileReader.hh"
 
 BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
  :fDetector(myDC)
@@ -245,6 +246,27 @@ void BeamGenerator::GeneratePrimaryPositron()
   fPositron.t = parTime;
   //  G4cout << "BeamGenerator - Positron time " << fPositron.t << G4endl;
 
+  // Take position and momentum from external TTree if requested.
+  // File values are offsets wrt the beam axis (beam along +Z): they are
+  // rotated to /beam/direction and displaced to /beam/position_x,y,z,
+  // exactly as done below for the gaussian beam.
+  // Time still comes from the bunch structure above (the file has no time).
+  // Momentum and its spread come only from the file: the return below skips
+  // /beam/momentum, momentum/position spread, emittance and beamspot.
+  if ( bpar->BeamInputFileOn() ) {
+    G4ThreeVector beam_pos = G4ThreeVector(bpar->GetBeamCenterPosX(),bpar->GetBeamCenterPosY(),bpar->GetBeamCenterPosZ());
+    G4ThreeVector beam_dir = bpar->GetBeamDirection().unit();
+    BeamFileParticle part;
+    BeamFileReader::GetInstance()->GetNextParticle(part);
+    part.mom.rotateUz(beam_dir);
+    fPositron.pos = part.pos + beam_pos;
+    fPositron.p   = part.mom;
+    fPositron.P   = part.mom.mag();
+    fPositron.dir = part.mom.unit();
+    fPositron.E   = sqrt(fPositron.P*fPositron.P+fPositron.m*fPositron.m);
+    return;
+  }
+
   // Set positron momentum
   fPositron.P = bpar->GetBeamMomentum();
   if ( bpar->BeamMomentumApplySpread() ) fPositron.P = G4RandGauss::shoot(fPositron.P,bpar->GetBeamMomentumSpread());
@@ -265,7 +287,7 @@ void BeamGenerator::GeneratePrimaryPositron()
     G4double zPos = 0.;
     part_pos = G4ThreeVector(xPos,yPos,zPos);
     // Rotate initial position to the correct beam direction
-    part_pos.rotateUz(beam_dir);
+    //part_pos.rotateUz(beam_dir);    //16/11/2026
     // Finally displace to the real beam origin
     part_pos += beam_pos;    
   } else {

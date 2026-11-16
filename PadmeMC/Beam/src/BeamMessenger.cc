@@ -377,6 +377,33 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamTargetEmittanceYCmd->SetRange("TEY >= 0. && TEY <= 1000.");
   fSetBeamTargetEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableBeamInputFileCmd = new G4UIcmdWithABool("/beam/input_file_on",this);
+  fEnableBeamInputFileCmd->SetGuidance("Enable (true) or disable (false) reading primary e+ position and momentum from an external ROOT TTree.");
+  fEnableBeamInputFileCmd->SetParameterName("BIFO",true);
+  fEnableBeamInputFileCmd->SetDefaultValue(false);
+  fEnableBeamInputFileCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFilenameCmd = new G4UIcmdWithAString("/beam/input_file",this);
+  fSetBeamInputFilenameCmd->SetGuidance("Set name of ROOT file with primary e+.");
+  fSetBeamInputFilenameCmd->SetParameterName("BIF",false);
+  fSetBeamInputFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputTreeNameCmd = new G4UIcmdWithAString("/beam/input_file_tree",this);
+  fSetBeamInputTreeNameCmd->SetGuidance("Set name of TTree with primary e+ inside the input file.");
+  fSetBeamInputTreeNameCmd->SetParameterName("BIT",false);
+  fSetBeamInputTreeNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFlagCmd = new G4UIcmdWithAnInteger("/beam/input_file_flag",this);
+  fSetBeamInputFlagCmd->SetGuidance("Use only TTree entries with NFlag equal to this value.");
+  fSetBeamInputFlagCmd->SetParameterName("BIFL",false);
+  fSetBeamInputFlagCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFirstEntryCmd = new G4UIcmdWithAnInteger("/beam/input_file_first_entry",this);
+  fSetBeamInputFirstEntryCmd->SetGuidance("Set first entry (inside the NFlag-selected sample) to use.");
+  fSetBeamInputFirstEntryCmd->SetParameterName("BIFE",false);
+  fSetBeamInputFirstEntryCmd->SetRange("BIFE >= 0");
+  fSetBeamInputFirstEntryCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 BeamMessenger::~BeamMessenger()
@@ -439,6 +466,12 @@ BeamMessenger::~BeamMessenger()
   delete fSetBeamTargetEmittanceXCmd;
   delete fSetBeamTargetEmittanceYCmd;
   delete fSetBeamTargetPathLengthCmd;
+
+  delete fEnableBeamInputFileCmd;
+  delete fSetBeamInputFilenameCmd;
+  delete fSetBeamInputTreeNameCmd;
+  delete fSetBeamInputFlagCmd;
+  delete fSetBeamInputFirstEntryCmd;
 
   delete fBeamGeneratorDir;
 
@@ -642,6 +675,26 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBeamTargetPathLengthCmd )
     fBeamParameters->SetBeamTargetPathLength(fSetBeamTargetPathLengthCmd->GetNewDoubleValue(par));
 
+  else if ( cmd == fEnableBeamInputFileCmd ) {
+    if (fEnableBeamInputFileCmd->GetNewBoolValue(par)) {
+      fBeamParameters->BeamInputFileEnable();
+    } else {
+      fBeamParameters->BeamInputFileDisable();
+    }
+  }
+
+  else if ( cmd == fSetBeamInputFilenameCmd )
+    fBeamParameters->SetBeamInputFilename(par);
+
+  else if ( cmd == fSetBeamInputTreeNameCmd )
+    fBeamParameters->SetBeamInputTreeName(par);
+
+  else if ( cmd == fSetBeamInputFlagCmd )
+    fBeamParameters->SetBeamInputFlag(fSetBeamInputFlagCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBeamInputFirstEntryCmd )
+    fBeamParameters->SetBeamInputFirstEntry(fSetBeamInputFirstEntryCmd->GetNewIntValue(par));
+
 }
 
 G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
@@ -765,6 +818,21 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetBeamTargetPathLengthCmd )
     cv = fSetBeamTargetPathLengthCmd->ConvertToString(fBeamParameters->GetBeamTargetPathLength());
+
+  else if ( cmd == fEnableBeamInputFileCmd )
+    cv = fEnableBeamInputFileCmd->ConvertToString(fBeamParameters->BeamInputFileOn());
+
+  else if ( cmd == fSetBeamInputFilenameCmd )
+    cv = fBeamParameters->GetBeamInputFilename();
+
+  else if ( cmd == fSetBeamInputTreeNameCmd )
+    cv = fBeamParameters->GetBeamInputTreeName();
+
+  else if ( cmd == fSetBeamInputFlagCmd )
+    cv = fSetBeamInputFlagCmd->ConvertToString(fBeamParameters->GetBeamInputFlag());
+
+  else if ( cmd == fSetBeamInputFirstEntryCmd )
+    cv = fSetBeamInputFirstEntryCmd->ConvertToString(fBeamParameters->GetBeamInputFirstEntry());
 
   return cv;
 

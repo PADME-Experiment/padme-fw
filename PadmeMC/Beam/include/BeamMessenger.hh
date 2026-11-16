@@ -96,6 +96,12 @@ private:
   G4UIcmdWithAnInteger* fSetBabayagaGGLinesToSkipCmd;
 
 
+  G4UIcmdWithABool* fEnableBeamInputFileCmd;
+  G4UIcmdWithAString* fSetBeamInputFilenameCmd;
+  G4UIcmdWithAString* fSetBeamInputTreeNameCmd;
+  G4UIcmdWithAnInteger* fSetBeamInputFlagCmd;
+  G4UIcmdWithAnInteger* fSetBeamInputFirstEntryCmd;
+
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 
   G4UIcmdWithABool* fEnableCalibRunCmd;

@@ -228,6 +228,15 @@ void GeneralInfo::EvalBeamProperties(){
   std::cout<<"General Info: fEnergyMax : "<<fEnergyMax<<" fEnergyMin "<<fEnergyMin<<std::endl;
 }
 
+Double_t GeneralInfo::EvaluateRMinfromRMax(Double_t RMax){
+  double tanQMax = RMax/(fCOGAtECal.Z()-fRTarg.Z());
+  double tLim = TMath::ATan(fGam*tanQMax);
+  if (tLim < TMath::Pi()*0.25) {
+    std::cout << "No solution? " << tLim << " " << fGam << std::endl;
+  }
+  
+  return (fCOGAtECal.Z()-fRTarg.Z())*TMath::Tan(0.5*TMath::Pi()-tLim)/fGam ;// (fCOGAtECal.Z()-fRTarg.Z())*tanQMin; 
+}
 
 void GeneralInfo::PrintBeamProperties(int runID){
   std::cout << "GeneralInfo: run-level info for run " << runID ;

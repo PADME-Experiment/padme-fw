@@ -17,6 +17,7 @@ struct observable{
   Int_t* nCountsCoarse; // number vs time [coarse bin]
   Double_t reject_above;
   Double_t reject_below;
+  UInt_t trigmask_avail;
 };
 
 class DataQuality {

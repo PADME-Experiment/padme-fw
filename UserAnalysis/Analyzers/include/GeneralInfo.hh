@@ -67,7 +67,7 @@ public:
   inline Int_t GetTargetFlag(){return fTargetFlag;}
   inline double GetBField(){return fBField;}
   // methods giving availability of original information
-
+  Double_t EvaluateRMinfromRMax(Double_t RMax);
   bool IsEnergyAvailable(){return fIsEnergyAvailable;}
   bool IsTargetAvgAvailable(){return fIsTargetAvgAvailable;} 
   bool IsCOGAvailable(){return fIsCOGAvailable;} 

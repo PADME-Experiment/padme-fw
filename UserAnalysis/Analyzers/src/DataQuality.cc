@@ -50,15 +50,17 @@ Bool_t DataQuality::Init(PadmeAnalysisEvent* event,  Bool_t fHistoModeVal, TStri
   fNTimeBins = fSafety +((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBin; //check carefully this ratio because there are two long long int subtracted
   fNTimeBinsCoarse =1+fSafety*fTimeBin/fTimeBinCoarse + ((int)(fGeneralInfo->GetRunStopTime()-fGeneralInfo->GetRunStartTime()))/fTimeBinCoarse; 
 
-  const int nObservables = 7;
-  TString obsNames[nObservables] = {"POT","ECalHitOverPOT","POTBunchLength","LGPed","POTTarg", "TargXCharge", "TargYCharge"};
-  double reject_above[nObservables] = {5000, 1.1, 300, 3712, 4000.,  4000., 4000.};
-  double reject_below[nObservables] = {1500, 0.95, 150, 3708, 0., 0., 0.}; 
+  const int nObservables = 9;
+  TString obsNames[nObservables] = {"POT","ECalHitOverPOT","POTBunchLength","LGPed","POTTarg", "TargXCharge", "TargYCharge", "QLED_LG1", "QLED_LG2"};
+  double reject_below[nObservables] = {1500, 0.8, 150, 3708, 0., 0., -4000., 0., 0.}; //should be taken from db
+  double reject_above[nObservables] = {5000, 1.5, 300, 3712, 4000.,  4000., 4000., 4000., 4000.}; ////should be taken from db
+  UInt_t triggerMaskAvail[nObservables] = {1, 1, 1, 1, 1,  1, 1, 4,4}; 
   for (int i=0; i<nObservables; i++){
     observable obsn;
     obsn.name = obsNames[i].Data();
     obsn.reject_above = reject_above[i];
     obsn.reject_below = reject_below[i];
+    obsn.trigmask_avail = triggerMaskAvail[i];
 
     obsn.valueSum = new Double_t[fNTimeBins];
     obsn.valueSquareSum = new Double_t[fNTimeBins];
@@ -102,12 +104,6 @@ Bool_t DataQuality::InitHistos(Int_t nRun){
 Bool_t DataQuality::Process(){
 
   UInt_t trigMask = fEvent->RecoEvent->GetTriggerMask();
-  if(trigMask & (1 << 0)) {
-  // protection: should run on data only
-  // riempire i valori delle 5 osservabili
-  // prendere il tempo dell'evento e calcolare in che bin temporale cadi x 2 (normale e coarse)
-  // incrementare gli array sum, sumsquare, nCounts
-  // il codice sotto e' vecchio
   long long int fTimeStamp =(long long int) fEvent->RecoEvent->GetEventTime().GetSec();
   int TimeBinVal =(int) (fTimeStamp - fGeneralInfo->GetRunStartTime())/ fTimeBin;
   // if(TMath::Abs(TimeBinVal-28900)<1000) std::cout<<"LOOK HERE"<<std::endl;
@@ -120,13 +116,18 @@ Bool_t DataQuality::Process(){
     std::cout<<"DataQuality WARNING * Exceeding the numer of bins available: TimeBinValCoarse: "<<TimeBinValCoarse<<" NTimeBinsCoarse: "<<fNTimeBinsCoarse<<std::endl;
     return false;
   }
-
+  
+  
+  // protection: should run on data only
+  // riempire i valori delle 5 osservabili
+  // prendere il tempo dell'evento e calcolare in che bin temporale cadi x 2 (normale e coarse)
+  // incrementare gli array sum, sumsquare, nCounts
+  // il codice sotto e' vecchio
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
     Double_t Value;
-    
     if((iter->name).CompareTo("POT")==0){
       Value = fNPoTAnalysis->GetNPoTLGCorr();
-    }else if((iter->name).CompareTo("ECalOverPOT")==0){
+    }else if((iter->name).CompareTo("ECalOverPOT")==0 ){
       Double_t ETotECal=0;
       for(int ical = 0;ical < fEvent->ECalRecoCl->GetNElements(); ical++){
         double eECal = fEvent->ECalRecoCl->Element(ical)->GetEnergy();
@@ -151,16 +152,25 @@ Bool_t DataQuality::Process(){
 
       }else if((iter->name).CompareTo("POTTarg")==0){
         if(fEvent->TargetRecoBeam!=0) Value = fEvent->TargetRecoBeam->getnPOT();
-
+        else Value=0;
       }else if((iter->name).CompareTo("TargXCharge")==0){
         if(fEvent->TargetRecoBeam!=0)  Value = fEvent->TargetRecoBeam->getXCharge();
-
+        else Value=0;
       }else if((iter->name).CompareTo("TargYCharge")==0){
         if(fEvent->TargetRecoBeam!=0) Value = fEvent->TargetRecoBeam->getYCharge();
+        else Value=0;
+
+      }else if((iter->name).CompareTo("QLED_LG1")==0){
+        if(fEvent->LeadGlassRecoEvent)Value = fEvent->LeadGlassRecoEvent->GetTotalCharge(0);
+        else Value=0;
+
+      }else if((iter->name).CompareTo("QLED_LG2")==0 ){
+        if(fEvent->LeadGlass2RecoEvent)Value = fEvent->LeadGlass2RecoEvent->GetTotalCharge(0);
+        else Value=0;
 
       }else{
       Value = 1;
-      std::cout<<" DataQuality ** WARNING ** The "<<(iter->name).Data() << " observable is not implemented"<<std::endl;
+      //std::cout<<" DataQuality ** WARNING ** The "<<(iter->name).Data() << " observable is not implemented"<<std::endl;
     }
     
     // if((iter->name).CompareTo("ECalHitOverPOT")==0 && ((iter->valueSum)[TimeBinVal]+Value)<-4 && (iter->valueSum)[TimeBinVal]>=0){
@@ -173,16 +183,16 @@ Bool_t DataQuality::Process(){
     //   }
     
     // }
-    
+    if(trigMask==iter->trigmask_avail){
     (iter->valueSum)[TimeBinVal] += Value;
     (iter->valueSquareSum)[TimeBinVal] += (Value*Value);
     (iter->valueSumCoarse)[TimeBinValCoarse] += (Value);
     (iter->valueSquareSumCoarse)[TimeBinValCoarse] += (Value*Value);
     (iter->nCounts)[TimeBinVal]++;
     (iter->nCountsCoarse)[TimeBinValCoarse]++;
-
+    }
   }
-  }
+  
 
   return true;
 }
@@ -252,8 +262,18 @@ if(fHistoMode && !fGeneralInfo->isMC()){
 
   TGraphErrors *gPoTratioCharge = new TGraphErrors();
   gPoTratioCharge->SetName("gPoTratioCharge");
+  TGraphErrors *gPoTratioChargevsPoT = new TGraphErrors();
+  gPoTratioChargevsPoT->SetName("gPoTratioChargevsPoT");
   TGraphErrors *gPoTratioChargeAll = new TGraphErrors();
   gPoTratioChargeAll->SetName("gPoTratioChargeAll");
+
+  TGraphErrors *gLEDRatio = new TGraphErrors();
+  TGraphErrors *gQLED1 = new TGraphErrors();
+  TGraphErrors *gQLED2 = new TGraphErrors();
+  gLEDRatio->SetName("gLEDRatio");
+  gQLED1->SetName("gQLED1");
+  gQLED2->SetName("gQLED2");
+  
   TF1 *p0fit = new TF1("p0fit", "pol0");
 
   TFile *fileIn = new TFile(InputHistofile.Data());
@@ -261,10 +281,13 @@ if(fHistoMode && !fGeneralInfo->isMC()){
   std::cout<<"File to analyze for DataQuality: "<< InputHistofile.Data()<<std::endl;
   //retrive info from th1d and assign it to the obs struct
   ofstream tobecut;
+  ofstream fitresults;
   std::cout<<"fApplyDataQuality: "<<fApplyDataQuality<<std::endl;
     if(!fApplyDataQuality){
       std::cout<<"DataQuality is in flag mode, writing the bad periods to file: "<<Form("%s/tobecut_%d.txt",DQPath.Data(),fNRun)<<std::endl;
       tobecut.open(Form("%s/tobecut_%d.txt",DQPath.Data(),fNRun));
+      fitresults.open(Form("%s/fitresults_%d.txt", DQPath.Data(),fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
+
     }
   for(std::vector<observable>::iterator iter = fObservables.begin(); iter != fObservables.end(); ++iter){
     TH1D *hvalueSum = (TH1D*) fileIn->Get(Form("DataQuality/hvalueSum_%s_%d", iter->name.Data(), fNRun))->Clone(); //in seconds
@@ -333,7 +356,7 @@ if(fHistoMode && !fGeneralInfo->isMC()){
             obsplotMean->GetPoint(iprm,xvalrm,yvalrm);
             errxrm= obsplotMean->GetErrorX(iprm);
             erryrm= obsplotMean->GetErrorY(iprm);
-            if(yvalrm < iter->reject_below || yvalrm > iter->reject_above){
+            if((yvalrm < iter->reject_below || yvalrm > iter->reject_above) && iter->name!="TargetYCharge"){
               long long tStart = fGeneralInfo->GetRunStartTime() + (long long)xvalrm;
               long long tStop  = tStart + (long long)fTimeBin;
                //std::cout<<"Removing yvalrm:"<<yvalrm<<" xvalrm: "<<xvalrm<<" Point: "<<obsplotMeanNoBeamDown->GetN()<<std::endl;
@@ -348,11 +371,12 @@ if(fHistoMode && !fGeneralInfo->isMC()){
             
           }
           obsplotMeanNoBeamDown->Fit(p0fit, "EMQ");
-          obsplotMeanNoBeamDown->SaveAs(Form("checks/check_%s.root", (iter->name).Data()));
-          Double_t p0Val = p0fit->GetParameter(0);
-          Double_t p0sigma = p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
           
-          ofstream fitresults(Form("%s/fitresults_%d.txt", DQPath.Data(),fNRun)); //could be changed to only one file opening ad adding a new line with the new run number
+
+          obsplotMeanNoBeamDown->SaveAs(Form("%s/checks/check_%s_%d.root", DQPath.Data(), (iter->name).Data(), fNRun));
+          Double_t p0Val = obsplotMeanNoBeamDown->GetMean(2); //was p0fit->GetParameter(0);
+          Double_t p0sigma = obsplotMeanNoBeamDown->GetRMS(2); //was p0fit->GetParError(0)*TMath::Sqrt(obsplotMean->GetN()) ; // *p0fit->GetChisquare()/(p0fit->GetNDF()*1.1) questo da fare per il punto quando applico il t
+          std::cout<<"Mean: "<<p0Val<<" RMS: "<<p0sigma<<"FIT MEAN: "<<p0fit->GetParameter(0)<<"FIT RMS: "<<p0fit->GetParError(0)*TMath::Sqrt(obsplotMeanNoBeamDown->GetN())<<std::endl;
           fitresults<<fNRun<<"\t"<<fGeneralInfo->GetBeamEnergy()<<"\t"<<iter->name<<"\t"<<p0Val<<"\t"<<p0sigma<<std::endl;
           for(int ip =0; ip<obsplotMean->GetN(); ip++){
             double yval,xval;
@@ -391,7 +415,12 @@ if(fHistoMode && !fGeneralInfo->isMC()){
     }else if((iter->name).CompareTo("TargXCharge")==0) {
       gXChargeAll = (TGraphErrors*) obsplotMean->Clone();
       gXCharge = (TGraphErrors*) obsplotCoarseMean->Clone();
-      }
+    }else if((iter->name).CompareTo("QLED_LG1")==0){
+      gQLED1 = (TGraphErrors*) obsplotCoarseMean->Clone();
+      
+    }else if((iter->name).CompareTo("QLED_LG2")==0){
+      gQLED2 = (TGraphErrors*) obsplotCoarseMean->Clone();
+    }
     }
     if(gPoTLG->GetN()== gPoTTarget->GetN()){
         for(int i =0; i<gPoTLG->GetN(); i++){
@@ -405,13 +434,23 @@ if(fHistoMode && !fGeneralInfo->isMC()){
           gXChargeAll->GetPoint(i, XChaAll, YChaAll);
           //sistemare deno =0
           if(YLG!=0) gPoTratioCharge->SetPoint(gPoTratioCharge->GetN(),XLG, YCha/YLG);
+          if(YLG!=0) gPoTratioChargevsPoT->SetPoint(gPoTratioChargevsPoT->GetN(),YLG, YCha/YLG);
+          
           if(YLGAll!=0)gPoTratioChargeAll->SetPoint(gPoTratioChargeAll->GetN(),XLGAll, YChaAll/YLGAll);
-
-
         }
+      if(gQLED1->GetN()==gQLED2->GetN()){
+        for(int j =0; j<gQLED1->GetN();j++){
+          Double_t XLG1, XLG2, YLG1, YLG2;
+          gQLED1->GetPoint(j, XLG1, YLG1);
+          gQLED2->GetPoint(j, XLG2, YLG2);
+          if(YLG2!=0) gLEDRatio->SetPoint(gLEDRatio->GetN(),XLG1, YLG1/YLG2);
+        }
+      }
     }
     fHS->SaveTGraphList("DataQuality", gPoTratio->GetName(),gPoTratio);
+    fHS->SaveTGraphList("DataQuality", gLEDRatio->GetName(),gLEDRatio);
     fHS->SaveTGraphList("DataQuality", gPoTratioCharge->GetName(),gPoTratioCharge);
+    fHS->SaveTGraphList("DataQuality", gPoTratioChargevsPoT->GetName(),gPoTratioChargevsPoT);
     fHS->SaveTGraphList("DataQuality", gPoTratioChargeAll->GetName(),gPoTratioChargeAll);
     
     //fare delete dei tgraph

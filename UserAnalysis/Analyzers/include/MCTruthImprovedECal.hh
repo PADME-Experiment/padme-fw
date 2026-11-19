@@ -114,6 +114,17 @@ public:
     return -1;
   }
 
+  Int_t GetOriginalVtxFromECalVtxID(Int_t ecalvtxid){ //returns a sigle original vertex associated to an ECal vertex
+    std::map<Int_t, std::vector<MatchingStruct>>::iterator it;
+    for (it = VtxKeyMap.begin(); it != VtxKeyMap.end(); it++){
+      std::vector<MatchingStruct> VtxKeyMapValue = it->second;
+      for (int i=0; i < (int) VtxKeyMapValue.size(); i++){
+      MatchingStruct mstruct = VtxKeyMapValue.at(i);
+      if (mstruct.ecalvtxid == ecalvtxid) return mstruct.originalvtxid;
+          }
+        }
+    return -1;
+  }
   std::vector<Int_t> GetClusFromVtx(Int_t vtxid){ //returns the list of clusters associated to an original-type vertex
     std::vector<Int_t> clusarray;
     auto itvtx = VtxKeyMap.find(vtxid);
@@ -172,6 +183,7 @@ public:
     }
     return ecalvtxarray; // vector with ecal vertices (no repetitions)
   }
+
 
   void DumpMapWithVtxKey(){
     std::cout <<"MCTruthImprovedECal: Dump map with vtxid as key: size " << VtxKeyMap.size() << std::endl;

@@ -1,3 +1,4 @@
+#include <memory>
 #include "MCTruthImprovedECal.hh"
 #include "TLorentzVector.h"
 #include <iostream>
@@ -11,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <sys/stat.h>
+#define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 
 
@@ -84,6 +86,7 @@ Bool_t MCTruthImprovedECal::InitHistos(){
   fHS->CreateList("MCTruthImprovedECal");
   for (int i=0; i<2; i++){
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",i),300,0.,300.,200,-10.,10.);
+    fHS->BookHisto2List("MCTruthImprovedECal",Form("DTVsECluVtx_type%d",i),300,0.,300.,200,-10.,10.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d_deadcells",i),300,0.,300.,200,-10.,10.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",i),100,-300.,300.,100,-100.,100.);
@@ -93,12 +96,20 @@ Bool_t MCTruthImprovedECal::InitHistos(){
     fHS->BookHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",i),ncells,fXMin,fXMax,ncells,fYMin,fYMax);
     fHS->BookHisto2List("MCTruthImprovedECal",Form("EinVsEout_type%d",i),100,0.,300.,100,0.,300.);
   }
-
+   
   fpdgcodes[0] = -11;
   fpdgcodes[1] = 11;
   fpdgcodes[2] = 22; 
   std::map<TString, int>::iterator it;
   for (it = fProcessIDsMap.begin(); it != fProcessIDsMap.end(); it++){
+    for(int i=0; i<3; i++){
+
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("cogXvsPhi_%s_hasExtrapolated_%d",it->first.Data(),i),60, -3.14159, 3.14159, 80, -150,150);
+      fHS->BookHisto2List("MCTruthImprovedECal",Form("cogYvsPhi_%s_hasExtrapolated_%d",it->first.Data(),i),60, -3.14159, 3.14159, 80, -150,150);
+ 
+  }
+
+    
     for (int i=0; i<3; i++){
       // efficiency to find an associated cluster Y vs X
       TString histoNameXY = Form("InAccYvsX_%s_%d",it->first.Data(),fpdgcodes[i]);
@@ -174,7 +185,8 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     TMCVertex* mcVtx = fEvent->MCTruthEvent->Vertex(iV);
 
     // parse format of process to match this: 	  G4String processName = "AtECal_"+oldvtxprocess+"_VtxID_"+std::to_string(oldvtxid)+"_Outposition_"+std::to_string(oldvtxparticlepos)+"_type_"+std::to_string(itype);
-    TObjArray *tx = mcVtx->GetProcess().Tokenize("_");
+    // Tokenize allocates a new owning TObjArray: unique_ptr frees it on every continue
+    std::unique_ptr<TObjArray> tx(mcVtx->GetProcess().Tokenize("_"));
     if (tx->GetLast() != 7) continue;
     if ( ((TObjString *)(tx->At(0)))->String() != "AtECal" ) continue;
 
@@ -205,7 +217,6 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       std::cout <<"MCTruthImprovedECal >> ecalvtx type out of bound ---" << ecalvtxtype << "----" << std::endl;
       continue;
     }
-    
     // retrieve position and momentum/energy of particle out at ECal
     TVector3 ecalvtxPosition = mcVtx->GetPosition();
     TLorentzVector ecalvtxPcleMom(mcVtx->ParticleOut(0)->GetMomentum(), mcVtx->ParticleOut(0)->GetEnergy());
@@ -234,13 +245,16 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 //      TVector3 cluDiffOrt(cluDiff.X(),cluDiff.Y(),cluDiff.Z());
 //      cluDiffOrt -= cluDelta*cluDir; // CDA vector: difference component ortogonal to the cluster "direction"
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
+     
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DXCluVtx_type%d",ecalvtxtype),cluPos.X(),cluPos.X()-ecalvtxPosition.X(),1.);
       fHS->FillHisto2List("MCTruthImprovedECal",Form("DYCluVtx_type%d",ecalvtxtype),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y(),1.);
       if(fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2)  fHS->FillHisto2List("MCTruthImprovedECal",Form("DrVsDTCluVtx_type%d_deadcells",ecalvtxtype),cluDiff.Perp(),cluTime-ecalVtxTime,1.);
 
       double perplimit = 20.;
+      double minTrueEnergy = 10.;
       if (fCellMap[100*(int)((ecalvtxPositionCorr.X()-fXMin)/cellSize)+(int)((ecalvtxPositionCorr.Y()-fYMin)/cellSize)]==2) perplimit = 30.;
-      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < perplimit) {
+      if(cluDiff.Perp()<perplimit) fHS->FillHisto2List("MCTruthImprovedECal",Form("DTVsECluVtx_type%d",ecalvtxtype), mcVtx->ParticleOut(0)->GetEnergy(),cluTime-ecalVtxTime,1.);
+      if (TMath::Abs(cluTime-ecalVtxTime) < 5. && cluDiff.Perp() < perplimit && (ecalvtxtype ==0 && mcVtx->ParticleOut(0)->GetEnergy() > minTrueEnergy)) {
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),1.);
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdx_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.X()-ecalvtxPosition.X());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("YvsX_weightdy_type%d",ecalvtxtype),cluPos.X(),cluPos.Y(),cluPos.Y()-ecalvtxPosition.Y());
@@ -251,7 +265,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
     } //ECal cluster loop
   } //MCTruth Vtx Loop
       
-  DumpMapWithVtxKey();
+  //DumpMapWithVtxKey();
 
   // to check the performance, must apply acceptance criteria
 
@@ -267,16 +281,22 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       continue;
     }
     TString processName = it->first;
-    
+    TVector3 pclePos =mcVtx->GetPosition();
+
+    Int_t hasExtrapolated[10] = {1,1,1,1,1,1,1,1,1,1};
+    TLorentzVector pcleMomVect[10];
+
     for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
       TMCParticle* mcOPart = mcVtx->ParticleOut(iO);
-      TVector3 pclePos =mcVtx->GetPosition();
       TVector3 pcleMom =mcOPart->GetMomentum();
       TLorentzVector pcle(pcleMom.X(),pcleMom.Y(),pcleMom.Z(),mcOPart->GetEnergy());
+      pcleMomVect[iO] = pcle;
       TVector3 VtxPosAtCalo;
+      
       VtxPosAtCalo.SetZ(fGeneralInfo->GetCOG().Z());//-72.8); //removed 6.5X0 faccia calorimetro
       VtxPosAtCalo.SetX(pclePos.X()+((pcleMom.X()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
-      VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));      
+      VtxPosAtCalo.SetY(pclePos.Y()+((pcleMom.Y()/pcleMom.Z())*(VtxPosAtCalo.Z()-pclePos.Z())));
+      
       int pdgcode = mcVtx->ParticleOut(iO)->GetPDGCode();
       // acceptance condition: extrapolates to an ECal crystal
       int icellX = (VtxPosAtCalo.X() - fXMin)/cellSize;//    VtxPosAtCalo.X()/cellSize + ncells/2;
@@ -285,6 +305,7 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       if(icellY>=ncells || icellY<0) continue;
       if(fCellMap[100*icellX+icellY]<=0) continue; // ECal map to remove holes and external parts
       std::vector<Int_t> ecalvtxids = GetECalVtxFromVtxPclePair(iV,iO);
+      hasExtrapolated[iO] += 2;
       // evaluate total energy that according to MCtruth, enters the ECal [primary, daughters]
       double totalEnergyMC = 0;
       for (std::vector<Int_t>::iterator itecalvtxids = ecalvtxids.begin(); itecalvtxids != ecalvtxids.end(); ++itecalvtxids){
@@ -301,7 +322,9 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccEvsPhi_%s_%d_assMCOK",processName.Data(),pdgcode),TMath::ATan2(VtxPosAtCalo.Y(),VtxPosAtCalo.X()),pcle.E());
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_totalEMC",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y(),totalEnergyMC);      
 	fHS->FillHisto2List("MCTruthImprovedECal",Form("InAccYvsX_%s_%d_totalElossMC",processName.Data(),pdgcode),VtxPosAtCalo.X(),VtxPosAtCalo.Y(),mcOPart->GetEnergy()-totalEnergyMC);      
-      }
+     hasExtrapolated[iO] += 4;
+    }   
+  
       
       // retrieve list of clusters associated to vertex from mctruth
       std::vector<Int_t> cluidvec = GetClusFromVtxPclePair(iV,iO);
@@ -396,6 +419,29 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
           }// no associated cluster found
         }
       
+    }
+    if(mcVtx->GetProcess() == "eIoni" || mcVtx->GetProcess() == "eBrem" || mcVtx->GetProcess() == "annihil") { 
+      TVector2 cogPos(0.,0.);
+      double cogE = 0.;
+      double phi = 0.;
+      if(pcleMomVect[0].E()>10 && pcleMomVect[1].E()>10){
+
+        for(Int_t iO = 0; iO<mcVtx->GetNParticleOut(); iO++) {
+          
+          cogPos.SetX(cogPos.X()+(pclePos.X()+(pcleMomVect[iO].X()/pcleMomVect[iO].Z()*(fGeneralInfo->GetCOG().Z()-pclePos.Z())))*pcleMomVect[iO].E());
+          cogPos.SetY(cogPos.Y()+(pclePos.Y()+(pcleMomVect[iO].Y()/pcleMomVect[iO].Z()*(fGeneralInfo->GetCOG().Z()-pclePos.Z())))*pcleMomVect[iO].E());
+          cogE += pcleMomVect[iO].E();
+        }
+        pcleMomVect[0].E()> pcleMomVect[1].E() ? phi = pcleMomVect[0].Phi() : phi = pcleMomVect[1].Phi();
+        cogPos.SetX(cogPos.X()/cogE);
+        cogPos.SetY(cogPos.Y()/cogE);
+        for(int i=0; i< 3; i++){
+          if(CHECK_BIT(hasExtrapolated[0],i) && CHECK_BIT(hasExtrapolated[1],i)){
+            fHS->FillHisto2List("MCTruthImprovedECal",Form("cogXvsPhi_%s_hasExtrapolated_%d",processName.Data(),i),phi,cogPos.X());
+            fHS->FillHisto2List("MCTruthImprovedECal",Form("cogYvsPhi_%s_hasExtrapolated_%d",processName.Data(),i),phi,cogPos.Y());
+          }
+        }
+      }
     }
   }
 

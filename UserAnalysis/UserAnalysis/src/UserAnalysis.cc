@@ -6,6 +6,7 @@
 #include "GeneralInfo.hh" //TS
 #include "ECalSel.hh" //TS
 #include "TagAndProbe.hh" //EDM
+#include "RunIVSelection.hh" //EDM
 #include "ETagAn.hh" //TS
 #include "ECalETagMatching.hh" //EDM
 #include "ECalCalib.hh"
@@ -34,6 +35,11 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   }
   fHS = HistoSvc::GetInstance();
   fCfgParser    = new utl::ConfigParser((const std::string)cfgFile.Data());
+  TString cfgvalue = TString(fCfgParser->GetSingleArg("GENERAL", "UseMM"));
+  fUseMM = false;
+  if (cfgvalue=="1") fUseMM = true;
+  else fUseMM = false;
+  
   fECalCalib    = ECalCalib::GetInstance();
   fECalCalib22    = ECalCalib22::GetInstance();
   //  fMCTruth      = new MCTruth(cfgFile,fVerbose);
@@ -46,11 +52,15 @@ UserAnalysis::UserAnalysis(TString cfgFile, Int_t verbose)
   fGeneralInfo = GeneralInfo::GetInstance();
   fECalSel = ECalSel::GetInstance();
   fTagAndProbe = TagAndProbe::GetInstance();
+  fRunIVSelection = RunIVSelection::GetInstance();
   //  fECalETagMatching  = ECalETagMatching::GetInstance();
   //  fETagAn  = ETagAn::GetInstance();
   fDataQuality = DataQuality::GetInstance();
-  fMMTrackDevel = MMTrackDevel::GetInstance();
-  fMMFindBestTrack = MMFindBestTrack::GetInstance();
+  if(fUseMM){
+    fMMTrackDevel = MMTrackDevel::GetInstance();
+    fMMFindBestTrack = MMFindBestTrack::GetInstance();
+  }
+  
   //  fIsGGAnalysis = new IsGGAnalysis(cfgFile,fVerbose);
 //  fETagAnalysis = new ETagAnalysis(cfgFile,fVerbose);
 //  fIs22GGAnalysis = new Is22GGAnalysis(cfgFile,fVerbose);
@@ -67,6 +77,7 @@ UserAnalysis::~UserAnalysis(){
   delete fGeneralInfo;
   delete fECalSel;
   delete fTagAndProbe;
+  delete fRunIVSelection;
   //  delete fETagAn;
   //  delete fIsGGAnalysis;
   //  delete fETagAnalysis;
@@ -103,9 +114,12 @@ Bool_t UserAnalysis::Init(PadmeAnalysisEvent* event, Bool_t HistoMode, TString I
 
 //  if (fETagHitsAvail) fETagAn->Init(fEvent);
 //  if (fETagHitsAvail) fECalETagMatching->Init(fEvent);
-  fMMTrackDevel->Init(fEvent,fHistoMode,InputHistofile);
-  fMMFindBestTrack->Init(fEvent);
+  if(fUseMM){
+    fMMTrackDevel->Init(fEvent,fHistoMode,InputHistofile);
+    fMMFindBestTrack->Init(fEvent);
+  }
   fTagAndProbe->Init(fEvent,fHistoMode,InputHistofile);
+  fRunIVSelection->Init(fEvent,fHistoMode,InputHistofile);
 
   //  fIsGGAnalysis->Init(fEvent);
   //if (fETagHitsAvail && fETagClusAvail)   fETagAnalysis->Init(fEvent);
@@ -156,7 +170,9 @@ Bool_t UserAnalysis::Process(){
     fDataQuality->Process();
     fECalCalib22->Process(fEvent);
   }
-  fMMFindBestTrack->Process();
+  if(fUseMM){
+    fMMFindBestTrack->Process();
+  }
 
   fECalSel->ProcessForCalib();
 
@@ -165,8 +181,11 @@ Bool_t UserAnalysis::Process(){
 //    fETagAn->Process();
 //    fECalETagMatching->Process();
 //  }
-  fMMTrackDevel->Process();
+  if(fUseMM){
+    fMMTrackDevel->Process();
+  }
   fTagAndProbe->Process();
+  fRunIVSelection->Process();
 
   //  fIsGGAnalysis->Process();
   //fIs22GGAnalysis->Process();
@@ -236,6 +255,7 @@ Bool_t UserAnalysis::Finalize()
   fNPoTAnalysis->Finalize();
   fECalSel->Finalize();
   fTagAndProbe->Finalize();
+  fRunIVSelection->Finalize();
 //  if (fETagHitsAvail) fETagAn->Finalize();
 //  if (fETagHitsAvail) fECalETagMatching->Finalize();
   //  fIsGGAnalysis->Finalize();
@@ -245,9 +265,10 @@ Bool_t UserAnalysis::Finalize()
   fECalCalib->Finalize();
   fDataQuality->Finalize();
 //  fIs3GAnalysis->Finalize();
-  fMMTrackDevel->Finalize();
-  fMMFindBestTrack->Finalize();
-
+  if(fUseMM){
+    fMMTrackDevel->Finalize();
+    fMMFindBestTrack->Finalize();
+  }
 //  // TGraph example
 //  Double_t x[5] = {1.,2.,3.,4.,5.};
 //  Double_t xe[5] = {.1,.1,.2,.2,.3};

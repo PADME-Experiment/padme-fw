@@ -14,6 +14,7 @@ class Is3GAnalysis;
 class GeneralInfo;
 class ECalSel;
 class TagAndProbe;
+class RunIVSelection;
 class ECalETagMatching;
 class ETagAn;
 class ETagAnalysis;
@@ -41,7 +42,7 @@ private:
   Bool_t InitHistos();
   Bool_t fHistoMode;
   Int_t fVerbose;
-
+  Bool_t fUseMM;
   PadmeAnalysisEvent* fEvent;
 
   utl::ConfigParser* fCfgParser;
@@ -55,6 +56,7 @@ private:
   GeneralInfo* fGeneralInfo;
   ECalSel* fECalSel;
   TagAndProbe* fTagAndProbe;
+  RunIVSelection* fRunIVSelection;
   ECalCalib22 *fECalCalib22;
   ETagAn* fETagAn;
   ECalETagMatching* fECalETagMatching;

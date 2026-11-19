@@ -26,6 +26,7 @@
 #include "TSACRecoEvent.hh"
 #include "THEPVetoRecoEvent.hh"
 #include "TLeadGlassRecoEvent.hh"
+#include "TLeadGlass2RecoEvent.hh"
 #include "TMMRecoEvent.hh"
 #include "TMCTruthEvent.hh"
 
@@ -207,6 +208,7 @@ int main(Int_t argc, char **argv)
   TETagRecoEvent*       fETagRecoEvent    =0;
   TSACRecoEvent*        fSACRecoEvent     =0;
   TLeadGlassRecoEvent*  fLeadGlassRecoEvent =0;
+  TLeadGlass2RecoEvent*  fLeadGlass2RecoEvent =0;
   TTargetRecoBeam*      fTargetRecoBeam   =0;
   TMMRecoEvent*         fMMRecoEvent      =0;
   TRecoVClusCollection* fSACRecoCl        =0;
@@ -279,7 +281,10 @@ int main(Int_t argc, char **argv)
       //} else if (branchName=="TPix") {
       //  fTPixRecoEvent = new TTPixRecoEvent();
       //  fRecoChain->SetBranchAddress(branchName.Data(),&fTPixRecoEvent);
-    } else if (branchName=="TargetBeam") {
+    }else if (branchName=="LeadGlass2_Hits") {
+      fLeadGlass2RecoEvent = new TLeadGlass2RecoEvent();
+      fRecoChain->SetBranchAddress(branchName.Data(),&fLeadGlass2RecoEvent);
+    }  else if (branchName=="TargetBeam") {
       fTargetRecoBeam = new TTargetRecoBeam();
       fRecoChain->SetBranchAddress(branchName.Data(),&fTargetRecoBeam);
     } else if (branchName=="MM_Hits") {
@@ -356,6 +361,7 @@ int main(Int_t argc, char **argv)
   event->ECalRecoEvent    = fECalRecoEvent   ;
   event->SACRecoEvent     = fSACRecoEvent    ;
   event->LeadGlassRecoEvent = fLeadGlassRecoEvent;
+  event->LeadGlass2RecoEvent = fLeadGlass2RecoEvent;
   event->TargetRecoBeam   = fTargetRecoBeam  ;
   event->MMRecoEvent      = fMMRecoEvent     ;
   event->SACRecoCl        = fSACRecoCl       ;
@@ -380,6 +386,7 @@ int main(Int_t argc, char **argv)
   Int_t nSACHits    =0;
   Int_t nETagHits   =0;
   Int_t nLeadGlassHits=0;
+  Int_t nLeadGlass2Hits=0;
   Int_t nMMHits     =0;
   Bool_t doDataQuality = false;
   UInt_t mcEvent = (1U << TRECOEVENT_STATUSBIT_SIMULATED); // Mask to check if event is MC
@@ -463,6 +470,7 @@ int main(Int_t argc, char **argv)
       if (fETagRecoEvent)    nETagHits   = fETagRecoEvent->GetNHits();
       if (fMMRecoEvent)      nMMHits     = fMMRecoEvent->GetNHits();
       if (fLeadGlassRecoEvent) nLeadGlassHits= fLeadGlassRecoEvent->GetNHits();
+      if (fLeadGlass2RecoEvent) nLeadGlass2Hits= fLeadGlass2RecoEvent->GetNHits();
       std::cout<<"     Hits in Target "<<nTargetHits
 	       <<" ECal "<<nECalHits
 	       <<" PVeto "<<nPVetoHits
@@ -470,6 +478,7 @@ int main(Int_t argc, char **argv)
 	       <<" HEPVeto "<<nHEPVetoHits
 	       <<" ETag "<<nETagHits
 	       <<" LeadGlass "<<nLeadGlassHits
+         <<" LeadGlass2 "<<nLeadGlass2Hits
 	       <<" SAC "<<nSACHits
 	       <<" MM "<<nMMHits
 	       <<std::endl;
@@ -503,6 +512,7 @@ int main(Int_t argc, char **argv)
       if (fHEPVetoRecoEvent) fHEPVetoRecoEvent->Print();
       if (fSACRecoEvent)     fSACRecoEvent->Print();
       if (fLeadGlassRecoEvent) fLeadGlassRecoEvent->Print();
+      if (fLeadGlass2RecoEvent) fLeadGlass2RecoEvent->Print();
       if (fMMRecoEvent)      fMMRecoEvent->Print();
     }
     

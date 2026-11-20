@@ -258,7 +258,17 @@ void BeamGenerator::GeneratePrimaryPositron()
     G4ThreeVector beam_dir = bpar->GetBeamDirection().unit();
     BeamFileParticle part;
     BeamFileReader::GetInstance()->GetNextParticle(part);
-    part.mom.rotateUz(beam_dir);
+    G4cout<<"before dir x,y,z: "<< part.mom.x() << " "<<part.mom.y() <<" "<<part.mom.z()<<G4endl; 
+    G4ThreeVector checkrotation;
+    // G4ThreeVector beamMomCopy = part.mom;
+    checkrotation.setX(-beam_dir.y());
+    checkrotation.setY(beam_dir.x());
+    checkrotation.setZ(0.);
+    //G4double scalarprod = beam_dir.z();
+    G4double angle = acos(beam_dir.z());
+    part.mom.rotate(angle, checkrotation);
+    // part.mom.rotateUz(beam_dir);
+    // G4cout<<"UzRot dir x,y,z: "<< part.mom.x() << " "<<part.mom.y() <<" "<<part.mom.z()<< " Rotation x,y,z: "<<beamMomCopy.x()<<" "<<beamMomCopy.y()<<" "<<beamMomCopy.z()<<G4endl; 
     fPositron.pos = part.pos + beam_pos;
     fPositron.p   = part.mom;
     fPositron.P   = part.mom.mag();

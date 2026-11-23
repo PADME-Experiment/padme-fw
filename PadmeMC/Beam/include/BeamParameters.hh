@@ -43,6 +43,9 @@ public:
   // intensity profile filename
   G4String GetIntensityProfileFilename()        { return fIntensityProfileFilename; }
   void SetIntensityProfileFilename(G4String f)  { fIntensityProfileFilename = f; }
+  // intensity profile period
+  G4int GetIntensityProfilePeriod()        { return fIntensityProfilePeriod; }
+  void SetIntensityProfilePeriod(G4int f)  { fIntensityProfilePeriod = f; }
   // input gun mode
   void BeamEnableInputGun()  { fInputGunEnabled = true; }
   void BeamDisableInputGun() { fInputGunEnabled = false; }
@@ -249,7 +252,7 @@ private:
   // Intensity profile mode
   G4bool   fIntensityProfileEnabled;
   G4String fIntensityProfileFilename;
-
+  G4int fIntensityProfilePeriod;
   // Input gun mode
   G4bool   fInputGunEnabled;
   G4String fInputGunFilename;

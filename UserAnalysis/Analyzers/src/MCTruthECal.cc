@@ -86,6 +86,8 @@ Bool_t MCTruthECal::InitHistos(){
 
   fHS->CreateList("MCTruthECal");
   fHS->BookHisto2List("MCTruthECal", "VtxPosXY", 400, -100, 100,400, -100, 100);
+  fHS->BookHisto2List("MCTruthECal", "VtxPosXY_nobeamandbrem", 400, -100, 100,400, -100, 100);
+  fHS->BookHisto2List("MCTruthECal", "PYvsPX_nobeamandbrem", 400, -100, 100,400, -100, 100);
 
   fHS->BookHistoList("MCTruthECal","DTCluVtx",100,-10.,10.); 
   fHS->BookHistoList("MCTruthECal","NPcleOut",10,0,10);	
@@ -314,6 +316,10 @@ Bool_t MCTruthECal::CorrelateVtxClu(){
           TVector3 pclePos = VtxPos;
           enTrue+=pcleE;
           TVector3 pcleMom =mcOPart->GetMomentum();
+          if (!(VtxPos.X() > -5. && VtxPos.X() < 37. && VtxPos.Y() > -7. && VtxPos.Y() < -3.)){
+            fHS->FillHisto2List("MCTruthECal", "PYvsPX_nobeamandbrem", pcleMom.X(), pcleMom.Y());
+            fHS->FillHisto2List("MCTruthECal", "VtxPosXY_nobeamandbrem", VtxPos.X(), VtxPos.Y());
+          }
           TLorentzVector pcle;
           pcle.SetXYZT(pcleMom.X(), pcleMom.Y(), pcleMom.Z(), pcleE);
           sumBabayaga+=pcle;

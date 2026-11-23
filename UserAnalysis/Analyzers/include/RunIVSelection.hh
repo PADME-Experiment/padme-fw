@@ -28,7 +28,7 @@ struct SelectedEvent{
   double Ebeam, gamma;
   double ERange[2];
   double RRange[2];
-  double phi[2], thetaLab[2], thetaCM[2], thetaCMinfo[2];
+  double phi[2], thetaLab[2], thetaCM[2], thetaCMinfo[2], phiinfo[2];
   int cluster_Nhits[2];
   TVector2 seedposition[2];
   double seedenergy[2];

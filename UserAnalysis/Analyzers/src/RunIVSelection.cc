@@ -92,6 +92,7 @@ Bool_t RunIVSelection::InitHistos()
   ftree->Branch("RRange", &selev->RRange, "RRange[2]/D");
   ftree->Branch("energy", &selev->energy, "energy[2]/D");
   ftree->Branch("thetaCMinfo", &selev->thetaCMinfo, "thetaCMinfo[2]/D");
+  ftree->Branch("phiinfo", &selev->phiinfo, "phiinfo[2]/D");
 
   ftree->Branch("time", &selev->time, "time[2]/D");
   ftree->Branch("phi", &selev->phi, "phi[2]/D");
@@ -273,7 +274,7 @@ Bool_t RunIVSelection::SelectTwoClusters(){
       }
     fhSvcVal->FillHisto2List("RunIVSelection", Form("ECal_TC_DTHEVsDPHIAbs_dt_Emin_Emax"),fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi()), labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta(), 1.);
     Double_t DeltaPhiAbs = fabs(labMomentaCM[0].Vect().Phi() - labMomentaCM[1].Vect().Phi());
-    Double_t DeltaTheta = labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta();
+    //Double_t DeltaTheta = labMomentaCM[0].Vect().Theta() + labMomentaCM[1].Vect().Theta();
     if (!(DeltaPhiAbs > fMeanDPhi - fSigmaCut * fSigmaDPhi && DeltaPhiAbs < fMeanDPhi + fSigmaCut * fSigmaDPhi)){
       continue;
     }
@@ -284,6 +285,8 @@ Bool_t RunIVSelection::SelectTwoClusters(){
     asstracks[1] = fMMFindBestTrack->GetBestTrackFromCluPos(cluPos[1], fGeneralInfo->GetCOG().Z());
     selev->thetaCMinfo[0] = fMeanDTheta;
     selev->thetaCMinfo[1] = fSigmaDTheta;
+    selev->phiinfo[0] = fMeanDPhi;
+    selev->phiinfo[1] = fSigmaDPhi;
     selev->Ebeam = fGeneralInfo->GetBeamEnergy();
     selev->gamma = fGeneralInfo->GetGam();
     selev->ERange[0] = fGeneralInfo->GetEnergyMin();
@@ -335,19 +338,7 @@ Bool_t RunIVSelection::SelectTwoClusters(){
     if(fisMC){  
       for(int i =0; i<2; i++){
         if(processFound[i]){
-          if(processSelected[i] =="eBrem"){
-            selev->processID[i] = 1;
-            }else if(processSelected[i] =="eIoni"){ 
-            selev->processID[i] = 2;
-            }else if(processSelected[i]=="annihil"){
-            selev->processID[i] = 3;
-            }else if (processSelected[i]=="Bhabha"){
-            selev->processID[i] = 4;  
-            }else if (processSelected[i]=="Babayaga"){
-            selev->processID[i] = 5;
-            }else if(processSelected[i]=="BabayagaGG"){
-            selev->processID[i] = 6;
-            }
+          selev->processID[i] = fMCTruthECalImproved->AssignProcessID(processSelected[i]);
           TMCVertex *mcVtx = fEvent->MCTruthEvent->Vertex(ecalvtxid[i]);
           TMCParticle* pcleOut = mcVtx->ParticleOut(0); //for ecal type vertices the first particle is the one going to the ecal
           selev->truePos[i].Set(mcVtx->GetPosition().X(), mcVtx->GetPosition().Y());

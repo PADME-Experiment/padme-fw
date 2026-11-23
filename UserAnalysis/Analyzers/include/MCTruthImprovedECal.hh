@@ -33,6 +33,7 @@ public:
   Bool_t Finalize();
   Bool_t CorrelateVtxClu();
   Bool_t TagAndProbeFromVertex();
+  Int_t AssignProcessID(TString procname);
 
   void insertMatchingVtxPcleToEcalvtx(Int_t ecalvtxid, Int_t originalvtxid, Int_t originalpcleout){
     // find vector of ecalvtxids given vtx, pcle 

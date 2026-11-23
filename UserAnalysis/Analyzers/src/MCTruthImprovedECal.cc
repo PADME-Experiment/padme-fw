@@ -162,23 +162,6 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
   VtxPclePairKeyMap.clear(); // {vtx,pcle}, MatchingStruct vector pair
   VtxPclePairKeyMapToEcalvtx.clear(); // {vtx,pcle}, all ecal vertices pair
   
-//  TVector3 cluPos, VtxPos;
-//  TRecoVCluster* clu;
-//  double cluEnergy=0;
-//  //double mcIPartE;
-//  double VtxTime;
-//  double cluTime =-99;
-//  int NCluVtx    =0;
-//  double cVal = 30.; //cm/ns
-//
-//  double TOFoffset = 13.6; //ns --> TOF offset moving towards the calorimeter //just assigned default value, evaluated precisely later in the code
-//  const double DTlow     = -2.00;//4.0; //from fit on DT
-//  const double DTup      = 7.27;//6.0; //from fit on DT
-//  const double muX       =  1.442; //0.868;//1.389; //from fit on DX
-//  const double muY       = -0.0731;//-0.100; //from fit on DY
-//  const double sigmaX    = 10.57;//7.232; //from fit on DX
-//  const double sigmaY    = 10.5;//7.632; //from fit on DY
-
 
   //Loop on vertex
   for(Int_t iV = 0; iV < fEvent->MCTruthEvent->GetNVertices(); iV++) {
@@ -360,8 +343,6 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
       } 
       else { // no cluster associated
         Double_t distanceToDeadCell = 9999.0; // Initialize with a large value
-        Double_t Xval = VtxPosAtCalo.X();
-        Double_t Yval = VtxPosAtCalo.Y();
         if (ecalvtxids.size() == 0) { // from MCtruth, no particle (primary, daughter) enters the ECal
 	  // evaluate minimum distance from any deadcell of the extrapolated position
           for (std::vector<Int_t>::iterator itdead = fdeadcells.begin(); itdead != fdeadcells.end(); ++itdead) {
@@ -401,11 +382,11 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
               continue; // skip clusters not associated with this vertex
             }
             TRecoVCluster* clu = fECal_clEvent->Element((int)h1);
-            double cluEnergy = clu->GetEnergy();
-            double cluTime = clu->GetTime();
+            // double cluEnergy = clu->GetEnergy();
+            // double cluTime = clu->GetTime();
             TVector3 cluPos(clu->GetPosition().X(),clu->GetPosition().Y(),fGeneralInfo->GetCOG().Z()); 
-      //      TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
-      //      cludir *= (1./cluDir.Mag());
+            //TVector3 cluDir = cluPos-fGeneralInfo->GetTargetPos(); // direction of the cluster wrt the target
+            //cludir *= (1./cluDir.Mag());
         
             TVector3 cluDiff = cluPos-VtxPosAtCalo;
             if(ecalvtxids.size() > 0) {
@@ -448,7 +429,23 @@ Bool_t MCTruthImprovedECal::CorrelateVtxClu(){
   
   return true;
 }
-
+Int_t MCTruthImprovedECal::AssignProcessID(TString procname){
+  Int_t procID =0;
+    if(procname =="eBrem"){
+      procID = 1;
+      }else if(procname =="eIoni"){ 
+      procID = 2;
+      }else if(procname=="annihil"){
+      procID = 3;
+      }else if (procname=="Bhabha"){
+      procID = 4;  
+      }else if (procname=="Babayaga"){
+      procID = 5;
+      }else if(procname=="BabayagaGG"){
+      procID = 6;
+      }
+      return procID;
+}
 
 //Int_t MCTruthImprovedECal::GetVtxFromCluID(Int_t CluId){
 //  map<Int_t, Int_t>::iterator it;

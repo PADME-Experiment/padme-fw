@@ -23,11 +23,13 @@ BeamFileReader* BeamFileReader::GetInstance()
 }
 
 BeamFileReader::BeamFileReader()
- : fLoaded(false), fIndex(0), fNRecycles(0)
+ : fLoaded(false), fPOTLoaded(false), fIndex(0), fNRecycles(0)
 {}
 
 BeamFileReader::~BeamFileReader()
-{}
+{
+  if (fPOTLoaded) delete fPOTProfile;
+}
 
 void BeamFileReader::LoadFile()
 {
@@ -97,6 +99,51 @@ void BeamFileReader::LoadFile()
          << " (|P| vs p mismatches: " << nBad << "), start index " << fIndex << G4endl;
 }
 
+void BeamFileReader::LoadPOTFile()
+{
+  BeamParameters* bpar = BeamParameters::GetInstance();
+
+  G4String fileName = bpar->GetIntensityProfileFilename();
+  G4int period = bpar->GetIntensityProfilePeriod();
+  G4String histoName = Form("period_%d_nPoT",period);
+  if (fileName == "") {
+    G4cerr << "BeamFileReader - ERROR - /beam/intensity_profile_on is true but no file given with /beam/intensity_profile_file" << G4endl;
+    exit(1);
+  }
+
+  if (period < 1 || period > 36) {
+    G4cerr << "BeamFileReader - ERROR - /beam/intensity_profile_on is true but no/wrong period given with /beam/intensity_profile_period : " << period << G4endl;
+    exit(1);
+  }
+  
+  TFile* f = TFile::Open(fileName.c_str(),"READ");
+  if (!f || f->IsZombie()) {
+    G4cerr << "BeamFileReader - ERROR - cannot open intensity profile file " << fileName << G4endl;
+    exit(1);
+  }
+  TH1D* h = (TH1D*)f->Get(histoName.c_str());
+  if (!h) {
+    G4cerr << "BeamFileReader - ERROR - no TH1D in intensity profile file " << histoName << " in " << fileName << G4endl;
+    exit(1);
+  }
+  
+  if (h->GetSum() == 0) {
+    G4cerr << "BeamFileReader - ERROR - no entries in intensity profile histogram " << histoName << " in " << fileName << G4endl;
+    exit(1);
+  }
+  fPOTProfile = (TH1D*) h->Clone(Form("%s_clone",histoName.c_str()));
+  
+  f->Close();
+  delete f;
+
+  fPOTLoaded = true;
+
+  G4cout << "BeamFileReader - POT Loaded " << h->GetMean() << " average POTs from " << fileName << ":" << histoName << " period " << period << G4endl;
+}
+
+
+
+
 void BeamFileReader::GetNextParticle(BeamFileParticle& part)
 {
   if (!fLoaded) LoadFile();
@@ -112,3 +159,4 @@ void BeamFileReader::GetNextParticle(BeamFileParticle& part)
   part.mom = fMom[fIndex];
   fIndex++;
 }
+

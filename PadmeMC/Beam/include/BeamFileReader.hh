@@ -19,7 +19,7 @@
 
 #include "globals.hh"
 #include "G4ThreeVector.hh"
-
+#include "TH1D.h"
 #include <vector>
 
 struct BeamFileParticle
@@ -38,22 +38,23 @@ public:
   // Fills 'part' with the next particle (file frame, G4 units).
   // Loads the file on first call, wraps around at end of sample.
   void GetNextParticle(BeamFileParticle& part);
-
+  G4int GetNextPOT();
   G4long GetNRecycles() const { return fNRecycles; }
-
+  TH1D* GetPOTProfileHistogram(){return fPOTProfile; }
 private:
 
   BeamFileReader();
   void LoadFile();
-
+  void LoadPOTFile();
   static BeamFileReader* fInstance;
 
   G4bool fLoaded;
+  G4bool fPOTLoaded;
   // File-frame values, already converted to G4 units
   std::vector<G4ThreeVector> fPos;
   std::vector<G4ThreeVector> fMom;
   size_t fIndex;
   G4long fNRecycles;
-
+  TH1D* fPOTProfile;
 };
 #endif

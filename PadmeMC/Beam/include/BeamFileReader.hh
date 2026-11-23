@@ -38,9 +38,11 @@ public:
   // Fills 'part' with the next particle (file frame, G4 units).
   // Loads the file on first call, wraps around at end of sample.
   void GetNextParticle(BeamFileParticle& part);
-  G4int GetNextPOT();
   G4long GetNRecycles() const { return fNRecycles; }
-  TH1D* GetPOTProfileHistogram(){return fPOTProfile; }
+  TH1D* GetPOTProfileHistogram(){
+    if (!fPOTLoaded) LoadPOTFile();
+    return fPOTProfile;
+  }
 private:
 
   BeamFileReader();

@@ -106,6 +106,7 @@ void BeamFileReader::LoadPOTFile()
   G4String fileName = bpar->GetIntensityProfileFilename();
   G4int period = bpar->GetIntensityProfilePeriod();
   G4String histoName = Form("period_%d_nPoT",period);
+
   if (fileName == "") {
     G4cerr << "BeamFileReader - ERROR - /beam/intensity_profile_on is true but no file given with /beam/intensity_profile_file" << G4endl;
     exit(1);
@@ -121,6 +122,7 @@ void BeamFileReader::LoadPOTFile()
     G4cerr << "BeamFileReader - ERROR - cannot open intensity profile file " << fileName << G4endl;
     exit(1);
   }
+
   TH1D* h = (TH1D*)f->Get(histoName.c_str());
   if (!h) {
     G4cerr << "BeamFileReader - ERROR - no TH1D in intensity profile file " << histoName << " in " << fileName << G4endl;
@@ -131,17 +133,23 @@ void BeamFileReader::LoadPOTFile()
     G4cerr << "BeamFileReader - ERROR - no entries in intensity profile histogram " << histoName << " in " << fileName << G4endl;
     exit(1);
   }
-  fPOTProfile = (TH1D*) h->Clone(Form("%s_clone",histoName.c_str()));
-  
+  h->SetDirectory(nullptr);
   f->Close();
   delete f;
 
+  fPOTProfile = h;
   fPOTLoaded = true;
 
-  G4cout << "BeamFileReader - POT Loaded " << h->GetMean() << " average POTs from " << fileName << ":" << histoName << " period " << period << G4endl;
+  G4cout << "BeamFileReader - POT Loaded " << fPOTProfile->GetMean() << " average POTs from " << fileName << ":" << histoName << " period " << period << G4endl;
 }
 
-
+TH1D* BeamFileReader::GetPOTProfileHistogram(){
+  if (!fPOTLoaded) {
+    G4cout << "BeamFileReader Loading POT file " << G4endl;
+    LoadPOTFile();
+  }
+  return fPOTProfile;
+}
 
 
 void BeamFileReader::GetNextParticle(BeamFileParticle& part)

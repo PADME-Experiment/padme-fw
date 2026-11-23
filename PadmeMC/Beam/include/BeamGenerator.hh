@@ -14,6 +14,7 @@
 #include "G4ThreeVector.hh"
 
 #include "BeamParameters.hh"
+#include "TRandom3.h"
 
 class G4Event;
 
@@ -73,6 +74,6 @@ private:
   HistoManager* fHistoManager;
 
   BeamPrimaryPositron fPositron;
-
+  TRandom3* fRndm3;
 };
 #endif

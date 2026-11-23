@@ -224,6 +224,9 @@
 # So all beam customizations must be done after the run initialization is done
 
 # Primary positrons setup (default PADMEMC configuration)
+#/beam/intensity_profile_on true
+#/beam/intensity_profile_file /data9Vd1/padme/dimeco/RunIV/out_data_rereco/fullrereco_data/fit_results_period_fixedrmax.root
+#/beam/intensity_profile_period 12
 /beam/n_e+_per_bunch 3000
 #/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true

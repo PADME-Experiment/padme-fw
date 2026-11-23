@@ -25,6 +25,7 @@ BeamParameters::BeamParameters()
   // Intensity profile from an input histogram
   fIntensityProfileEnabled = false;
   fIntensityProfileFilename = "";
+  fIntensityProfilePeriod = 0;
   
   // Input gun from an input TTree
   fInputGunEnabled = false;

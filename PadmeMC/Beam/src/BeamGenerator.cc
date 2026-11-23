@@ -17,7 +17,6 @@
 #include "G4RandomDirection.hh"
 #include "G4Poisson.hh"
 #include "Randomize.hh"
-//#include "TRandom3.h"
 #include "TString.h"
 #include "BeamMessenger.hh"
 #include "HistoManager.hh"
@@ -56,6 +55,9 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
   // Connect to MCTruth manager
   fMCTruthMgr = MCTruthManager::GetInstance();
 
+  //
+  fRndm3 = new TRandom3(CLHEP::HepRandom::getTheSeed());
+  
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -63,6 +65,7 @@ BeamGenerator::BeamGenerator(DetectorConstruction* myDC)
 BeamGenerator::~BeamGenerator()
 {
   delete fBeamMessenger;
+  delete fRndm3;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -95,7 +98,7 @@ void BeamGenerator::GenerateBeam(G4Event* anEvent)
   G4int nTotPositrons = 0;
 
   if (bpar->BeamApplyIntensityProfile()){
-    nTotPositrons = BeamFileReader::GetInstance()->GetPOTProfileHistogram()->GetRandom();
+    nTotPositrons = BeamFileReader::GetInstance()->GetPOTProfileHistogram()->GetRandom(fRndm3);
   } else {  
     nTotPositrons = bpar->GetNPositronsPerBunch();
   }

@@ -43,6 +43,7 @@ private:
 
   G4UIcmdWithABool* fEnableIntensityProfileCmd;
   G4UIcmdWithAString* fSetIntensityProfileFilenameCmd;
+  G4UIcmdWithAnInteger* fSetIntensityProfilePeriodCmd;
   G4UIcmdWithABool* fEnableInputGunCmd;
   G4UIcmdWithAString* fSetInputGunFilenameCmd;
 

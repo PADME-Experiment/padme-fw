@@ -38,6 +38,12 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetIntensityProfileFilenameCmd->SetParameterName("TPF",false);
   fSetIntensityProfileFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
   
+  fSetIntensityProfilePeriodCmd = new G4UIcmdWithAnInteger("/beam/intensity_profile_period",this);
+  fSetIntensityProfilePeriodCmd->SetGuidance("Set number of positrons from intensity profile of the input period");
+  fSetIntensityProfilePeriodCmd->SetParameterName("IPP",false);
+  fSetIntensityProfilePeriodCmd->SetRange("IPP > 0 && IPP <= 36");
+  fSetIntensityProfilePeriodCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+    
   fEnableInputGunCmd = new G4UIcmdWithABool("/beam/input_gun_on",this);
   fEnableInputGunCmd->SetGuidance("Enable (true) or disable (false) using input gun for MC beam generation.");
   fEnableInputGunCmd->SetParameterName("IG",true);
@@ -431,6 +437,7 @@ BeamMessenger::~BeamMessenger()
 {
   delete fEnableIntensityProfileCmd;
   delete fSetIntensityProfileFilenameCmd;
+  delete fSetIntensityProfilePeriodCmd;
   delete fEnableInputGunCmd;
   delete fSetInputGunFilenameCmd;
 
@@ -511,6 +518,9 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   }
   else if ( cmd == fSetIntensityProfileFilenameCmd ) {
     fBeamParameters->SetIntensityProfileFilename(par);
+  }
+  else if ( cmd == fSetIntensityProfilePeriodCmd ) {
+    fBeamParameters->SetIntensityProfilePeriod(fSetIntensityProfilePeriodCmd->GetNewIntValue(par));
   }
   // gun from external file
   else if ( cmd == fEnableInputGunCmd ) {

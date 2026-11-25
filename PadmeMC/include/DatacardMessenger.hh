@@ -55,6 +55,7 @@ private:
   G4UIcmdWithADoubleAndUnit* fTurboNeutronKillEnergyCmd;
 
   G4UIcmdWithABool* fEnableMCTruthCmd;
+  G4UIcmdWithADoubleAndUnit* fSetMinimumKineticEnergyMCTrutchCmd;
 
 };
 #endif // DatacardMessenger_h

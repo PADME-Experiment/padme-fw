@@ -28,6 +28,33 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fBeamGeneratorDir = new G4UIdirectory("/beam/");
   fBeamGeneratorDir->SetGuidance("UI commands to control Beam generation");
 
+  fEnableIntensityProfileCmd = new G4UIcmdWithABool("/beam/intensity_profile_on",this);
+  fEnableIntensityProfileCmd->SetGuidance("Enable (true) or disable (false) poissonian spread for the number of positrons in each bunch.");
+  fEnableIntensityProfileCmd->SetParameterName("IP",true);
+  fEnableIntensityProfileCmd->SetDefaultValue(false);
+  fEnableIntensityProfileCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetIntensityProfileFilenameCmd = new G4UIcmdWithAString("/beam/intensity_profile_file",this);
+  fSetIntensityProfileFilenameCmd->SetParameterName("TPF",false);
+  fSetIntensityProfileFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+  
+  fSetIntensityProfilePeriodCmd = new G4UIcmdWithAnInteger("/beam/intensity_profile_period",this);
+  fSetIntensityProfilePeriodCmd->SetGuidance("Set number of positrons from intensity profile of the input period");
+  fSetIntensityProfilePeriodCmd->SetParameterName("IPP",false);
+  fSetIntensityProfilePeriodCmd->SetRange("IPP > 0 && IPP <= 36");
+  fSetIntensityProfilePeriodCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+    
+  fEnableInputGunCmd = new G4UIcmdWithABool("/beam/input_gun_on",this);
+  fEnableInputGunCmd->SetGuidance("Enable (true) or disable (false) using input gun for MC beam generation.");
+  fEnableInputGunCmd->SetParameterName("IG",true);
+  fEnableInputGunCmd->SetDefaultValue(false);
+  fEnableInputGunCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetInputGunFilenameCmd = new G4UIcmdWithAString("/beam/input_gun_file",this);
+  fSetInputGunFilenameCmd->SetParameterName("IGF",false);
+  fSetInputGunFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  
   fSetNPositronsPerBunchCmd = new G4UIcmdWithAnInteger("/beam/n_e+_per_bunch",this);
   fSetNPositronsPerBunchCmd->SetGuidance("Set number of positrons in each bunch.");
   fSetNPositronsPerBunchCmd->SetParameterName("NP",false);
@@ -377,10 +404,42 @@ BeamMessenger::BeamMessenger(BeamGenerator* bgen)
   fSetBeamTargetEmittanceYCmd->SetRange("TEY >= 0. && TEY <= 1000.");
   fSetBeamTargetEmittanceYCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableBeamInputFileCmd = new G4UIcmdWithABool("/beam/input_file_on",this);
+  fEnableBeamInputFileCmd->SetGuidance("Enable (true) or disable (false) reading primary e+ position and momentum from an external ROOT TTree.");
+  fEnableBeamInputFileCmd->SetParameterName("BIFO",true);
+  fEnableBeamInputFileCmd->SetDefaultValue(false);
+  fEnableBeamInputFileCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFilenameCmd = new G4UIcmdWithAString("/beam/input_file",this);
+  fSetBeamInputFilenameCmd->SetGuidance("Set name of ROOT file with primary e+.");
+  fSetBeamInputFilenameCmd->SetParameterName("BIF",false);
+  fSetBeamInputFilenameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputTreeNameCmd = new G4UIcmdWithAString("/beam/input_file_tree",this);
+  fSetBeamInputTreeNameCmd->SetGuidance("Set name of TTree with primary e+ inside the input file.");
+  fSetBeamInputTreeNameCmd->SetParameterName("BIT",false);
+  fSetBeamInputTreeNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFlagCmd = new G4UIcmdWithAnInteger("/beam/input_file_flag",this);
+  fSetBeamInputFlagCmd->SetGuidance("Use only TTree entries with NFlag equal to this value.");
+  fSetBeamInputFlagCmd->SetParameterName("BIFL",false);
+  fSetBeamInputFlagCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fSetBeamInputFirstEntryCmd = new G4UIcmdWithAnInteger("/beam/input_file_first_entry",this);
+  fSetBeamInputFirstEntryCmd->SetGuidance("Set first entry (inside the NFlag-selected sample) to use.");
+  fSetBeamInputFirstEntryCmd->SetParameterName("BIFE",false);
+  fSetBeamInputFirstEntryCmd->SetRange("BIFE >= 0");
+  fSetBeamInputFirstEntryCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 BeamMessenger::~BeamMessenger()
 {
+  delete fEnableIntensityProfileCmd;
+  delete fSetIntensityProfileFilenameCmd;
+  delete fSetIntensityProfilePeriodCmd;
+  delete fEnableInputGunCmd;
+  delete fSetInputGunFilenameCmd;
 
   delete fSetNPositronsPerBunchCmd;
   delete fEnableNPositronsPerBunchSpreadCmd;
@@ -440,14 +499,39 @@ BeamMessenger::~BeamMessenger()
   delete fSetBeamTargetEmittanceYCmd;
   delete fSetBeamTargetPathLengthCmd;
 
+  delete fEnableBeamInputFileCmd;
+  delete fSetBeamInputFilenameCmd;
+  delete fSetBeamInputTreeNameCmd;
+  delete fSetBeamInputFlagCmd;
+  delete fSetBeamInputFirstEntryCmd;
+
   delete fBeamGeneratorDir;
 
 }
 
 void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
 {
-
-  if ( cmd == fSetNPositronsPerBunchCmd )
+  // profile template for the POTs
+  if ( cmd == fEnableIntensityProfileCmd ) {
+    if (fEnableIntensityProfileCmd->GetNewBoolValue(par)) fBeamParameters->BeamEnableIntensityProfile();
+    else                                                  fBeamParameters->BeamDisableIntensityProfile();
+  }
+  else if ( cmd == fSetIntensityProfileFilenameCmd ) {
+    fBeamParameters->SetIntensityProfileFilename(par);
+  }
+  else if ( cmd == fSetIntensityProfilePeriodCmd ) {
+    fBeamParameters->SetIntensityProfilePeriod(fSetIntensityProfilePeriodCmd->GetNewIntValue(par));
+  }
+  // gun from external file
+  else if ( cmd == fEnableInputGunCmd ) {
+    if (fEnableInputGunCmd->GetNewBoolValue(par)) fBeamParameters->BeamEnableInputGun();
+    else                                          fBeamParameters->BeamDisableInputGun();
+  }
+  else if ( cmd == fSetInputGunFilenameCmd ) {
+    fBeamParameters->SetInputGunFilename(par);
+  }
+  // value of positron per bunch
+  else if ( cmd == fSetNPositronsPerBunchCmd )
     fBeamParameters->SetNPositronsPerBunch(fSetNPositronsPerBunchCmd->GetNewIntValue(par));
 
   else if ( cmd == fEnableNPositronsPerBunchSpreadCmd ) {
@@ -642,6 +726,26 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBeamTargetPathLengthCmd )
     fBeamParameters->SetBeamTargetPathLength(fSetBeamTargetPathLengthCmd->GetNewDoubleValue(par));
 
+  else if ( cmd == fEnableBeamInputFileCmd ) {
+    if (fEnableBeamInputFileCmd->GetNewBoolValue(par)) {
+      fBeamParameters->BeamInputFileEnable();
+    } else {
+      fBeamParameters->BeamInputFileDisable();
+    }
+  }
+
+  else if ( cmd == fSetBeamInputFilenameCmd )
+    fBeamParameters->SetBeamInputFilename(par);
+
+  else if ( cmd == fSetBeamInputTreeNameCmd )
+    fBeamParameters->SetBeamInputTreeName(par);
+
+  else if ( cmd == fSetBeamInputFlagCmd )
+    fBeamParameters->SetBeamInputFlag(fSetBeamInputFlagCmd->GetNewIntValue(par));
+
+  else if ( cmd == fSetBeamInputFirstEntryCmd )
+    fBeamParameters->SetBeamInputFirstEntry(fSetBeamInputFirstEntryCmd->GetNewIntValue(par));
+
 }
 
 G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
@@ -649,7 +753,19 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   G4String cv;
 
-  if ( cmd == fSetNPositronsPerBunchCmd )
+  if ( cmd == fEnableIntensityProfileCmd) {
+    cv = fEnableIntensityProfileCmd->ConvertToString(fBeamParameters->BeamApplyIntensityProfile());
+  }
+  else if ( cmd == fSetIntensityProfileFilenameCmd) {
+    cv = fBeamParameters->GetIntensityProfileFilename();  
+  }
+  if ( cmd == fEnableInputGunCmd) {
+    cv = fEnableInputGunCmd->ConvertToString(fBeamParameters->BeamApplyInputGun());
+  }
+  else if ( cmd == fSetInputGunFilenameCmd) {
+    cv = fBeamParameters->GetInputGunFilename();  
+  }
+  else if ( cmd == fSetNPositronsPerBunchCmd )
     cv = fSetNPositronsPerBunchCmd->ConvertToString(fBeamParameters->GetNPositronsPerBunch());
 
   else if ( cmd == fEnableNPositronsPerBunchSpreadCmd )
@@ -765,6 +881,21 @@ G4String BeamMessenger::GetCurrentValue(G4UIcommand* cmd)
 
   else if ( cmd == fSetBeamTargetPathLengthCmd )
     cv = fSetBeamTargetPathLengthCmd->ConvertToString(fBeamParameters->GetBeamTargetPathLength());
+
+  else if ( cmd == fEnableBeamInputFileCmd )
+    cv = fEnableBeamInputFileCmd->ConvertToString(fBeamParameters->BeamInputFileOn());
+
+  else if ( cmd == fSetBeamInputFilenameCmd )
+    cv = fBeamParameters->GetBeamInputFilename();
+
+  else if ( cmd == fSetBeamInputTreeNameCmd )
+    cv = fBeamParameters->GetBeamInputTreeName();
+
+  else if ( cmd == fSetBeamInputFlagCmd )
+    cv = fSetBeamInputFlagCmd->ConvertToString(fBeamParameters->GetBeamInputFlag());
+
+  else if ( cmd == fSetBeamInputFirstEntryCmd )
+    cv = fSetBeamInputFirstEntryCmd->ConvertToString(fBeamParameters->GetBeamInputFirstEntry());
 
   return cv;
 

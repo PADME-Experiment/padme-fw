@@ -138,6 +138,14 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fEnableMCTruthCmd->SetParameterName("EMCT",true);
   fEnableMCTruthCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fSetMinimumKineticEnergyMCTrutchCmd = new G4UIcmdWithADoubleAndUnit("/settings/SetMinimumKineticEnergyMCTruth",this);
+  fSetMinimumKineticEnergyMCTrutchCmd->SetGuidance("Set energy threshold to store MCTruth vertices in the ECal");
+  fSetMinimumKineticEnergyMCTrutchCmd->SetParameterName("MKEMCT",false);
+  fSetMinimumKineticEnergyMCTrutchCmd->SetDefaultUnit("MeV");
+  fSetMinimumKineticEnergyMCTrutchCmd->SetRange("MKEMCT >= 0.");
+  fSetMinimumKineticEnergyMCTrutchCmd->SetDefaultValue(1.);
+  fSetMinimumKineticEnergyMCTrutchCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
 }
 
 DatacardMessenger::~DatacardMessenger() {
@@ -169,6 +177,7 @@ DatacardMessenger::~DatacardMessenger() {
   delete fSettingsDir;
 
   delete fEnableMCTruthCmd;
+  delete fSetMinimumKineticEnergyMCTrutchCmd;
 }
 
 void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
@@ -274,7 +283,8 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
       mctMgr->Enable();
     } else {
       mctMgr->Disable();
-    }
+    }    
   }
-
+  if ( command == fSetMinimumKineticEnergyMCTrutchCmd )
+    ((StackingAction*)G4RunManager::GetRunManager()->GetUserStackingAction())->SetECalKineticEnergyThresholdEnergyMCTruth(fSetMinimumKineticEnergyMCTrutchCmd->GetNewDoubleValue(newValue));
 }

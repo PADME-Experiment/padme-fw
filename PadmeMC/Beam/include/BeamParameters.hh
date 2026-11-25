@@ -33,13 +33,31 @@ public:
   void SetDetectorSetup(G4int);
   G4int GetDetectorSetup() { return fDetectorSetup; }
 
-  void EnableBeamLine() { fBeamLineEnabled = true; }
-  void DisableBeamLine() { fBeamLineEnabled = false; }
+  void EnableBeamLine()    { fBeamLineEnabled = true; }
+  void DisableBeamLine()   { fBeamLineEnabled = false; }
   G4bool BeamLineEnabled() { return fBeamLineEnabled; }
-
+  // intensity profile mode
+  void BeamEnableIntensityProfile()  { fIntensityProfileEnabled = true; }
+  void BeamDisableIntensityProfile() { fIntensityProfileEnabled = false; }
+  G4bool BeamApplyIntensityProfile() { return fIntensityProfileEnabled; }
+  // intensity profile filename
+  G4String GetIntensityProfileFilename()        { return fIntensityProfileFilename; }
+  void SetIntensityProfileFilename(G4String f)  { fIntensityProfileFilename = f; }
+  // intensity profile period
+  G4int GetIntensityProfilePeriod()        { return fIntensityProfilePeriod; }
+  void SetIntensityProfilePeriod(G4int f)  { fIntensityProfilePeriod = f; }
+  // input gun mode
+  void BeamEnableInputGun()  { fInputGunEnabled = true; }
+  void BeamDisableInputGun() { fInputGunEnabled = false; }
+  G4bool BeamApplyInputGun() { return fInputGunEnabled; }
+  // input beam filename
+  G4String GetInputGunFilename()        { return fInputGunFilename; }
+  void SetInputGunFilename(G4String f)  { fInputGunFilename = f; }
+  
+  
   G4int GetNPositronsPerBunch()        { return fNPositronsPerBunch; }
   void  SetNPositronsPerBunch(G4int n) { fNPositronsPerBunch = n;    }
-
+  
   void NPositronsPerBunchEnableSpread()  { fNPositronsPerBunchApplySpread = true;  }
   void NPositronsPerBunchDisableSpread() { fNPositronsPerBunchApplySpread = false; }
   G4bool NPositronsPerBunchApplySpread() { return fNPositronsPerBunchApplySpread;  }
@@ -163,6 +181,23 @@ public:
   G4int GetBabayagaGGLinesToSkip()       { return fBabayagaGGLinesToSkip; }
   void SetBabayagaGGLinesToSkip(G4int n) { fBabayagaGGLinesToSkip = n;    }
 
+  // Primary positrons from external ROOT TTree
+  void BeamInputFileEnable()  { fBeamInputFileOn = true;  }
+  void BeamInputFileDisable() { fBeamInputFileOn = false; }
+  G4bool BeamInputFileOn()    { return fBeamInputFileOn;  }
+
+  G4String GetBeamInputFilename()        { return fBeamInputFilename; }
+  void SetBeamInputFilename(G4String f)  { fBeamInputFilename = f; }
+
+  G4String GetBeamInputTreeName()        { return fBeamInputTreeName; }
+  void SetBeamInputTreeName(G4String t)  { fBeamInputTreeName = t; }
+
+  G4int GetBeamInputFlag()        { return fBeamInputFlag; }
+  void SetBeamInputFlag(G4int f)  { fBeamInputFlag = f; }
+
+  G4int GetBeamInputFirstEntry()        { return fBeamInputFirstEntry; }
+  void SetBeamInputFirstEntry(G4int n)  { fBeamInputFirstEntry = n; }
+
   G4double GetDecayLength() { return fDecayLength; }
   void SetDecayLength(G4double d) { fDecayLength = d; }
 
@@ -214,6 +249,14 @@ private:
 
   G4bool fBeamLineEnabled;
 
+  // Intensity profile mode
+  G4bool   fIntensityProfileEnabled;
+  G4String fIntensityProfileFilename;
+  G4int fIntensityProfilePeriod;
+  // Input gun mode
+  G4bool   fInputGunEnabled;
+  G4String fInputGunFilename;
+  
   // Average number of positrons in each bunch
   G4int  fNPositronsPerBunch;
   G4bool fNPositronsPerBunchApplySpread; // Poisson distribution
@@ -278,6 +321,13 @@ private:
   G4int fNBabayagaGGPerBunch;
   G4String fBabayagaGGFilename;
   G4int fBabayagaGGLinesToSkip;
+
+  // Primary positrons from external ROOT TTree
+  G4bool        fBeamInputFileOn;
+  G4String      fBeamInputFilename;
+  G4String      fBeamInputTreeName;
+  G4int         fBeamInputFlag;        // use only entries with NFlag == this
+  G4int         fBeamInputFirstEntry;  // first entry used in the selected sample
 
   // Displaced vertex decay length (only used in TwoGamma and ThreeGamma generation)
   G4double fDecayLength;

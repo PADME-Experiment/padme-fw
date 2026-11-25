@@ -41,6 +41,12 @@ private:
 
   G4UIdirectory* fBeamGeneratorDir;
 
+  G4UIcmdWithABool* fEnableIntensityProfileCmd;
+  G4UIcmdWithAString* fSetIntensityProfileFilenameCmd;
+  G4UIcmdWithAnInteger* fSetIntensityProfilePeriodCmd;
+  G4UIcmdWithABool* fEnableInputGunCmd;
+  G4UIcmdWithAString* fSetInputGunFilenameCmd;
+
   G4UIcmdWithAnInteger* fSetNPositronsPerBunchCmd;
   G4UIcmdWithABool* fEnableNPositronsPerBunchSpreadCmd;
 
@@ -95,6 +101,12 @@ private:
   G4UIcmdWithAString* fSetBabayagaGGFilenameCmd;
   G4UIcmdWithAnInteger* fSetBabayagaGGLinesToSkipCmd;
 
+
+  G4UIcmdWithABool* fEnableBeamInputFileCmd;
+  G4UIcmdWithAString* fSetBeamInputFilenameCmd;
+  G4UIcmdWithAString* fSetBeamInputTreeNameCmd;
+  G4UIcmdWithAnInteger* fSetBeamInputFlagCmd;
+  G4UIcmdWithAnInteger* fSetBeamInputFirstEntryCmd;
 
   G4UIcmdWithADoubleAndUnit* fSetDecayLengthCmd;
 

@@ -47,7 +47,7 @@ MMIonizations::MMIonizations(G4ThreeVector start, G4ThreeVector end, G4double dE
         // //G4cout << "MMIonizations.cc : randomPos = " << randomPos << G4endl;
         
         G4ThreeVector fionPos = start + ((end-start)/fstepLength)*randomPos;
-
+         
         if(geo->GetReadoutType() == "strips"){
             ComputeStripID(fionPos);
             // here i could also push back the neighbouring strips and the times for induction
@@ -177,6 +177,25 @@ G4double MMIonizations::GetTimeSpread(G4double charge){
 
 void MMIonizations::ComputeStripID(G4ThreeVector ionipos){
 
+    // boardSN plane Layer side  view otherview hole offset stripid_orig
+    // 0       0     0     0     0    0         6    0      1-256
+    // 1       0     0     1     0    0         6    256    257-512
+    // 2       0     1     0     0    1         6    0      0-255
+    // 3       0     1     1     0    1         6    256    256-511
+    // 4       0     2     0     1    1         1    0      0-255
+    // 5       0     2     1     1    1         1    256    256-511
+    // 6       0     3     0     1    0         1    0      0-255
+    // 7       0     3     1     1    0         1    256    256-511
+
+    // 8       1     4     0     0    0         1    0      0-255
+    // 9       1     4     1     0    0         1    256    256-511
+    // 10      1     5     0     0    1         1    0      0-255
+    // 11      1     5     1     0    1         1    256    256-511
+    // 12      1     6     0     1    1         6    0      0-255
+    // 13      1     6     1     1    1         6    256    256-511
+    // 14      1     7     0     1    0         6    0      0-255
+    // 15      1     7     1     1    0         6    256    256-511
+
     G4double xP0 = geo->GetV1StripStartPos(); //plane 0 X readout
     G4double xP1 = geo->GetV2StripStartPos(); //plane 1 X readout
     G4double yP0 = geo->GetV2StripStartPos(); //plane 0 Y readout
@@ -215,6 +234,7 @@ void MMIonizations::ComputeStripID(G4ThreeVector ionipos){
                 if(y<0) fid = iChy + 2000; //brd 2
                 else fid = iChy-V2Hole + 3000; //brd 3, -6 to exclude the hole      
             }
+            fIonipos.push_back(ionipos);
             fIDs.push_back(fid);
             fTimes.push_back(ftime);
             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
@@ -231,6 +251,7 @@ void MMIonizations::ComputeStripID(G4ThreeVector ionipos){
                 else fid = iChx-V1Hole + 7000; //brd 7, -1 to exclude the hole
                 
             }
+            fIonipos.push_back(ionipos);
             fIDs.push_back(fid);
             fTimes.push_back(ftime);
             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
@@ -251,6 +272,7 @@ void MMIonizations::ComputeStripID(G4ThreeVector ionipos){
                 if(y<0) fid = iChy  + 10000; //brd 10
                 else fid = iChy-V1Hole + 11000; //brd 11, -1 to exclude the hole      
             }
+            fIonipos.push_back(ionipos);
             fIDs.push_back(fid);
             fTimes.push_back(ftime);
             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));
@@ -263,6 +285,7 @@ void MMIonizations::ComputeStripID(G4ThreeVector ionipos){
                 if(x<0) fid = iChx + 14000; //brd 14
                 else fid = iChx-V2Hole + 15000; //brd 15, -6 to exclude the hole
             }
+            fIonipos.push_back(ionipos);
             fIDs.push_back(fid);
             fTimes.push_back(ftime);
             fRadii.push_back(sqrt(ionipos.x()*ionipos.x() + ionipos.y()*ionipos.y()));

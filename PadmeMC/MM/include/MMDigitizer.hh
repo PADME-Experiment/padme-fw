@@ -11,6 +11,7 @@
 
 #include "G4VDigitizerModule.hh"
 #include "MMDigi.hh" 
+#include "MMGeometry.hh" 
 #include "TF1.h" 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -27,7 +28,9 @@ public:
 private: 
   static void InitializeAmplificationFluctuation();
   G4double GetAmplificationFluctuation();
+  G4double DumpChargeAmplification(G4ThreeVector ionipos, G4int stripid);
   static TF1 *ampl_dist;
+  MMGeometry *fgeo;
 
 };
 

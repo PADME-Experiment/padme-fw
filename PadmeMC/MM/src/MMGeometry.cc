@@ -51,6 +51,14 @@ MMGeometry::MMGeometry()
   fMMPanelSizeV2 =(fMMStripPitch*(512+fV2StripHole))*mm;
   fV1StripStartPos = -fMMPanelSizeV1/2.; //to be changed when i have readout maps
   fV2StripStartPos = -fMMPanelSizeV2/2.;
+  fGlueHolePositions[0] = 6.2;
+  fGlueHolePositions[1] = -1.8;
+  fGlueHolePositions[2] = -1.8;
+  fGlueHolePositions[3] = -4.8;
+  fGlueHoleSigmas[0] = 36.7;
+  fGlueHoleSigmas[1] = 36.6;
+  fGlueHoleSigmas[2] = 26.95;
+  fGlueHoleSigmas[3] = 40.7;
   //setting non active channels (pcb holes) false
   for(int i=0; i<512+fV1StripHole; i++){
     isChV1Active[i]=true;
@@ -101,7 +109,7 @@ MMGeometry::MMGeometry()
   fMMFrontFacePosZ = 2353.32*mm;//2526.5*mm - fMMSizeZ - 45*mm; //  SURVEY  INFO 2353.32!!!!! vs 2349.084 mm calculated
   fMMDisplacementX=10*mm; //50*mm+fMMFaradayPanelSizeX/2 for slipped chamber configuration;//10*mm; //
   fMMDisplacementY=20*mm; //0*mm;//;
-  fMMRotationAngle=0*deg; // z-x 0.1 deg (testa in avanti)
+  fMMRotationAngle=0.1*deg; // z-x 0.1 deg (testa in avanti)
   fMMDigitizerName = "MMDigitizer";
   fMMSensitiveDetectorName = "MMSD";
 }

@@ -32,6 +32,8 @@ void MCTruthManager::Clear()
 {
   fEventWeight = 1.;
   fVertex.clear();
+  fG4TrackSecondaryMap.clear();  
+  fG4TrackSecondaryDaughtersMap.clear();  
 }
 
 MCTruthVertex* MCTruthManager::AddVertex(G4String type, G4ThreeVector pos, G4double time)

@@ -22,6 +22,15 @@ BeamParameters::BeamParameters()
   fDetectorSetup = 10;
   fBeamLineEnabled = false;
 
+  // Intensity profile from an input histogram
+  fIntensityProfileEnabled = false;
+  fIntensityProfileFilename = "";
+  fIntensityProfilePeriod = 0;
+  
+  // Input gun from an input TTree
+  fInputGunEnabled = false;
+  fInputGunFilename = "";
+  
   // Average number of positrons in each bunch
   fNPositronsPerBunch = 25000;
   fNPositronsPerBunchApplySpread = true;
@@ -86,6 +95,13 @@ BeamParameters::BeamParameters()
   fBabayagaGGFilename = "BabayagaGG.list"; 
   fBabayagaGGLinesToSkip = 0;
 
+
+  // Primary positrons from external ROOT TTree (file must be set from macro)
+  fBeamInputFileOn = false;
+  fBeamInputFilename = "";
+  fBeamInputTreeName = "BeamFlag";
+  fBeamInputFlag = 3;
+  fBeamInputFirstEntry = 0;
 
   // Decay length for displaced vertex (currently used only for TwoGamma events)
   fDecayLength = 0.*mm;

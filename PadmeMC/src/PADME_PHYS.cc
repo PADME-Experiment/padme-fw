@@ -180,7 +180,6 @@ void PADME_PHYS::SetCuts()
   //   the default cut value for all particle types 
 
   this->SetCutsWithDefault();   
-  
-//  if (this->verboseLevel >0)
-  G4VUserPhysicsList::DumpCutValuesTable();  
+  //if (this->verboseLevel >0)
+  //  G4VUserPhysicsList::DumpCutValuesTable();  
 }

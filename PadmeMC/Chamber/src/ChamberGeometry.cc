@@ -93,12 +93,12 @@ ChamberGeometry::ChamberGeometry()
   fBTFJunLength = 113.*mm; // From Foggetta's drawings - EL 2019-04-15
 
   fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
-  // Flange towards cross
+  // Flange towards cross CF100
   fBTFJunFFlgRIn = fBTFJunROut;
   fBTFJunFFlgROut = fJunFlangeR;
   fBTFJunFFlgThick = fJunFlangeThick;
   fBTFJunFFlgPosZ = fBTFJunPosZ+0.5*fBTFJunLength-0.5*fBTFJunFFlgThick;
-  // Flange towards bellow
+  // Flange towards bellow CF60
   fBTFJunBFlgRIn = fBTFJunROut;
   fBTFJunBFlgROut = 56.75*mm;
   fBTFJunBFlgThick = 17.5*mm;
@@ -213,15 +213,24 @@ void ChamberGeometry::UpdateDerivedMeasures()
 {
 
   //Move the target cross and pipes to Run IV location
-  if(fDetectorSetup>40){
-     fCPZPosZ = -732.47*mm; 
-     fCPXPosZ= -732.47*mm; 
-     fJunFrontFacePosZ = fCPZPosZ+0.5*fCPZLength;
-     fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
-     fJunLength = fJunBackFacePosZ-fJunFrontFacePosZ;
-     fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
-
-    }
+  if(fDetectorSetup>=50){
+    fCPZPosZ = -732.47*mm;  //Z directed cross arm
+    fCPXPosZ = -732.47*mm; //X directed cross arm
+    fJunLength = 295*mm;
+    fJunBackFacePosZ =fCPZPosZ-0.5*fCPZLength;
+    fJunFrontFacePosZ=fJunBackFacePosZ-fJunLength; 
+    fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
+    fBTFJunPosZ = fJunFrontFacePosZ-0.5*fBTFJunLength;;
+    //    fBTFJunPosZ = fJunFrontFacePosZ+0.5*fBTFJunLength;;
+  }else{
+    fCPZPosZ = -1028*mm;  //Z directed cross arm
+    fCPXPosZ = -1028*mm; //X directed cross arm
+    fJunFrontFacePosZ = fCPZPosZ+0.5*fCPZLength;
+    fJunBackFacePosZ = -56.2*cm; // From vacuum chamber technical drawing
+    fBTFJunPosZ = fCPZPosZ-0.5*fCPZLength-0.5*fBTFJunLength;
+    fJunLength = fJunBackFacePosZ-fJunFrontFacePosZ;
+    fJunPosZ = 0.5*(fJunBackFacePosZ+fJunFrontFacePosZ);
+  }
 }
 
 void ChamberGeometry::SetDetectorSetup(G4int setup)

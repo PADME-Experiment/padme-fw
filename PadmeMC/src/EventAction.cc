@@ -49,6 +49,7 @@
 //PRINTOUT VERTICES#include "MCTruthVertex.hh"
 
 #include "SystemInfo.hh"
+#include <sstream> // MR 20/11/2026
 
 extern double NNeutrons;
 extern double Npionc;
@@ -58,7 +59,8 @@ extern double Npionc;
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
 {
-
+  BeamOut.open("beam_output.txt",std::ios::out);
+  fFlag8MylarDEThr = 1.5*CLHEP::MeV; // MR 20/11/2026 write flag 8 + flag 0 only if |E8-E0| above this
   fFirstEvent = true;
 
   fTargetDigitizer  = NULL;
@@ -91,13 +93,17 @@ EventAction::EventAction(RunAction* run)
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 EventAction::~EventAction()
-{}
+{
+  if (!BeamOut.is_open()) {
+        // Gestione dell'errore se il file non si apre
+        std::cout << "Errore nell'apertura del file beam_output.txt" << std::endl;
+  }
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
  
 void EventAction::BeginOfEventAction(const G4Event*)
 {
-
   // Get current run and event numbers
   ETotCal  = 0;
   ETotLG   = 0;
@@ -128,14 +134,13 @@ void EventAction::BeginOfEventAction(const G4Event*)
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
   //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
   for(G4int i=0;i<ECalNCells;i++){Empty[i]=0;}
-
+  //Opening text output for beam characteristics
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void EventAction::EndOfEventAction(const G4Event* evt)
 {
-
   G4int event_id = evt->GetEventID();
   // Periodic printing
   //if (event_id < 1 || event_id%NPrint == 0) G4cout << ">>> Event " << event_id << G4endl;
@@ -196,10 +201,14 @@ void EventAction::EndOfEventAction(const G4Event* evt)
   // Save event to root file
   RootIOManager::GetInstance()->SaveEvent(evt);
 
+  fFlag8Lines.clear(); // MR 20/11/2026
+  fMylarLines.clear();
+  fOtherFlagLines.clear(); // MR 23/11/2026
+
   G4int nHC = 0;
   G4HCofThisEvent* LHC = evt->GetHCofThisEvent(); //list of Hit collections
   if (LHC) nHC = LHC->GetNumberOfCollections();
-  //  G4cout<<"N collections "<<nHC<<G4endl;
+//  G4cout<<"N collections "<<nHC<<G4endl;
   for(G4int iHC=0; iHC<nHC; iHC++) {
     G4String HCname = LHC->GetHC(iHC)->GetName();  //nome della collezione
     if (HCname == "ECalCollection") {
@@ -229,6 +238,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
+  WriteBeamOutLines(); // MR 20/11/2026 needs both Mylar and BeamFlag collections
 //PRINTOUT VERTICES  MCTruthManager* mct = MCTruthManager::GetInstance();
 //PRINTOUT VERTICES  if (mct->IsEnabled()) {
 //PRINTOUT VERTICES    G4cout << "Number of MC vertices " << mct->GetNVertices() << G4endl;
@@ -417,15 +427,15 @@ void EventAction::EndOfEventAction(const G4Event* evt)
 //  }else{
 //  if(ETotCal>EMinSaveNT || SACTracks>0) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   
-// M. Raggi metti a posto!!!!
-//  if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
-//    fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-//  }else{
-//    //    G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
-//  }
-//  G4cout<<"Writing to file UBTF "<<G4endl;
-  fHistoManager->FillNtuple(&(fHistoManager->myEvt));
-  //    if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//M. Raggi metti a posto!!!!
+ // if( (ETotCal>5. && fEnableSaveEcal) || (SACTracks>0 && fEnableSaveSAC) || (NTracks>0 &&  fEnableSaveVeto) ){ 
+  //  fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+ //  }else{
+ //       G4cout<<"No event saved in the FastMC output"<<NTracks<<" "<<fEnableSaveVeto<<G4endl;
+ //   }
+//   G4cout<<"Writing to file UBTF "<<G4endl;
+//fHistoManager->FillNtuple(&(fHistoManager->myEvt));
+//if(ETotCal>EMinSaveNT || NTracks>0.) fHistoManager->FillNtuple(&(fHistoManager->myEvt));
   //  }
 }
 
@@ -620,17 +630,17 @@ void EventAction::AddTargetHits(TargetHitsCollection* hcont)  //Target readout m
  // computing angle at the entrance of the target using the directions of the particles:
       G4double htheta = asin(PT/PTOT);
       G4double hthetaX = asin(PX/PTOT);
-      //      G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
+ //   G4cout<<"angle: PX "<<hit->GetPX()<<" PY "<<hit->GetPZ()<<" theta "<< htheta << G4endl;
       if(IsPrimary){
-	fHistoManager->FillHisto(60,hE);     // All hit energies
-	fHistoManager->FillHisto(61,htheta); // after the target
-	fHistoManager->FillHisto(62,hX);     // 
-	fHistoManager->FillHisto(63,hY);     // 
-	fHistoManager->FillHisto(64,hTrE);   // At the target entrance
-	
-	fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
-	fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
-	fHistoManager->FillHisto2(67,hX,hthetaX,1.); //X vs Track energy
+          fHistoManager->FillHisto(60,hE);     // All hit energies
+          fHistoManager->FillHisto(61,htheta); // after the target
+          fHistoManager->FillHisto(62,hX);     // 
+          fHistoManager->FillHisto(63,hY);     // 
+          fHistoManager->FillHisto(64,hTrE);   // At the target entrance
+          
+          fHistoManager->FillHisto2(65,hX,hY,1.);   //X vs Y local coordinates 
+          fHistoManager->FillHisto2(66,hX,hTrE,1.); //X vs Track energy
+          fHistoManager->FillHisto2(67,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop
@@ -651,6 +661,7 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
       YMylarW += hit->GetY();
       NMylarW++;
 
+      //printf("MylarW hit %d: Edep %f Time %f X %f Y %f\n", h, hit->GetEdep(), hit->GetTime(), hit->GetX(), hit->GetY());
       // Mylaram structure control histogras M. Raggi 2/04/2019
       G4double hTime  = hit->GetTime();
       G4double hE     = hit->GetEnergy();        // deposited energy
@@ -666,6 +677,13 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
  // computing angle at the entrance of the target using the directions of the particles:
       G4double htheta = asin(PT/PTOT);
       G4double hthetaX = asin(PX/PTOT);
+
+      // Mylar window info as flag 0, same format as AddBeamFlagHits.
+      // MR 20/11/2026 buffered per track, written in WriteBeamOutLines() only if matched with flag 8
+      if (fMylarLines.find(hit->GetTrackId()) == fMylarLines.end()) {
+        G4ThreeVector mom(PX*hTrE,PY*hTrE,PZ*hTrE);
+        fMylarLines[hit->GetTrackId()] = {hTrE, hTime, FormatBeamOutLine(0,mom,hX,hY,hit->GetLocalPosZ())};
+      }
 
       fHistoManager->FillHisto(90,hE);     // All hit energies
       fHistoManager->FillHisto(91,htheta); // after the target
@@ -733,24 +751,20 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
     BeamFlagHit * hit = (*hcont)[h]; //prende l'elemento h del vettore hit
     if ( hit != 0 ) {
       EFlag += hit->GetEdep(); //somma le energie su tutti gli hit di ogni cristalli
-      //     if (hit->GetTime()<TBeW) TBeW  = hit->GetTime();
       XBeamFlag += hit->GetX();
       YBeamFlag += hit->GetY();
       NBeamFlag++;
- //
+      G4int NFlag  = hit->GetChannelId();
+      G4int NHisto =100+10*NFlag;
  //     // Beam structure control histogras M. Raggi 2/04/2019
       G4double hTime  = hit->GetTime();
       G4double hE     = hit->GetEnergy();        // deposited energy
       G4double hTrE   = hit->GetTrackEnergy();   // track energy
-      G4double hX     = hit->GetLocalPosX();
-      G4double hY     = hit->GetLocalPosY();
-      G4int    NFlag  = hit->GetChannelId(); 
-
-      G4int    NHisto =100+10*NFlag;
-      //      if(NFlag==4)  G4cout<<"Flag"<<NFlag<<" "<<hit->GetTrackEnergy()<<" Pos X "<<hit->GetLocalPosX()<<" "<<hit->GetTime()<<" "<<NHisto<<G4endl;
-      double PX=hit->GetPX();
-      double PY=hit->GetPY();
-      double PZ=hit->GetPZ();
+      G4double hX     = hit->GetLocalPosX(); //Voglio la global !!!
+      G4double hY     = hit->GetLocalPosY(); //Voglio la global !!!
+      double PX=hit->GetPX()*hTrE;
+      double PY=hit->GetPY()*hTrE;
+      double PZ=hit->GetPZ()*hTrE;
       double PT=sqrt(PX*PX+PY*PY);
       double PTOT=sqrt(PX*PX+PY*PY+PZ*PZ);
  // computing angle at the entrance of the target using the directions of the particles:
@@ -759,20 +773,49 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
 
       if(NFlag==7 || NFlag==4 || NFlag==1){
 	//	std::cout<<"Theta x"<<hthetaX<<std::endl;
-	hthetaX += 0.785398;
+	      hthetaX += 0.785398;
       }else if(NFlag==8){
-	hthetaX += 2*0.785398;
+	      hthetaX += 2*0.785398;
       }
-      //   G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
-      if (NFlag<9){
-	fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
-	fHistoManager->FillHisto(NHisto+1,htheta); // after the target
-	fHistoManager->FillHisto(NHisto+2,hX);     // 
-	fHistoManager->FillHisto(NHisto+3,hY);     // 
-	fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
-	fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
-	fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
-	fHistoManager->FillHisto2(NHisto+7,hX,hthetaX,1.); //X vs Track energy
+      
+      if (NFlag == 3 || NFlag == 10 || NFlag == 2) {
+        hthetaX += 3*0.785398;
+      } else if (NFlag == 2) {
+        hthetaX += 4*0.785398;
+      }
+      // Momentum vector from the information already stored in the hit
+      G4ThreeVector mom(PX,PY,PZ);
+      // Momentum magnitude and angles
+      G4double p     = mom.mag(); // scale by PTOT to get the actual momentum magnitude
+      G4double theta = mom.theta();
+      G4double phi   = mom.phi();
+      // Position
+      G4double x = hit->GetLocalPosX();
+      G4double y = hit->GetLocalPosY();
+      G4double z = hit->GetLocalPosZ();
+      //G4cout<<NFlag<<" PX "<<PX<<" PY "<<PY<<" PT "<<PT<<" PTOT "<<PTOT<<" theta "<< htheta << G4endl;
+      //      if (BeamOut.is_open() && NFlag !=8) {
+      //        BeamOut<<" "<<NFlag<< " " << p << " " << PX << " " << PY << " " << PZ << " "<< theta << " " << phi << " "<< x << " " << y << " "<<z<<G4endl;
+      //      }
+      // MR 20/11/2026 flag 8 is buffered per track and written with the Mylar (flag 0) line
+      // only if |E8-E0| > fFlag8MylarDEThr (see WriteBeamOutLines)
+      // MR 23/11/2026 other flags are buffered per track too, written after the 0/8 pair
+      if (NFlag == 8) {
+        if (fFlag8Lines.find(hit->GetTrackId()) == fFlag8Lines.end())
+          fFlag8Lines[hit->GetTrackId()] = {hTrE, hTime, FormatBeamOutLine(NFlag,mom,x,y,z)};
+      } else {
+        fOtherFlagLines[hit->GetTrackId()].push_back({hTrE, hTime, FormatBeamOutLine(NFlag,mom,x,y,z)});
+      }
+      
+      if (NFlag<10){
+        fHistoManager->FillHisto(NHisto+0,hE);     // All hit energies
+        fHistoManager->FillHisto(NHisto+1,htheta); // after the target
+        fHistoManager->FillHisto(NHisto+2,hX);     // 
+        fHistoManager->FillHisto(NHisto+3,hY);     // 
+        fHistoManager->FillHisto(NHisto+4,hTrE);   // At the target entrance
+        fHistoManager->FillHisto2(NHisto+5,hX,hY,1.);   //X vs Y local coordinates 
+        fHistoManager->FillHisto2(NHisto+6,hX,hTrE,1.); //X vs Track energy
+        fHistoManager->FillHisto2(NHisto+7,hX,hthetaX,1.); //X vs Track energy
       }
     }
   }//end of loop
@@ -1177,3 +1220,43 @@ G4double EventAction::GetCharge(G4double Energia)
 //  G4cout<<"Massa "<<Massa<<G4endl;
 //  return Massa;
 //}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+// MR 20/11/2026 one line of beam_output.txt: flag p px py pz theta phi x y z (local)
+std::string EventAction::FormatBeamOutLine(G4int flag, const G4ThreeVector& mom, G4double x, G4double y, G4double z)
+{
+  std::ostringstream s;
+  s << " " << flag << " " << mom.mag() << " " << mom.x() << " " << mom.y() << " " << mom.z() << " "
+    << mom.theta() << " " << mom.phi() << " " << x << " " << y << " " << z << "\n";
+  return s.str();
+}
+
+// MR 20/11/2026 write flag 8 and Mylar window (flag 0) lines only for primaries that crossed both
+// and whose energy changed by more than fFlag8MylarDEThr between the two
+// MR 23/11/2026 output grouped per track (ascending track ID): the 0/8 pair first, then the
+// other flags; inside each block lines are sorted by crossing time, i.e. in beam order
+void EventAction::WriteBeamOutLines()
+{
+  if (!BeamOut.is_open()) return;
+  auto byTime = [](const BeamOutLine& a, const BeamOutLine& b) { return a.t < b.t; };
+
+  std::set<G4int> tracks;
+  for (auto& f : fFlag8Lines)     tracks.insert(f.first);
+  for (auto& f : fOtherFlagLines) tracks.insert(f.first);
+
+  for (G4int tid : tracks) {
+    auto f8 = fFlag8Lines.find(tid);
+    auto f0 = fMylarLines.find(tid);
+    if (f8 != fFlag8Lines.end() && f0 != fMylarLines.end() &&
+        fabs(f8->second.E - f0->second.E) > fFlag8MylarDEThr) {
+      std::vector<BeamOutLine> pair = {f0->second, f8->second};
+      std::stable_sort(pair.begin(), pair.end(), byTime);
+      for (auto& l : pair) BeamOut << l.line;
+    }
+    auto other = fOtherFlagLines.find(tid);
+    if (other != fOtherFlagLines.end()) {
+      std::stable_sort(other->second.begin(), other->second.end(), byTime);
+      for (auto& l : other->second) BeamOut << l.line;
+    }
+  }
+}

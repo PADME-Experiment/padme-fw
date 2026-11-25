@@ -1,6 +1,5 @@
 #ifndef HistoManager_h
 #define HistoManager_h 1
-
 #include "globals.hh"
        	       	       
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -102,7 +101,6 @@ struct NTEvent{
   double NTPVetoECl[NPVetoBars][NPVetoMaxNCl];
   int    NTPVetoClIndex[NPVetoBars];
 
-
   //EVeto variables
   double NTEVetoTrkEne[300];
   int    NTEVetoTrkFinger[300];
@@ -131,10 +129,6 @@ struct NTEvent{
   double  NTETagX[300];
   double  NTETagY[300];
   int     NTETagNHit;
-
-
-
-
 }; 
 
  class TFile;

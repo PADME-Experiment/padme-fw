@@ -35,10 +35,9 @@ void MylarWSD::Initialize(G4HCofThisEvent* HCE)
 G4bool MylarWSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
 
+  // The SD is attached to the vacuum volume containing the window: edep is ~0 there,
+  // so do not cut on it (same as BeamFlagSD). M. Raggi 20/11/2026
   G4double edep = aStep->GetTotalEnergyDeposit();
-  if (edep==0.) return false;
-
-  MylarWHit* newHit = new MylarWHit();
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
@@ -49,9 +48,14 @@ G4bool MylarWSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   //	 << " local " << G4MylarstUnit(localPosPre,"Length") << G4endl;
 
   // this way you only see primary particle there is a component coming form background that is killed here.
-  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
+  // Keep only the crossing just downstream of the Mylar foil (local z>0): the entry face of the
+  // container volume (local z=-FlangeThick/2) would give a second hit upstream of the window.
+  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0
+     && localPosPre.z()>0.){
     //if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    MylarWHit* newHit = new MylarWHit();
     newHit->SetEnergy(edep);
+    newHit->SetTrackId(aStep->GetTrack()->GetTrackID()); // MR 20/11/2026
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
     newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction

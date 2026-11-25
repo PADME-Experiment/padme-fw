@@ -119,7 +119,9 @@ public:
 
   // Get name of Target sensitive detector
   G4String GetTargetSensitiveDetectorName() { return fTargetSensitiveDetectorName; }
-  
+  // MR 01/10/2026 added to score the energy in the target support to check if the beam is hitting the target or not
+  // G4String GetTargetSupportSensitiveDetectorName() { return fTargetSupportSensitiveDetectorName; }  
+
    // Set RMS Noise, Threshold, Baseline, Bins, offset and integration window
   G4double GetTargetDigiNoiseRMS() { return fTargetDigiNoiseRMS; }
   void     SetTargetDigiNoiseRMS(G4double n) { fTargetDigiNoiseRMS = n; }
@@ -217,7 +219,8 @@ private:
 
   G4String fTargetDigitizerName;
   G4String fTargetSensitiveDetectorName;
-
+  //MR 01/10/2026 added to score the energy in the target support to check if the beam is hitting the target or not
+  //  G4String fTargetSupportSensitiveDetectorName; 
 };
 
 #endif

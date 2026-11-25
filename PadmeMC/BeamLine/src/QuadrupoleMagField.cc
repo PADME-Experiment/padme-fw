@@ -65,11 +65,6 @@ void QuadrupoleMagField::GetFieldValue( const G4double y[7],G4double B[3]) const
 					 y[0] - fOrigin.x(), 
 					 y[1] - fOrigin.y(), 
 					 y[2] - fOrigin.z());  
-//  G4ThreeVector r_local = G4ThreeVector(
-//					fpMatrix->colX() * r_global,
-//					fpMatrix->colY() * r_global,
-//					fpMatrix->colZ() * r_global);
-
  G4ThreeVector r_local = G4ThreeVector(
 				       fpMatrix->rowX() * r_global,
 				       fpMatrix->rowY() * r_global,
@@ -81,16 +76,10 @@ void QuadrupoleMagField::GetFieldValue( const G4double y[7],G4double B[3]) const
 					//fGradient * r_local.z(), //bad fix M. Raggi 03/2021
 					0);
   
-//  G4ThreeVector B_global = G4ThreeVector(
-//					 fpMatrix->inverse().colX() * B_local,
-//					 fpMatrix->inverse().colY() * B_local,
-//					 fpMatrix->inverse().colZ() * B_local);  
-
   G4ThreeVector B_global = G4ThreeVector(
 					 fpMatrix->inverse().rowX() * B_local,
 					 fpMatrix->inverse().rowY() * B_local,
 					 fpMatrix->inverse().rowZ() * B_local);  
-
   B[0] = B_global.x() ;
   B[1] = B_global.y() ;
   B[2] = B_global.z() ;

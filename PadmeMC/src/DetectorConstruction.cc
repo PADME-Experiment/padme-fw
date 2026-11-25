@@ -1,5 +1,6 @@
 #include "DetectorConstruction.hh"
 #include "DetectorMessenger.hh"
+#include "G4SDManager.hh" //MR 1/10/2026
 
 #include "MagneticFieldSetup.hh"
 
@@ -359,13 +360,15 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   G4LogicalVolume* logicMagneticVolumeVC = new G4LogicalVolume(solidMagneticVolume,G4Material::GetMaterial("Vacuum"),"MagneticVolumeVC",0,0,0);
   if (! fMagneticVolumeIsVisible) logicMagneticVolumeVC->SetVisAttributes(G4VisAttributes::GetInvisible());
-  new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true);
+  //new G4PVPlacement(0,magVolPos,logicMagneticVolumeVC,"MagneticVolumeVC",logicWorld,false,0,true); //MR and EL 26/06/2026
 
   // Magnetic volume in the target cross region and its position
   G4LogicalVolume* logicMagneticVolumeCross;
   G4ThreeVector positionMagneticVolumeCross;
 
-  if ( fCrossMagneticVolume == "internal" ) {
+  if ( fCrossMagneticVolume == "none" ) {
+
+  } else if ( fCrossMagneticVolume == "internal" ) {
 
     // Create magnetic volume inside beam entrance pipe
 
@@ -375,6 +378,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     G4Tubs* cpzSolid = new G4Tubs("CPZ",0.,cpzRIn-1.*um,0.5*cpzLen,0.*deg,360.*deg);
     positionMagneticVolumeCross = G4ThreeVector(0.,0.,geoChamber->GetJunBackFacePosZ()-0.5*cpzLen-1.*um);
     logicMagneticVolumeCross = new G4LogicalVolume(cpzSolid,G4Material::GetMaterial("Vacuum"),"MagneticVolumeCross",0,0,0);
+ 
   } else {
 
     // Create a box with XY section matching that of the volume inside the vacuum chamber
@@ -415,8 +419,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   }
 
-  if (! fMagneticVolumeIsVisible)
-    logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::GetInvisible());
+ // if (! fMagneticVolumeIsVisible) logicMagneticVolumeCross->SetVisAttributes(G4VisAttributes::GetInvisible());
   //new G4PVPlacement(0,positionMagneticVolumeCross,logicMagneticVolumeCross,"MagneticVolumeCross",logicWorld,false,0,true);
 
   // Add magnetic field to volumes
@@ -425,7 +428,9 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     if (fVerbose)
       printf("Enabling Magnetic Field with constant value %7.3f gauss\n",fMagneticFieldManager->GetMagneticField()->GetConstantMagneticFieldValue()/gauss);
     logicMagneticVolumeVC->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
-    logicMagneticVolumeCross->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
+    if(fCrossMagneticVolume == "internal" || fCrossMagneticVolume == "external") {
+      logicMagneticVolumeCross->SetFieldManager(fMagneticFieldManager->GetLocalFieldManager(),true);
+    }
   }
 
   // Vacuum chamber structure
@@ -440,7 +445,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fChamberStructure->SetChamberInvisible();
   }
   fChamberStructure->SetMotherVolume(logicWorld);
-  if ( fCrossMagneticVolume == "internal" ) {
+  if ( fCrossMagneticVolume == "internal" || fCrossMagneticVolume == "none" ) {
     fChamberStructure->SetCrossMotherVolume(logicWorld);
     fChamberStructure->SetCrossDisplacePosZ(0.);
   } else {
@@ -476,7 +481,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   // Target
   if (fEnableTarget) {
-    if ( fCrossMagneticVolume == "internal" ) {
+    if ( fCrossMagneticVolume == "internal" || fCrossMagneticVolume == "none" ) {
       fTargetDetector->SetMotherVolume(logicWorld);
       fTargetDetector->SetTargetDisplacePosZ(0.);
     } else {
@@ -577,11 +582,6 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
     fLeadGlassDetector->SetMotherVolume(logicWorld);
     fLeadGlassDetector->CreateGeometry();
   }
-
-  // This code makes a full debug dump of the geometry, looking for overlaps
-  // HUGE amount of output: enable at your own risk ;)
-  //CheckDaughters(logicWorld,0);
-
   return physicWorld;
 
 }

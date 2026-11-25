@@ -27,6 +27,9 @@ public:
 
 public:
   
+  void SetTrackId(G4int id) { fTrackId = id; } // MR 20/11/2026 to match hits of the same track
+  G4int GetTrackId() { return fTrackId; }
+
   void SetTime(G4double t) { fTime = t; };
   G4double GetTime() { return fTime; };
 
@@ -66,6 +69,7 @@ public:
 
 private:
 
+  G4int         fTrackId; // MR 20/11/2026
   G4double      fTime;
   G4double      fEnergy;
   G4double      fTrackEnergy; //M. Raggi 2/04/2019 added track energy

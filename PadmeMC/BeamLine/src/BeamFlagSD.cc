@@ -37,28 +37,27 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 
   G4double edep = aStep->GetTotalEnergyDeposit();
   //  if (edep==0.) return false;
-
   BeamFlagHit* newHit = new BeamFlagHit();
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
 
-
 //  << " global " << G4BestUnit(worldPosPre,"Length")<< G4endl;
 //  << " local " << G4BestUnit(localPosPre,"Length") << G4endl;
-  
 //  G4cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<G4endl;
 
   // this way you only see primary particle there is a component coming form background that is killed here.
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
   //  if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
     newHit->SetEnergy(edep);
+    newHit->SetTrackId(aStep->GetTrack()->GetTrackID()); // MR 20/11/2026
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019
     newHit->SetPDir(aStep->GetTrack()->GetMomentumDirection());  //this is post step we want the exit direction
     newHit->SetPosition(worldPosPre);
-    //    std::cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<std::endl;
+    newHit->SetLocalPosition(localPosPre);
+   // std::cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<std::endl;
     
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag1")  newHit->SetChannelId(1); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag2")  newHit->SetChannelId(2); 
@@ -67,8 +66,13 @@ G4bool BeamFlagSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag5")  newHit->SetChannelId(5); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag6")  newHit->SetChannelId(6); 
     if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag7")  newHit->SetChannelId(7); 
-    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag8")  newHit->SetChannelId(8); 
-    newHit->SetLocalPosition(localPosPre);
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag8")  newHit->SetChannelId(8);
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag9")  newHit->SetChannelId(9);
+    if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag10") newHit->SetChannelId(10); //Scoring into target support to check if the beam is hitting the target or not
+    // G4cout << ">>> BeamFlagSD: Hit registered in BeamLineBeamFlag10!" << G4endl;
+    
+   // if(touchHPre->GetVolume()->GetName()=="BeamLineBeamFlag10")      std::cout<<"NAME "<<touchHPre->GetVolume()->GetName()<<std::endl;
+
     fBeamFlagCollection->insert(newHit);
   }
   return true;

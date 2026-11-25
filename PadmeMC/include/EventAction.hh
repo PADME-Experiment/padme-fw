@@ -26,6 +26,12 @@
 #include "BeamParameters.hh"
 #include "MMDigi.hh" //EDM from D. Quaranta
 #include "TMMDigi.hh" //EDM
+#include <map>    // MR 20/11/2026
+#include <vector> // MR 23/11/2026
+#include <set>
+#include <algorithm>
+#include <string>
+#include <fstream>
 
 class G4Event;
 class RunAction;
@@ -105,6 +111,20 @@ class EventAction : public G4UserEventAction
   //G4double GGMass();
 
   private:
+  //MR 01/10/2026 output file for beam characteristics
+  std::fstream BeamOut;
+
+  // MR 20/11/2026 flag 8 and Mylar window (flag 0) lines are buffered per track and written
+  // only if the energy difference between the two is above fFlag8MylarDEThr
+  // MR 23/11/2026 all flag lines are buffered per track: at end of event each track writes its
+  // flag 0/8 pair first (if it passes the cut), then the other flags, each block in crossing-time order
+  struct BeamOutLine { G4double E; G4double t; std::string line; };
+  std::map<G4int,BeamOutLine> fFlag8Lines;
+  std::map<G4int,BeamOutLine> fMylarLines;
+  std::map<G4int,std::vector<BeamOutLine> > fOtherFlagLines;
+  G4double fFlag8MylarDEThr;
+  std::string FormatBeamOutLine(G4int flag, const G4ThreeVector& mom, G4double x, G4double y, G4double z);
+  void WriteBeamOutLines();
 
   RunAction*    fRunAct;
   HistoManager* fHistoManager;

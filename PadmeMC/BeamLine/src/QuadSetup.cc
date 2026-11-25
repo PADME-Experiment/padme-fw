@@ -32,7 +32,7 @@ QuadSetup::QuadSetup(G4double pGradient, G4ThreeVector pOrigin, G4RotationMatrix
 {
   fMagneticField = new QuadrupoleMagField(pGradient,pOrigin,pMatrix);
   
-  //fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
+  fEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   fLocalEquation = new G4Mag_UsualEqRhs(fMagneticField); 
   
   fMinStep     = 0.25*mm; // minimal step of 1 mm is default

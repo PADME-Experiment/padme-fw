@@ -51,7 +51,7 @@
 
 #/Detector/VerboseLevel 0
 
-# General setup for desired year: 10=2019, 20=2020, 30=2021, 40=2022
+# General setup for desired year: 10=2019, 20=2020, 30=2021, 40=2022 50=2025
 #/Detector/Setup 10
 
 # Any detector customization must be done after the initial setup
@@ -81,6 +81,8 @@
 #/Detector/DisableSubDetector TPix
 #/Detector/DisableSubDetector ETag
 #/Detector/DisableSubDetector LeadGlass
+#/Detector/DisableSubDetector MM
+#/Detector/DisableSubDetector TMM
 
 #/Detector/DisableStructure Magnet
 #/Detector/DisableStructure Chamber
@@ -104,6 +106,7 @@
 
 #/Detector/CrossMagneticVolume internal
 #/Detector/CrossMagneticVolume external
+#/Detector/CrossMagneticVolume none
 
 #/Detector/SetMagneticVolumeVisible
 #/Detector/SetMagneticVolumeInvisible
@@ -190,6 +193,9 @@
 #/Detector/LeadGlass/VerboseLevel 0
 #/Detector/LeadGlass/FullSimulation true
 #/Detector/LeadGlass/FrontFaceZ 310. cm
+
+#/Detector/TMM/FrontFaceZ 0. cm
+#/Detector/TMM/ZLength 0. cm
 
 # IO initialization must be done after detector configuration
 # This is mostly to use the correrct VerboseLevel

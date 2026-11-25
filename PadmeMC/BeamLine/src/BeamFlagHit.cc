@@ -10,7 +10,7 @@ G4Allocator<BeamFlagHit> BeamFlagHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-BeamFlagHit::BeamFlagHit() {}
+BeamFlagHit::BeamFlagHit() : fTrackId(-1) {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -22,6 +22,7 @@ BeamFlagHit::BeamFlagHit(const BeamFlagHit& right)
   : G4VHit()
 {
   fChannelId = right.fChannelId;
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;
@@ -33,6 +34,7 @@ BeamFlagHit::BeamFlagHit(const BeamFlagHit& right)
 const BeamFlagHit& BeamFlagHit::operator=(const BeamFlagHit& right)
 {
   fChannelId = right.fChannelId;
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;

@@ -15,6 +15,8 @@
 #include "BeamLineGeometry.hh"
 #include "BeamFlagSD.hh"  
 
+//include "../Chamber/ChamberGeometry.hh" //MR 06/2026
+
 class G4LogicalVolume;
 class G4UnionSolid;
 //class G4RotationMatrix;
@@ -48,6 +50,7 @@ private:
   void CreateBeamLine();
   void CreateBeamLine2020();  //Raggi 06/2020
   void CreateBeamLine2022();  //Raggi 02/2022
+  void CreateBeamLine2025();  //Raggi 06/2025
 
   void CreateDHSTB002Magnet();
   void CreateDHSTB001Magnet(); //Raggi 01/02/2022

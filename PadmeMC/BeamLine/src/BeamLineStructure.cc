@@ -72,8 +72,6 @@ void BeamLineStructure::CreateGeometry()
     //    G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
   }
   
-  /*
-  //(fLineSetup==0.){
   if(setup == 10){
     //G4cout<<"######### Create 2019 Beam Line ###############"<<fLineSetup<<G4endl;
     G4cout<<"######### Create 2019 Beam Line ###############"<<G4endl;
@@ -81,7 +79,6 @@ void BeamLineStructure::CreateGeometry()
     CreateDHSTB002Magnet(); // Create DHSTB002 magnet
     CreateBeamLine();       // Create Beam line 2019
   }
-  //if(fLineSetup==1.){
   if(setup == 20 || setup == 30){
     //G4cout<<"######### Create 2020 Beam Line ###############"<<fLineSetup<<G4endl;
     G4cout<<"######### Create 2020 Beam Line ###############"<<G4endl;
@@ -90,7 +87,6 @@ void BeamLineStructure::CreateGeometry()
     CreateDHSTB001Magnet();
     CreateBeamLine2020();    // Beam line 2020
   }
-  //if(fLineSetup==2.){
   if(setup == 40){
     //G4cout<<"######### Create 2022 Beam Line ###############"<<fLineSetup<<G4endl;
     G4cout<<"######### Create 2022 Beam Line ###############"<<G4endl;
@@ -103,7 +99,18 @@ void BeamLineStructure::CreateGeometry()
     CreatePulsedMagnet();
     CreateBeamLine2022();    // Beam line 2022
   }
-  */
+  if(setup == 50){
+    //G4cout<<"######### Create 2025 Beam Line ###############"<<fLineSetup<<G4endl;
+    G4cout<<"######### Create 2025 Beam Line ###############"<<G4endl;
+    CreateMylarThinWindow(); // Create mylar Window
+    CreateDHSTB002Magnet();
+    CreateDHSTB001Magnet();
+    CreateWallAndPipe();
+    PositionAllQuads();
+    CreateAllSLTB();
+    CreatePulsedMagnet();
+    CreateBeamLine2025();    // Beam line 2025 to be checked
+  }
 }
 
 ///////////////////////////////////////////////////////
@@ -125,7 +132,7 @@ G4LogicalVolume* BeamLineStructure::CreateQuadMagnets(G4double Grad, G4double Le
   new G4PVPlacement(Rot,Pos,logicalSupport,"QuadSuport",fMotherVolume,false,0,true);
 
   G4Tubs* solidQuadMagField = new G4Tubs("solidQuadMagField",0.,Radius,0.5*Length,0.*deg,360.*deg);  
-  printf("Creating Qx quadrupole with gradient %f %f %f %f\n",Grad*m/tesla,Pos.x(),Pos.y(),Pos.z());
+//  printf("Creating Qx quadrupole with gradient %f %f %f %f\n",Grad*m/tesla,Pos.x(),Pos.y(),Pos.z());
 
   QuadSetup* QFieldManager = new QuadSetup(Grad,Pos,Rot);
   G4LogicalVolume* logicQMagField = new G4LogicalVolume(solidQuadMagField,G4Material::GetMaterial("Vacuum"),"logicQ1MagField",0,0,0);
@@ -365,6 +372,10 @@ void BeamLineStructure::CreateBeamLine2020()
   // positioning collimators
   new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
   new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
+  printf("Placing SLTB3 collimator with aperture %f \n",SLTB3Aperture);
+  printf("Placing SLTB4 collimator with aperture %f \n",SLTB4Aperture);
+  printf("Placing SLTB3 collimator at %f %f %f \n",SLTB3PosX,SLTB3PosY,SLTB3PosZ);
+  printf("Placing SLTB4 collimator at %f %f %f \n",SLTB4PosX,SLTB4PosY,SLTB4PosZ);
 
   //***********************************************
   // Setup quadrupoles pairs along the beam line
@@ -425,7 +436,7 @@ void BeamLineStructure::CreateBeamLine2020()
     printf("Placing Q3 quadrupole with gradient %f \n",Q3BGradient*m/tesla);
     //  }
 //////////////////////////////////////////////////////////////////////////
-//// Flag 5 just before the target M. Raggi 12/03/2021
+//// Flag 5 between Q4 and Q3 quads M. Raggi 12/03/2021
 /////////////////////////////////////////////////////////////////////////
 ////  In between the Q4 and Q3 quads           DHSTB002---Q4----FL5-----Q3
     G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
@@ -482,8 +493,10 @@ void BeamLineStructure::CreateBeamLine2020()
     G4LogicalVolume* logicalBeamFlag6 = new G4LogicalVolume(solidBeamFlag6,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag6",0,0,0);
     logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
     
-    printf("Registering Flag6 %d\n",geo->BeamFlagIsEnabled());
+    
     if (geo->BeamFlagIsEnabled() ) {
+      printf("Registering Flag6 %d\n",geo->BeamFlagIsEnabled());
+      printf("Placing Flag6 at Position %f %f %f \n",Flag6FrontPosX,Flag6FrontPosY,Flag6FrontPosZ);
       new G4PVPlacement(Q2Rot,Flag6FrontPos,logicalBeamFlag6,"BeamLineBeamFlag6",fMotherVolume,false,0,true);    
       logicalBeamFlag6->SetSensitiveDetector(beamFlagSD);
     }
@@ -526,6 +539,8 @@ void BeamLineStructure::CreateBeamLine2020()
     logicalBeamFlag7->SetVisAttributes(FlagVisAttr);
     
     printf("Registering Flag7 %d at %f %f %f\n",geo->BeamFlagIsEnabled(),Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
+    printf("Placing Flag7 at Position %f %f %f \n",Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
+
     new G4PVPlacement(Q2Rot,Flag7FrontPos,logicalBeamFlag7,"BeamLineBeamFlag7",fMotherVolume,false,0,true);    
     logicalBeamFlag7->SetSensitiveDetector(beamFlagSD);
   }
@@ -572,7 +587,21 @@ void BeamLineStructure::CreateBeamLine2022()
 
 } //END OF 2022 BeamLine
 
+// *********Beam Line 2025******************
+// written by M. Raggi 06.2026 
+// *****************************************xs 
+void BeamLineStructure::CreateBeamLine2025()
+{
+  G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
+  G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
+  G4VisAttributes DentroilMuroVisAttr   = G4VisAttributes(G4Color::Red()); // Beam Flags
+  
+  if ( ! fBeamLineIsVisible ) steelVisAttr = G4VisAttributes::GetInvisible();
+  printf("****************************************** \n");
+  printf("Creating a beamline in 2025 RunIV setup    \n");
+  printf("****************************************** \n");
 
+} //END OF 2025 BeamLine
 
 void BeamLineStructure::CreateBeThinWindow()
 {
@@ -631,6 +660,7 @@ void BeamLineStructure::CreateBeThinWindow()
   }
 } // end of BeW creator
 
+// Create DHSTB002 magnet and Flags 1,2,3,4
 void BeamLineStructure::CreateDHSTB002Magnet()
 {
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
@@ -705,7 +735,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   rotDHSTB->rotateZ(180.*deg+geo->GetDHSTB002AngularSpan());
   G4ThreeVector posDHSTB = G4ThreeVector(holeCenterR,0.,geo->GetDHSTB002ExitPosZ());
   new G4PVPlacement(rotDHSTB,posDHSTB,logicalDHSTB002,"DHSTB002",fMotherVolume,false,0,true);
-
+  printf("Placing DHSTB002 magnet at %f %f %f \n",posDHSTB.x(),posDHSTB.y(),posDHSTB.z());
   // Angular span of the DHSTB002 magnet (45 deg)
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();
 
@@ -842,13 +872,15 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   // Entrance of DHSTB002 Magnet from linac side
   ///////////////////////////////////////////////////////////////////////
 
-  G4double      FlagBackPosX = mpEntPosX;
+  // 2 mm upstream of the DHSTB002 entrance along the 45 deg beam line axis
+  G4double      FlagBackPosX = mpEntPosX+2*mm*sin(magnetAngle);
   G4double      FlagBackPosY = mpEntPosY;
-  G4double      FlagBackPosZ = mpEntPosZ-2*mm;
+  G4double      FlagBackPosZ = mpEntPosZ-2*mm*cos(magnetAngle);
   G4ThreeVector FlagBackPos  = G4ThreeVector(FlagBackPosX,FlagBackPosY,FlagBackPosZ);
 
   G4Tubs* solidBeamFlag1 = new G4Tubs("solidBeamFlag1",0.,geo->GetBeJunctionRIn()-4*mm,0.5*FlagT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag1 = new G4LogicalVolume(solidBeamFlag1,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag1",0,0,0);
+  
   logicalBeamFlag1->SetVisAttributes(FlagVisAttr);
 
   ////////////////////////////////////////////////////////////////////////
@@ -857,8 +889,10 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   ///////////////////////////////////////////////////////////////////////
   
   G4double     FlagFrontPosX = geo->GetMagPipeStraightFrontPosX()               +2*mm*sin(strFrontRotY);
+  G4double     FlagFrontPosY = 0.;       
   G4double     FlagFrontPosZ = geo->GetMagPipeStraightFrontPosZ()+strPipeSizeZ/2+2*mm*cos(strFrontRotY);
-  G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,0.,FlagFrontPosZ);
+
+  G4ThreeVector FlagFrontPos = G4ThreeVector(FlagFrontPosX,FlagFrontPosY,FlagFrontPosZ);
   
   G4Tubs* solidBeamFlag2 = new G4Tubs("solidBeamFlag2",0.,FlagR-4*mm,0.5*FlagT,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag2 = new G4LogicalVolume(solidBeamFlag2,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag2",0,0,0);
@@ -869,12 +903,15 @@ void BeamLineStructure::CreateDHSTB002Magnet()
     new G4PVPlacement(strFrontRot,FlagFrontPos,logicalBeamFlag2,"BeamLineBeamFlag2",fMotherVolume,false,0,true);    
     BeamFlag2SDName = geo->GetBeamFlag2SensitiveDetectorName();
     printf("Registering Flag2 SD %s\n",BeamFlag2SDName.data());
+    printf("Placing Flag2 at Position %f %f %f \n",FlagFrontPosX,FlagFrontPosY,FlagFrontPosZ);
     logicalBeamFlag2->SetSensitiveDetector(beamFlagSD);
     G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
 
     G4RotationMatrix* Flag1Rot = new G4RotationMatrix;  
     Flag1Rot->rotateY(magnetAngle);
-    new G4PVPlacement(Flag1Rot,FlagBackPos,logicalBeamFlag1,"BeamLineBeamFlag1",fMotherVolume,false,0,true);    
+    new G4PVPlacement(Flag1Rot,FlagBackPos,logicalBeamFlag1,"BeamLineBeamFlag1",fMotherVolume,false,0,true);  
+  // printf("Registering Flag1 SD %s\n",BeamFlagSDName.data());
+    printf("Placing Flag1 at Position %f %f %f \n",FlagBackPosX,FlagBackPosY,FlagBackPosZ);  
     logicalBeamFlag1->SetSensitiveDetector(beamFlagSD);
     G4SDManager::GetSDMpointer()->AddNewDetector(beamFlagSD);
   }
@@ -882,13 +919,16 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   ////////////////////////////////////////////////////////////////////////
   // Beam Flag to monitor beam in different locations M. Raggi 29/08/2019
   // Flag 3 exit of DHSTB002 into large 100mm cross region No Rotation needed
+  // (Setup 50: at -782 mm, ~50 mm upstream of the target front face at -732.47 mm)
   ///////////////////////////////////////////////////////////////////////
   
   G4double Flag3R = 44.5*mm; // 99mm diameter
   G4double Flag3T = 50*um;  //Use the same of the BeW
   
   G4double      Flag3FrontPosX = 0.;
-  G4double      Flag3FrontPosZ = -1039*mm;
+  G4double      Flag3FrontPosY = 0.;
+  G4double      Flag3FrontPosZ = -1039*mm; //MR fix for difference with the previous version of the beamline
+  if (geo->GetDetectorSetup() == 50) Flag3FrontPosZ = -782*mm; //MR: Setup 50 close to the target (front face at -732.47 mm) 21/11/2026
   G4ThreeVector Flag3FrontPos = G4ThreeVector(Flag3FrontPosX,0.,Flag3FrontPosZ);
   
   G4Tubs* solidBeamFlag3 = new G4Tubs("solidBeamFlag3",0.,Flag3R,0.5*Flag3T,0.*deg,360.*deg);
@@ -896,6 +936,7 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   logicalBeamFlag3->SetVisAttributes(FlagVisAttr);
   if ( geo->BeamFlagIsEnabled() ) {
     printf("Registering Flag3 %d\n",geo->BeamFlagIsEnabled());
+    printf("Placing Flag3 at Position %f %f %f \n",Flag3FrontPosX,Flag3FrontPosY,Flag3FrontPosZ);
     new G4PVPlacement(strFrontRot,Flag3FrontPos,logicalBeamFlag3,"BeamLineBeamFlag3",fMotherVolume,false,0,true);    
     logicalBeamFlag3->SetSensitiveDetector(beamFlagSD);
   }
@@ -905,59 +946,98 @@ void BeamLineStructure::CreateDHSTB002Magnet()
   // Flag 4 on the strait DHSTB002 exit section
   ///////////////////////////////////////////////////////////////////////
   
-  G4double      Flag4FrontPosX = mpEntPosX-(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*sin(magnetAngle);; 
-  G4double      Flag4FrontPosZ = mpEntPosZ+(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*cos(magnetAngle);
-  G4ThreeVector Flag4FrontPos  = G4ThreeVector(Flag4FrontPosX,beWin2FlgPosY,Flag4FrontPosZ);
+ // G4double      Flag4FrontPosX = mpEntPosX-(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*sin(magnetAngle);; 
+ //  G4double      Flag4FrontPosZ = mpEntPosZ+(strPipeSizeZ+magBPLSizeY+strPipeSizeZ+0.5*beWinFlgT +5*cm)*cos(magnetAngle);
+
+  //MR test for 2025 beamline
+  G4double      Flag4FrontPosX = 0.;
+  G4double      Flag4FrontPosY = 0.;
+  //  G4double      Flag4FrontPosZ = -500.*mm; //MR fix for difference with the previous version of the beamline
+  //G4double      Flag4FrontPosZ = 2057.*mm; //MR now at MM fron face 17/09/2026
+  G4double      Flag4FrontPosZ = 2343.*mm; //MR coloser to MM fron face 15/10/2026
+
+  G4ThreeVector Flag4FrontPos  = G4ThreeVector(Flag4FrontPosX,0,Flag4FrontPosZ);
   
   G4Tubs* solidBeamFlag4 = new G4Tubs("solidBeamFlag4",0.,30.*mm,0.1*mm,0.*deg,360.*deg);
   G4LogicalVolume* logicalBeamFlag4 = new G4LogicalVolume(solidBeamFlag4,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag4",0,0,0);
   logicalBeamFlag4->SetVisAttributes(FlagVisAttr);
   
   if ( geo->BeamFlagIsEnabled() ) {
-    new G4PVPlacement(strSideRot,Flag4FrontPos,logicalBeamFlag4,"BeamLineBeamFlag4",fMotherVolume,false,0,true);    
+   // new G4PVPlacement(strSideRot,Flag4FrontPos,logicalBeamFlag4,"BeamLineBeamFlag4",fMotherVolume,false,0,true);
+    new G4PVPlacement(strFrontRot,Flag4FrontPos,logicalBeamFlag4,"BeamLineBeamFlag4",fMotherVolume,false,0,true); //Perpendicular to PADME beam axis (Z), same as Flag3
+    printf("Registering Flag4 %d\n",geo->BeamFlagIsEnabled());
+    printf("Placing Flag4 at Position %f %f %f \n",Flag4FrontPosX,Flag4FrontPosY,Flag4FrontPosZ);    
     logicalBeamFlag4->SetSensitiveDetector(beamFlagSD);
   }
 
-//  ////////////////////////////////////////////////////////////////////////
-//  // Flag 5 just before the target M. Raggi 23/09/2019
-//  ///////////////////////////////////////////////////////////////////////
-//
-//  G4double      Flag5FrontPosX = 0.;
-//  G4double      Flag5FrontPosZ = -490.0*mm-Flag3T*0.5;
-//  G4ThreeVector Flag5FrontPos = G4ThreeVector(Flag5FrontPosX,0.,Flag5FrontPosZ);
-//// in between the Q4 and Q3 quads            Q3----FL5-----Q4
-//
-//  G4Tubs* solidBeamFlag5 = new G4Tubs("solidBeamFlag5",0.,Flag3R,3*mm,0.*deg,360.*deg);
-//  G4LogicalVolume* logicalBeamFlag5 = new G4LogicalVolume(solidBeamFlag5,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag5",0,0,0);
-//  logicalBeamFlag5->SetVisAttributes(FlagVisAttr);
-//  if ( geo->BeamFlagIsEnabled() ) {
-//    new G4PVPlacement(strFrontRot,Flag5FrontPos,logicalBeamFlag5,"BeamLineBeamFlag5",fMotherVolume,false,0,true);    
-//    logicalBeamFlag5->SetSensitiveDetector(beamFlagSD);
-//  }
-//  ////////////////////////////////////////////////////////////////////////
-//  // Flag 6 just before TimePix M. Raggi 30/09/2019
-//  ///////////////////////////////////////////////////////////////////////
-//
-//  G4double      Flag6FrontPosX = 746.1; //from TPix positioning
-//  G4double      Flag6FrontPosZ = 2250.6*mm-Flag3T*0.5; //from TPix positioning
-//  G4ThreeVector Flag6FrontPos = G4ThreeVector(Flag6FrontPosX,0.,Flag6FrontPosZ);
-//
-//  G4RotationMatrix* rotTPix = new G4RotationMatrix;
-//  rotTPix->rotateY(-0.314159); //from chamber geometry
-//
-//  G4Box* solidBeamFlag6 =  new G4Box("solidBeamFlag6",15*cm,10*cm,0.5*1*mm);
-//  G4LogicalVolume* logicalBeamFlag6 = new G4LogicalVolume(solidBeamFlag6,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag6",0,0,0);
-//  logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
-//
-//  printf("Registering Flag6 %d\n",geo->BeamFlagIsEnabled());
-//  if (geo->BeamFlagIsEnabled() ) {
-//    new G4PVPlacement(rotTPix,Flag6FrontPos,logicalBeamFlag6,"BeamLineBeamFlag6",fMotherVolume,false,0,true);    
-//    logicalBeamFlag6->SetSensitiveDetector(beamFlagSD);
-//  }
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 9 in front of the TMM on the PADME beam axis
+  ///////////////////////////////////////////////////////////////////////
+    
+  G4double Flag9PosX = 0;
+  G4double Flag9PosY = 0;							 
+  //G4double Flag9PosZ = 0;
+  //G4double Flag9PosZ = 3383*mm;  //MR: now at TMM front face 17/09/2026
+  G4double Flag9PosZ = 3300*mm;  //MR: ~84.5 mm upstream of TMM front face (3384.53 mm)
+  G4ThreeVector Flag9Pos = G4ThreeVector(Flag9PosX,Flag9PosY,Flag9PosZ);    
+    
+//  G4Tubs* solidBeamFlag9 = new G4Tubs("solidBeamFlag9",0.,WallPipeRIn-0.1*mm,0.1*mm,0.*deg,360.*deg);
+  G4Tubs* solidBeamFlag9 = new G4Tubs("solidBeamFlag9",0.,Flag3R,0.5*Flag3T,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag9 = new G4LogicalVolume(solidBeamFlag9,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag9",0,0,0);
+  logicalBeamFlag9->SetVisAttributes(FlagVisAttr);
+  
+  if ( geo->BeamFlagIsEnabled() ) {
+    new G4PVPlacement(strFrontRot,Flag9Pos,logicalBeamFlag9,"BeamLineBeamFlag9",fMotherVolume,false,0,true); //Perpendicular to PADME beam axis (Z), same as Flag3
+    printf("Registering Flag9 %d\n",geo->BeamFlagIsEnabled());
+    printf("Placing Flag9 at Position %f %f %f \n",Flag9PosX,Flag9PosY,Flag9PosZ);
+    logicalBeamFlag9->SetSensitiveDetector(beamFlagSD);
+  }
+  
+    // MR Create the Target support flag as flag 10
+    // ------------------------------------------------------------
+    // Piastra piena: G4Box usa SEMIDIMENSIONI.
+    // ------------------------------------------------------------
+    G4double Flag10PosX = 0.5 *cm;
+    G4double Flag10PosY = 0.;							 
+    G4double Flag10PosZ = -750*mm;  //MR: just before the target support flange 1/10/2026
+    
+    G4ThreeVector Flag10Pos = G4ThreeVector(Flag10PosX,Flag10PosY,Flag10PosZ);    
+    // Dimensioni COMPLETE della piastra.
+    const G4double L2 = 5.0 * cm;          // asse X
+    const G4double L1 = 4.0 * cm;          // asse Y
+//    const G4double thickness = 1.0 * mm;  // asse Z
 
+    // Origine nel centro della piastra, X positivo verso destra.
+    const G4double xHole = 0.5 * cm;
+    const G4double halfHole = 0.75 * cm;
+    G4RotationMatrix* rotZ = new G4RotationMatrix();
+    G4double TargetRotationAngle=180.*deg;
+    rotZ->rotateZ(TargetRotationAngle);
+
+    G4Box* plateBox = new G4Box("PlateBox", 0.5 * L2, 0.5 * L1, 0.5*Flag3T);
+    // ------------------------------------------------------------
+    // Solido da sottrarre per ottenere il foro passante.
+    // Sporge di 0.1 mm su ciascun lato lungo Z.
+    // ------------------------------------------------------------
+    const G4double cutMargin = 0.1 * mm;
+
+    G4Box* holeBox = new G4Box("HoleCutter",halfHole,halfHole,0.5*Flag3T + cutMargin);
+
+  // Piastra forata = piastra piena - foro traslato.
+    G4SubtractionSolid* plateSolid = new G4SubtractionSolid("PerforatedPlateSolid",plateBox,holeBox,nullptr,G4ThreeVector(xHole, 0.0, 0.0));  
+    G4LogicalVolume* logicalBeamFlag10 = new G4LogicalVolume(plateSolid,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag10",0,0,0);
+    logicalBeamFlag10->SetVisAttributes(FlagVisAttr);
+    // Posizionare SOLO la piastra forata.
+
+    if ( geo->BeamFlagIsEnabled() ) {
+      new G4PVPlacement(rotZ,Flag10Pos,logicalBeamFlag10,"BeamLineBeamFlag10",fMotherVolume,false,0,true);  // checkOverlaps
+      printf("Registering Flag10 %d\n",geo->BeamFlagIsEnabled());
+      printf("Placing Flag10 at Position %f %f %f \n",Flag10PosX,Flag10PosY,Flag10PosZ);
+      logicalBeamFlag10->SetSensitiveDetector(beamFlagSD);
+    }
 }// END of DHSTB002 magnet creation
 
-// Create DHSTB001 magnet and SLTB2
+// Create DHSTB001 magnet and SLTB2 BTF target and Flag 8
 void BeamLineStructure::CreateDHSTB001Magnet()
 {
   G4VisAttributes steelVisAttr   = G4VisAttributes(G4Color::Grey()); // Dark gray
@@ -1061,7 +1141,7 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4ThreeVector EndFrontFlange = G4ThreeVector(strFrontPos.x()*mm+strPipeSizeZ/2*mm*sin(magnetAngle),0.,strFrontPos.z()*mm-strPipeSizeZ/2*mm*cos(magnetAngle));
   G4ThreeVector posDHSTB01 = G4ThreeVector(EndFrontFlange.x()+holeCenterR*mm*sin(magnetAngle),0.,EndFrontFlange.z()+holeCenterR*mm*cos(magnetAngle));
   new G4PVPlacement(rotDHSTB01,posDHSTB01,logicalDHSTB001,"DHSTB001",fMotherVolume,false,0,true);
-
+  printf("Placing DHSTB001 at %f %f %f \n",posDHSTB01.x(),posDHSTB01.y(),posDHSTB01.z());
   // Create the magnetic volume
   G4double magvolSizeY = geo->GetMagVolSizeY();
   G4double magvolMinR = geo->GetMagVolMinRadius();
@@ -1127,7 +1207,6 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   //***********************************************************
   // START POSITIONING SLTB2           MR 01/03/2022
   //***********************************************************
-  //  G4double SLTB2ToMylar = 519.24*mm;
   G4double SLTBThickness = 35.0*mm;
   G4double SLTB2Aperture = geo->GetSLTB2Aperture();  
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
@@ -1146,8 +1225,8 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   //  new G4PVPlacement(MylarWinFlgRot,SLTB2Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true); //rotation matrix    
   // positioning collimators
   new G4PVPlacement(strBackRot,SLTB2Pos,logicalSLTB2,"BeamSLTB2",fMotherVolume,false,0,true);
-
-
+  printf("positioning SLTB2 at %f %f %f\n",SLTB2PosX,SLTB2PosY,SLTB2PosZ);
+  printf("SLTB2 Aperture %f mm\n",SLTB2Aperture);
   //***********************************************************
   // START POSITIONING BTF TARGET  MR 31/08/2022
   //***********************************************************
@@ -1163,28 +1242,40 @@ void BeamLineStructure::CreateDHSTB001Magnet()
   G4LogicalVolume* logicalBTFTarget = new G4LogicalVolume(solidBTFTarget,G4Material::GetMaterial("G4_Cu"),"logicalBTFTarget",0,0,0);
   logicalBTFTarget->SetVisAttributes(CopperVisAttr);
   
+  ////////////////////////////////////////////////////////////////////////
+  // Flag 8 just after the BTF target
+  ///////////////////////////////////////////////////////////////////////
+    
+  // Old position: just after the BTF target
+  //  G4double Flag8PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+BTFTargetDistance; ;
+  //  G4double Flag8PosY = 0;
+  //  G4double Flag8PosZ = strBackPosZ;
+  // MR 20/11/2026 Flag 8 moved between the beam injection point and the Mylar window:
+  // centre of the DHSTB001-Mylar connection pipe (same formula as DHSTB001_PipePos in CreateWallAndPipe),
+  // inside its bore (radius WallPipeRIn-0.1mm < pipe inner radius) so no volume overlap
+  G4double Flag8PipeLen = 1040*mm-strPipeSizeZ;
+  G4double Flag8PosX = 7232.1*mm+(0.5*Flag8PipeLen+strFlangeThick)*sin(magnetAngle);
+  G4double Flag8PosY = 0;
+  G4double Flag8PosZ = -9580.76*mm-(0.5*Flag8PipeLen+strFlangeThick)*cos(magnetAngle);
+    
+  G4ThreeVector Flag8Pos = G4ThreeVector(Flag8PosX,Flag8PosY,Flag8PosZ);    
+    
+  G4Tubs* solidBeamFlag8 = new G4Tubs("solidBeamFlag8",0.,WallPipeRIn-0.1*mm,0.1*mm,0.*deg,360.*deg);
+  G4LogicalVolume* logicalBeamFlag8 = new G4LogicalVolume(solidBeamFlag8,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag8",0,0,0);
+  logicalBeamFlag8->SetVisAttributes(FlagVisAttr);
+    
+  if ( geo->BeamFlagIsEnabled() ) {
+    printf("Registering Flag8 %d\n",geo->BeamFlagIsEnabled());
+    printf("Placing Flag8 at Position %f %f %f \n",Flag8PosX,Flag8PosY,Flag8PosZ);
+    //    new G4PVPlacement(strBackRot,Flag8Pos,logicalBeamFlag8,"BeamLineBeamFlag8",fMotherVolume,false,0,true);
+    new G4PVPlacement(WallPipeRot,Flag8Pos,logicalBeamFlag8,"BeamLineBeamFlag8",fMotherVolume,false,0,true); // MR 20/11/2026 pipe orientation
+
+    logicalBeamFlag8->SetSensitiveDetector(beamFlagSD);
+  }
+
   // positioning BTF target
   if(geo->BTFTargetIsEnabled()){
-    new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);
-    
-    
-    ////////////////////////////////////////////////////////////////////////
-    // Flag 8 just after the BTF target
-    ///////////////////////////////////////////////////////////////////////
-    
-    G4double Flag8PosX = strBackPosX+0.5*mm*strPipeSizeZ+SLTBThickness*0.5*mm+strFlangeThick*mm+BTFTargetDistance; ;
-    G4double Flag8PosY = 0;							 
-    G4double Flag8PosZ = strBackPosZ;
-    
-    G4ThreeVector Flag8Pos = G4ThreeVector(Flag8PosX,Flag8PosY,Flag8PosZ);    
-    
-    G4Tubs* solidBeamFlag8 = new G4Tubs("solidBeamFlag8",0.,WallPipeRIn-0.1*mm,0.1*mm,0.*deg,360.*deg);
-    G4LogicalVolume* logicalBeamFlag8 = new G4LogicalVolume(solidBeamFlag8,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag8",0,0,0);
-    logicalBeamFlag8->SetVisAttributes(FlagVisAttr);
-    
-    printf("Registering Flag8 %d\n",geo->BeamFlagIsEnabled());
-    new G4PVPlacement(strBackRot,Flag8Pos,logicalBeamFlag8,"BeamLineBeamFlag8",fMotherVolume,false,0,true);    
-    logicalBeamFlag8->SetSensitiveDetector(beamFlagSD);  
+    new G4PVPlacement(strBackRot,BTFTargetPos,logicalBTFTarget,"BeamBTFTarget",fMotherVolume,false,0,true);  
   }
 }// End of Create DHSTB001 
 
@@ -1694,6 +1785,7 @@ void BeamLineStructure::CreateWallAndPipe()
 
 }
 
+// Contains the logic to position all quadrupoles along the beam line and flags 5,6,7
 void BeamLineStructure::PositionAllQuads()
 {
   //***********************************************
@@ -1763,7 +1855,7 @@ void BeamLineStructure::PositionAllQuads()
     G4RotationMatrix* Q3Rot = new G4RotationMatrix;
     Q3Rot->rotateY(magnetAngle);
 
-    // Negative gradient focus on X
+    // Negative gradient focus on X per e+ che viaggiano lungo Z
     G4LogicalVolume* logicQ3Quad = CreateQuadMagnets(Q3BGradient,Q4Leng,Q4Radius,Q3Pos,Q3Rot);
     logicQ3Quad->SetVisAttributes(QuadVisAttr);
     logicQ3Quad->SetName("logicQ3Quad");
@@ -1773,7 +1865,7 @@ void BeamLineStructure::PositionAllQuads()
 
 
 //////////////////////////////////////////////////////////////////////////
-//// Flag 5 just before the target M. Raggi 12/03/2021
+//// Flag 5 between Q4 and Q3 quads M. Raggi 12/03/2021
 /////////////////////////////////////////////////////////////////////////
 ////  In between the Q4 and Q3 quads           DHSTB002---Q4----FL5-----Q3
     G4VisAttributes FlagVisAttr   = G4VisAttributes(G4Color::Yellow()); // Beam Flags
@@ -1790,10 +1882,14 @@ void BeamLineStructure::PositionAllQuads()
     G4RotationMatrix* Flag5Rot = new G4RotationMatrix;  
     Flag5Rot->rotateY(magnetAngle);
     //
-    new G4PVPlacement(Flag5Rot,Flag5FrontPos,logicalBeamFlag5,"BeamLineBeamFlag5",fMotherVolume,false,0,true);    
-    logicalBeamFlag5->SetSensitiveDetector(beamFlagSD);
-    printf("Placing Flag5 at Position %f %f %f \n",Flag5FrontPosX,Flag5FrontPosY,Flag5FrontPosZ);
     
+    if (geo->BeamFlagIsEnabled() ) {
+      printf("Registering Flag5 %d\n",geo->BeamFlagIsEnabled());
+      printf("Placing Flag5 at Position %f %f %f \n",Flag5FrontPosX,Flag5FrontPosY,Flag5FrontPosZ);
+      new G4PVPlacement(Flag5Rot,Flag5FrontPos,logicalBeamFlag5,"BeamLineBeamFlag5",fMotherVolume,false,0,true);    
+      logicalBeamFlag5->SetSensitiveDetector(beamFlagSD);
+    }
+
     // Q2 quadrupole second one in LINAC side
     G4double OffsetwrtWallPipe = 440*mm; // Checked on drawings M. Raggi 02/03/2021
     G4double Q2PosX   = InWallPipePosX + (InWallPipeLen*0.5+OffsetwrtWallPipe)*sin(magnetAngle); 
@@ -1830,8 +1926,9 @@ void BeamLineStructure::PositionAllQuads()
     G4LogicalVolume* logicalBeamFlag6 = new G4LogicalVolume(solidBeamFlag6,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag6",0,0,0);
     logicalBeamFlag6->SetVisAttributes(FlagVisAttr);
     
-    printf("Registering Flag6 %d\n",geo->BeamFlagIsEnabled());
     if (geo->BeamFlagIsEnabled() ) {
+      printf("Registering Flag6 %d\n",geo->BeamFlagIsEnabled());
+      printf("Placing Flag6 at Position %f %f %f \n",Flag6FrontPosX,Flag6FrontPosY,Flag6FrontPosZ);
       new G4PVPlacement(Q2Rot,Flag6FrontPos,logicalBeamFlag6,"BeamLineBeamFlag6",fMotherVolume,false,0,true);    
       logicalBeamFlag6->SetSensitiveDetector(beamFlagSD);
     }
@@ -1869,15 +1966,18 @@ void BeamLineStructure::PositionAllQuads()
     G4LogicalVolume* logicalBeamFlag7 = new G4LogicalVolume(solidBeamFlag7,G4Material::GetMaterial("Vacuum"),"logicalBeamFlag7",0,0,0);
     logicalBeamFlag7->SetVisAttributes(FlagVisAttr);
     
-    printf("Registering Flag7 %d at %f %f %f\n",geo->BeamFlagIsEnabled(),Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
-    new G4PVPlacement(Q1Rot,Flag7FrontPos,logicalBeamFlag7,"BeamLineBeamFlag7",fMotherVolume,false,0,true);    
-    logicalBeamFlag7->SetSensitiveDetector(beamFlagSD);
+    if (geo->BeamFlagIsEnabled() ) {
+      printf("Registering Flag7 %d at %f %f %f\n",geo->BeamFlagIsEnabled(),Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
+      printf("Placing Flag7 at Position %f %f %f \n",Flag7FrontPosX,Flag7FrontPosY,Flag7FrontPosZ);
+      new G4PVPlacement(Q1Rot,Flag7FrontPos,logicalBeamFlag7,"BeamLineBeamFlag7",fMotherVolume,false,0,true);    
+      logicalBeamFlag7->SetSensitiveDetector(beamFlagSD);
+    }
   }
 }
 
 void BeamLineStructure::CreateAllSLTB()
 {
-  printf("Setting up collimators SLTB2 SLTB3 SLTB4 \n");
+  printf("Setting up collimators SLTB3 SLTB4 SLTB5 \n");
 
   ////////////////////////////////////////////////////////////////////////
   // Collimators after mylar sltb4(LR) sltb3(UPDW)  Mylar 
@@ -1886,14 +1986,14 @@ void BeamLineStructure::CreateAllSLTB()
   //TB4R   26.16 TB4L   22.30          TB3 Up 26.06  TB3 Down 23.32	
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024 TB3D_M   26.39    	
   //TB4Ape  2.28    +    1.71 = 4mm    TB4Ape  0     +         3.07 = 3.07 mm
+ 
+  // From Luca tune 22 run stable.              // From Clara Log 26 run stable. MR 09/26
+  //TB2R   25.6 TB2L   22.30                    //TB5R   15.0 TB5L   15.3           
+  //TB2R_M 26.6 TB2L_M 28.29                    //TB5R_M 29.5 TB5L_M 38.7 	       
+  //TB2Ape  1.71 = 1.71mm                       //TB5Ape  38,2 = 38.2mm  
 
-  // From Luca tune 22 run stable.
-  //TB2R   25.6 TB2L   22.30           
-  //TB2R_M 26.6 TB2L_M 28.29 	       
-  //TB2Ape  1.71 = 1.71mm    
-
-  std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
-  std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
+  //std::cout<<"Set collimators aperture SLTB3 "<<geo->GetSLTB3Aperture()<<std::endl;
+  //  std::cout<<"Set collimators aperture SLTB4 "<<geo->GetSLTB4Aperture()<<std::endl;
   G4double SLTBThickness = 35.0*mm;
   G4double magnetAngle = geo->GetDHSTB002AngularSpan();
   G4double WallPipeRIn  = geo->Get2020PipeInnerRadius();
@@ -1961,8 +2061,13 @@ void BeamLineStructure::CreateAllSLTB()
     
   // positioning collimators
   new G4PVPlacement(MylarWinFlgRot,SLTB3Pos,logicalSLTB3,"BeamSLTB3",fMotherVolume,false,0,true);
+  printf("Placing SLTB3 collimator with aperture %f \n",SLTB3Aperture);
+  printf("Placing SLTB3 collimator at %f %f %f \n",SLTB3PosX,SLTB3PosY,SLTB3PosZ);
+  
   new G4PVPlacement(MylarWinFlgRot,SLTB4Pos,logicalSLTB4,"BeamSLTB4",fMotherVolume,false,0,true);
-
+  printf("Placing SLTB4 collimator at %f %f %f \n",SLTB4PosX,SLTB4PosY,SLTB4PosZ);
+  printf("Placing SLTB4 collimator with aperture %f \n",SLTB4Aperture);
+  
   //*************************************************************
   // SLTB5 just before the DHSTB002 magnet only LR
   //***************************************************************
@@ -1984,7 +2089,8 @@ void BeamLineStructure::CreateAllSLTB()
   //  new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalCollSupport,"CollSuport",fMotherVolume,false,0,true);
   // positioning collimators
   new G4PVPlacement(MylarWinFlgRot,SLTB5Pos,logicalSLTB5,"BeamSLTB5",fMotherVolume,false,0,true);
-
+  printf("Placing SLTB5 collimator at %f %f %f \n",SLTB5PosX,SLTB5PosY,SLTB5PosZ);
+  printf("Placing SLTB5 collimator with aperture %f \n",SLTB5Aperture); 
 }
 
 //
@@ -2063,7 +2169,9 @@ void BeamLineStructure::CreatePulsedMagnet()
   
   G4double PulsedMagnetIronPosX =  DHSTB002FlangeExitPos.x()*mm-PulsedPipeSizeZ/2*mm*sin(magnetAngle)-DistanceFromDHSTB002Exit*mm*sin(magnetAngle)-(PulsedIronHoleSizeX/2+PulsedIronGapSizeX/2)*mm*sin(magnetAngle);
   G4double PulsedMagnetIronPosZ =  DHSTB002FlangeExitPos.z()*mm+PulsedPipeSizeZ/2*mm*cos(magnetAngle)+DistanceFromDHSTB002Exit*mm*cos(magnetAngle)-(PulsedIronHoleSizeX/2+PulsedIronGapSizeX/2)*mm*cos(magnetAngle);
-  G4ThreeVector PulsedMagnetIronPos =G4ThreeVector(PulsedMagnetIronPosX,0,PulsedMagnetIronPosZ);
+  G4double PulsedMagnetIronPosY = 0;
+
+  G4ThreeVector PulsedMagnetIronPos =G4ThreeVector(PulsedMagnetIronPosX,PulsedMagnetIronPosY,PulsedMagnetIronPosZ);
   new G4PVPlacement(WallPipeRot,PulsedMagnetIronPos,logicalPulsedIron,"PulsedIron",fMotherVolume,false,0,true); 
-  
+  printf("Placing Pulsed Magnet Iron at %f %f %f \n",PulsedMagnetIronPosX,PulsedMagnetIronPosY,PulsedMagnetIronPosZ);
 }

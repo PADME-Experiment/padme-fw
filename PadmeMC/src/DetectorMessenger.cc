@@ -23,6 +23,7 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fDetectorSetupCmd->SetGuidance("20: 2020");
   fDetectorSetupCmd->SetGuidance("30: 2021");
   fDetectorSetupCmd->SetGuidance("40: 2022 - Add ETag, move ECal, remove SAC, switch off Vetoes, TimePix behind ECal");
+  fDetectorSetupCmd->SetGuidance("50: 2025 - Add MM, add TMM, move ECal, remove SAC, switch off Vetoes, add LG");  //MR 06/2026
   fDetectorSetupCmd->SetParameterName("DS",false);
   fDetectorSetupCmd->SetRange("DS >= 0");
   fDetectorSetupCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -60,8 +61,9 @@ DetectorMessenger::DetectorMessenger(DetectorConstruction* myDet)
   fCrossMagVolCmd->SetGuidance("Possible choices are:");
   fCrossMagVolCmd->SetGuidance("internal     magnetic field only inside the beam pipe (old style).");
   fCrossMagVolCmd->SetGuidance("external     the full cross region is included in the magnetic field.");
+  fCrossMagVolCmd->SetGuidance("none         no cross region magnetic field.");
   fCrossMagVolCmd->SetParameterName("CMV",false);
-  fCrossMagVolCmd->SetCandidates("internal external");
+  fCrossMagVolCmd->SetCandidates("internal external none");
   fCrossMagVolCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fMagVolVisibleCmd = new G4UIcmdWithoutParameter("/Detector/SetMagneticVolumeVisible",this);

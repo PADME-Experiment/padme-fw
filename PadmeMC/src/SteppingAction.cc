@@ -364,11 +364,20 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 //  //*************************************
   if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
     if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB5"){
-      //      G4cout<<"Killin particle in SLTB5 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+      //      G4cout<<"Killing particle in SLTB5 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
       track->SetTrackStatus(fStopAndKill);
     }
   }  
   
+//*************************************
+// Checking flag 10
+//*************************************
+  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
+    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineBeamFlag10"){
+ //     G4cout<<"Killing particle in Flag10 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
+ //      track->SetTrackStatus(fStopAndKill);
+    }
+  }
 }
 
 G4int SteppingAction::ClassifyTrack(G4Track* track){

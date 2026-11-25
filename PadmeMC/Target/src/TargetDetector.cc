@@ -57,8 +57,8 @@ void TargetDetector::CreateGeometry()
   printf("Diamond target dimensions are %f %f %f\n",targetSizeX, targetSizeY, targetSizeZ);
 
   // box dimentions large enough to contain diamond + support
-  G4double assemblySizeX = 20.0*cm;
-  G4double assemblySizeY = 20.0*cm;
+  G4double assemblySizeX = 15.0*cm;
+  G4double assemblySizeY = 8.5*cm;
   G4double assemblySizeZ = 3.0*cm;
 
   G4Box* solidAssembly =new G4Box("TargetAssembly",0.5*assemblySizeX,0.5*assemblySizeY,0.5*assemblySizeZ);
@@ -112,6 +112,13 @@ void TargetDetector::CreateGeometry()
   G4String targetSDName = geo->GetTargetSensitiveDetectorName();
   printf("Registering Target Sensitive Detector %s\n",targetSDName.data());
   TargetSD* targetSD = new TargetSD(targetSDName);
-  fTargetVolume->SetSensitiveDetector(targetSD);
+  fTargetVolume->SetSensitiveDetector(targetSD);   
   G4SDManager::GetSDMpointer()->AddNewDetector(targetSD);
+  
+  //MR 01/10/2026 added to score the energy in the target support to check if the beam is hitting the target or not
+  // printf("Registering Target Support Sensitive Detector %s\n",targetSupportSDName.data());
+  // TargetSD* targetSupportSD = new TargetSD(targetSupportSDName);   
+  // logicTargetSupport->SetSensitiveDetector(targetSupportSD); 
+  // G4SDManager::GetSDMpointer()->AddNewDetector(targetSupportSD);
+
 }

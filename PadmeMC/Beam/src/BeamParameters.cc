@@ -212,8 +212,39 @@ void BeamParameters::SetDetectorSetup(G4int setup)
       fBeamDirection = G4ThreeVector(0.,0.,1.);
       fBeamEmittanceX = 1.*mrad;
       fBeamEmittanceY = 1.*mrad;
-    }
+    } 
+  }else if (fDetectorSetup == 50) {
 
+    // Year 2022
+    printf("BeamParameters::SetDetectorSetup - Setting beam to default parameters for year 2022\n");
+
+    fBeamMomentum = 282.8*MeV;
+    fBunchTimeLength = 250.*ns;
+    if (fBeamLineEnabled) {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is ENABLED\n");
+      fNPositronsPerBunch = 30000;
+      fBeamCenterPosX =  7233.*mm; //
+      fBeamCenterPosY =     0.*mm; // Starting in front of Mylar window
+      fBeamCenterPosZ = -9581.*mm; //
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.7*MeV;
+      fBeamDirection = G4ThreeVector(-1.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    } else {
+      printf("BeamParameters::SetDetectorSetup - BeamLine is DISABLED\n");
+      fNPositronsPerBunch = 2500;
+      fBeamCenterPosX =        0.*mm; //
+      fBeamCenterPosY =        0.*mm; // Starting 1um before actual Target front face 
+      fBeamCenterPosZ = -1028.001*mm; //
+      fBeamCenterPosXSpread = 1.*mm;
+      fBeamCenterPosYSpread = 1.*mm;
+      fBeamMomentumSpread = 0.004*fBeamMomentum; // 0.4% of beam momentum
+      fBeamDirection = G4ThreeVector(0.,0.,1.);
+      fBeamEmittanceX = 1.*mrad;
+      fBeamEmittanceY = 1.*mrad;
+    }
   } else {
     printf("BeamParameters::SetDetectorSetup - ERROR - Setup %d is not available.\n",fDetectorSetup);
   }

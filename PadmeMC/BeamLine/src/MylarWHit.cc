@@ -10,7 +10,7 @@ G4Allocator<MylarWHit> MylarWHitAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-MylarWHit::MylarWHit() {}
+MylarWHit::MylarWHit() : fTrackId(-1) {}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -21,6 +21,7 @@ MylarWHit::~MylarWHit() {}
 MylarWHit::MylarWHit(const MylarWHit& right)
   : G4VHit()
 {
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;
@@ -31,6 +32,7 @@ MylarWHit::MylarWHit(const MylarWHit& right)
 
 const MylarWHit& MylarWHit::operator=(const MylarWHit& right)
 {
+  fTrackId = right.fTrackId;
   fTime = right.fTime;
   fEnergy = right.fEnergy;
   fPosition = right.fPosition;

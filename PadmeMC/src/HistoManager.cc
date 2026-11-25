@@ -122,14 +122,13 @@ void HistoManager::book()
   double TPixYmax=TPixYmin+14.1*2;
   double TPiYBins = 14.1*2/0.055;
 
-  double MinE= 150.;
-  double MaxE= 450.;
-  int BinE= (int)(MaxE-MinE)*2;
+  double MinE= 200.;
+  double MaxE= 400.;
+  int BinE= (int)(MaxE-MinE)*4;
 
   // h40 Lead Glass study
   histo[40] = new TH1D("h40","LG energy",1000,0.,1.E6);
   if (!histo[40]) G4cout << "\n can't create histo 40" << G4endl; 
-
   histo[42] = new TH1D("h42","LeadGlass X coord",240,-60.,60.);
   if (!histo[42]) G4cout << "\n can't create histo 42" << G4endl; 
   histo[43] = new TH1D("h43","LeadGlass Y coord",240,-60.,60.);
@@ -163,13 +162,13 @@ void HistoManager::book()
   double TarYmax =  15.;
   double TarYBins = 300.;
 
-  double BigFlagsXmin = -20.;
-  double BigFlagsXmax =  20.;
-  double BigFlagsXBins = 400.;
+  double BigFlagsXmin = -25.;
+  double BigFlagsXmax =  25.;
+  double BigFlagsXBins = 500.;
 
-  double BigFlagsYmin = -20.;
-  double BigFlagsYmax =  20.;
-  double BigFlagsYBins = 400.;
+  double BigFlagsYmin = -25.;
+  double BigFlagsYmax =  25.;
+  double BigFlagsYBins = 500.;
 
   // h60 series Target study
   histo[60] = new TH1D("h60","Target energy",500,0.,0.1);
@@ -181,7 +180,7 @@ void HistoManager::book()
   histo[63] = new TH1D("h63","Target Y coord ",TarYBins,TarYmin,TarYmax);
   if (!histo[63]) G4cout << "\n can't create histo 63" << G4endl; 
 
-  histo[64] = new TH1D("h64","Beam energy ",BinE,MinE,MaxE);
+  histo[64] = new TH1D("h64","Beam energy ",BinE*2,MinE,MaxE);
   if (!histo[64]) G4cout << "\n can't create histo 64" << G4endl;   
   histo2[65] = new TH2D("h65","Tar beam spot",TarXBins,TarXmin,TarXmax,TarYBins,TarYmin,TarYmax);
   if (!histo2[65]) G4cout << "\n can't create histo 65" << G4endl;
@@ -366,7 +365,7 @@ void HistoManager::book()
   histo[183] = new TH1D("h183","Flag8 Y coord ",BigFlagsYBins,BigFlagsYmin,BigFlagsYmax);
   if (!histo[183]) G4cout << "\n can't create histo 183" << G4endl; 
   //  histo[184] = new TH1D("h184","Flag8 Beam energy ",BinE,MinE,MaxE);
-  histo[184] = new TH1D("h184","Flag8 Beam energy ",400.,0.,400.);
+  histo[184] = new TH1D("h184","Flag8 Beam energy ",BinE,MinE,MaxE);
   if (!histo[184]) G4cout << "\n can't create histo 184" << G4endl;   
   histo2[185] = new TH2D("h185","Flag8 beam spot",BigFlagsXBins,BigFlagsXmin,BigFlagsXmax,BigFlagsYBins,BigFlagsYmin,BigFlagsYmax);
   if (!histo2[185]) G4cout << "\n can't create histo 185" << G4endl;
@@ -374,6 +373,29 @@ void HistoManager::book()
   if (!histo2[186]) G4cout << "\n can't create histo 186" << G4endl;
   histo2[187] = new TH2D("h187","Flag8 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
   if (!histo2[187]) G4cout << "\n can't create histo 187" << G4endl;
+
+
+//*****************************************
+  // Beam Flag9 just at BTF target
+  //*************************************
+
+  histo[190] = new TH1D("h190","Flag9 energy",500,0.,0.1);
+  if (!histo[190]) G4cout << "\n can't create histo 190" << G4endl; 
+  histo[191] = new TH1D("h191","Flag9 Angle ",500,0.,0.050);
+  if (!histo[191]) G4cout << "\n can't create histo 191" << G4endl;
+  histo[192] = new TH1D("h192","Flag9 X coord ",BigFlagsXBins,BigFlagsXmin,BigFlagsXmax);
+  if (!histo[192]) G4cout << "\n can't create histo 192" << G4endl; 
+  histo[193] = new TH1D("h193","Flag9 Y coord ",BigFlagsYBins,BigFlagsYmin,BigFlagsYmax);
+  if (!histo[193]) G4cout << "\n can't create histo 193" << G4endl; 
+  histo[194] = new TH1D("h194","Flag9 Beam energy ",BinE,MinE,MaxE);
+  if (!histo[194]) G4cout << "\n can't create histo 194" << G4endl;   
+  histo2[195] = new TH2D("h195","Flag9  beam spot",BigFlagsXBins,BigFlagsXmin,BigFlagsXmax,BigFlagsYBins,BigFlagsYmin,BigFlagsYmax);
+  if (!histo2[195]) G4cout << "\n can't create histo 195" << G4endl;
+  histo2[196] = new TH2D("h196","Flag9 XvsE",TarXBins,TarXmin,TarXmax,BinE,MinE,MaxE);
+  if (!histo2[196]) G4cout << "\n can't create histo 196" << G4endl;
+  histo2[197] = new TH2D("h197","Flag9 ThetavsX",TarXBins,TarXmin,TarXmax,400,-0.02,0.020);
+  if (!histo2[197]) G4cout << "\n can't create histo 197" << G4endl;
+
 
   // BeW study
   histo[70] = new TH1D("h70","BeW energy",500,0.,0.1);

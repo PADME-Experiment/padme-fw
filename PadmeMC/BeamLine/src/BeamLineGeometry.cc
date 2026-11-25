@@ -20,7 +20,6 @@ BeamLineGeometry* BeamLineGeometry::GetInstance()
 
 BeamLineGeometry::BeamLineGeometry()
 {
-
   fDetectorSetup = 10; // Default to 2019 setup
 
   // By default the Be window is positioned
@@ -40,7 +39,7 @@ BeamLineGeometry::BeamLineGeometry()
   fDHSTB001MagneticFieldY = -1.055*tesla;
 
   //  fQuadMagneticFieldGrad  =  10*tesla/m;
-  fQuadrupolesEnable = false;
+  fQuadrupolesEnable = true;
 
   fBeamLineSetup=0;  //M. Raggi 06/2020
   //printf("***************************** tesla %f m %f \n ",tesla,m);
@@ -170,7 +169,8 @@ BeamLineGeometry::BeamLineGeometry()
   fMylarWindowFlangeRadius = 0.5*113.5*mm;
   fMylarWindowFlangeThick = 17.5*mm;//36.*mm; // was 17.5*mm (?)
 
-  fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
+//  fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
+  fQuadMagSizeZ = 290.*mm; // checked on drawing M. Raggi 25/11/2026
 
   ///********M.R. Default values for RUN II ***********
   //         PADME-- DHSTB002 -- Q4 --- Q3 --|  |-- Q2----Q1-----MyW
@@ -191,17 +191,6 @@ BeamLineGeometry::BeamLineGeometry()
   //TB4R_M 28.44 TB4L_M 24.01 	       TB3U_M 26.024	 TB3D_M   26.39    	
   //TB4Ape  2.28         1.71 = 4mm    TB4Ape  0                   3.07 = 3.07 mm
 
-  fSLTB4Aperture= 4.0*mm;
-  fSLTB3Aperture= 3.1*mm;
-  fSLTB2Aperture= 1.7*mm;
-  // Only in Run III starting from 2022
-  fSLTB5Aperture= 2.*mm;
-
-//  fQ1MagneticFieldGrad =  3.010*tesla/m; // M.R. tuning better Y 1mm
-//  fQ2MagneticFieldGrad =  2.710*tesla/m;
-//  fQ1MagneticFieldGrad =  3.210*tesla/m; // M.R. tuning better Y 1mm
-//  fQ2MagneticFieldGrad =  2.910*tesla/m;
-  
   //Front face of the box to front face of the flange M. Raggi From L. Foggetta Drawings 11/04/2019
   fQ4DistFromDHSTB002 = 380.*mm; // Checked on drawing M. Raggi and E. Leonardi 02/03/2021
   fQ1Q2Dist = 1100.*mm; //center to center quads in LINAC Checked on drawing M. Raggi and E. Leonardi 02/03/2021
@@ -250,6 +239,7 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
   // Data updated on Nov 30, 2023, by Emanuele Leonardi and Mauro Raggi
 
   fDetectorSetup = setup;
+  printf("******Beam Line Geometry ******** setting Setup *********** %d \n",fDetectorSetup);
 
   if (fDetectorSetup == 10) {
 
@@ -300,22 +290,37 @@ void BeamLineGeometry::SetDetectorSetup(G4int setup)
     fQ4MagneticFieldGrad =  3.925*tesla/m;
 
   } else if (fDetectorSetup == 40) {
-
     // Year 2022
     // Assume default energy of 282.8 MeV (CM = 17 MeV)
     // Change it with datacards if using a different energy
     fDHSTB002MagneticFieldY = -0.5308*tesla;
     fDHSTB001MagneticFieldY = -0.5308*tesla;
 
-    fSLTB2Aperture= 1.74*mm;
-    fSLTB3Aperture= 4.2*mm;
-    fSLTB4Aperture= 1.9*mm;
-    fSLTB5Aperture= 5.0*mm;
+    fSLTB2Aperture= 1.74*mm;  //Horizontal
+    fSLTB3Aperture= 4.2*mm;   //Vertical
+    fSLTB4Aperture= 1.9*mm;   //Horizontal
+    fSLTB5Aperture= 10.0*mm;
 
     fQ1MagneticFieldGrad =  1.771*tesla/m;
     fQ2MagneticFieldGrad =  1.490*tesla/m;
     fQ3MagneticFieldGrad =  1.881*tesla/m;
     fQ4MagneticFieldGrad =  2.112*tesla/m;
+  } else if (fDetectorSetup == 50) {
+    // Year 2025
+    // Assume default energy of 282.8 MeV (CM = 17 MeV)
+    // Change it with datacards if using a different energy check currents for 2025
+    fDHSTB002MagneticFieldY = -0.5308*tesla;
+    fDHSTB001MagneticFieldY = -0.5308*tesla;
+
+    fSLTB2Aperture= 2.0*mm;   //MR 16/06/2026
+    fSLTB3Aperture= 1.35*mm;  //MR 16/06/2026
+    fSLTB4Aperture= 1.0*mm;   //MR 16/06/2026
+    fSLTB5Aperture= 30.0*mm;  //MR 2/09/2026 Clara logbook MR
+
+    fQ1MagneticFieldGrad =  2.771*tesla/m;  //MR 16/06/2026  conversion formula  B=0.08372*I+0.02376
+    fQ2MagneticFieldGrad =  1.690*tesla/m;  //MR 16/06/2026
+    fQ3MagneticFieldGrad =  2.372*tesla/m;  //MR 16/06/2026
+    fQ4MagneticFieldGrad =  2.828*tesla/m;  //MR 16/06/2026
 
   }
 

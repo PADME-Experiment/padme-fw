@@ -38,6 +38,10 @@ G4bool TargetSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep==0.) return false;
 
+  // MR 26/11/2026 only steps entering from a boundary are stored: return before allocating
+  // the hit, otherwise every other step with edep>0 leaked a TargetHit
+  if(aStep->GetPreStepPoint()->GetStepStatus()!=fGeomBoundary) return true;
+
   TargetHit* newHit = new TargetHit();
 
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();

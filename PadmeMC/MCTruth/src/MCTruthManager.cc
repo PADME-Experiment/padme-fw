@@ -17,9 +17,7 @@ MCTruthManager::MCTruthManager()
 
 MCTruthManager::~MCTruthManager()
 {
-  for(std::vector<MCTruthVertex*>::iterator it = fVertex.begin(); it != fVertex.end(); ++it) {
-    if (*it) delete *it;
-  }
+  Clear();
 }
 
 MCTruthManager* MCTruthManager::GetInstance()
@@ -31,6 +29,8 @@ MCTruthManager* MCTruthManager::GetInstance()
 void MCTruthManager::Clear()
 {
   fEventWeight = 1.;
+  // MR 26/11/2026 delete the vertices of the previous event (called once per event): was leaking
+  for (MCTruthVertex* v : fVertex) delete v;
   fVertex.clear();
   fG4TrackSecondaryMap.clear();  
   fG4TrackSecondaryDaughtersMap.clear();  

@@ -34,6 +34,9 @@ void MCTruthVertex::Clear()
   fProcess = "";
   fPosition = G4ThreeVector(0.,0.,0.);
   fTime = 0.;
+  // MR 26/11/2026 particles are owned by the vertex: delete them, was leaking
+  for (MCTruthParticle* p : fParticleIn)  delete p;
+  for (MCTruthParticle* p : fParticleOut) delete p;
   fParticleIn.clear();
   fParticleOut.clear();
 }

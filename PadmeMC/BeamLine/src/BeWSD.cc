@@ -38,8 +38,6 @@ G4bool BeWSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep==0.) return false;
 
-  BeWHit* newHit = new BeWHit();
-
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
@@ -51,6 +49,7 @@ G4bool BeWSD::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   // this way you only see primary particle there is a component coming form background that is killed here.
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
     //if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary){
+    BeWHit* newHit = new BeWHit(); // MR 26/11/2026 allocate only if stored: was leaking every skipped step
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());
     newHit->SetTrackEnergy(aStep->GetPreStepPoint()->GetTotalEnergy()); //M. Raggi 2/04/2019

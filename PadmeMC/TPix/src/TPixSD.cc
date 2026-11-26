@@ -39,8 +39,6 @@ G4bool TPixSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
 
   G4TouchableHandle touchHPre = aStep->GetPreStepPoint()->GetTouchableHandle();
 
-  TPixHit* newHit = new TPixHit();
-
   G4ThreeVector worldPosPre = aStep->GetPreStepPoint()->GetPosition();
   G4ThreeVector localPosPre = touchHPre->GetHistory()->GetTopTransform().TransformPoint(worldPosPre);
   //G4cout << "PreStepPoint in " << touchHPre->GetVolume()->GetName()
@@ -60,6 +58,7 @@ G4bool TPixSD::ProcessHits(G4Step* aStep,G4TouchableHistory*)
   // Saving only hits exiting the TPix not correct if you want to study clustering
   //  if(aStep->GetPostStepPoint()->GetStepStatus()==fGeomBoundary){
   if(aStep->GetPreStepPoint()->GetStepStatus()==fGeomBoundary && aStep->GetTrack()->GetParentID()==0){
+    TPixHit* newHit = new TPixHit(); // MR 26/11/2026 allocate only if stored: was leaking every skipped step
     newHit->SetChannelId(touchHPre->GetCopyNumber());
     newHit->SetEnergy(edep);
     newHit->SetTime(aStep->GetPreStepPoint()->GetGlobalTime());

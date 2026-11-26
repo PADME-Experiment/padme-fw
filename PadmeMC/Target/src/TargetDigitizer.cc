@@ -88,7 +88,8 @@ void TargetDigitizer::Digitize()
   char hnameVCCD [30];
   
   // array to handle waveforms
-  G4double** dTimeTraceCCD = new G4double*[nChannels];
+  // MR 26/11/2026 std::vector instead of new[]: was never (or wrongly) freed
+  std::vector<std::vector<G4double> > dTimeTraceCCD(nChannels);
   
   // constants needed for building waveforms and integrate signal
 
@@ -123,9 +124,7 @@ void TargetDigitizer::Digitize()
 	//dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
 	//    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
 	
-	dTimeTraceCCD[i]= new G4double[nhires];
-	for (G4int j=0; j< nhires; j++)
-	  dTimeTraceCCD[i][j] = 0.;	
+	dTimeTraceCCD[i].assign(nhires,0.);
       }
     }
   
@@ -333,7 +332,7 @@ void TargetDigitizer::Digitize()
       
       if (dCharge[i]<fThreshold){	
 	// G4cout<<"DIGIDELETED - channel: "<<dChannel[i]<<" time: "<<dTime[i]<<" energy: "<<dEnergy[i]<<" multi: "<<dNumber[i]<<" charge: "<<dCharge[i]<<" noisecharge: "<<dNCharge[i]<<G4endl;
-	////	delete digi;
+	delete digi; // MR 26/11/2026 restored: below-threshold digis are not stored, was leaking ~30 digis/event
 
       }
       else{     
@@ -382,8 +381,14 @@ void TargetDigitizer::Digitize()
       dTTVCCD.clear();
 
     }// fill digis in targetdigicollection
-    
-    delete dTimeTraceCCD;	    
+
+  } else if (!fFastDigi) {
+    // MR 26/11/2026 no hits collection: the waveform histograms were booked above, free them
+    for (G4int i=0;i<nChannels;i++) {
+      delete dTraceHCCD[i];
+      delete dTraceNHCCD[i];
+      delete dTraceVHCCD[i];
+    }
   }
   //// root file for debuggind traces
   // fTargetFile->Close();

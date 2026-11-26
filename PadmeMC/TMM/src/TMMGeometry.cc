@@ -96,10 +96,46 @@ TMMGeometry::TMMGeometry()
   fTMMPadDistance = 1.1*mm;
 
   
-  fTMMFrontFacePosZ = 3384.53*mm;// allignaments
-  fTMMDisplacementX=0*mm; 
-  fTMMDisplacementY=0*mm; 
-  fTMMRotationAngle=0*deg; // z-x 0.1 deg (testa in avanti)
+  fTMMFrontFacePosZ = 3384.683*mm;// allignaments (2.781*mm, -1.232*mm, 3382.683*mm)
+  fTMMDisplacementX=2.781*mm; 
+  fTMMDisplacementY=-1.232*mm; 
+  
+  //**************** RUN IV ******************************
+
+  //   Survey points (X, Y, Z) [mm]:
+  //   1: [-129.95  129.45 3384.59]
+  //   2: [-128.15   84.84 3384.53]
+  //   3: [ 123.04  -63.21 3381.  ]
+
+  // Face normal (world): [ 0.013582 -0.000797  0.999907]
+  //   tilt vs Z axis        : 0.7796 deg
+  //   slope XZ (about Y)    : +0.7782 deg
+  //   slope YZ (about X)    : +0.0457 deg
+
+  // Reference points  CAD(local)  ->  measured(world, lifted on plane):
+  //   R1: [101.074 129.949]  ->  [ 101.69      130.26     3381.444183]
+  //   R2: [127.104 -98.791]  ->  [ 131.48      -97.78     3380.857807]
+  //   baseline CAD 230.216 mm, measured 229.978 mm
+  //   pure 2D XY angle (your script): +0.9505 deg
+  //   in-plane roll gamma           : +0.9518 deg
+  //   in-plane residuals [mm]: [[ 0.0154 -0.118 ]
+  //  [-0.0154  0.118 ]]  RMS 0.1190
+  //   NOTE: position Z is the surveyed plane surface at the local origin; add the offset surface -> volume centre if needed.
+
+  // Method: plane normal + CAD reference points (in-plane 2D fit)
+  // Rotation matrix R (active, local -> world):
+  // [[ 0.99977  -0.016599  0.013582]
+  //  [ 0.016611  0.999862 -0.000797]
+  //  [-0.013567  0.001022  0.999907]]
+  // Geant4 angles (rotateX, rotateY, rotateZ in this order):
+  //   about X: +0.0586 deg = +1.0224 mrad
+  //   about Y: +0.7774 deg = +13.5675 mrad
+  //   about Z: +0.9519 deg = +16.6135 mrad
+
+  fTMMRotationAngleX=0.0586*deg; 
+  fTMMRotationAngleY=0.7774*deg; 
+  fTMMRotationAngleZ=0.9519*deg; 
+
   fTMMDigitizerName = "TMMDigitizer";
   fTMMSensitiveDetectorName = "TMMSD";
 }

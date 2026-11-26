@@ -37,6 +37,13 @@
 # Output root file with analysis histograms/ntuple
 #/output/HistoFileName UBTF.root
 
+# Beam flags text output (one line per particle crossing the Mylar window / beam flags)
+# Requires the BeamLine structure with Mylar window and beam flags enabled
+# (see /Detector/BeamLine/EnableMylarWindow and /Detector/BeamLine/BeamFlag below)
+# The file is opened at the first event: set the name before /run/beamOn
+#/output/EnableBeamFlagsOutput true
+#/output/BeamFlagsFileName beam_output.txt
+
 # Disable/enable SAC/ECal analysis (WARNING! For SAC see command documentation)
 #/analysis/DisableSACAnalysis true
 #/analysis/DisableECalAnalysis true
@@ -115,6 +122,8 @@
 
 #/Detector/BeamLine/EnableBeWindow true
 #/Detector/BeamLine/EnableMylarWindow true
+# Place the beam monitor flags along the beam line (needed for the beam flags text output)
+#/Detector/BeamLine/BeamFlag true
 #/Detector/BeamLine/DHSTB002_FieldY -1.055 tesla
 #/Detector/BeamLine/DHSTB001_FieldY -1.055 tesla
 #/Detector/BeamLine/EnableQuadrupoles false
@@ -229,6 +238,16 @@
 # So all beam customizations must be done after the run initialization is done
 
 # Primary positrons setup (default PADMEMC configuration)
+# New beamline and pot input handlers
+#/beam/intensity_profile_on true
+#/beam/intensity_profile_file /data9Vd1/padme/dimeco/RunIV/out_data_rereco/fullrereco_data/fit_results_period_fixedrmax.root
+#/beam/intensity_profile_period 12
+#/beam/input_file_on true
+#/beam/input_file /data9Vd1/padme/dimeco/beam_output_E271.3MeV.root
+#/beam/input_file_tree BeamFlag
+#/beam/input_file_flag 3
+#/beam/input_file_first_entry 0
+
 #/beam/n_e+_per_bunch 25000
 #/beam/n_e+_poisson_on true
 #/beam/bunch_structure_on true

@@ -37,6 +37,9 @@ private:
 
   G4UIcmdWithABool* fDisableSACAnalysisCmd;
   G4UIcmdWithABool* fDisableECalAnalysisCmd;
+  
+  G4UIcmdWithABool*   fEnableBeamFlagsOutputCmd;
+  G4UIcmdWithAString* fBeamFlagsFileNameCmd;
 
   //M. Raggi 06/23/2018
   G4UIcmdWithABool* fEnableSaveSACCmd; 

@@ -123,7 +123,9 @@ public:
   G4double GetTMMFrontFacePosZ() { return fTMMFrontFacePosZ; }
   G4double GetTMMDisplacementX() { return fTMMDisplacementX; }
   G4double GetTMMDisplacementY() { return fTMMDisplacementY; }
-  G4double GetTMMRotationAngle() { return fTMMRotationAngle; }
+  G4double GetTMMRotationAngleX() { return fTMMRotationAngleX; }
+  G4double GetTMMRotationAngleY() { return fTMMRotationAngleY; }
+  G4double GetTMMRotationAngleZ() { return fTMMRotationAngleZ; }
   
   // Get name of TMM digitizer
   G4String GetTMMDigitizerName() { return fTMMDigitizerName; }
@@ -209,7 +211,9 @@ private:
   G4double fTMMCathodeMeshSizeZ;
 
   G4double fTMMFrontFacePosZ; // Position along Z axis of TMM front face
-  G4double fTMMRotationAngle; // Rotation angle of the whole TMM system (surveys)
+  G4double fTMMRotationAngleX; // Rotation angle of the whole TMM system (surveys)
+  G4double fTMMRotationAngleY; // Rotation angle of the whole TMM system (surveys)
+  G4double fTMMRotationAngleZ; // Rotation angle of the whole TMM system (surveys)
   G4double fTMMDisplacementX; // Displacement wrt 0 in X (surveys)
   G4double fTMMDisplacementY; // Displacement wrt 0 in Y (surveys)
   G4String fTMMSensitiveDetectorName;

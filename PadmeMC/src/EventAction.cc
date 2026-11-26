@@ -59,7 +59,10 @@ extern double Npionc;
 EventAction::EventAction(RunAction* run)
 :fRunAct(run)
 {
-  BeamOut.open("beam_output.txt",std::ios::out);
+  // Beam flags text output: disabled by default, file opened at first write
+  // (see WriteBeamOutLines) so that datacard settings are already applied
+  fEnableBeamOut = false;
+  fBeamOutFileName = "beam_output.txt";
   fFlag8MylarDEThr = 1.5*CLHEP::MeV; // MR 20/11/2026 write flag 8 + flag 0 only if |E8-E0| above this
   fFirstEvent = true;
 
@@ -94,10 +97,7 @@ EventAction::EventAction(RunAction* run)
  
 EventAction::~EventAction()
 {
-  if (!BeamOut.is_open()) {
-        // Gestione dell'errore se il file non si apre
-        std::cout << "Errore nell'apertura del file beam_output.txt" << std::endl;
-  }
+  if (BeamOut.is_open()) BeamOut.close();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -680,7 +680,7 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
 
       // Mylar window info as flag 0, same format as AddBeamFlagHits.
       // MR 20/11/2026 buffered per track, written in WriteBeamOutLines() only if matched with flag 8
-      if (fMylarLines.find(hit->GetTrackId()) == fMylarLines.end()) {
+      if (fEnableBeamOut && fMylarLines.find(hit->GetTrackId()) == fMylarLines.end()) {
         G4ThreeVector mom(PX*hTrE,PY*hTrE,PZ*hTrE);
         fMylarLines[hit->GetTrackId()] = {hTrE, hTime, FormatBeamOutLine(0,mom,hX,hY,hit->GetLocalPosZ())};
       }
@@ -800,7 +800,9 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       // MR 20/11/2026 flag 8 is buffered per track and written with the Mylar (flag 0) line
       // only if |E8-E0| > fFlag8MylarDEThr (see WriteBeamOutLines)
       // MR 23/11/2026 other flags are buffered per track too, written after the 0/8 pair
-      if (NFlag == 8) {
+      if (!fEnableBeamOut) {
+        // beam flags text output disabled: nothing to buffer
+      } else if (NFlag == 8) {
         if (fFlag8Lines.find(hit->GetTrackId()) == fFlag8Lines.end())
           fFlag8Lines[hit->GetTrackId()] = {hTrE, hTime, FormatBeamOutLine(NFlag,mom,x,y,z)};
       } else {
@@ -1237,7 +1239,17 @@ std::string EventAction::FormatBeamOutLine(G4int flag, const G4ThreeVector& mom,
 // other flags; inside each block lines are sorted by crossing time, i.e. in beam order
 void EventAction::WriteBeamOutLines()
 {
-  if (!BeamOut.is_open()) return;
+  if (!fEnableBeamOut) return;
+  if (!BeamOut.is_open()) {
+    BeamOut.open(fBeamOutFileName.data(),std::ios::out);
+    if (!BeamOut.is_open()) {
+      G4cout << "EventAction - ERROR - Unable to open beam flags output file " << fBeamOutFileName
+             << " - beam flags output disabled" << G4endl;
+      fEnableBeamOut = false;
+      return;
+    }
+    G4cout << "EventAction - Writing beam flags output to " << fBeamOutFileName << G4endl;
+  }
   auto byTime = [](const BeamOutLine& a, const BeamOutLine& b) { return a.t < b.t; };
 
   std::set<G4int> tracks;

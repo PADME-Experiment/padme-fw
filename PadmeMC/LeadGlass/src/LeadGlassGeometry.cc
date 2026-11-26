@@ -25,7 +25,12 @@ LeadGlassGeometry::LeadGlassGeometry()
   fBlockId = 1; // OPAL block type 8
 
   fLeadGlassFrontFacePosZ = 3452.79*mm; //allignment 3100.*mm; // Position of block front face
-
+  fLeadGlassPosX = 0*mm; 
+  fLeadGlassPosY = 0*mm; 
+  fLeadGlassRotationAngleX = 0*deg; 
+  fLeadGlassRotationAngleY = 0*deg; 
+  fLeadGlassRotationAngleZ = 0*deg; 
+  
   fLeadGlassDigitizerName = "LeadGlassDigitizer";
   fLeadGlassSensitiveDetectorName = "LeadGlassSD";
 
@@ -176,6 +181,53 @@ LeadGlassGeometry::LeadGlassGeometry()
   fSteelSlabThickness[8] = 15.000 * mm;  // Steel slab thickness
 
 }
+
+void LeadGlassGeometry::SetDetectorSetup(G4int s)
+{
+  fDetectorSetup = s;
+  UpdateDerivedMeasures();
+}
+
+void LeadGlassGeometry::UpdateDerivedMeasures()
+{
+  //   // New Position in RunIV
+  //   Survey points (X, Y, Z) [mm]:
+  //   1: [  42.07   34.17 3451.73]
+  //   2: [   8.36   35.09 3452.79]
+  //   3: [ -11.93   -6.3  3453.28]
+
+  // Face normal (world): [ 0.031333 -0.003527  0.999503]
+  //   tilt vs Z axis        : 1.8069 deg
+  //   slope XZ (about Y)    : +1.7955 deg
+  //   slope YZ (about X)    : +0.2022 deg
+
+  // Edge 2->1: length 33.74 mm, angle to world X in XY view -1.5633 deg
+
+  // Method: plane normal + edge 2->1 // local X
+  // Rotation matrix R (active, local -> world):
+  // [[ 0.999134  0.027365  0.031333]
+  //  [-0.027268  0.999622 -0.003527]
+  //  [-0.031417  0.00267   0.999503]]
+  // Geant4 angles (rotateX, rotateY, rotateZ in this order):
+  //   about X: +0.1530 deg = +2.6710 mrad
+  //   about Y: +1.8004 deg = +31.4226 mrad
+  //   about Z: -1.5633 deg = -27.2848 mrad
+  // Rough angular resolution: 48.0 mdeg (worst baseline 33.7 mm)
+
+  // Centre position for G4PVPlacement [mm]: [  -3.458413  -15.100207 3638.075406]
+  
+
+  if (fDetectorSetup > 40) {
+    fLeadGlassFrontFacePosZ = 3638.075406*mm; 
+    fLeadGlassPosX = -3.458413*mm; 
+    fLeadGlassPosY =-15.100207*mm; 
+    fLeadGlassRotationAngleX=0.1530*deg;
+    fLeadGlassRotationAngleY=1.8004*deg;
+    fLeadGlassRotationAngleZ=-1.5633*deg;
+  }
+  
+}
+
 
 std::vector<G4String> LeadGlassGeometry::GetHashTable()
 {

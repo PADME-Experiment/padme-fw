@@ -144,8 +144,10 @@ public:
   G4int GetNThreePhotonDecaysPerBunch()        { return fNThreePhotonDecaysPerBunch; }
   void SetNThreePhotonDecaysPerBunch(G4int n) { fNThreePhotonDecaysPerBunch = n;    }
 
-  G4String GetThreePhotonDecaysFilename()        { return fTwoPhotonDecaysFilename; }
-  void SetThreePhotonDecaysFilename(G4String f) { fTwoPhotonDecaysFilename = f; }
+  // MR 27/11/2026 were using fTwoPhotonDecaysFilename: the 3gamma generator read the 2gamma file
+  // (9 numbers per line instead of 12) and /beam/3g_file changed the 2gamma file name
+  G4String GetThreePhotonDecaysFilename()        { return fThreePhotonDecaysFilename; }
+  void SetThreePhotonDecaysFilename(G4String f) { fThreePhotonDecaysFilename = f; }
   
   G4int GetNTwoPhotonDecaysPerBunch()        { return fNTwoPhotonDecaysPerBunch; }
   void SetNTwoPhotonDecaysPerBunch(G4int n) { fNTwoPhotonDecaysPerBunch = n;    }

@@ -14,9 +14,6 @@
 #include "TargetMessenger.hh"
 #include "TargetGeometry.hh"
 
-#include "TFile.h"
-#include "TH1D.h"
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 class TargetDigitizer : public G4VDigitizerModule
@@ -42,7 +39,8 @@ private:
   std::vector<G4double> RCFilter (std::vector<G4double>& traceI);
   std::vector<G4double> CSAFilter (std::vector<G4double>& traceI);
   std::vector<G4double> AddNoiseAndBaseline (std::vector<G4double>& traceI);
-  
+  std::vector<G4double> fCSAKernel; // MR 26/11/2026 CSA response vs bin distance, computed once
+
   G4double stepfunCCD(G4double& ct, G4int& neh, G4int& cn, G4double& cd, G4double& os, G4int& cb);
 
   G4String digiCollectionName;
@@ -50,14 +48,8 @@ private:
   // G4double fThreshold;
   // G4double nTrackDiv; 
 
-  // ROOT file target.root
-  //TFile * fTargetFile;  
-  TH1D * dTraceHCCD[32]; // hardcoded nchannels to change
-  TH1D * dTraceNHCCD[32]; // 
-  TH1D * dTraceVHCCD[32]; // 
-  //TH1D * dTraceVHCCD1[32]; // 
-  //TH1D * dTraceV1HCCD[32]; // 
-  
+  // MR 27/11/2026 removed the per-event waveform histograms dTraceHCCD/NHCCD/VHCCD[32]
+  // (hardcoded 32 channels): the charges are now computed on the vectors, see Digitize()
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

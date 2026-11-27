@@ -5,6 +5,7 @@
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
 #include "G4StepPoint.hh"
+#include "G4VPhysicalVolume.hh"
 #include "G4VProcess.hh"
 #include "G4TrackStatus.hh"
 #include "HistoManager.hh"
@@ -31,8 +32,41 @@ SteppingAction::SteppingAction()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+// MR 26/11/2026 classify a physical volume by name only the first time it is seen
+unsigned int SteppingAction::VolumeFlags(const G4VPhysicalVolume* pv)
+{
+  if (pv == fLastVolume) return fLastVolumeFlags; // pre and post volume are usually the same
+  unsigned int flags = 0;
+  auto it = fVolumeFlags.find(pv);
+  if (it != fVolumeFlags.end()) {
+    flags = it->second;
+  } else {
+    const G4String& n = pv->GetName();
+    if (n == "Target")          flags |= kVolTarget;
+    if (n == "TargetSupport")   flags |= kVolTargetSupport;
+    if (n == "ECal")            flags |= kVolECal;
+    if (n == "world_volume_PV") flags |= kVolWorldPV;
+    if (n == "World")           flags |= kVolWorld;
+    if (n == "SACCry")          flags |= kVolSACCry;
+    if (n == "BeamSLTB2" || n == "BeamSLTB3" || n == "BeamSLTB4" || n == "BeamSLTB5" ||
+        n == "LinacWall" || n == "BeamLineInLinacPipe" || n == "BeamLineInWallPipe") flags |= kVolKill;
+    fVolumeFlags[pv] = flags;
+  }
+  fLastVolume = pv;
+  fLastVolumeFlags = flags;
+  return flags;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 void SteppingAction::UserSteppingAction(const G4Step* step)
 {
+  // MR 26/11/2026 volumes are identified with cached flags instead of string comparisons
+  const G4VPhysicalVolume* preVolume  = step->GetPreStepPoint()->GetPhysicalVolume();
+  const G4VPhysicalVolume* postVolume = step->GetPostStepPoint()->GetPhysicalVolume(); // 0 when leaving the world
+  const unsigned int preFlags  = VolumeFlags(preVolume);
+  const unsigned int postFlags = postVolume ? VolumeFlags(postVolume) : 0;
+
   // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
   if (fMCTruthManager->IsEnabled()) {
 //     if (step->GetPostStepPoint()->GetPhysicalVolume() != 0){ 
@@ -107,13 +141,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 //     //  }
 // 	//}
    
-    const G4TouchableHandle& preStepTouch = step->GetPreStepPoint()->GetTouchableHandle();
-    const G4VPhysicalVolume* volume = preStepTouch->GetVolume();
-    const G4String& name = volume->GetName();
-    //const G4LogicalVolume* lVolume = volume->GetLogicalVolume();
-    //const G4VPhysicalVolume* mother = preStepTouch->GetVolume(1);
-   
-    if (step->GetPostStepPoint()->GetPhysicalVolume() != 0 && ((step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") || (name =="TargetSupport")) ) { // name is from preStep? 
+    if (postVolume != 0 && ((postFlags & kVolTarget) || (preFlags & kVolTargetSupport)) ) { // TargetSupport is from preStep
       G4Track* track = step->GetTrack();
       G4String proc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
       // Enable for some debug printout
@@ -256,8 +284,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 
 //Analyze SAC track
   if (fEnableSACAnalysis) {
-    if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-      if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="SACCry") {
+    if(postVolume!=0){
+      if(postFlags & kVolSACCry) {
 	//      G4cout << "Next volume " <<  step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << " "<<track->GetKineticEnergy()<< G4endl;
 	// G4cout << "E Thr " <<fSACEnergyThr<<G4endl;
 	// processing hit when entering the volume SAC Cry
@@ -276,9 +304,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   }
   
 
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
-       step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="world_volume_PV") {
+  if(postVolume!=0){
+    if((postFlags & kVolECal) && (preFlags & kVolWorldPV)) {
       for (int itype = 0; itype < 2; itype++){
 	if (fMCTruthManager->IsG4TrackInVertex(track->GetTrackID(),itype)){
 	  std::pair<G4int, G4int> vtxpos = fMCTruthManager->GetG4TrackInVertex(track->GetTrackID(),itype);
@@ -310,9 +337,8 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   
   //Analyze ECal tracks
   if (fEnableECalAnalysis) {
-    if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){
-      if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="ECal" && 
-	 step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="World") {
+    if(postVolume!=0){
+      if((postFlags & kVolECal) && (preFlags & kVolWorld)) {
 	  
 	
 
@@ -361,20 +387,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
 	  // G4cout << step->GetPreStepPoint()->GetPhysicalVolume()->GetName() 
 	  // 	 << "  ----> " 
 	  // 	 << step->GetPostStepPoint()->GetPhysicalVolume()->GetName() << G4endl;
-	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()!="Target" 
-	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() == "Target") {
+	  if(!(preFlags & kVolTarget) && (postFlags & kVolTarget)) {
 	    PositronMomentum = G4ThreeVector(-1000,-1000,-1000);
 	    nt = 0;
 	    
 	  }
 	  
-	  if(step->GetPreStepPoint()->GetPhysicalVolume()->GetName()=="Target" 
-	     && step->GetPostStepPoint()->GetPhysicalVolume()->GetName() != "Target") {
+	  if((preFlags & kVolTarget) && !(postFlags & kVolTarget)) {
 	    // G4cout << " Getting the momentum:   " << track->GetMomentum() << G4endl;
 	    PositronMomentum = G4ThreeVector(track->GetMomentum());
 	  }
 	  
-    	  if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="Target") {
+    	  if(postFlags & kVolTarget) {
 	    //      G4cout<<"track->GetParticleDefinition() "<<track->GetParticleDefinition()<<G4endl;
 	    G4String lastProc = step->GetPostStepPoint()->GetProcessDefinedStep()->GetProcessName();
 	    //	    if(lastProc!="Transportation" && lastProc!="eIoni" && ProcID==-1){
@@ -412,40 +436,18 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   //*************************************
   // Killing particle in the LINAC region
   //*************************************
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    //Killing in the collimators
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB3" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB4"||
-       step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB2"){
-      //      G4cout<<"Killin particle in SLTB "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-      track->SetTrackStatus(fStopAndKill);
-    }
-    //Killing in the walls and beamlines
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="LinacWall" || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInLinacPipe"
-       || step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineInWallPipe"){
-      //      G4cout<<"Killing particle in  "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-      track->SetTrackStatus(fStopAndKill);
-    }
+  // Killing in the collimators (BeamSLTB2, BeamSLTB3, BeamSLTB4 and BeamSLTB5 region)
+  // and in the walls and beamlines (LinacWall, BeamLineInLinacPipe, BeamLineInWallPipe):
+  // see VolumeFlags() for the list of volumes
+  if(postVolume!=0 && (postFlags & kVolKill)){
+    track->SetTrackStatus(fStopAndKill);
   }
 
-//  //*************************************
-//  // Killing particle in the SLTB5 region
-//  //*************************************
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamSLTB5"){
-      //      G4cout<<"Killing particle in SLTB5 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
-      track->SetTrackStatus(fStopAndKill);
-    }
-  }  
-  
 //*************************************
 // Checking flag 10
 //*************************************
-  if(step->GetPostStepPoint()->GetPhysicalVolume()!=0){			
-    if(step->GetPostStepPoint()->GetPhysicalVolume()->GetName()=="BeamLineBeamFlag10"){
- //     G4cout<<"Killing particle in Flag10 "<<step->GetPostStepPoint()->GetPhysicalVolume()->GetName()<<G4endl;                                      
- //      track->SetTrackStatus(fStopAndKill);
-    }
-  }
+  // MR 26/11/2026 the check on "BeamLineBeamFlag10" did nothing (kill commented out): removed.
+  // To kill there, add the name to kVolKill in VolumeFlags().
 }
 
 G4int SteppingAction::ClassifyTrack(G4Track* track){

@@ -667,7 +667,7 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
     fBeamParameters->SetBabayagaFilename(par);
 
   else if ( cmd == fSetBabayagaLinesToSkipCmd )
-    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
+    fBeamParameters->SetBabayagaLinesToSkip(fSetBabayagaLinesToSkipCmd->GetNewIntValue(par));
   
   else if ( cmd == fSetNBabayagaGGPerBunchCmd )
     fBeamParameters->SetNBabayagaGGPerBunch(fSetNBabayagaGGPerBunchCmd->GetNewIntValue(par));
@@ -675,7 +675,9 @@ void BeamMessenger::SetNewValue(G4UIcommand* cmd, G4String par)
   else if ( cmd == fSetBabayagaGGFilenameCmd )
     fBeamParameters->SetBabayagaGGFilename(par);
 
-  else if ( cmd == fSetBabayagaLinesToSkipCmd )
+  // MR 27/11/2026 was comparing with fSetBabayagaLinesToSkipCmd (already handled above):
+  // /beam/BabayagaGG_lines_to_skip was silently ignored
+  else if ( cmd == fSetBabayagaGGLinesToSkipCmd )
     fBeamParameters->SetBabayagaGGLinesToSkip(fSetBabayagaGGLinesToSkipCmd->GetNewIntValue(par));
 
 

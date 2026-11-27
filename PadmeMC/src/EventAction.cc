@@ -130,6 +130,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
 
   memset(&(fHistoManager->myEvt),0,sizeof(NTEvent));
   myStepping->SetPhysProc(0);
+  myStepping->ResetVolumeCache(); // MR 26/11/2026 see SteppingAction::VolumeFlags
 
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
   //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}

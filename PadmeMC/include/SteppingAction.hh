@@ -36,9 +36,12 @@
 #include "G4ThreeVector.hh"
 #include "BeamParameters.hh"
 
+#include <unordered_map>
+
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 class EventAction;
 class G4Track;
+class G4VPhysicalVolume;
 class HistoManager;
 class MCTruthManager;
 class SteppingAction : public G4UserSteppingAction
@@ -75,7 +78,11 @@ public:
 
 
   G4ThreeVector & GetPositronMomentum(){ return PositronMomentum;  };
-  
+
+  // MR 26/11/2026 forget the volume classification (called at the start of each event,
+  // in case the geometry is rebuilt between runs)
+  void ResetVolumeCache() { fVolumeFlags.clear(); fLastVolume = 0; fLastVolumeFlags = 0; }
+
 
 private:
   BeamParameters* bpar;
@@ -101,6 +108,23 @@ private:
   G4int NChild;
 
   G4int ClassifyTrack(G4Track* );
+
+  // MR 26/11/2026 the volume names used in UserSteppingAction were compared as strings
+  // at every step (~7% of the total CPU time in RunIV production). Each physical volume
+  // is now classified once, the first time it is seen, and the flags are cached.
+  enum VolumeFlag : unsigned int {
+    kVolTarget        = 1u<<0, // "Target"
+    kVolTargetSupport = 1u<<1, // "TargetSupport"
+    kVolECal          = 1u<<2, // "ECal"
+    kVolWorldPV       = 1u<<3, // "world_volume_PV"
+    kVolWorld         = 1u<<4, // "World"
+    kVolSACCry        = 1u<<5, // "SACCry"
+    kVolKill          = 1u<<6  // BTF collimators SLTB2-5, LINAC wall and pipes: tracks killed on entry
+  };
+  unsigned int VolumeFlags(const G4VPhysicalVolume*);
+  std::unordered_map<const G4VPhysicalVolume*,unsigned int> fVolumeFlags;
+  const G4VPhysicalVolume* fLastVolume = 0;
+  unsigned int fLastVolumeFlags = 0;
 
 private:
   double fSACEnergyThr;

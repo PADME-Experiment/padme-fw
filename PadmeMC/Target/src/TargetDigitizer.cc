@@ -25,10 +25,20 @@
 //#include <stdio>
 #include <ctime>
 
-// ROOT file target.root
-#include "TFile.h"
-
-#include "TH1D.h"
+// MR 27/11/2026 replaces TH1D::Integral(b1,b2) on the per-event waveform histograms (see Digitize):
+// sum of the bins [b1,b2] of a histogram with nb bins whose bin b contains v[b-offset] (bins
+// outside v are empty), with the bin range clamped as ROOT does. Same values, same order.
+static G4double HistoIntegral(const std::vector<G4double>& v, G4int offset, G4int nb, G4int b1, G4int b2)
+{
+  if (b1 < 0) b1 = 0;
+  if (b2 > nb+1 || b2 < b1) b2 = nb+1;
+  G4double sum = 0.;
+  for (G4int b=b1; b<=b2; b++) {
+    G4int j = b-offset;
+    if (j >= 0 && j < (G4int)v.size()) sum += v[j];
+  }
+  return sum;
+}
 
 TargetDigitizer::TargetDigitizer(G4String name)
  :G4VDigitizerModule(name),
@@ -81,12 +91,7 @@ void TargetDigitizer::Digitize()
   }
 
   // used in full mode !fFastDigi
-  
-  // histograms to handle waveforms
-  char hnameCCD [30];
-  char hnameNCCD [30];
-  char hnameVCCD [30];
-  
+
   // array to handle waveforms
   // MR 26/11/2026 std::vector instead of new[]: was never (or wrongly) freed
   std::vector<std::vector<G4double> > dTimeTraceCCD(nChannels);
@@ -107,23 +112,12 @@ void TargetDigitizer::Digitize()
   G4int hole=0;
  
 
+  // MR 27/11/2026 the 3 waveform TH1D per channel (TimeTraceCCD/NCCD/VCCD_ch_N, 96 per event)
+  // are no longer booked: they were used only to compute the charge integrals, and were
+  // written with Write() into the current ROOT file (UBTF.root) at every event
   if (!fFastDigi)
     {
       for (G4int i=0;i<nChannels;i++){
-	
-	sprintf(hnameCCD, "TimeTraceCCD_ch_%d",i);
-	sprintf(hnameNCCD, "TimeTraceNCCD_ch_%d",i);
-	sprintf(hnameVCCD, "TimeTraceVCCD_ch_%d",i);
-	//sprintf(hnameV1CCD, "TimeTraceV1CCD_ch_%d",i);
-	//    sprintf(hnameVCCD1, "TimeTraceVCCD1_ch_%d",i);
-	dTraceHCCD[i]= new TH1D(hnameCCD,hnameCCD,nhires,0.,nhires); // 10240 
-	//    dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nhires,0.,nhires);
-	//    dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nhires,0.,nhires);
-	dTraceNHCCD[i]= new TH1D(hnameNCCD,hnameNCCD,nbins,0.,nbins); // 1024
-	dTraceVHCCD[i]= new TH1D(hnameVCCD,hnameVCCD,nbins,0.,nbins);
-	//dTraceV1HCCD[i]= new TH1D(hnameV1CCD,hnameV1CCD,nbins,0.,nbins);
-	//    dTraceVHCCD1[i]= new TH1D(hnameVCCD1,hnameVCCD1,nbins,0.,nbins); //1024
-	
 	dTimeTraceCCD[i].assign(nhires,0.);
       }
     }
@@ -286,29 +280,23 @@ void TargetDigitizer::Digitize()
       
       if(!fFastDigi){
 	for(G4int j=0; j< nhires; j++){
-	  // current waveform histogram
-	  dTraceHCCD[dChannel[i]]->Fill(j,dTimeTraceCCD[dChannel[i]][j]);	    
 	  dTTCCD.push_back(dTimeTraceCCD[dChannel[i]][j]);
-	} 
-	
-	dTTCCD1=NsRebin(dTTCCD);  // rebin 1ns	
+	}
+
+	dTTCCD1=NsRebin(dTTCCD);  // rebin 1ns
 	dTTNCCD=AddNoiseAndBaseline(dTTCCD1);
-	//dTTVCCD=RCFilter(dTTNCCD);  // integrate waveform ccd func 
-	dTTVCCD=CSAFilter(dTTNCCD);  // integrate with CSA 
-	
-	for(G4int j=0; j< nbins; j++){
-	  // current waveform histogram
-	  dTraceNHCCD[dChannel[i]]->SetBinContent(j,dTTNCCD[j]);
-	  // voltage waveform histogram
-	  dTraceVHCCD[dChannel[i]]->SetBinContent(j,dTTVCCD[j]);
-	}	  
+	//dTTVCCD=RCFilter(dTTNCCD);  // integrate waveform ccd func
+	dTTVCCD=CSAFilter(dTTNCCD);  // integrate with CSA
 
-	// Charge is calculated as: binsize in seconds * root method Integral(range) of trace histo 
+	// Charge is calculated as: binsize in seconds * root method Integral(range) of trace histo
 	// (same also for lowres waveform as NsRebin sums the signal in 10 bins)
+	// MR 27/11/2026 integrals computed on the vectors, same bin ranges as the old histograms:
+	// the 0.1 ns trace was filled with Fill(j) (bin j+1 = dTTCCD[j]), the 1 ns ones with
+	// SetBinContent(j) (bin j = sample j, sample 0 in the underflow bin)
 
-	dNCharge.push_back(1e-10*dTraceNHCCD[dChannel[i]]->Integral(nbins-intwindow,nbins));// noise charge 1ns res
-	dChargeT.push_back(1e-10*dTraceHCCD[dChannel[i]]->Integral(trigoff/binw,intwindow/binw));// true charge 0.1 nsres
-	dCharge.push_back(1e-10/50*(dTraceVHCCD[dChannel[i]]->Integral(trigoff,intwindow))); // ccd func integrated (CSAFilter) 1ns res (check factor 50 ohm)
+	dNCharge.push_back(1e-10*HistoIntegral(dTTNCCD,0,nbins,(G4int)(nbins-intwindow),nbins));// noise charge 1ns res
+	dChargeT.push_back(1e-10*HistoIntegral(dTTCCD,1,nhires,(G4int)(trigoff/binw),(G4int)(intwindow/binw)));// true charge 0.1 nsres
+	dCharge.push_back(1e-10/50*(HistoIntegral(dTTVCCD,0,nbins,(G4int)trigoff,(G4int)intwindow))); // ccd func integrated (CSAFilter) 1ns res (check factor 50 ohm)
 		
       }// if !fFastDigi
       else{
@@ -358,23 +346,6 @@ void TargetDigitizer::Digitize()
 	targetDigiCollection->insert(digi);
       }
 
-      if (!fFastDigi) {
-	if(dNumber[i]){
-	  //// root file for debugging traces
-	  dTraceHCCD[dChannel[i]]->Write();
-	  dTraceNHCCD[dChannel[i]]->Write();
-	  dTraceVHCCD[dChannel[i]]->Write();
-	  // dTraceV1HCCD[dChannel[i]]->Write();
-	  ////dTraceVHCCD1[dChannel[i]]->Write();
-	  
-	}
-	delete  dTraceHCCD[dChannel[i]];
-	delete  dTraceNHCCD[dChannel[i]];
-	delete  dTraceVHCCD[dChannel[i]];
-      }
-      
-       
-      
       dTTCCD.clear();
       dTTCCD1.clear();
       dTTNCCD.clear();
@@ -382,13 +353,6 @@ void TargetDigitizer::Digitize()
 
     }// fill digis in targetdigicollection
 
-  } else if (!fFastDigi) {
-    // MR 26/11/2026 no hits collection: the waveform histograms were booked above, free them
-    for (G4int i=0;i<nChannels;i++) {
-      delete dTraceHCCD[i];
-      delete dTraceNHCCD[i];
-      delete dTraceVHCCD[i];
-    }
   }
   //// root file for debuggind traces
   // fTargetFile->Close();
@@ -481,23 +445,27 @@ std::vector<G4double> TargetDigitizer::CSAFilter (std::vector<G4double>& traceI)
 
   G4double Tr=10.;
   G4double Tf=20.;
-  G4double T0=0.;
   //  G4double G0=1.;
   G4double G0=4.;
 
+  // MR 26/11/2026 the CSA response depends only on the bin distance d = i-k > 0:
+  // tabulate it once instead of calling exp() twice for every (i,k) pair at every
+  // event (~33M exp per event with 32 channels x 1024 bins). Same values and same
+  // summation order as before, so the output is unchanged.
+  if ((G4int)fCSAKernel.size() < binno) {
+    fCSAKernel.assign(binno,0.);
+    for(G4int d=1; d<binno; d++){
+      G4double dt = -double(d); // = t-T0 of the original loop
+      G4double exp_r = dt/Tr;
+      G4double exp_f = dt/Tf;
+      fCSAKernel[d] = G0 * ( 1. - exp(exp_r))*exp(exp_f);
+    }
+  }
+
   for(int i=1; i<binno; i++){
-    T0    = double (i);
     G4double Vout = 0.;
-    for(G4int k=0; k<binno; k++){   
-      
-      G4double V0=0;
-      G4double t= double(k);
-      if(t-T0<0){
-	G4double exp_r = (t-T0)/Tr;
-	G4double exp_f = (t-T0)/Tf;
-	V0    = G0 * ( 1. - exp(exp_r))*exp(exp_f);
-	Vout  += V0 * traceI[k];
-      }    
+    for(G4int k=0; k<i; k++){ // only bins before i contribute (t-T0<0)
+      Vout  += fCSAKernel[i-k] * traceI[k];
     }
     traceV.push_back(Vout);
   }

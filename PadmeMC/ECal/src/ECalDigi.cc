@@ -17,7 +17,12 @@ G4Allocator<ECalDigi> ECalDigiAllocator;
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-ECalDigi::ECalDigi() {}
+// MR 26/11/2026 initialize all members: fSignal is never set by ECalDigitizer::Digitize()
+// and random memory was written to the output file
+ECalDigi::ECalDigi()
+  : fChannelId(0), fTime(0.), fEnergy(0.), fTimeSpread(0.),
+    fPosition(0.,0.,0.), fLocalPosition(0.,0.,0.), fNHits(0), fSignal(0.)
+{}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 

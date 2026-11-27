@@ -70,6 +70,36 @@ BeamGenerator::~BeamGenerator()
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+// MR 26/11/2026 open the input file of a file-based generator only once (or again if its
+// name changes) and keep reading it sequentially from where the previous event stopped
+std::ifstream& BeamGenerator::OpenInputFile(BeamGeneratorInputFile& f, const G4String& name, const char* errorMsg)
+{
+  if (!f.stream.is_open() || name != f.name) {
+    if (f.stream.is_open()) f.stream.close();
+    f.stream.clear();
+    f.stream.open(name.data());
+    f.name = name;
+    f.nRead = 0;
+    if (!f.stream) {
+      std::cout << "BeamGenerator::" << errorMsg << " " << name << " not found" << std::endl;
+      exit(1);
+    }
+  }
+  return f.stream;
+}
+
+// MR 27/11/2026 true if the first n fields of an input line are numbers: an empty or truncated
+// line (e.g. a blank line at the end of the file) was decoded into uninitialized momenta
+static G4bool InputLineHasNumbers(const std::string& line, G4int n)
+{
+  std::istringstream iss(line);
+  G4double x;
+  for (G4int i=0; i<n; i++) if (!(iss >> x)) return false;
+  return true;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+
 void BeamGenerator::GenerateBeam(G4Event* anEvent)
 { 
 
@@ -576,19 +606,19 @@ void BeamGenerator::CreateFinalStateThreeGamma(G4double decayLength)
   // Get file with list of three-gamma events kinematics
   G4String file3g = BeamParameters::GetInstance()->GetThreePhotonDecaysFilename();
 
-  std::ifstream infile;
+  std::ifstream& infile = OpenInputFile(fThreeGammaFile,file3g,"CreateFinalStateThreeGamma - ERROR - ThreeGamma file");
   std::string Line = "";
-  infile.open(file3g.data());
-  if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateThreeGamma - ERROR - ThreeGamma file " <<  file3g << " not found" << std::endl;
-    exit(1);
+  G4int& il = fThreeGammaFile.nRead; // MR 26/11/2026 continue from the line reached at the previous event
+  // MR 27/11/2026 count only the lines actually read: with while(!eof()) the failed getline after
+  // the last line was counted too, and an event was generated from an empty line (crash)
+  while (il <= iline && std::getline(infile,Line)) il++;
+
+  // MR 27/11/2026 skip lines that cannot be decoded (3 + 3x3 numbers)
+  if (il == iline + 1 && !InputLineHasNumbers(Line,12)) {
+    G4cout << "BeamGenerator::CreateFinalStateThreeGamma - WARNING - Line " << il << " of " << file3g << " cannot be decoded: skipped" << G4endl;
+    iline++;
+    return;
   }
-  G4int il=0;
-  while (!infile.eof() && il <= iline) {
-     getline(infile,Line);
-     il++;
-  }
-  infile.close();
 
   // If we did not reach EOF, generate 3 photons
   if (il == iline + 1) {
@@ -684,19 +714,18 @@ void BeamGenerator::CreateFinalStateTwoGamma(G4double decayLength)
   // Get file with list of two-gamma events kinematics
   G4String file2g = BeamParameters::GetInstance()->GetTwoPhotonDecaysFilename();
 
-  std::ifstream infile;
+  std::ifstream& infile = OpenInputFile(fTwoGammaFile,file2g,"CreateFinalStateTwoGamma - ERROR - TwoGamma file");
   std::string Line = "";
-  infile.open(file2g.data());
-  if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateTwoGamma - ERROR - TwoGamma file " <<  file2g << " not found" << std::endl;
-    exit(1);
+  G4int& il = fTwoGammaFile.nRead; // MR 26/11/2026 continue from the line reached at the previous event
+  // MR 27/11/2026 count only the lines actually read (see CreateFinalStateThreeGamma)
+  while (il <= iline && std::getline(infile,Line)) il++;
+
+  // MR 27/11/2026 skip lines that cannot be decoded (3 + 2x3 numbers)
+  if (il == iline + 1 && !InputLineHasNumbers(Line,9)) {
+    G4cout << "BeamGenerator::CreateFinalStateTwoGamma - WARNING - Line " << il << " of " << file2g << " cannot be decoded: skipped" << G4endl;
+    iline++;
+    return;
   }
-  G4int il=0;
-  while (!infile.eof() && il <= iline) {
-     getline(infile,Line);
-     il++;
-  }
-  infile.close();
 
   // If we did not reach EOF, generate 2 photons
   if (il == iline + 1) {
@@ -799,19 +828,18 @@ void BeamGenerator::CreateFinalStateBhaBha(G4double decayLength)
   G4String fileBhaBha = bpar->GetBhaBhaFilename();
   //  std::cout<<" entering BhaBha generator" <<std::endl;
 
-  std::ifstream infile;
+  std::ifstream& infile = OpenInputFile(fBhaBhaFile,fileBhaBha,"CreateFinalStateBhabha - ERROR - BhaBha file");
   std::string Line = "";
-  infile.open(fileBhaBha.data());
-  if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateBhabha - ERROR - BhaBha file " <<  fileBhaBha << " not found" << std::endl;
-    exit(1);
+  G4int& il = fBhaBhaFile.nRead; // MR 26/11/2026 continue from the line reached at the previous event
+  // MR 27/11/2026 count only the lines actually read (see CreateFinalStateThreeGamma)
+  while (il <= iline && std::getline(infile,Line)) il++;
+
+  // MR 27/11/2026 skip lines that cannot be decoded (3 + 2x3 numbers)
+  if (il == iline + 1 && !InputLineHasNumbers(Line,9)) {
+    G4cout << "BeamGenerator::CreateFinalStateBhabha - WARNING - Line " << il << " of " << fileBhaBha << " cannot be decoded: skipped" << G4endl;
+    iline++;
+    return;
   }
-  G4int il=0;
-  while (!infile.eof() && il <= iline) {
-     getline(infile,Line);
-     il++;
-  }
-  infile.close();
 
   // If we did not reach EOF, generate 2 photons
   if (il == iline + 1) {
@@ -958,20 +986,15 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
 
   // read first part of input file
 
-  std::ifstream infile;
+  std::ifstream& infile = OpenInputFile(fBabayagaFile,fileBabayaga,"CreateFinalStateBabayaga - ERROR - Babayaga file");
   std::string Line = "";
-  infile.open(fileBabayaga.data());
-  if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateBabayaga - ERROR - Babayaga file " <<  fileBabayaga << " not found" << std::endl;
-    exit(1);
-  }
 
   // Skipping first iline events
-  G4int ievt = 0;
+  G4int& ievt = fBabayagaFile.nRead; // MR 26/11/2026 continue from the event reached at the previous call
   while (!infile.eof() && ievt <= iline) {
     getline(infile,Line);
     TString tLine(Line);
-    if ( tLine.BeginsWith(" # EVENT N.") ){ 
+    if ( tLine.BeginsWith(" # EVENT N.") ){
       ievt++; // We found a new event: count it
       //std::cout<<" I'm at evt: "<<ievt<<"  "<<Line<<std::endl;
     }
@@ -986,7 +1009,12 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
   //std::cout<<"ievt: "<<ievt<< " Line: "<<Line<<std::endl;
   std::istringstream nparticleString(Line);
   int iparticles;
-  nparticleString >> iparticles;
+  // MR 27/11/2026 truncated event (end of file): iparticles was left uninitialized
+  if (!(nparticleString >> iparticles) || iparticles < 0) {
+    G4cout << "BeamGenerator::CreateFinalStateBabayaga - WARNING - Event " << ievt << " of " << fileBabayaga << " is truncated: skipped" << G4endl;
+    iline++;
+    return;
+  }
   //std::cout<<"iparticles: "<<iparticles<<" il: "<<il<<std::endl;
 
   // read up to maxparticles
@@ -999,7 +1027,12 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
     double en,px,py,pz;
     getline(infile,Line);
     std::istringstream particleString(Line);
-    particleString >> en >> px >> py >> pz;
+    // MR 27/11/2026 truncated event (end of file): the momenta were left uninitialized
+    if (!(particleString >> en >> px >> py >> pz)) {
+      G4cout << "BeamGenerator - WARNING - Event " << ievt << " of " << fileBabayaga << " is truncated: skipped" << G4endl;
+      iline++;
+      return;
+    }
     //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
     //std::cout<<"il:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
     if (ngoodparticles < 2) {
@@ -1020,7 +1053,7 @@ void BeamGenerator::CreateFinalStateBabayaga(G4double decayLength)
 
   // This event is over, skip to next event
   iline++;
-  infile.close();
+  // MR 26/11/2026 file kept open: next event continues from here
   // TLorentzVector sum;
   // sum.SetXYZT(0.,0.,0.,0.);
   // for(int ig =0; ig<2; ig++){
@@ -1106,16 +1139,11 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
 
   // read first part of input file
 
-  std::ifstream infile;
+  std::ifstream& infile = OpenInputFile(fBabayagaGGFile,fileBabayaga,"CreateFinalStateBabayaga - ERROR - Babayaga file");
   std::string Line = "";
-  infile.open(fileBabayaga.data());
-  if(!infile) {
-    std::cout << "BeamGenerator::CreateFinalStateBabayaga - ERROR - Babayaga file " <<  fileBabayaga << " not found" << std::endl;
-    exit(1);
-  }
 
   // Skipping first iline events
-  G4int ievt = 0;
+  G4int& ievt = fBabayagaGGFile.nRead; // MR 26/11/2026 continue from the event reached at the previous call
   while (!infile.eof() && ievt <= iline) {
     getline(infile,Line);
     TString tLine(Line);
@@ -1130,7 +1158,12 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
   getline(infile,Line);
   std::istringstream nparticleString(Line);
   int iparticles;
-  nparticleString >> iparticles;
+  // MR 27/11/2026 truncated event (end of file): iparticles was left uninitialized
+  if (!(nparticleString >> iparticles) || iparticles < 0) {
+    G4cout << "BeamGenerator::CreateFinalStateBabayagaGG - WARNING - Event " << ievt << " of " << fileBabayaga << " is truncated: skipped" << G4endl;
+    iline++;
+    return;
+  }
   //std::cout<<"iparticles: "<<iparticles<<" il: "<<il<<std::endl;
   // read up to maxparticles
   const int maxparticles = 10;
@@ -1142,7 +1175,12 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
     double en,px,py,pz;
     getline(infile,Line);
     std::istringstream particleString(Line);
-    particleString >> en >> px >> py >> pz;
+    // MR 27/11/2026 truncated event (end of file): the momenta were left uninitialized
+    if (!(particleString >> en >> px >> py >> pz)) {
+      G4cout << "BeamGenerator - WARNING - Event " << ievt << " of " << fileBabayaga << " is truncated: skipped" << G4endl;
+      iline++;
+      return;
+    }
     //std::cout<<"il:"<<il <<" "<<  en << "  "<< px<<" "<<py<<" "<<pz<<std::endl;
     //std::cout<<"il:"<<il <<" "<< particles[ngoodparticles].T() << "  "<< particles[ngoodparticles].X()<<" "<<particles[ngoodparticles].Y()<<" "<<particles[ngoodparticles].Z()<<std::endl;
     if (ngoodparticles < 2) {
@@ -1163,7 +1201,7 @@ void BeamGenerator::CreateFinalStateBabayagaGG(G4double decayLength)
 
   // This event is over, skip to next event
   iline++;
-  infile.close();
+  // MR 26/11/2026 file kept open: next event continues from here
   // TLorentzVector sum;
   // sum.SetXYZT(0.,0.,0.,0.);
   // for(int ig =0; ig<2; ig++){

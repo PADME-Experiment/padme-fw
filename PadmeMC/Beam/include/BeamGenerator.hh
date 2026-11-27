@@ -16,6 +16,8 @@
 #include "BeamParameters.hh"
 #include "TRandom3.h"
 
+#include <fstream>
+
 class G4Event;
 
 class BeamMessenger;
@@ -32,6 +34,16 @@ struct BeamPrimaryPositron
   G4double      P;   // Positron momentum magnitude
   G4ThreeVector p;   // Positron momentum vector
   G4ThreeVector dir; // Positron direction (unit of momentum vector)
+};
+
+// MR 26/11/2026 input file of a file-based generator (2gamma, 3gamma, BhaBha, Babayaga).
+// It stays open between events: before, the file was reopened and re-read from the
+// beginning at every event, i.e. a cost growing with the event number (O(N^2) per run).
+struct BeamGeneratorInputFile
+{
+  std::ifstream stream;
+  G4String      name;
+  G4int         nRead = 0; // lines (Babayaga: event headers) already read from the stream
 };
 
 class BeamGenerator
@@ -63,6 +75,13 @@ private:
 
   G4double CS(G4double,G4double,G4double,G4double);
   G4double CS2(G4double,G4double,G4double,G4double);
+
+  std::ifstream& OpenInputFile(BeamGeneratorInputFile&, const G4String&, const char*);
+  BeamGeneratorInputFile fThreeGammaFile;
+  BeamGeneratorInputFile fTwoGammaFile;
+  BeamGeneratorInputFile fBhaBhaFile;
+  BeamGeneratorInputFile fBabayagaFile;
+  BeamGeneratorInputFile fBabayagaGGFile;
 
   G4Event* fEvent;
   

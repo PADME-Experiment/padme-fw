@@ -99,7 +99,7 @@ void TargetRootIO::SaveEvent(const G4Event* eventG4)
   Int_t savedObjNumber = TProcessID::GetObjectCount();
 
   // Reset event structure
-  fEvent->Clear();
+  fEvent->Clear("C"); // MR 26/11/2026 "C": call TTargetMCDigi::Clear to free the waveform vectors
   //G4cout << "TargetRootIO: setting run/event to " << fRunNumber << "/" << eventG4->GetEventID() << G4endl;
   fEvent->SetRunNumber(fRunNumber);
   fEvent->SetEventNumber(eventG4->GetEventID());

@@ -50,9 +50,16 @@ void LeadGlassDetector::CreateGeometry()
   fLeadGlassVolume = lgBlock->GetBlockLogicalVolume();
 
   //G4ThreeVector LeadGlassPos = G4ThreeVector(geo->GetETagPosX(),geo->GetETagPosY(),geo->GetETagPosZ());
-  G4ThreeVector posLeadGlass = G4ThreeVector(0.,0.,geo->GetLeadGlassFrontFacePosZ()+0.5*lgBlock->GetBlockZLength());
+  // myabe should be G4ThreeVector frontCentre(-9.255*mm, -14.448*mm, 3453.167*mm);      // measured
+  // G4ThreeVector axis(0.031333, -0.003527, 0.999503);                  // measured normal
+  // G4ThreeVector posLeadGlass = frontCentre + 0.5*lgBlock->GetBlockZLength()*axis;
+  G4ThreeVector posLeadGlass = G4ThreeVector(geo->GetLeadGlassPosX(),geo->GetLeadGlassPosY(),geo->GetLeadGlassFrontFacePosZ()+0.5*lgBlock->GetBlockZLength());
   G4RotationMatrix* rotLeadGlass = new G4RotationMatrix;
   rotLeadGlass->rotateY(180.*deg);
+  rotLeadGlass->rotateX(geo->GetLeadGlassRotationAngleX());
+  rotLeadGlass->rotateY(geo->GetLeadGlassRotationAngleY());
+  rotLeadGlass->rotateZ(geo->GetLeadGlassRotationAngleZ());
+
   new G4PVPlacement(rotLeadGlass,posLeadGlass,fLeadGlassVolume,"LeadGlass",fMotherVolume,false,0,true);
 
   // Create digitizer for LeadGlass

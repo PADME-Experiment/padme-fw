@@ -73,7 +73,9 @@ void TMMDetector::CreateGeometry()
   fTMMVolume->SetVisAttributes(G4VisAttributes(G4Colour::Green()));
   fTMMVolume->SetVisAttributes(G4VisAttributes::GetInvisible);
   G4RotationMatrix* rotationMatrix = new G4RotationMatrix(); 
-  rotationMatrix->rotateY(0.*deg); // added to mimic test beam conditions
+  rotationMatrix->rotateX(geo->GetTMMRotationAngleX()); 
+  rotationMatrix->rotateY(geo->GetTMMRotationAngleY()); 
+  rotationMatrix->rotateZ(geo->GetTMMRotationAngleZ()); 
   new G4PVPlacement(rotationMatrix,TMMPos,fTMMVolume,"TMM",fMotherVolume,false,0,false);
 
 

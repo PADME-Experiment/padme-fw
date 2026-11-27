@@ -49,6 +49,18 @@ DatacardMessenger::DatacardMessenger(DatacardManager* datacardMng):fDatacardMana
   fDisableDetectorIOCmd->SetGuidance("Disable hits/digis output for a specific detector.");
   fDisableDetectorIOCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  fEnableBeamFlagsOutputCmd = new G4UIcmdWithABool("/output/EnableBeamFlagsOutput", this);
+  fEnableBeamFlagsOutputCmd->SetGuidance("Enable (true) or disable (false) the text output of beam flags information (default: false).");
+  fEnableBeamFlagsOutputCmd->SetGuidance("Output file name is set with /output/BeamFlagsFileName.");
+  fEnableBeamFlagsOutputCmd->SetParameterName("EBFO",true);
+  fEnableBeamFlagsOutputCmd->SetDefaultValue(true);
+  fEnableBeamFlagsOutputCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
+  fBeamFlagsFileNameCmd = new G4UIcmdWithAString("/output/BeamFlagsFileName", this);
+  fBeamFlagsFileNameCmd->SetGuidance("Define name (with path) of the beam flags text output file (default: beam_output.txt).");
+  fBeamFlagsFileNameCmd->SetParameterName("BFFN",false);
+  fBeamFlagsFileNameCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
+
   fDisableSACAnalysisCmd = new G4UIcmdWithABool("/analysis/DisableSACAnalysis",this);
   fDisableSACAnalysisCmd->SetGuidance("If -true- disable analysis of SAC inside MC.");
   fDisableSACAnalysisCmd->SetGuidance("WARNING! If -false-, SAC will not be simulated and no SAC hits/digis will be produced.");
@@ -155,6 +167,8 @@ DatacardMessenger::~DatacardMessenger() {
   delete fHistoNameCmd;
   delete fEnableDetectorIOCmd;
   delete fDisableDetectorIOCmd;
+  delete fEnableBeamFlagsOutputCmd;
+  delete fBeamFlagsFileNameCmd;
   delete fOutputDir;
 
   delete fDisableSACAnalysisCmd;
@@ -237,6 +251,20 @@ void DatacardMessenger::SetNewValue(G4UIcommand* command, G4String newValue) {
       evtAct->DisableSaveVeto();
       //	G4cout<<"Disable "<<G4endl;
     }
+  }
+
+  if (command == fEnableBeamFlagsOutputCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    if (fEnableBeamFlagsOutputCmd->GetNewBoolValue(newValue)) {
+      evtAct->EnableBeamOut();
+    } else {
+      evtAct->DisableBeamOut();
+    }
+  }
+
+  if (command == fBeamFlagsFileNameCmd) {
+    EventAction* evtAct = (EventAction*)G4RunManager::GetRunManager()->GetUserEventAction();
+    evtAct->SetBeamOutFileName(newValue);
   }
 
   if (command == fPrintOutFrequencyCmd) {

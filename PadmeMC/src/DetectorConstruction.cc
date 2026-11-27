@@ -994,8 +994,9 @@ void DetectorConstruction::SetDetectorSetup(G4int detectorSetup)
   TargetGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   SACGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   ETagGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
+  LeadGlassGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   MMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
-  TMMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM D.Quaranta 
+  TMMGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup); //EDM 
   PVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   EVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);
   HEPVetoGeometry::GetInstance()->SetDetectorSetup(fDetectorSetup);

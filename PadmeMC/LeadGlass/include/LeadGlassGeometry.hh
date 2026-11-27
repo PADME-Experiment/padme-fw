@@ -37,8 +37,10 @@ protected:
 
 public:
 
-  void SetDetectorSetup(G4int s) { fDetectorSetup = s; }
+  void SetDetectorSetup(G4int s);
   G4int GetDetectorSetup() { return fDetectorSetup; }
+  void UpdateDerivedMeasures();
+
 
   void SetVerboseLevel(G4int v) { fVerbose = v; }
   G4int GetVerboseLevel() { return fVerbose; }
@@ -69,7 +71,13 @@ public:
   // Position along Z of LeadGlass front face
   G4double GetLeadGlassFrontFacePosZ() { return fLeadGlassFrontFacePosZ; }
   void SetLeadGlassFrontFacePosZ(G4double z) { fLeadGlassFrontFacePosZ = z; }
-  
+
+  G4double GetLeadGlassPosX() { return fLeadGlassPosX; }
+  G4double GetLeadGlassPosY() { return fLeadGlassPosY; }
+  G4double GetLeadGlassRotationAngleX() {return fLeadGlassRotationAngleX;}
+  G4double GetLeadGlassRotationAngleY() {return fLeadGlassRotationAngleY;}
+  G4double GetLeadGlassRotationAngleZ() {return fLeadGlassRotationAngleZ;}
+
   // Enable/disable full simulation
   void EnableFullSimulation() { fFullSimulation = true; }
   void DisableFullSimulation() { fFullSimulation = false; }
@@ -106,6 +114,11 @@ private:
   G4int fDetectorSetup;
 
   G4double fLeadGlassFrontFacePosZ; // Position along Z axis of LeadGlass front face
+  G4double fLeadGlassPosX; // Position along X axis of LeadGlass front face
+  G4double fLeadGlassPosY; // Position along X axis of LeadGlass front face
+  G4double fLeadGlassRotationAngleX; // Position along X axis of LeadGlass front face
+  G4double fLeadGlassRotationAngleY; // Position along X axis of LeadGlass front face
+  G4double fLeadGlassRotationAngleZ; // Position along X axis of LeadGlass front face
 
   G4bool fFullSimulation; // If false: hit=particle then StopAndKill; if true: full shower simulation
 

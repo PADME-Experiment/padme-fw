@@ -83,6 +83,13 @@ class EventAction : public G4UserEventAction
   }
   void DisableSaveVeto() { fEnableSaveVeto = 0; }
 
+  // Beam flags text output (beam_output.txt), controlled from datacard
+  void EnableBeamOut()  { fEnableBeamOut = true; }
+  void DisableBeamOut() { fEnableBeamOut = false; if (BeamOut.is_open()) BeamOut.close(); }
+  G4bool IsBeamOutEnabled() { return fEnableBeamOut; }
+  void SetBeamOutFileName(G4String name) { if (BeamOut.is_open()) BeamOut.close(); fBeamOutFileName = name; }
+  G4String GetBeamOutFileName() { return fBeamOutFileName; }
+
   private:
 
   //M. Raggi 
@@ -113,6 +120,8 @@ class EventAction : public G4UserEventAction
   private:
   //MR 01/10/2026 output file for beam characteristics
   std::fstream BeamOut;
+  G4bool   fEnableBeamOut;   // write beam flags text file (default: false)
+  G4String fBeamOutFileName; // name (with path) of beam flags text file
 
   // MR 20/11/2026 flag 8 and Mylar window (flag 0) lines are buffered per track and written
   // only if the energy difference between the two is above fFlag8MylarDEThr

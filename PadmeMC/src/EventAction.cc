@@ -60,7 +60,8 @@ EventAction::EventAction(RunAction* run)
 :fRunAct(run)
 {
   BeamOut.open("beam_output.txt",std::ios::out);
-  fFlag8MylarDEThr = 1.5*CLHEP::MeV; // MR 20/11/2026 write flag 8 + flag 0 only if |E8-E0| above this
+  //fFlag8MylarDEThr = 1.5*CLHEP::MeV; // MR 20/11/2026 write flag 8 + flag 0 only if |E8-E0| above this
+  fMylarBremKThr = 1.5*CLHEP::MeV; // MR 27/11/2026 write flag 0 + flag 8 if the eBrem photons in the Mylar foil exceed this
   fFirstEvent = true;
 
   fTargetDigitizer  = NULL;
@@ -131,6 +132,7 @@ void EventAction::BeginOfEventAction(const G4Event*)
   memset(&(fHistoManager->myEvt),0,sizeof(NTEvent));
   myStepping->SetPhysProc(0);
   myStepping->ResetVolumeCache(); // MR 26/11/2026 see SteppingAction::VolumeFlags
+  myStepping->ClearMylarBrem();   // MR 27/11/2026 see SteppingAction::GetMylarBremK
 
   for(G4int i=0;i<ECalNCells;i++){Used[i]=0;}
   //for(G4int i=0;i<TrackerNRings;i++){UsedRing[i]=0;}
@@ -239,7 +241,7 @@ void EventAction::EndOfEventAction(const G4Event* evt)
       AddLeadGlassHits((LeadGlassHitsCollection*)(LHC->GetHC(iHC)));
     }
   }
-  WriteBeamOutLines(); // MR 20/11/2026 needs both Mylar and BeamFlag collections
+  WriteBeamOutLines(event_id); // MR 20/11/2026 needs both Mylar and BeamFlag collections
 //PRINTOUT VERTICES  MCTruthManager* mct = MCTruthManager::GetInstance();
 //PRINTOUT VERTICES  if (mct->IsEnabled()) {
 //PRINTOUT VERTICES    G4cout << "Number of MC vertices " << mct->GetNVertices() << G4endl;
@@ -680,7 +682,7 @@ void EventAction::AddMylarWHits(MylarWHitsCollection* hcont)  //BeW readout modu
       G4double hthetaX = asin(PX/PTOT);
 
       // Mylar window info as flag 0, same format as AddBeamFlagHits.
-      // MR 20/11/2026 buffered per track, written in WriteBeamOutLines() only if matched with flag 8
+      // MR 20/11/2026 buffered per track, written in WriteBeamOutLines() only for tagged tracks
       if (fMylarLines.find(hit->GetTrackId()) == fMylarLines.end()) {
         G4ThreeVector mom(PX*hTrE,PY*hTrE,PZ*hTrE);
         fMylarLines[hit->GetTrackId()] = {hTrE, hTime, FormatBeamOutLine(0,mom,hX,hY,hit->GetLocalPosZ())};
@@ -799,7 +801,7 @@ void EventAction::AddBeamFlagHits(BeamFlagHitsCollection* hcont)  //BeW readout 
       //        BeamOut<<" "<<NFlag<< " " << p << " " << PX << " " << PY << " " << PZ << " "<< theta << " " << phi << " "<< x << " " << y << " "<<z<<G4endl;
       //      }
       // MR 20/11/2026 flag 8 is buffered per track and written with the Mylar (flag 0) line
-      // only if |E8-E0| > fFlag8MylarDEThr (see WriteBeamOutLines)
+      // only for tagged tracks (MR 27/11/2026 Mylar bremsstrahlung, see WriteBeamOutLines)
       // MR 23/11/2026 other flags are buffered per track too, written after the 0/8 pair
       if (NFlag == 8) {
         if (fFlag8Lines.find(hit->GetTrackId()) == fFlag8Lines.end())
@@ -1224,11 +1226,12 @@ G4double EventAction::GetCharge(G4double Energia)
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 // MR 20/11/2026 one line of beam_output.txt: flag p px py pz theta phi x y z (local)
+// MR 27/11/2026 without the end of line: WriteBeamOutLines appends event ID, track ID and kbrem
 std::string EventAction::FormatBeamOutLine(G4int flag, const G4ThreeVector& mom, G4double x, G4double y, G4double z)
 {
   std::ostringstream s;
   s << " " << flag << " " << mom.mag() << " " << mom.x() << " " << mom.y() << " " << mom.z() << " "
-    << mom.theta() << " " << mom.phi() << " " << x << " " << y << " " << z << "\n";
+    << mom.theta() << " " << mom.phi() << " " << x << " " << y << " " << z;
   return s.str();
 }
 
@@ -1236,28 +1239,36 @@ std::string EventAction::FormatBeamOutLine(G4int flag, const G4ThreeVector& mom,
 // and whose energy changed by more than fFlag8MylarDEThr between the two
 // MR 23/11/2026 output grouped per track (ascending track ID): the 0/8 pair first, then the
 // other flags; inside each block lines are sorted by crossing time, i.e. in beam order
-void EventAction::WriteBeamOutLines()
+// MR 27/11/2026 new tag and format:
+//  - only the primaries that reach at least one flag downstream of the Mylar window (flags 1-7, 9, 10)
+//    are written. The 0/8 pair is added if the primary emitted more than fMylarBremKThr of eBrem
+//    photons in the Mylar foil (SteppingAction::GetMylarBremK). The old cut |E8-E0| > 1.5 MeV was
+//    dominated by particles scraping the window flange, and 99.9% of them never reached flag 7.
+//  - three columns are appended to every line: event ID, track ID and kbrem, the energy (MeV) of
+//    the eBrem photons emitted by that primary in the Mylar foil (0 if none). The first 10 columns
+//    are unchanged.
+void EventAction::WriteBeamOutLines(G4int eventID)
 {
   if (!BeamOut.is_open()) return;
   auto byTime = [](const BeamOutLine& a, const BeamOutLine& b) { return a.t < b.t; };
 
-  std::set<G4int> tracks;
-  for (auto& f : fFlag8Lines)     tracks.insert(f.first);
-  for (auto& f : fOtherFlagLines) tracks.insert(f.first);
+  for (auto& other : fOtherFlagLines) { // ascending track ID
+    G4int tid = other.first;
+    G4double kbrem = myStepping->GetMylarBremK(tid);
+    std::ostringstream ids;
+    ids << " " << eventID << " " << tid << " " << kbrem/CLHEP::MeV << "\n";
+    const std::string tail = ids.str();
 
-  for (G4int tid : tracks) {
-    auto f8 = fFlag8Lines.find(tid);
-    auto f0 = fMylarLines.find(tid);
-    if (f8 != fFlag8Lines.end() && f0 != fMylarLines.end() &&
-        fabs(f8->second.E - f0->second.E) > fFlag8MylarDEThr) {
-      std::vector<BeamOutLine> pair = {f0->second, f8->second};
+    if (kbrem > fMylarBremKThr) {
+      std::vector<BeamOutLine> pair;
+      auto f0 = fMylarLines.find(tid);
+      if (f0 != fMylarLines.end()) pair.push_back(f0->second);
+      auto f8 = fFlag8Lines.find(tid);
+      if (f8 != fFlag8Lines.end()) pair.push_back(f8->second);
       std::stable_sort(pair.begin(), pair.end(), byTime);
-      for (auto& l : pair) BeamOut << l.line;
+      for (auto& l : pair) BeamOut << l.line << tail;
     }
-    auto other = fOtherFlagLines.find(tid);
-    if (other != fOtherFlagLines.end()) {
-      std::stable_sort(other->second.begin(), other->second.end(), byTime);
-      for (auto& l : other->second) BeamOut << l.line;
-    }
+    std::stable_sort(other.second.begin(), other.second.end(), byTime);
+    for (auto& l : other.second) BeamOut << l.line << tail;
   }
 }

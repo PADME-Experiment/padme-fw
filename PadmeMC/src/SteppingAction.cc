@@ -50,6 +50,7 @@ unsigned int SteppingAction::VolumeFlags(const G4VPhysicalVolume* pv)
     if (n == "SACCry")          flags |= kVolSACCry;
     if (n == "BeamSLTB2" || n == "BeamSLTB3" || n == "BeamSLTB4" || n == "BeamSLTB5" ||
         n == "LinacWall" || n == "BeamLineInLinacPipe" || n == "BeamLineInWallPipe") flags |= kVolKill;
+    if (n == "BeamLineMylarWindow") flags |= kVolMylarFoil; // MR 27/11/2026 foil only, not "BeamLineMylarWinFlange"
     fVolumeFlags[pv] = flags;
   }
   fLastVolume = pv;
@@ -66,6 +67,19 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   const G4VPhysicalVolume* postVolume = step->GetPostStepPoint()->GetPhysicalVolume(); // 0 when leaving the world
   const unsigned int preFlags  = VolumeFlags(preVolume);
   const unsigned int postFlags = postVolume ? VolumeFlags(postVolume) : 0;
+
+  // MR 27/11/2026 tag the primaries that emit bremsstrahlung in the Mylar foil of the BTF window:
+  // the energies of the eBrem photons are summed per track and written in beam_output.txt
+  // (see EventAction::WriteBeamOutLines). A discrete interaction happens inside the pre-step volume.
+  if ((preFlags & kVolMylarFoil) && step->GetTrack()->GetParentID() == 0) {
+    const G4VProcess* proc = step->GetPostStepPoint()->GetProcessDefinedStep();
+    if (proc && proc->GetProcessName() == "eBrem") {
+      G4double k = 0.;
+      for (const G4Track* sec : *step->GetSecondaryInCurrentStep())
+        if (sec->GetDefinition() == G4Gamma::GammaDefinition()) k += sec->GetKineticEnergy();
+      fMylarBremK[step->GetTrack()->GetTrackID()] += k;
+    }
+  }
 
   // Save MCTruth kinematics for physics processes (Bremsstrahlung, Bhabha, Annihilation) in Target
   if (fMCTruthManager->IsEnabled()) {

@@ -118,13 +118,17 @@ class EventAction : public G4UserEventAction
   // only if the energy difference between the two is above fFlag8MylarDEThr
   // MR 23/11/2026 all flag lines are buffered per track: at end of event each track writes its
   // flag 0/8 pair first (if it passes the cut), then the other flags, each block in crossing-time order
+  // MR 27/11/2026 the 0/8 pair is now written for the primaries that emitted more than fMylarBremKThr
+  // of bremsstrahlung in the Mylar foil (SteppingAction::GetMylarBremK) and reach a downstream flag;
+  // every line ends with event ID, track ID and kbrem (see WriteBeamOutLines)
   struct BeamOutLine { G4double E; G4double t; std::string line; };
   std::map<G4int,BeamOutLine> fFlag8Lines;
   std::map<G4int,BeamOutLine> fMylarLines;
   std::map<G4int,std::vector<BeamOutLine> > fOtherFlagLines;
-  G4double fFlag8MylarDEThr;
+  //G4double fFlag8MylarDEThr; // MR 27/11/2026 replaced by fMylarBremKThr
+  G4double fMylarBremKThr;
   std::string FormatBeamOutLine(G4int flag, const G4ThreeVector& mom, G4double x, G4double y, G4double z);
-  void WriteBeamOutLines();
+  void WriteBeamOutLines(G4int eventID);
 
   RunAction*    fRunAct;
   HistoManager* fHistoManager;

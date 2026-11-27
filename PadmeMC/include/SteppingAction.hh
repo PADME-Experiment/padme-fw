@@ -83,6 +83,14 @@ public:
   // in case the geometry is rebuilt between runs)
   void ResetVolumeCache() { fVolumeFlags.clear(); fLastVolume = 0; fLastVolumeFlags = 0; }
 
+  // MR 27/11/2026 bremsstrahlung of the primaries in the Mylar foil of the BTF window (not in its
+  // flange): sum of the energies of the eBrem photons per track ID, cleared at the start of each event
+  G4double GetMylarBremK(G4int trackID) const {
+    auto it = fMylarBremK.find(trackID);
+    return it == fMylarBremK.end() ? 0. : it->second;
+  }
+  void ClearMylarBrem() { fMylarBremK.clear(); }
+
 
 private:
   BeamParameters* bpar;
@@ -119,12 +127,15 @@ private:
     kVolWorldPV       = 1u<<3, // "world_volume_PV"
     kVolWorld         = 1u<<4, // "World"
     kVolSACCry        = 1u<<5, // "SACCry"
-    kVolKill          = 1u<<6  // BTF collimators SLTB2-5, LINAC wall and pipes: tracks killed on entry
+    kVolKill          = 1u<<6, // BTF collimators SLTB2-5, LINAC wall and pipes: tracks killed on entry
+    kVolMylarFoil     = 1u<<7  // "BeamLineMylarWindow": Mylar foil of the BTF window (MR 27/11/2026)
   };
   unsigned int VolumeFlags(const G4VPhysicalVolume*);
   std::unordered_map<const G4VPhysicalVolume*,unsigned int> fVolumeFlags;
   const G4VPhysicalVolume* fLastVolume = 0;
   unsigned int fLastVolumeFlags = 0;
+
+  std::unordered_map<G4int,G4double> fMylarBremK; // MR 27/11/2026 see GetMylarBremK
 
 private:
   double fSACEnergyThr;

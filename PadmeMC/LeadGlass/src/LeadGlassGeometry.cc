@@ -196,34 +196,39 @@ void LeadGlassGeometry::UpdateDerivedMeasures()
   //   2: [   8.36   35.09 3452.79]
   //   3: [ -11.93   -6.3  3453.28]
 
+  //   Point 1 = upper-edge corner of the front (upstream) face, on the +X side
+  //   Point 2 = another point on the upper edge of the front face
+  //   Point 3 = a point on the front face
+  //
   // Face normal (world): [ 0.031333 -0.003527  0.999503]
-  //   tilt vs Z axis        : 1.8069 deg
-  //   slope XZ (about Y)    : +1.7955 deg
-  //   slope YZ (about X)    : +0.2022 deg
-
-  // Edge 2->1: length 33.74 mm, angle to world X in XY view -1.5633 deg
-
-  // Method: plane normal + edge 2->1 // local X
-  // Rotation matrix R (active, local -> world):
-  // [[ 0.999134  0.027365  0.031333]
-  //  [-0.027268  0.999622 -0.003527]
-  //  [-0.031417  0.00267   0.999503]]
-  // Geant4 angles (rotateX, rotateY, rotateZ in this order):
-  //   about X: +0.1530 deg = +2.6710 mrad
-  //   about Y: +1.8004 deg = +31.4226 mrad
-  //   about Z: -1.5633 deg = -27.2848 mrad
-  // Rough angular resolution: 48.0 mdeg (worst baseline 33.7 mm)
-
-  // Centre position for G4PVPlacement [mm]: [  -3.458413  -15.100207 3638.075406]
-  
+  // Upper edge direction = (P1-P2) projected on the face plane
+  //
+  // Block geometry used (OPAL 8, fBlockId=1, after TrapParamAdjustment), in the
+  // frame after rotateY(180deg) w.r.t. the block centre:
+  //   upper-edge corner = (+/-47.6553, +45.817, -185.0) mm
+  //   (y = -(W1-W2)/4 + W2/2, front face at -Z/2)
+  //
+  // Centre of the block (world) [mm]: [ -1.001240  -10.982725  3638.012907 ]
+  // Centre of the front face (world) [mm]: [ -6.881  -13.382  3453.097 ]
+  //
+  // Geant4 angles, as used in LeadGlassDetector::CreateGeometry
+  // (rotateY(180) then rotateX, rotateY, rotateZ; G4PVPlacement frame-rotation convention):
+  //   about X: +0.2022 deg
+  //   about Y: -1.7955 deg
+  //   about Z: -1.5689 deg
+  // Check: the +X upper corner maps exactly on P1, P2 lies on the upper edge,
+  // P3 lies on the front face (residuals < 1e-12 mm).
+  //
+  // NB: LeadGlassDetector places the centre at FrontFacePosZ + Z/2, so
+  // fLeadGlassFrontFacePosZ = centre_z - 185 mm (nominal, i.e. before tilt).
 
   if (fDetectorSetup > 40) {
-    fLeadGlassFrontFacePosZ = 3638.075406*mm; 
-    fLeadGlassPosX = -3.458413*mm; 
-    fLeadGlassPosY =-15.100207*mm; 
-    fLeadGlassRotationAngleX=0.1530*deg;
-    fLeadGlassRotationAngleY=1.8004*deg;
-    fLeadGlassRotationAngleZ=-1.5633*deg;
+    fLeadGlassFrontFacePosZ = 3453.012907*mm;
+    fLeadGlassPosX = -1.001240*mm;
+    fLeadGlassPosY = -10.982725*mm;
+    fLeadGlassRotationAngleX =  0.2022*deg;
+    fLeadGlassRotationAngleY = -1.7955*deg;
+    fLeadGlassRotationAngleZ = -1.5689*deg;
   }
   
 }

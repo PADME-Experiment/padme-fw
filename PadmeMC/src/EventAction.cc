@@ -65,6 +65,7 @@ EventAction::EventAction(RunAction* run)
   fBeamOutFileName = "beam_output.txt";
   //fFlag8MylarDEThr = 1.5*CLHEP::MeV; // MR 20/11/2026 write flag 8 + flag 0 only if |E8-E0| above this
   fMylarBremKThr = 1.5*CLHEP::MeV; // MR 27/11/2026 write flag 0 + flag 8 if the eBrem photons in the Mylar foil exceed this
+  fMylarIoniKThr = 1.5*CLHEP::MeV; // MR 27/11/2026 ... or if the eIoni delta electrons in the Mylar foil exceed this
   fFirstEvent = true;
 
   fTargetDigitizer  = NULL;
@@ -1249,6 +1250,9 @@ std::string EventAction::FormatBeamOutLine(G4int flag, const G4ThreeVector& mom,
 //  - three columns are appended to every line: event ID, track ID and kbrem, the energy (MeV) of
 //    the eBrem photons emitted by that primary in the Mylar foil (0 if none). The first 10 columns
 //    are unchanged.
+// MR 27/11/2026 same mechanism for the ionisation: 14th column kioni, kinetic energy (MeV) of the
+//    eIoni delta electrons produced by that primary in the Mylar foil (SteppingAction::GetMylarIoniK);
+//    the 0/8 pair is written if kbrem > fMylarBremKThr or kioni > fMylarIoniKThr.
 void EventAction::WriteBeamOutLines(G4int eventID)
 {
   if (!fEnableBeamOut) return;
@@ -1267,11 +1271,12 @@ void EventAction::WriteBeamOutLines(G4int eventID)
   for (auto& other : fOtherFlagLines) { // ascending track ID
     G4int tid = other.first;
     G4double kbrem = myStepping->GetMylarBremK(tid);
+    G4double kioni = myStepping->GetMylarIoniK(tid); // MR 27/11/2026
     std::ostringstream ids;
-    ids << " " << eventID << " " << tid << " " << kbrem/CLHEP::MeV << "\n";
+    ids << " " << eventID << " " << tid << " " << kbrem/CLHEP::MeV << " " << kioni/CLHEP::MeV << "\n";
     const std::string tail = ids.str();
 
-    if (kbrem > fMylarBremKThr) {
+    if (kbrem > fMylarBremKThr || kioni > fMylarIoniKThr) {
       std::vector<BeamOutLine> pair;
       auto f0 = fMylarLines.find(tid);
       if (f0 != fMylarLines.end()) pair.push_back(f0->second);

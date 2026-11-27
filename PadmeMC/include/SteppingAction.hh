@@ -89,7 +89,14 @@ public:
     auto it = fMylarBremK.find(trackID);
     return it == fMylarBremK.end() ? 0. : it->second;
   }
-  void ClearMylarBrem() { fMylarBremK.clear(); }
+  // MR 27/11/2026 same for the ionisation (eIoni): sum of the kinetic energies of the delta electrons
+  // produced by the primary in the Mylar foil, i.e. the energy lost in hard (Bhabha) collisions above
+  // the e- production threshold; the continuous ionisation loss below threshold is not included
+  G4double GetMylarIoniK(G4int trackID) const {
+    auto it = fMylarIoniK.find(trackID);
+    return it == fMylarIoniK.end() ? 0. : it->second;
+  }
+  void ClearMylarBrem() { fMylarBremK.clear(); fMylarIoniK.clear(); } // clears both eBrem and eIoni
 
 
 private:
@@ -136,6 +143,7 @@ private:
   unsigned int fLastVolumeFlags = 0;
 
   std::unordered_map<G4int,G4double> fMylarBremK; // MR 27/11/2026 see GetMylarBremK
+  std::unordered_map<G4int,G4double> fMylarIoniK; // MR 27/11/2026 see GetMylarIoniK
 
 private:
   double fSACEnergyThr;

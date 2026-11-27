@@ -130,12 +130,14 @@ class EventAction : public G4UserEventAction
   // MR 27/11/2026 the 0/8 pair is now written for the primaries that emitted more than fMylarBremKThr
   // of bremsstrahlung in the Mylar foil (SteppingAction::GetMylarBremK) and reach a downstream flag;
   // every line ends with event ID, track ID and kbrem (see WriteBeamOutLines)
+  // MR 27/11/2026 ... and kioni (eIoni delta electrons in the Mylar foil): pair written also if kioni > fMylarIoniKThr
   struct BeamOutLine { G4double E; G4double t; std::string line; };
   std::map<G4int,BeamOutLine> fFlag8Lines;
   std::map<G4int,BeamOutLine> fMylarLines;
   std::map<G4int,std::vector<BeamOutLine> > fOtherFlagLines;
   //G4double fFlag8MylarDEThr; // MR 27/11/2026 replaced by fMylarBremKThr
   G4double fMylarBremKThr;
+  G4double fMylarIoniKThr; // MR 27/11/2026 same for the eIoni delta electrons (kioni column)
   std::string FormatBeamOutLine(G4int flag, const G4ThreeVector& mom, G4double x, G4double y, G4double z);
   void WriteBeamOutLines(G4int eventID);
 

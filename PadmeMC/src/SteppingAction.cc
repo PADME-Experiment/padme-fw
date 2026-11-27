@@ -71,13 +71,22 @@ void SteppingAction::UserSteppingAction(const G4Step* step)
   // MR 27/11/2026 tag the primaries that emit bremsstrahlung in the Mylar foil of the BTF window:
   // the energies of the eBrem photons are summed per track and written in beam_output.txt
   // (see EventAction::WriteBeamOutLines). A discrete interaction happens inside the pre-step volume.
+  // Same for the ionisation: kinetic energies of the eIoni delta electrons.
   if ((preFlags & kVolMylarFoil) && step->GetTrack()->GetParentID() == 0) {
     const G4VProcess* proc = step->GetPostStepPoint()->GetProcessDefinedStep();
-    if (proc && proc->GetProcessName() == "eBrem") {
-      G4double k = 0.;
-      for (const G4Track* sec : *step->GetSecondaryInCurrentStep())
-        if (sec->GetDefinition() == G4Gamma::GammaDefinition()) k += sec->GetKineticEnergy();
-      fMylarBremK[step->GetTrack()->GetTrackID()] += k;
+    if (proc) {
+      const G4String& pname = proc->GetProcessName();
+      if (pname == "eBrem") {
+        G4double k = 0.;
+        for (const G4Track* sec : *step->GetSecondaryInCurrentStep())
+          if (sec->GetDefinition() == G4Gamma::GammaDefinition()) k += sec->GetKineticEnergy();
+        fMylarBremK[step->GetTrack()->GetTrackID()] += k;
+      } else if (pname == "eIoni") {
+        G4double k = 0.;
+        for (const G4Track* sec : *step->GetSecondaryInCurrentStep())
+          if (sec->GetDefinition() == G4Electron::ElectronDefinition()) k += sec->GetKineticEnergy();
+        fMylarIoniK[step->GetTrack()->GetTrackID()] += k;
+      }
     }
   }
 

@@ -170,7 +170,16 @@ BeamLineGeometry::BeamLineGeometry()
   fMylarWindowFlangeThick = 17.5*mm;//36.*mm; // was 17.5*mm (?)
 
 //  fQuadMagSizeZ = 263.*mm; // checked on drawing M. Raggi and E. Leonardi 02/03/2021
-  fQuadMagSizeZ = 290.*mm; // checked on drawing M. Raggi 25/11/2026
+//  fQuadMagSizeZ = 290.*mm; // checked on drawing M. Raggi 25/11/2026
+
+  // Quadrupoles QUATB001-QUATB004 (Type A) M. Raggi 27/11/2026
+  //   L(mag) = 0.2951 m   I(max) = 100 A
+  //   G = (8.372e-2*I + 2.3767e-2) T/m    K = (1/E[GeV])*(2.51e-2*I + 7.13e-3) m^-2
+  // The field is hard-edge (uniform gradient over the full length): use the magnetic length
+  fQuadMagSizeZ   = 295.1*mm;
+  fQuadGradPerAmp = 8.372e-2*tesla/(m*ampere);
+  fQuadGradOffset = 2.3767e-2*tesla/m;
+  fQuadMaxCurrent = 100.*ampere;
 
   ///********M.R. Default values for RUN II ***********
   //         PADME-- DHSTB002 -- Q4 --- Q3 --|  |-- Q2----Q1-----MyW

@@ -18,6 +18,16 @@
 
 #include "BeamLineGeometry.hh"
 
+#include <cstdio>
+
+// Range string |G| <= gMax (in T/m) for the quadrupole gradient commands
+static G4String QuadGradRange(const char* par, G4double gMax)
+{
+  char range[128];
+  snprintf(range,sizeof(range),"%s >= -%.6f && %s <= %.6f",par,gMax,par,gMax);
+  return G4String(range);
+}
+
 BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
  :fBeamLineStructure(blstruc)
 {
@@ -110,7 +120,7 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fSetSLTB5Cmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   fEnableQuadrupolesCmd = new G4UIcmdWithABool("/Detector/BeamLine/EnableQuadrupoles",this);
-  fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1 and Q2.");
+  fEnableQuadrupolesCmd->SetGuidance("Enable (true) or disable (false) positioning of Quadrupoles Q1-Q4.");
   fEnableQuadrupolesCmd->SetParameterName("QPS",false);
   fEnableQuadrupolesCmd->SetDefaultValue(false);
   fEnableQuadrupolesCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
@@ -122,32 +132,42 @@ BeamLineMessenger::BeamLineMessenger(BeamLineStructure* blstruc)
   fEnableBTFTargetCmd->SetDefaultValue(false);
   fEnableBTFTargetCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
+  // Quadrupole gradient limit from the QUATB maximum current (100 A)
+  G4double qMaxGrad = fBeamLineGeometry->GetQuadMaxGradient()/(tesla/m);
+  char qLimitGuidance[128];
+  snprintf(qLimitGuidance,sizeof(qLimitGuidance),"|G| <= %.6f T/m, i.e. I <= %.0f A with G = 8.372e-2*I + 2.3767e-2 T/m",
+	   qMaxGrad,fBeamLineGeometry->GetQuadMaxCurrent()/ampere);
+
   //data card for Q1 quadrupole magnet gradient.
   fSetQ1_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q1_FieldGrad",this);
   fSetQ1_FieldGradCmd->SetGuidance("Set gradient of the Q1 quadrupole in T/m");
+  fSetQ1_FieldGradCmd->SetGuidance(qLimitGuidance);
   fSetQ1_FieldGradCmd->SetParameterName("Q1GF",false);
-  fSetQ1_FieldGradCmd->SetRange("Q1GF > -15. && Q1GF < 15.");
+  fSetQ1_FieldGradCmd->SetRange(QuadGradRange("Q1GF",qMaxGrad));
   fSetQ1_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q2 quadrupole magnet gradient.
   fSetQ2_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q2_FieldGrad",this);
   fSetQ2_FieldGradCmd->SetGuidance("Set gradient of the Q2 quadrupole in T/m");
+  fSetQ2_FieldGradCmd->SetGuidance(qLimitGuidance);
   fSetQ2_FieldGradCmd->SetParameterName("Q2GF",false);
-  fSetQ2_FieldGradCmd->SetRange("Q2GF > -15. && Q2GF < 15.");
+  fSetQ2_FieldGradCmd->SetRange(QuadGradRange("Q2GF",qMaxGrad));
   fSetQ2_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q3 quadrupole magnet gradient.
   fSetQ3_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q3_FieldGrad",this);
   fSetQ3_FieldGradCmd->SetGuidance("Set gradient of the Q3 quadrupole in T/m");
+  fSetQ3_FieldGradCmd->SetGuidance(qLimitGuidance);
   fSetQ3_FieldGradCmd->SetParameterName("Q3GF",false);
-  fSetQ3_FieldGradCmd->SetRange("Q3GF > -15. && Q3GF < 15.");
+  fSetQ3_FieldGradCmd->SetRange(QuadGradRange("Q3GF",qMaxGrad));
   fSetQ3_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
   //data card for Q4 quadrupole magnet gradient.
   fSetQ4_FieldGradCmd = new G4UIcmdWithADouble("/Detector/BeamLine/Q4_FieldGrad",this);
   fSetQ4_FieldGradCmd->SetGuidance("Set gradient of the Q4 quadrupole in T/m");
+  fSetQ4_FieldGradCmd->SetGuidance(qLimitGuidance);
   fSetQ4_FieldGradCmd->SetParameterName("Q4GF",false);
-  fSetQ4_FieldGradCmd->SetRange("Q4GF > -15. && Q4GF < 15.");
+  fSetQ4_FieldGradCmd->SetRange(QuadGradRange("Q4GF",qMaxGrad));
   fSetQ4_FieldGradCmd->AvailableForStates(G4State_PreInit,G4State_Idle);
 
 }
@@ -284,19 +304,20 @@ G4String BeamLineMessenger::GetCurrentValue(G4UIcommand* cmd)
     cv = fEnableQuadrupolesCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
 
   else if ( cmd == fEnableBTFTargetCmd )
-    cv = fEnableBTFTargetCmd->ConvertToString(fBeamLineGeometry->QuadrupolesAreEnabled());
+    cv = fEnableBTFTargetCmd->ConvertToString(fBeamLineGeometry->BTFTargetIsEnabled());
 
+  // Gradients are given in T/m without unit: "tesla/m" is not in the G4 units table (fatal G4Exception)
   else if ( cmd == fSetQ1_FieldGradCmd )
-   cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad(),"tesla/m");
+   cv = fSetQ1_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ1MagneticFieldGrad()/(tesla/m));
 
   else if ( cmd == fSetQ2_FieldGradCmd )
-   cv = fSetQ2_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ2MagneticFieldGrad(),"tesla/m");
+   cv = fSetQ2_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ2MagneticFieldGrad()/(tesla/m));
 
   else if ( cmd == fSetQ3_FieldGradCmd )
-   cv = fSetQ3_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ3MagneticFieldGrad(),"tesla/m");
+   cv = fSetQ3_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ3MagneticFieldGrad()/(tesla/m));
 
-  else if ( cmd == fSetQ2_FieldGradCmd )
-   cv = fSetQ4_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ4MagneticFieldGrad(),"tesla/m");
+  else if ( cmd == fSetQ4_FieldGradCmd )
+   cv = fSetQ4_FieldGradCmd->ConvertToString(fBeamLineGeometry->GetQ4MagneticFieldGrad()/(tesla/m));
 
   return cv;
 

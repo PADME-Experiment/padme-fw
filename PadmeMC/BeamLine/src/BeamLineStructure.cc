@@ -119,6 +119,14 @@ void BeamLineStructure::CreateGeometry()
 ///////////////////////////////////////////////////////
 G4LogicalVolume* BeamLineStructure::CreateQuadMagnets(G4double Grad, G4double Length, G4double Radius, G4ThreeVector Pos, G4RotationMatrix* Rot)
 {
+  // QUATB current limit (100 A): also catches gradients not set through the messenger
+  if (std::fabs(Grad) > geo->GetQuadMaxGradient()*(1.+1.e-9)) {
+    G4ExceptionDescription ed;
+    ed << "Quadrupole gradient " << Grad/(tesla/m) << " T/m exceeds the QUATB limit of "
+       << geo->GetQuadMaxGradient()/(tesla/m) << " T/m (I(max) = " << geo->GetQuadMaxCurrent()/ampere << " A)";
+    G4Exception("BeamLineStructure::CreateQuadMagnets()","BeamLine001",FatalException,ed);
+  }
+
   //create the Qaudrupole support structure around the pipe
   G4VisAttributes QuadVisAttr = G4VisAttributes(G4Colour::Green());
   G4Box* solidSupportFull = new G4Box("solidSupportFull",2.0*Radius,2.0*Radius,0.5*Length);

@@ -220,6 +220,10 @@ public:
   G4double GetQuadMagSizeY(){return fQuadMagSizeY;}
   G4double GetQuadMagSizeZ(){return fQuadMagSizeZ;}
 
+  // QUATB current limit: G(I) = fQuadGradPerAmp*I + fQuadGradOffset with I <= fQuadMaxCurrent
+  G4double GetQuadMaxCurrent(){return fQuadMaxCurrent;}
+  G4double GetQuadMaxGradient(){return fQuadGradPerAmp*fQuadMaxCurrent + fQuadGradOffset;}
+
   G4double GetQ4DistFromDHSTB002(){return fQ4DistFromDHSTB002;} 
   G4double GetQ1Q2Dist(){return fQ1Q2Dist;} 
   G4double GetQ3Q4Dist(){return fQ3Q4Dist;} 
@@ -417,6 +421,10 @@ private:
   G4double fQuadMagSizeX;
   G4double fQuadMagSizeY;
   G4double fQuadMagSizeZ;
+
+  G4double fQuadGradPerAmp;
+  G4double fQuadGradOffset;
+  G4double fQuadMaxCurrent;
 
 
   //
